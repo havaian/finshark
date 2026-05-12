@@ -72,7 +72,7 @@ services:
       target: prod
       args:
         # Vite bakes this URL into the bundle at build time.
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:/api}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     image: acca-duo-frontend:latest
     container_name: acca-duo-frontend
     ports:

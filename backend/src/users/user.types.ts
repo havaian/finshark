@@ -1,9 +1,9 @@
 // Row shape returned by `SELECT * FROM users`. Mirrors the migrations.
-// Keep in sync with db/migrations/*_users*.sql
+// Keep in sync with db/migrations/*_users*.sql + *_google_auth.sql
 export interface UserRow {
   id: string;                // bigint comes back as string from postgres.js
   email: string;
-  password_hash: string;
+  google_sub: string;        // Google's stable user identifier (sub claim)
   display_name: string;
   streak_count: number;
   xp: number;
@@ -15,7 +15,7 @@ export interface UserRow {
   updated_at: Date;
 }
 
-// Public-safe shape — never expose password_hash.
+// Public-safe shape — never expose google_sub (it's stable identifying data).
 export interface PublicUser {
   id: string;
   email: string;

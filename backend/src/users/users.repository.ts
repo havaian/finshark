@@ -5,7 +5,7 @@ import type { UserRow } from './user.types';
 
 // Centralised so every SELECT * matches the UserRow shape.
 const USER_COLS = `
-  id, email, password_hash, display_name, streak_count, xp, level,
+  id, email, google_sub, display_name, streak_count, xp, level,
   last_active_date, is_admin, email_reminders_enabled, created_at, updated_at
 `;
 
@@ -33,17 +33,46 @@ export class UsersRepository {
     return rows[0] ?? null;
   }
 
-  async create(input: {
+  // Google's stable identifier — the primary lookup once a user has logged in once.
+  async findByGoogleSub(google_sub: string): Promise<UserRow | null> {
+    const rows = await this.sql<UserRow[]>`
+      SELECT ${this.sql.unsafe(USER_COLS)}
+      FROM users
+      WHERE google_sub = ${google_sub}
+      LIMIT 1
+    `;
+    return rows[0] ?? null;
+  }
+
+  // New user from Google's verified profile.
+  async createFromGoogle(input: {
     email: string;
-    password_hash: string;
+    google_sub: string;
     display_name: string;
   }): Promise<UserRow> {
     const rows = await this.sql<UserRow[]>`
-      INSERT INTO users (email, password_hash, display_name)
-      VALUES (${input.email}, ${input.password_hash}, ${input.display_name})
+      INSERT INTO users (email, google_sub, display_name)
+      VALUES (${input.email}, ${input.google_sub}, ${input.display_name})
       RETURNING ${this.sql.unsafe(USER_COLS)}
     `;
     return rows[0];
+  }
+
+  // Auto-link: an account exists for this email but has no google_sub yet
+  // (e.g. created out-of-band, or pre-migration). Attach Google's sub to it.
+  // Returns the updated row; throws if google_sub is already in use by ANOTHER
+  // user (which would mean the same Google account is linked twice — a bug).
+  async attachGoogleSubByEmail(input: {
+    email: string;
+    google_sub: string;
+  }): Promise<UserRow | null> {
+    const rows = await this.sql<UserRow[]>`
+      UPDATE users
+      SET google_sub = ${input.google_sub}
+      WHERE email = ${input.email}
+      RETURNING ${this.sql.unsafe(USER_COLS)}
+    `;
+    return rows[0] ?? null;
   }
 
   // Apply post-session deltas atomically. Called once per lesson completion.

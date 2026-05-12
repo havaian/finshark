@@ -31,36 +31,8 @@ services:
       target: prod
     image: acca-duo-backend:latest
     container_name: acca-duo-backend
-    environment:
-      NODE_ENV: production
-      PORT: "3001"
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
-      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN is required}
-      APP_PUBLIC_URL: ${APP_PUBLIC_URL:?APP_PUBLIC_URL is required}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
-      UNSUBSCRIBE_SECRET: ${UNSUBSCRIBE_SECRET:?UNSUBSCRIBE_SECRET is required}
-      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
-      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-30d}
-      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
-      # LLM (optional)
-      LLM_PROVIDER: ${LLM_PROVIDER:-none}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
-      LLM_GRADES_PER_USER_PER_DAY: ${LLM_GRADES_PER_USER_PER_DAY:-200}
-      LLM_GRADE_TIMEOUT_MS: ${LLM_GRADE_TIMEOUT_MS:-10000}
-      # Email (optional — set EMAIL_MODE=smtp + SMTP_* to enable real sending)
-      EMAIL_MODE: ${EMAIL_MODE:-log}
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-}
-      SMTP_SECURE: ${SMTP_SECURE:-}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_TLS_REJECT_UNAUTHORIZED: ${SMTP_TLS_REJECT_UNAUTHORIZED:-true}
-      EMAIL_FROM: ${EMAIL_FROM:-}
-      REMINDER_CRON: ${REMINDER_CRON:-0 18 * * *}
+    env_file:
+      - ./.env
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     restart: unless-stopped

@@ -63,18 +63,18 @@ FROM base AS prod
 WORKDIR /app
 ENV NODE_ENV=production
 
-RUN addgroup -S nodeapp && adduser -S -G nodeapp nodeapp
-
 # Copy only what's needed at runtime.
-COPY --chown=nodeapp:nodeapp --from=build /repo/backend/dist            ./dist
-COPY --chown=nodeapp:nodeapp --from=build /repo/backend/package.json    ./package.json
-COPY --chown=nodeapp:nodeapp --from=build /repo/backend/db              ./db
-COPY --chown=nodeapp:nodeapp --from=build /repo/package.json            /repo/package.json
-COPY --chown=nodeapp:nodeapp --from=build /repo/pnpm-workspace.yaml     /repo/pnpm-workspace.yaml
-COPY --chown=nodeapp:nodeapp --from=build /repo/node_modules            /repo/node_modules
-COPY --chown=nodeapp:nodeapp --from=build /repo/backend/node_modules    ./node_modules
+COPY --from=build /repo/backend/dist            ./dist
+COPY --from=build /repo/backend/package.json    ./package.json
+COPY --from=build /repo/backend/db              ./db
+COPY --from=build /repo/package.json            /repo/package.json
+COPY --from=build /repo/pnpm-workspace.yaml     /repo/pnpm-workspace.yaml
+COPY --from=build /repo/node_modules            /repo/node_modules
+COPY --from=build /repo/backend/node_modules    ./node_modules
 
-USER nodeapp
+# Drop root. node:*-alpine ships with a `node` user (uid 1000) — reuse it.
+RUN chown -R node:node /app /repo
+USER node
 
 EXPOSE 3001
 # main.ts imports dotenv/config — when running in a container we rely on real

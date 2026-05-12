@@ -20,7 +20,7 @@ import { RemindersModule } from './reminders/reminders.module';
     }),
     ScheduleModule.forRoot(),
     // Default: 60 requests per 60 seconds per IP. Tight limits applied per-route
-    // via @Throttle on /auth/login and /auth/register below.
+    // via @Throttle on /auth/google and /auth/google/callback.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
     DbModule,
     AuthModule,

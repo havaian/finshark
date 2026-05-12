@@ -20,8 +20,12 @@ WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
 # dbmate static binary, used to run migrations.
-# Pinned version; bump intentionally.
-ARG DBMATE_VERSION=2.21.0
+# Pinned version; bump intentionally. We use the standard linux-{arch} build
+# (not "-musl-"), which is a statically linked Go binary that runs on Alpine
+# just fine because we don't need SQLite support — we're on Postgres.
+# Historical note: an earlier version of this Dockerfile pinned a URL like
+# `dbmate-linux-musl-amd64`, which 404s for recent releases.
+ARG DBMATE_VERSION=2.28.0
 ARG TARGETARCH
 RUN set -eux; \
     apk add --no-cache curl ca-certificates; \
@@ -31,8 +35,9 @@ RUN set -eux; \
       *) echo "unsupported arch: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     curl -fsSL -o /usr/local/bin/dbmate \
-      "https://github.com/amacneil/dbmate/releases/download/v${DBMATE_VERSION}/dbmate-linux-musl-${DBMATE_ARCH}"; \
-    chmod +x /usr/local/bin/dbmate
+      "https://github.com/amacneil/dbmate/releases/download/v${DBMATE_VERSION}/dbmate-linux-${DBMATE_ARCH}"; \
+    chmod +x /usr/local/bin/dbmate; \
+    dbmate --version
 
 # ---------- 2) deps: install workspace deps (cached layer) ----------
 FROM base AS deps

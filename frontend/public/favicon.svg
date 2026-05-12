@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a7d6a"/>
+      <stop offset="100%" stop-color="#5d9985"/>
+    </linearGradient>
+    <!-- Mask: white = visible, black = cut out. We start with the full outer
+         rounded square white, then knock out the middle so the gradient ring
+         is the only visible part. The center stays transparent through to
+         whatever's behind the favicon. -->
+    <mask id="ring">
+      <rect x="0" y="0" width="28" height="28" rx="9" ry="9" fill="white"/>
+      <rect x="6" y="6" width="16" height="16" rx="5" ry="5" fill="black"/>
+    </mask>
+  </defs>
+  <!-- Gradient ring (matches .brand-mark + .brand-mark::after cutout) -->
+  <rect x="0" y="0" width="28" height="28" rx="9" ry="9" fill="url(#g)" mask="url(#ring)"/>
+  <!-- Inner darker-sage square (matches .brand-mark::before) -->
+  <rect x="10" y="10" width="8" height="8" rx="2" ry="2" fill="#4a7d6a"/>
+</svg>

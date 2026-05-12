@@ -1,9 +1,13 @@
-import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
-import type { AuthTokens } from '../types/auth';
+import axios, {
+  AxiosError,
+  type AxiosRequestConfig,
+  type InternalAxiosRequestConfig,
+} from "axios";
+import type { AuthTokens } from "../types/auth";
 
 // localStorage keys. Keep in sync with stores/auth.store.ts
-const LS_ACCESS = 'acca_duo.access_token';
-const LS_REFRESH = 'acca_duo.refresh_token';
+const LS_ACCESS = "acca_duo.access_token";
+const LS_REFRESH = "acca_duo.refresh_token";
 
 // Extend axios request config to mark a request we've already retried
 // so we don't loop forever on a stuck 401.
@@ -49,7 +53,7 @@ async function performRefresh(): Promise<AuthTokens | null> {
     // we don't want this request to recurse into refresh logic.
     const res = await axios.post<AuthTokens>(
       `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
-      { refresh_token: refresh },
+      { refresh_token: refresh }
     );
     localStorage.setItem(LS_ACCESS, res.data.access_token);
     localStorage.setItem(LS_REFRESH, res.data.refresh_token);
@@ -69,9 +73,7 @@ api.interceptors.response.use(
       !original ||
       error.response?.status !== 401 ||
       original._retried ||
-      original.url?.endsWith('/auth/refresh') ||
-      original.url?.endsWith('/auth/login') ||
-      original.url?.endsWith('/auth/register')
+      original.url?.endsWith("/auth/refresh")
     ) {
       return Promise.reject(error);
     }
@@ -99,8 +101,11 @@ api.interceptors.response.use(
       original.headers.Authorization = `Bearer ${tokens.access_token}`;
     }
     return api.request(original as AxiosRequestConfig);
-  },
+  }
 );
 
 // Exported so the store can update storage when login/register succeed.
-export const TOKEN_STORAGE_KEYS = { access: LS_ACCESS, refresh: LS_REFRESH } as const;
+export const TOKEN_STORAGE_KEYS = {
+  access: LS_ACCESS,
+  refresh: LS_REFRESH,
+} as const;

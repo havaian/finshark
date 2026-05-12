@@ -27,8 +27,7 @@ const auth = useAuthStore();
           <RouterLink to="/dashboard" class="btn btn-primary">Go to dashboard</RouterLink>
         </template>
         <template v-else>
-          <RouterLink to="/login" class="btn btn-primary">Log in</RouterLink>
-          <RouterLink to="/register" class="btn btn-ghost">Register</RouterLink>
+          <RouterLink to="/login" class="btn btn-primary">Log in with Google</RouterLink>
         </template>
       </div>
     </div>

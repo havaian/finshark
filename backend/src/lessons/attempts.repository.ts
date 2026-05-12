@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { AttemptRow } from './lesson.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { AttemptRow } from "./lesson.types";
 
 const COLS = `id, session_id, user_id, question_id, user_answer, was_correct, llm_grade_json, answered_at`;
 
@@ -17,8 +17,12 @@ export class AttemptsRepository {
     was_correct: boolean;
     llm_grade_json: unknown | null;
   }): Promise<AttemptRow> {
+    // `as any` works around postgres.js's overly strict JSONValue narrowing.
+    // Runtime: sql.json accepts anything JSON-serializable.
     const llmParam =
-      input.llm_grade_json === null ? null : this.sql.json(input.llm_grade_json);
+      input.llm_grade_json === null
+        ? null
+        : this.sql.json(input.llm_grade_json as any);
     const rows = await this.sql<AttemptRow[]>`
       INSERT INTO attempts (session_id, user_id, question_id, user_answer, was_correct, llm_grade_json)
       VALUES (

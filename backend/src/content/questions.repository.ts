@@ -1,12 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 import type {
   McqOption,
   QuestionDifficulty,
   QuestionRow,
   QuestionType,
-} from './content.types';
+} from "./content.types";
 
 const COLS = `
   id, lo_id, type, difficulty, prompt, options,
@@ -18,7 +18,10 @@ const COLS = `
 export class QuestionsRepository {
   constructor(@Inject(PG) private readonly sql: Sql) {}
 
-  async findByLo(lo_id: string, opts?: { activeOnly?: boolean }): Promise<QuestionRow[]> {
+  async findByLo(
+    lo_id: string,
+    opts?: { activeOnly?: boolean }
+  ): Promise<QuestionRow[]> {
     const activeOnly = opts?.activeOnly ?? false;
     return this.sql<QuestionRow[]>`
       SELECT ${this.sql.unsafe(COLS)}
@@ -48,7 +51,10 @@ export class QuestionsRepository {
   }): Promise<QuestionRow> {
     // postgres.js: passing a JS array/object as a JSONB-typed param works directly.
     // We use sql.json(...) explicitly to be safe — avoids the array being treated as a postgres array.
-    const optionsParam = input.options === null ? null : this.sql.json(input.options);
+    // The `as any` is postgres.js's overly strict JSONValue type rejecting typed
+    // object arrays; runtime is fine with anything JSON-serializable.
+    const optionsParam =
+      input.options === null ? null : this.sql.json(input.options as any);
 
     const rows = await this.sql<QuestionRow[]>`
       INSERT INTO questions (
@@ -81,18 +87,21 @@ export class QuestionsRepository {
       explanation?: string;
       concept_bite?: string | null;
       is_active?: boolean;
-    },
+    }
   ): Promise<QuestionRow | null> {
     const sets: Record<string, unknown> = {};
     if (input.type !== undefined) sets.type = input.type;
     if (input.difficulty !== undefined) sets.difficulty = input.difficulty;
     if (input.prompt !== undefined) sets.prompt = input.prompt;
     if (input.options !== undefined) {
-      sets.options = input.options === null ? null : this.sql.json(input.options);
+      sets.options =
+        input.options === null ? null : this.sql.json(input.options as any);
     }
-    if (input.correct_answer !== undefined) sets.correct_answer = input.correct_answer;
+    if (input.correct_answer !== undefined)
+      sets.correct_answer = input.correct_answer;
     if (input.explanation !== undefined) sets.explanation = input.explanation;
-    if (input.concept_bite !== undefined) sets.concept_bite = input.concept_bite;
+    if (input.concept_bite !== undefined)
+      sets.concept_bite = input.concept_bite;
     if (input.is_active !== undefined) sets.is_active = input.is_active;
 
     if (Object.keys(sets).length === 0) return this.findById(id);
@@ -109,7 +118,8 @@ export class QuestionsRepository {
   // attempts.question_id has ON DELETE RESTRICT, so this throws if attempts exist.
   // Admin UI should prefer setting is_active=false to retire instead.
   async delete(id: string): Promise<boolean> {
-    const rows = await this.sql`DELETE FROM questions WHERE id = ${id} RETURNING id`;
+    const rows = await this
+      .sql`DELETE FROM questions WHERE id = ${id} RETURNING id`;
     return rows.length > 0;
   }
 }

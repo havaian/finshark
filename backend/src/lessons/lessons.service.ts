@@ -4,16 +4,16 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import { QuestionsRepository } from '../content/questions.repository';
-import { UsersRepository } from '../users/users.repository';
-import { LessonSessionsRepository } from './lesson-sessions.repository';
-import { LessonSessionQuestionsRepository } from './lesson-session-questions.repository';
-import { AttemptsRepository } from './attempts.repository';
-import { UserQuestionStateRepository } from './user-question-state.repository';
-import { GraderService } from './grader.service';
+} from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import { QuestionsRepository } from "../content/questions.repository";
+import { UsersRepository } from "../users/users.repository";
+import { LessonSessionsRepository } from "./lesson-sessions.repository";
+import { LessonSessionQuestionsRepository } from "./lesson-session-questions.repository";
+import { AttemptsRepository } from "./attempts.repository";
+import { UserQuestionStateRepository } from "./user-question-state.repository";
+import { GraderService } from "./grader.service";
 import {
   applyMastery,
   applySm2,
@@ -23,14 +23,18 @@ import {
   toUtcDateOnly,
   XP_PER_CORRECT,
   type SrsState,
-} from './srs';
-import type { QuestionRow, QuestionDifficulty, McqOption } from '../content/content.types';
+} from "./srs";
+import type {
+  QuestionRow,
+  QuestionDifficulty,
+  McqOption,
+} from "../content/content.types";
 
 // Public shape returned in the lesson queue. Note: NO correct_answer or explanation.
 // Those are only revealed in the attempt response, per question, after answering.
 export interface LessonQuestion {
   id: string;
-  type: 'mcq' | 'short_answer';
+  type: "mcq" | "short_answer";
   difficulty: QuestionDifficulty;
   prompt: string;
   options: McqOption[] | null; // for MCQ
@@ -47,8 +51,8 @@ export interface AttemptResult {
   correct_answer: string;
   explanation: string;
   mastery_score: number;
-  next_due_date: string;          // 'YYYY-MM-DD'
-  xp_earned: number;              // just for this attempt
+  next_due_date: string; // 'YYYY-MM-DD'
+  xp_earned: number; // just for this attempt
 }
 
 export interface CompleteLessonResult {
@@ -84,21 +88,21 @@ export class LessonsService {
     private readonly sessionQuestions: LessonSessionQuestionsRepository,
     private readonly attempts: AttemptsRepository,
     private readonly uqs: UserQuestionStateRepository,
-    private readonly grader: GraderService,
+    private readonly grader: GraderService
   ) {}
 
   // ---- start ----
 
   async start(
     user_id: string,
-    opts: { paper_id?: string; size?: number },
+    opts: { paper_id?: string; size?: number }
   ): Promise<StartLessonResult> {
     const size = opts.size ?? DEFAULT_LESSON_SIZE;
     const queue = await this.buildQueue(user_id, opts.paper_id ?? null, size);
 
     if (queue.length === 0) {
       throw new BadRequestException(
-        'no questions available — either the paper has no questions yet, or you have nothing due and no new content to learn',
+        "no questions available — either the paper has no questions yet, or you have nothing due and no new content to learn"
       );
     }
 
@@ -109,7 +113,7 @@ export class LessonsService {
 
     await this.sessionQuestions.insertMany(
       session.id,
-      queue.map((q) => q.id),
+      queue.map((q) => q.id)
     );
 
     return {
@@ -120,10 +124,14 @@ export class LessonsService {
 
   // ---- get (for resume) ----
 
-  async getSession(user_id: string, session_id: string): Promise<SessionDetail> {
+  async getSession(
+    user_id: string,
+    session_id: string
+  ): Promise<SessionDetail> {
     const session = await this.sessions.findById(session_id);
-    if (!session) throw new NotFoundException('session not found');
-    if (session.user_id !== user_id) throw new ForbiddenException('session belongs to another user');
+    if (!session) throw new NotFoundException("session not found");
+    if (session.user_id !== user_id)
+      throw new ForbiddenException("session belongs to another user");
 
     const queueIds = await this.sessionQuestions.findBySession(session_id);
     // Re-hydrate to QuestionRow → LessonQuestion, preserving order.
@@ -138,7 +146,9 @@ export class LessonsService {
 
     return {
       session_id: session.id,
-      completed_at: session.completed_at ? session.completed_at.toISOString() : null,
+      completed_at: session.completed_at
+        ? session.completed_at.toISOString()
+        : null,
       question_count: session.question_count,
       correct_count: session.correct_count,
       questions: hydrated,
@@ -152,21 +162,26 @@ export class LessonsService {
     user_id: string,
     session_id: string,
     question_id: string,
-    user_answer: string,
+    user_answer: string
   ): Promise<AttemptResult> {
     const session = await this.sessions.findById(session_id);
-    if (!session) throw new NotFoundException('session not found');
-    if (session.user_id !== user_id) throw new ForbiddenException('session belongs to another user');
-    if (session.completed_at) throw new BadRequestException('session already completed');
+    if (!session) throw new NotFoundException("session not found");
+    if (session.user_id !== user_id)
+      throw new ForbiddenException("session belongs to another user");
+    if (session.completed_at)
+      throw new BadRequestException("session already completed");
 
     const question = await this.questions.findById(question_id);
-    if (!question) throw new NotFoundException('question not found');
-    if (!question.is_active) throw new BadRequestException('question is retired');
+    if (!question) throw new NotFoundException("question not found");
+    if (!question.is_active)
+      throw new BadRequestException("question is retired");
 
     // Prevent double-answering the same question within a session.
     const answeredIds = await this.attempts.questionIdsInSession(session_id);
     if (answeredIds.includes(question_id)) {
-      throw new BadRequestException('question already answered in this session');
+      throw new BadRequestException(
+        "question already answered in this session"
+      );
     }
 
     // Grade.
@@ -193,8 +208,15 @@ export class LessonsService {
           due_date: today,
         };
 
-    const srsNext = applySm2(srsPrev, qualityFromCorrect(grade.was_correct), today);
-    const masteryNext = applyMastery(prevState?.mastery_score ?? 0, grade.was_correct);
+    const srsNext = applySm2(
+      srsPrev,
+      qualityFromCorrect(grade.was_correct),
+      today
+    );
+    const masteryNext = applyMastery(
+      prevState?.mastery_score ?? 0,
+      grade.was_correct
+    );
 
     // All three writes (attempt, session counter, SRS state) succeed or fail together.
     // postgres.js: sql.begin gives a transaction-scoped Sql; we use raw SQL here rather
@@ -202,7 +224,11 @@ export class LessonsService {
     // for one critical path.
     const newState = await this.sql.begin(async (tx) => {
       // 1) Record the attempt.
-      const llmParam = grade.llm_grade_json === null ? null : tx.json(grade.llm_grade_json);
+      // `as any`: postgres.js's JSONValue is overly strict; runtime accepts any JSON-serializable value.
+      const llmParam =
+        grade.llm_grade_json === null
+          ? null
+          : tx.json(grade.llm_grade_json as any);
       await tx`
         INSERT INTO attempts (session_id, user_id, question_id, user_answer, was_correct, llm_grade_json)
         VALUES (
@@ -249,7 +275,9 @@ export class LessonsService {
           due_date       = EXCLUDED.due_date,
           mastery_score  = EXCLUDED.mastery_score,
           times_seen     = user_question_state.times_seen + 1,
-          times_correct  = user_question_state.times_correct + ${grade.was_correct ? 1 : 0},
+          times_correct  = user_question_state.times_correct + ${
+            grade.was_correct ? 1 : 0
+          },
           last_seen_at   = NOW()
         RETURNING mastery_score, due_date
       `;
@@ -268,15 +296,19 @@ export class LessonsService {
 
   // ---- complete ----
 
-  async complete(user_id: string, session_id: string): Promise<CompleteLessonResult> {
+  async complete(
+    user_id: string,
+    session_id: string
+  ): Promise<CompleteLessonResult> {
     const session = await this.sessions.findById(session_id);
-    if (!session) throw new NotFoundException('session not found');
-    if (session.user_id !== user_id) throw new ForbiddenException('session belongs to another user');
+    if (!session) throw new NotFoundException("session not found");
+    if (session.user_id !== user_id)
+      throw new ForbiddenException("session belongs to another user");
 
     // Idempotent-ish: if already completed, surface the existing state rather than re-bumping XP.
     if (session.completed_at) {
       const user = await this.users.findById(user_id);
-      if (!user) throw new NotFoundException('user not found');
+      if (!user) throw new NotFoundException("user not found");
       return {
         session_id: session.id,
         question_count: session.question_count,
@@ -298,12 +330,16 @@ export class LessonsService {
     // streak is based on the user's last_active_date.
     const xpEarned = completed.correct_count * XP_PER_CORRECT;
     const user = await this.users.findById(user_id);
-    if (!user) throw new NotFoundException('user not found');
+    if (!user) throw new NotFoundException("user not found");
 
     const today = toUtcDateOnly(new Date());
     const newXp = user.xp + xpEarned;
     const newLevel = levelFromXp(newXp);
-    const newStreak = nextStreak(user.streak_count, user.last_active_date, today);
+    const newStreak = nextStreak(
+      user.streak_count,
+      user.last_active_date,
+      today
+    );
 
     const updated = await this.users.applySessionResult({
       id: user_id,
@@ -340,21 +376,27 @@ export class LessonsService {
   private async buildQueue(
     user_id: string,
     paper_id: string | null,
-    size: number,
+    size: number
   ): Promise<QuestionRow[]> {
-    const due = await this.uqs.findDueQuestions({ user_id, paper_id, limit: size });
+    const due = await this.uqs.findDueQuestions({
+      user_id,
+      paper_id,
+      limit: size,
+    });
 
     // Hydrate due IDs into full questions.
     const dueQuestions = await Promise.all(
-      due.map((d) => this.questions.findById(d.question_id)),
+      due.map((d) => this.questions.findById(d.question_id))
     );
-    const queue: QuestionRow[] = dueQuestions.filter((q): q is QuestionRow => !!q && q.is_active);
+    const queue: QuestionRow[] = dueQuestions.filter(
+      (q): q is QuestionRow => !!q && q.is_active
+    );
 
     if (queue.length >= size) return queue.slice(0, size);
 
     // Need more — pull from weak LOs.
     const user = await this.users.findById(user_id);
-    if (!user) throw new NotFoundException('user not found');
+    if (!user) throw new NotFoundException("user not found");
     const preferred = this.preferredDifficulty(user.level);
     const remaining = size - queue.length;
 
@@ -393,10 +435,10 @@ export class LessonsService {
 
   // ---- helpers ----
 
-  private preferredDifficulty(level: number): 'easy' | 'medium' | 'hard' {
-    if (level <= 2) return 'easy';
-    if (level <= 5) return 'medium';
-    return 'hard';
+  private preferredDifficulty(level: number): "easy" | "medium" | "hard" {
+    if (level <= 2) return "easy";
+    if (level <= 5) return "medium";
+    return "hard";
   }
 
   private toLessonQuestion(q: QuestionRow): LessonQuestion {

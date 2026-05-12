@@ -21,7 +21,7 @@ const errorMsg = ref<string | null>(null);
 
 // --- Create-form state ---
 const newType = ref<QuestionType>('mcq');
-const newDifficulty = ref<QuestionDifficulty>('intro');
+const newDifficulty = ref<QuestionDifficulty>('easy');
 const newPrompt = ref('');
 const newOptions = ref<McqOption[]>([
   { key: 'A', text: '' },
@@ -37,7 +37,7 @@ const creating = ref(false);
 // --- Inline edit state ---
 const editingId = ref<string | null>(null);
 const editType = ref<QuestionType>('mcq');
-const editDifficulty = ref<QuestionDifficulty>('intro');
+const editDifficulty = ref<QuestionDifficulty>('easy');
 const editPrompt = ref('');
 const editOptions = ref<McqOption[]>([]);
 const editCorrect = ref('');
@@ -182,11 +182,7 @@ onMounted(load);
           <h1>Questions</h1>
           <p v-if="lo" class="dim text-sm mt-2">{{ lo.code }} · {{ lo.title }}</p>
         </div>
-        <RouterLink
-          v-if="lo"
-          :to="`/admin/papers/${lo.paper_id}/los`"
-          class="btn-link"
-        >← Back to LOs</RouterLink>
+        <RouterLink v-if="lo" :to="`/admin/papers/${lo.paper_id}/los`" class="btn-link">← Back to LOs</RouterLink>
       </div>
 
       <!-- Create form -->
@@ -202,9 +198,9 @@ onMounted(load);
           <div class="field">
             <label class="field-label">Difficulty</label>
             <select v-model="newDifficulty">
-              <option value="intro">Intro</option>
-              <option value="standard">Standard</option>
-              <option value="exam">Exam</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
             </select>
           </div>
         </div>
@@ -223,20 +219,8 @@ onMounted(load);
           <label class="field-label">Options</label>
           <div class="col" style="gap: 8px;">
             <div v-for="(opt, i) in newOptions" :key="i" class="option-editor-row">
-              <input
-                v-model="opt.key"
-                type="text"
-                class="opt-key-input"
-                maxlength="2"
-                placeholder="A"
-              />
-              <input
-                v-model="opt.text"
-                type="text"
-                class="grow"
-                maxlength="500"
-                placeholder="Option text"
-              />
+              <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" placeholder="A" />
+              <input v-model="opt.text" type="text" class="grow" maxlength="500" placeholder="Option text" />
             </div>
           </div>
         </div>
@@ -269,11 +253,7 @@ onMounted(load);
           No questions yet for this LO. Add one above.
         </div>
 
-        <div
-          v-for="q in questions"
-          :key="q.id"
-          :class="['admin-question', { retired: !q.is_active }]"
-        >
+        <div v-for="q in questions" :key="q.id" :class="['admin-question', { retired: !q.is_active }]">
           <div class="q-head">
             <span>{{ q.type === 'mcq' ? 'MCQ' : 'SHORT' }}</span>
             <span>·</span>
@@ -320,9 +300,9 @@ onMounted(load);
               <div class="field">
                 <label class="field-label">Difficulty</label>
                 <select v-model="editDifficulty">
-                  <option value="intro">Intro</option>
-                  <option value="standard">Standard</option>
-                  <option value="exam">Exam</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
                 </select>
               </div>
             </div>
@@ -341,18 +321,8 @@ onMounted(load);
               <label class="field-label">Options</label>
               <div class="col" style="gap: 8px;">
                 <div v-for="(opt, i) in editOptions" :key="i" class="option-editor-row">
-                  <input
-                    v-model="opt.key"
-                    type="text"
-                    class="opt-key-input"
-                    maxlength="2"
-                  />
-                  <input
-                    v-model="opt.text"
-                    type="text"
-                    class="grow"
-                    maxlength="500"
-                  />
+                  <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" />
+                  <input v-model="opt.text" type="text" class="grow" maxlength="500" />
                 </div>
               </div>
             </div>

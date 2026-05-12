@@ -14,7 +14,7 @@
 
 # ---------- 1) base: node 24 + pnpm + dbmate ----------
 FROM node:24-alpine AS base
-WORKDIR /repo
+WORKDIR /app
 
 # pnpm via corepack (bundled with Node). Pin to the version we use locally.
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
@@ -41,7 +41,7 @@ RUN set -eux; \
 
 # ---------- 2) deps: install workspace deps (cached layer) ----------
 FROM base AS deps
-WORKDIR /repo
+WORKDIR /app
 
 # Native-build toolchain for bcrypt. Only present in this build stage; not copied to runtime.
 # libc6-compat is sometimes needed by node-gyp shim libs on alpine.
@@ -59,7 +59,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
 
 # ---------- 3) build: compile TypeScript ----------
 FROM deps AS build
-WORKDIR /repo
+WORKDIR /app
 COPY backend/ backend/
 RUN pnpm --filter @acca-duo/backend build
 
@@ -67,19 +67,19 @@ RUN pnpm --filter @acca-duo/backend build
 FROM base AS prod
 WORKDIR /app
 ENV NODE_ENV=production
+RUN addgroup -S nodeapp && adduser -S -G nodeapp nodeapp
 
 # Copy only what's needed at runtime.
-COPY --from=build /repo/backend/dist            ./dist
-COPY --from=build /repo/backend/package.json    ./package.json
-COPY --from=build /repo/backend/db              ./db
-COPY --from=build /repo/package.json            /repo/package.json
-COPY --from=build /repo/pnpm-workspace.yaml     /repo/pnpm-workspace.yaml
-COPY --from=build /repo/node_modules            /repo/node_modules
-COPY --from=build /repo/backend/node_modules    ./node_modules
+COPY --chown=nodeapp:nodeapp --from=build /app/backend/dist            ./dist
+COPY --chown=nodeapp:nodeapp --from=build /app/backend/package.json    ./package.json
+COPY --chown=nodeapp:nodeapp --from=build /app/backend/db              ./db
+COPY --chown=nodeapp:nodeapp --from=build /app/package.json            /app/package.json
+COPY --chown=nodeapp:nodeapp --from=build /app/pnpm-workspace.yaml     /app/pnpm-workspace.yaml
+COPY --chown=nodeapp:nodeapp --from=build /app/node_modules            /app/node_modules
+COPY --chown=nodeapp:nodeapp --from=build /app/backend/node_modules    ./node_modules
 
-# Drop root. node:*-alpine ships with a `node` user (uid 1000) — reuse it.
-RUN chown -R node:node /app /repo
-USER node
+# Run as non-roo
+USER nodeapp
 
 EXPOSE 3001
 # main.ts imports dotenv/config — when running in a container we rely on real

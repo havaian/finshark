@@ -1,0 +1,82 @@
+# Production-style compose: builds the multi-stage Dockerfiles and runs the
+# resulting images. External Postgres only — no postgres service here.
+#
+# Usage:
+#   # 1) provide secrets via .env at the repo root (NOT committed)
+#   #    minimal vars: see backend/.env.example
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+#
+#   # subsequent runs (no rebuild needed unless code changed):
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d
+#
+#   # logs:
+#   docker compose -f docker-compose.prod.yml logs -f backend
+#
+#   # run migrations against the external DB (one-off container):
+#   docker compose -f docker-compose.prod.yml run --rm backend \
+#     dbmate --env-file db/dbmate.env --migrations-dir db/migrations up
+#
+# IMPORTANT:
+#   - DATABASE_URL must point to your external Postgres reachable from inside
+#     the container. If your DB is on the docker host itself, use
+#     `host.docker.internal` on Mac/Windows or your host's LAN IP on Linux.
+#   - Frontend image bakes VITE_API_BASE_URL at BUILD time. Rebuild if you
+#     change where the API is served from.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: prod
+    image: acca-duo-backend:latest
+    container_name: acca-duo-backend
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN is required}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:?APP_PUBLIC_URL is required}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      UNSUBSCRIBE_SECRET: ${UNSUBSCRIBE_SECRET:?UNSUBSCRIBE_SECRET is required}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-30d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      # LLM (optional)
+      LLM_PROVIDER: ${LLM_PROVIDER:-none}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
+      LLM_GRADES_PER_USER_PER_DAY: ${LLM_GRADES_PER_USER_PER_DAY:-200}
+      LLM_GRADE_TIMEOUT_MS: ${LLM_GRADE_TIMEOUT_MS:-10000}
+      # Email (optional — set EMAIL_MODE=smtp + SMTP_* to enable real sending)
+      EMAIL_MODE: ${EMAIL_MODE:-log}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_TLS_REJECT_UNAUTHORIZED: ${SMTP_TLS_REJECT_UNAUTHORIZED:-true}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      REMINDER_CRON: ${REMINDER_CRON:-0 18 * * *}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: prod
+      args:
+        # Vite bakes this URL into the bundle at build time.
+        VITE_API_BASE_URL: ${PUBLIC_API_BASE_URL:?PUBLIC_API_BASE_URL is required}
+    image: acca-duo-frontend:latest
+    container_name: acca-duo-frontend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

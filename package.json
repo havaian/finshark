@@ -1,0 +1,19 @@
+{
+  "name": "acca-duo",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter @acca-duo/backend dev",
+    "dev:frontend": "pnpm --filter @acca-duo/frontend dev",
+    "build:backend": "pnpm --filter @acca-duo/backend build",
+    "build:frontend": "pnpm --filter @acca-duo/frontend build",
+    "db:up": "pnpm --filter @acca-duo/backend db:up",
+    "db:down": "pnpm --filter @acca-duo/backend db:down",
+    "db:status": "pnpm --filter @acca-duo/backend db:status",
+    "db:new": "pnpm --filter @acca-duo/backend db:new"
+  }
+}

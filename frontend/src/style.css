@@ -1,0 +1,832 @@
+/* ============================================================
+   ACCA Duo — global styles
+   Theme: data-theme="dark" (default) and data-theme="light"
+   ============================================================ */
+
+/* -----------------------------------------------------------
+   1) Theme tokens
+   ----------------------------------------------------------- */
+
+:root,
+:root[data-theme="dark"] {
+  /* surfaces */
+  --bg:             #0a0a0a;
+  --bg-card:        #131316;
+  --bg-elev:        #1c1c20;
+  --bg-elev-hover:  #232328;
+
+  /* borders */
+  --border:         #2a2a30;
+  --border-strong:  #3a3a42;
+
+  /* text */
+  --text:           #f5f5f7;
+  --text-dim:       #a0a0a8;
+  --text-mute:      #6a6a73;
+
+  /* primary purple */
+  --accent:         #7c5cff;
+  --accent-hot:     #9c82ff;
+  --accent-deep:    #5a3eef;
+  --accent-glow:    rgba(124, 92, 255, 0.18);
+  --accent-soft-bg: rgba(124, 92, 255, 0.10);
+
+  /* secondary identity (logo only) */
+  --sage:           #4a7d6a;
+  --sage-hot:       #5d9985;
+  --sage-glow:      rgba(74, 125, 106, 0.25);
+
+  /* warm streak accent (numeral + faint wash) */
+  --coral:          #f08a63;
+  --coral-wash-1:   rgba(217, 119, 87, 0.14);
+  --coral-wash-2:   rgba(217, 119, 87, 0.08);
+
+  /* status */
+  --success:        #4ade80;
+  --success-bg:     rgba(74, 222, 128, 0.08);
+  --success-border: rgba(74, 222, 128, 0.4);
+  --success-glow:   rgba(74, 222, 128, 0.22);
+
+  --danger:         #f87171;
+  --danger-bg:      rgba(248, 113, 113, 0.08);
+  --danger-border:  rgba(248, 113, 113, 0.4);
+
+  --amber:          #f5b955;
+  --amber-bg:       rgba(245, 185, 85, 0.10);
+  --amber-border:   rgba(245, 185, 85, 0.4);
+
+  --grey-band:      rgba(255, 255, 255, 0.04);
+
+  /* shadows */
+  --shadow-glow-accent: 0 0 18px var(--accent-glow);
+  --shadow-glow-sage:   0 0 18px var(--sage-glow);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  /* Light theme — same palette philosophy reworked for paper.
+     The streak still reads warm; the logo still reads sage; primary still purple.
+     Backgrounds are warm-tinted off-white, not pure #fff, to soften the screen. */
+
+  --bg:             #f7f5f1;
+  --bg-card:        #ffffff;
+  --bg-elev:        #f1ede5;
+  --bg-elev-hover:  #ebe6dc;
+
+  --border:         #e2ddd1;
+  --border-strong:  #c9c2b1;
+
+  --text:           #1a1a1d;
+  --text-dim:       #5a5852;
+  --text-mute:      #8a877f;
+
+  --accent:         #6840ff;     /* slightly deeper purple — needs more contrast on light */
+  --accent-hot:     #4f2af0;
+  --accent-deep:    #4017d4;
+  --accent-glow:    rgba(104, 64, 255, 0.16);
+  --accent-soft-bg: rgba(104, 64, 255, 0.08);
+
+  --sage:           #3d6a59;     /* deeper sage holds on cream */
+  --sage-hot:       #4d8270;
+  --sage-glow:      rgba(61, 106, 89, 0.2);
+
+  --coral:          #c25e36;     /* deeper coral for AA contrast on cream */
+  --coral-wash-1:   rgba(217, 119, 87, 0.18);
+  --coral-wash-2:   rgba(217, 119, 87, 0.10);
+
+  --success:        #1e8e3e;
+  --success-bg:     rgba(30, 142, 62, 0.08);
+  --success-border: rgba(30, 142, 62, 0.35);
+  --success-glow:   rgba(30, 142, 62, 0.18);
+
+  --danger:         #c1351c;
+  --danger-bg:      rgba(193, 53, 28, 0.08);
+  --danger-border:  rgba(193, 53, 28, 0.35);
+
+  --amber:          #b27e16;
+  --amber-bg:       rgba(178, 126, 22, 0.10);
+  --amber-border:   rgba(178, 126, 22, 0.35);
+
+  --grey-band:      rgba(0, 0, 0, 0.04);
+
+  --shadow-glow-accent: 0 0 18px var(--accent-glow);
+  --shadow-glow-sage:   0 0 18px var(--sage-glow);
+
+  color-scheme: light;
+}
+
+/* -----------------------------------------------------------
+   2) Reset + base
+   ----------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.mono, .font-mono {
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+button { font: inherit; cursor: pointer; }
+a { color: inherit; }
+input, select, textarea { font: inherit; }
+
+/* Headings */
+h1, h2, h3, h4 { margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: 28px; font-weight: 600; }
+h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+h3 { font-size: 13px; font-weight: 500; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+p  { margin: 0; }
+
+/* -----------------------------------------------------------
+   3) Layout
+   ----------------------------------------------------------- */
+
+.page          { min-height: 100vh; padding: 48px 24px; }
+.page-tight    { padding: 24px 16px; }
+.container     { max-width: 720px; margin: 0 auto; }
+.container-wide{ max-width: 960px; margin: 0 auto; }
+.container-narrow { max-width: 460px; margin: 0 auto; }
+
+.row    { display: flex; align-items: center; gap: 12px; }
+.row-end{ display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.col    { display: flex; flex-direction: column; gap: 12px; }
+.grow   { flex: 1; }
+.spacer { flex: 1; }
+
+.mt-2  { margin-top: 8px; }
+.mt-4  { margin-top: 16px; }
+.mt-6  { margin-top: 24px; }
+.mt-8  { margin-top: 32px; }
+.mt-12 { margin-top: 48px; }
+
+.divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+/* -----------------------------------------------------------
+   4) Card
+   ----------------------------------------------------------- */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+}
+.card + .card { margin-top: 16px; }
+
+/* -----------------------------------------------------------
+   5) Brand mark (logo)
+   The only place sage appears in the UI. Deliberate.
+   ----------------------------------------------------------- */
+
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-weight: 600; letter-spacing: -0.02em;
+}
+.brand-mark {
+  width: 28px; height: 28px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--sage-hot) 100%);
+  position: relative;
+  box-shadow: var(--shadow-glow-sage);
+}
+/* Frame cutout matches the page bg, leaving the gradient as a thin ring */
+.brand-mark::after {
+  content: ""; position: absolute; inset: 6px;
+  background: var(--bg);
+  border-radius: 5px;
+}
+/* Inner square — darker sage, sits inside the cutout */
+.brand-mark::before {
+  content: ""; position: absolute; inset: 10px;
+  background: var(--sage);
+  border-radius: 2px;
+  z-index: 1;
+}
+
+/* -----------------------------------------------------------
+   6) Stat tiles (used on dashboard)
+   ----------------------------------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.stat {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.stat .stat-lbl {
+  font-size: 12px;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.stat .stat-val {
+  font-size: 32px; font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-top: 4px;
+  display: flex; align-items: baseline; gap: 6px;
+}
+
+/* Streak — subtle warm wash + coral numerals. The warmth lives in the content. */
+.stat-streak {
+  background:
+    linear-gradient(135deg, var(--coral-wash-1) 0%, var(--coral-wash-2) 100%),
+    var(--bg-elev);
+}
+.stat-streak .stat-val { color: var(--coral); }
+.stat-fire { font-size: 22px; }
+
+/* -----------------------------------------------------------
+   7) Forms
+   ----------------------------------------------------------- */
+
+.field { display: block; }
+.field-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+input:disabled, select:disabled, textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+textarea { resize: vertical; min-height: 80px; }
+
+.input-help {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+/* -----------------------------------------------------------
+   8) Buttons
+   ----------------------------------------------------------- */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  text-decoration: none;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hot); }
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text-dim);
+}
+.btn-ghost:hover:not(:disabled) { border-color: var(--text-dim); color: var(--text); }
+
+.btn-danger {
+  background: transparent;
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+.btn-danger:hover:not(:disabled) { background: var(--danger-bg); }
+
+.btn-block { width: 100%; }
+
+.btn-link {
+  background: none; border: none; padding: 0;
+  color: var(--text-dim);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+}
+.btn-link:hover { color: var(--text); }
+.btn-link.accent { color: var(--accent); }
+.btn-link.accent:hover { color: var(--accent-hot); }
+
+/* -----------------------------------------------------------
+   9) Toggle (boolean switch)
+   ----------------------------------------------------------- */
+
+.toggle {
+  position: relative;
+  width: 44px; height: 24px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+  flex-shrink: 0;
+}
+.toggle.on {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hot));
+  border-color: transparent;
+}
+.toggle .toggle-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 160ms ease;
+}
+.toggle.on .toggle-knob { transform: translateX(20px); }
+.toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* -----------------------------------------------------------
+   10) Theme switcher (segmented)
+   ----------------------------------------------------------- */
+
+.theme-switch {
+  display: inline-flex;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.theme-switch button {
+  background: transparent;
+  border: none;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+  font-family: "Geist Mono", monospace;
+  letter-spacing: 0.04em;
+}
+.theme-switch button:hover { color: var(--text); }
+.theme-switch button.active {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+/* -----------------------------------------------------------
+   11) Pills / badges (used in progress legend + session badges)
+   ----------------------------------------------------------- */
+
+.pill {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  display: inline-block;
+}
+.pill-grey  { background: var(--grey-band);     color: var(--text-mute); }
+.pill-red   { background: var(--danger-bg);     color: var(--danger); }
+.pill-amber { background: var(--amber-bg);      color: var(--amber); }
+.pill-green { background: var(--success-bg);    color: var(--success); }
+.pill-accent{ background: var(--accent-soft-bg);color: var(--accent); }
+
+.badge {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  letter-spacing: 0.04em;
+  display: inline-block;
+}
+.badge-done { background: var(--success-bg); color: var(--success); }
+.badge-wip  { background: var(--grey-band);  color: var(--text-mute); }
+.badge-retired { background: var(--danger-bg); color: var(--danger); }
+
+/* -----------------------------------------------------------
+   12) Lists (reusable for weak topics, recent sessions, admin)
+   ----------------------------------------------------------- */
+
+.list { display: flex; flex-direction: column; }
+.list-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  gap: 12px;
+}
+.list-row:first-child { border-top: none; }
+.list-row .list-row-title { font-weight: 500; color: var(--text); }
+.list-row .list-row-sub   { color: var(--text-dim); font-size: 13px; }
+
+/* Bordered list (admin pages) */
+.list-bordered {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.list-bordered .list-row {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+.list-bordered .list-row:first-child { border-top: none; }
+
+/* -----------------------------------------------------------
+   13) Lesson page
+   ----------------------------------------------------------- */
+
+.lesson-frame { max-width: 680px; margin: 0 auto; }
+
+.lesson-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-elev);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-deep), var(--accent), var(--accent-hot));
+  border-radius: 999px;
+  transition: width 240ms ease;
+}
+.progress-num { font-size: 13px; color: var(--text-dim); }
+
+.bite {
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 22px;
+}
+.bite-tag {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  color: var(--accent-hot);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.prompt {
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* MCQ option list */
+.options { margin-top: 24px; display: grid; gap: 10px; }
+.option {
+  text-align: left;
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+  display: flex; align-items: center; gap: 14px;
+  font: inherit;
+}
+.option:hover:not(:disabled) { border-color: var(--text-mute); background: var(--bg-elev-hover); }
+.option-key {
+  display: inline-flex;
+  width: 28px; height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  align-items: center; justify-content: center;
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.option.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft-bg);
+}
+.option.selected .option-key { border-color: var(--accent); color: var(--accent-hot); }
+
+.option.correct {
+  border-color: var(--success);
+  background: var(--success-bg);
+  cursor: default;
+}
+.option.correct .option-key { border-color: var(--success); color: var(--success); }
+
+.option.wrong {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  cursor: default;
+}
+.option.wrong .option-key { border-color: var(--danger); color: var(--danger); }
+
+.option.locked { opacity: 0.5; cursor: default; }
+.option.locked:hover { border-color: var(--border-strong); background: var(--bg-elev); }
+
+/* Feedback panel */
+.feedback {
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 12px;
+  background:
+    radial-gradient(140% 100% at 50% -20%, var(--success-glow), transparent 55%),
+    var(--success-bg);
+  border: 1px solid var(--success-border);
+  position: relative;
+  overflow: hidden;
+}
+.feedback.wrong {
+  background:
+    radial-gradient(140% 100% at 50% -20%, rgba(248, 113, 113, 0.2), transparent 55%),
+    var(--danger-bg);
+  border-color: var(--danger-border);
+}
+.feedback-head {
+  display: flex; align-items: baseline; gap: 12px;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--success);
+}
+.feedback.wrong .feedback-head { color: var(--danger); }
+.xp-badge {
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+  background: var(--success-bg);
+  color: var(--success);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+.feedback-body {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.feedback-meta {
+  margin-top: 12px;
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Sparkle decoration on correct */
+.sparkle {
+  position: absolute;
+  color: var(--success);
+  opacity: 0.5;
+}
+.sparkle.s1 { top: 12px; right: 18px;  font-size: 14px; }
+.sparkle.s2 { bottom: 14px; right: 80px; font-size: 10px; }
+.sparkle.s3 { top: 28px; right: 60px; font-size: 8px; }
+
+.lesson-foot {
+  margin-top: 26px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px;
+}
+.keys {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.06em;
+}
+.keys kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  margin: 0 2px;
+  font-size: 10px;
+  font-family: "Geist Mono", monospace;
+}
+
+/* -----------------------------------------------------------
+   14) Progress page
+   ----------------------------------------------------------- */
+
+.legend { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.heat {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+@media (min-width: 640px) { .heat { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .heat { grid-template-columns: repeat(4, 1fr); } }
+
+.tile {
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: default;
+}
+.tile-code  { font-family: "Geist Mono", monospace; font-size: 12px; font-weight: 500; }
+.tile-title { font-size: 13px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile-meta  { font-family: "Geist Mono", monospace; font-size: 11px; opacity: 0.75; }
+
+.tile-grey  .tile-code, .tile-grey .tile-title { color: var(--text-mute); }
+.tile-red   { border-color: var(--danger-border);  background: var(--danger-bg); }
+.tile-red   .tile-code { color: var(--danger); }
+.tile-amber { border-color: var(--amber-border);   background: var(--amber-bg); }
+.tile-amber .tile-code { color: var(--amber); }
+.tile-green { border-color: var(--success-border); background: var(--success-bg); }
+.tile-green .tile-code { color: var(--success); }
+
+/* -----------------------------------------------------------
+   15) Page header (used across most pages)
+   ----------------------------------------------------------- */
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.topbar-right {
+  display: flex; align-items: center; gap: 12px;
+}
+
+/* -----------------------------------------------------------
+   16) Auth / centered forms
+   ----------------------------------------------------------- */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px;
+}
+.auth-card h1 { margin-bottom: 20px; }
+.auth-card .field + .field { margin-top: 14px; }
+.auth-card .btn-block { margin-top: 22px; }
+.auth-card .auth-foot {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* -----------------------------------------------------------
+   17) Inline error + small text
+   ----------------------------------------------------------- */
+
+.error-text {
+  font-size: 13px;
+  color: var(--danger);
+  margin-top: 8px;
+}
+.muted { color: var(--text-mute); }
+.dim   { color: var(--text-dim); }
+.text-xs { font-size: 12px; }
+.text-sm { font-size: 13px; }
+.text-base { font-size: 14px; }
+
+/* -----------------------------------------------------------
+   18) Admin extras (mini, since admin is internal tooling)
+   ----------------------------------------------------------- */
+
+.admin-form {
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.admin-form .form-grid-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.admin-question {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.admin-question + .admin-question { margin-top: 10px; }
+.admin-question.retired { opacity: 0.55; }
+.admin-question .q-head {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.admin-question .q-prompt { color: var(--text); white-space: pre-wrap; }
+.admin-question .q-opts {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.admin-question .q-opts li { margin: 2px 0; }
+.admin-question .q-correct {
+  margin-top: 8px;
+  font-size: 13px;
+}
+.admin-question .q-correct b { color: var(--text); }
+.admin-question .q-expl {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.admin-question .q-actions {
+  display: flex; gap: 12px; align-items: center;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.admin-edit {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  border-radius: 8px;
+  padding: 14px;
+}
+.admin-edit-actions {
+  display: flex; gap: 8px; margin-top: 10px;
+}
+
+.option-editor-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.option-editor-row input.opt-key-input {
+  width: 60px; text-align: center;
+}
+
+/* -----------------------------------------------------------
+   19) Misc utilities
+   ----------------------------------------------------------- */
+
+.hidden { display: none !important; }
+.opacity-60 { opacity: 0.6; }
+.whitespace-pre-wrap { white-space: pre-wrap; }
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

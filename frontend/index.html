@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACCA Duo</title>
+
+    <!-- Geist + Geist Mono via Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Theme bootstrap. This runs synchronously before Vue/Pinia load so
+      data-theme is already set on <html> when the first paint happens.
+      Without this, dark-mode users would see a brief flash of light on reload.
+    -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('acca_duo.theme');
+          var choice = (raw === 'light' || raw === 'dark' || raw === 'system') ? raw : 'system';
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var effective = choice === 'system' ? (prefersDark ? 'dark' : 'light') : choice;
+          document.documentElement.setAttribute('data-theme', effective);
+        } catch (e) {
+          // localStorage can fail in private mode / sandboxed iframes; fall back to dark.
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

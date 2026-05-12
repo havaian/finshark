@@ -1,0 +1,73 @@
+import { Inject, Injectable } from '@nestjs/common';
+import type { Sql } from 'postgres';
+import { PG } from '../db/db.module';
+import type { LearningObjectiveRow } from './content.types';
+
+const COLS = `id, paper_id, code, title, description, sort_order, created_at, updated_at`;
+
+@Injectable()
+export class LearningObjectivesRepository {
+  constructor(@Inject(PG) private readonly sql: Sql) {}
+
+  async findByPaper(paper_id: string): Promise<LearningObjectiveRow[]> {
+    return this.sql<LearningObjectiveRow[]>`
+      SELECT ${this.sql.unsafe(COLS)}
+      FROM learning_objectives
+      WHERE paper_id = ${paper_id}
+      ORDER BY sort_order ASC, code ASC
+    `;
+  }
+
+  async findById(id: string): Promise<LearningObjectiveRow | null> {
+    const rows = await this.sql<LearningObjectiveRow[]>`
+      SELECT ${this.sql.unsafe(COLS)} FROM learning_objectives WHERE id = ${id} LIMIT 1
+    `;
+    return rows[0] ?? null;
+  }
+
+  async create(input: {
+    paper_id: string;
+    code: string;
+    title: string;
+    description?: string | null;
+    sort_order?: number;
+  }): Promise<LearningObjectiveRow> {
+    const rows = await this.sql<LearningObjectiveRow[]>`
+      INSERT INTO learning_objectives (paper_id, code, title, description, sort_order)
+      VALUES (
+        ${input.paper_id},
+        ${input.code},
+        ${input.title},
+        ${input.description ?? null},
+        ${input.sort_order ?? 0}
+      )
+      RETURNING ${this.sql.unsafe(COLS)}
+    `;
+    return rows[0];
+  }
+
+  async update(
+    id: string,
+    input: { code?: string; title?: string; description?: string | null; sort_order?: number },
+  ): Promise<LearningObjectiveRow | null> {
+    const sets: Record<string, string | number | null> = {};
+    if (input.code !== undefined) sets.code = input.code;
+    if (input.title !== undefined) sets.title = input.title;
+    if (input.description !== undefined) sets.description = input.description;
+    if (input.sort_order !== undefined) sets.sort_order = input.sort_order;
+
+    if (Object.keys(sets).length === 0) return this.findById(id);
+
+    const rows = await this.sql<LearningObjectiveRow[]>`
+      UPDATE learning_objectives SET ${this.sql(sets)}
+      WHERE id = ${id}
+      RETURNING ${this.sql.unsafe(COLS)}
+    `;
+    return rows[0] ?? null;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const rows = await this.sql`DELETE FROM learning_objectives WHERE id = ${id} RETURNING id`;
+    return rows.length > 0;
+  }
+}

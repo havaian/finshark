@@ -1,93 +1,116 @@
-# acca-duolingo
+# acca-duo
 
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+Duolingo-style web app for ACCA practice.
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.ytech.space/acca-duolingo/acca-duolingo.git
-git branch -M main
-git push -uf origin main
+acca-duo/
+├── backend/                 NestJS + raw SQL via postgres.js
+│   ├── db/migrations/       dbmate SQL migrations
+│   └── Dockerfile
+├── frontend/                Vue 3 + Vite + TS + Tailwind + Pinia
+│   ├── nginx.conf           prod nginx config (SPA fallback)
+│   └── Dockerfile
+├── docker-compose.yml       dev: postgres + backend (hot reload) + frontend (vite)
+└── docker-compose.prod.yml  prod: built images, EXTERNAL postgres
 ```
 
-## Integrate with your tools
+## Option A — Docker (dev)
 
-* [Set up project integrations](https://gitlab.ytech.space/acca-duolingo/acca-duolingo/-/settings/integrations)
+One command, includes Postgres:
 
-## Collaborate with your team
+```
+docker compose up
+```
 
-* [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+- Backend at http://localhost:3001/api (hot reload on file changes)
+- Frontend at http://localhost:5173 (Vite HMR)
+- Postgres at localhost:5432 (user `acca`, password `acca_dev_password`, db `acca_duo`)
 
-## Test and Deploy
+First-run migrations:
+```
+docker compose exec backend pnpm db:up
+```
 
-Use the built-in continuous integration in GitLab.
+To wipe everything (including the Postgres volume):
+```
+docker compose down -v
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+The dev compose has placeholder JWT/unsubscribe secrets. They work for dev. Don't ever use them anywhere real.
 
-***
+## Option B — Bare metal (no Docker)
 
-# Editing this README
+Prereqs: Node 20+, pnpm 9+, Postgres 15.7 (external), dbmate (`brew install dbmate`).
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```
+pnpm install
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+cp backend/db/dbmate.env.example backend/db/dbmate.env
+# edit the three .env files with your real DATABASE_URL + secrets
+pnpm db:up
+pnpm dev:backend    # in one terminal
+pnpm dev:frontend   # in another
+```
 
-## Suggestions for a good README
+### Required backend env vars
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+| Var | Notes |
+|---|---|
+| `DATABASE_URL` | Postgres connection string |
+| `JWT_ACCESS_SECRET` | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
+| `JWT_REFRESH_SECRET` | Different value, same generator |
+| `UNSUBSCRIBE_SECRET` | Different value, 32 bytes hex |
+| `CORS_ORIGIN` | Frontend URL (`http://localhost:5173` in dev) |
+| `APP_PUBLIC_URL` | Frontend URL used in email links |
 
-## Name
-Choose a self-explaining name for your project.
+Optional: see `backend/.env.example` for `LLM_PROVIDER`, `EMAIL_MODE` + `SMTP_*`, `REMINDER_CRON`, etc.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## Option C — Docker (prod)
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Targets external Postgres. You provide a `.env` at repo root with required vars:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```
+DATABASE_URL=postgres://user:pass@your-host:5432/acca_duo
+CORS_ORIGIN=https://app.yourdomain.com
+APP_PUBLIC_URL=https://app.yourdomain.com
+PUBLIC_API_BASE_URL=https://api.yourdomain.com/api
+JWT_ACCESS_SECRET=...
+JWT_REFRESH_SECRET=...
+UNSUBSCRIBE_SECRET=...
+# optional: LLM_PROVIDER, EMAIL_MODE + SMTP_*, etc.
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Then:
+```
+docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Run migrations against the external DB (one-off):
+```
+docker compose -f docker-compose.prod.yml run --rm backend \
+  dbmate --url "$DATABASE_URL" --migrations-dir db/migrations up
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## Migrations
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```
+pnpm db:up                     # apply pending
+pnpm db:down                   # roll back last
+pnpm db:status                 # list applied/pending
+pnpm db:new my_migration_name  # create db/migrations/<ts>_my_migration_name.sql
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## First-time setup of an admin user
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+1. Register a user via the UI.
+2. In Postgres:
+   ```sql
+   UPDATE users SET is_admin = TRUE WHERE email = 'you@example.com';
+   ```
+3. Log out and back in (so the cached profile picks up `is_admin`).
+4. Admin → add a paper, then LOs, then questions.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Manual cron trigger
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+`POST /api/admin/reminders/run` (admin auth) — runs the daily-reminder pass immediately. With `EMAIL_MODE=log`, the email body is logged to the backend console.

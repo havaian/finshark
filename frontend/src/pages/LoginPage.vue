@@ -1,74 +1,53 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth.store';
-import { AxiosError } from 'axios';
+import { useRoute } from 'vue-router';
 
-const email = ref('');
-const password = ref('');
-const submitting = ref(false);
-const errorMsg = ref<string | null>(null);
+const route = useRoute();
 
-const router = useRouter();
-const auth = useAuthStore();
+// Where to go after sign-in completes. Set by router.beforeEach when an
+// unauthenticated user hits a protected route. Stash it in sessionStorage so
+// the /auth/callback page can read it after Google's redirect — query params
+// don't survive the round-trip through Google.
+const NEXT_STORAGE_KEY = 'acca_duo.post_login_next';
 
-async function onSubmit() {
-  errorMsg.value = null;
-  submitting.value = true;
-  try {
-    await auth.login(email.value, password.value);
-    router.push({ name: 'dashboard' });
-  } catch (e) {
-    if (e instanceof AxiosError) {
-      errorMsg.value = (e.response?.data as { message?: string })?.message ?? 'login failed';
-    } else {
-      errorMsg.value = 'login failed';
-    }
-  } finally {
-    submitting.value = false;
+function onGoogleSignIn() {
+  const next = typeof route.query.next === 'string' ? route.query.next : null;
+  if (next) {
+    sessionStorage.setItem(NEXT_STORAGE_KEY, next);
+  } else {
+    sessionStorage.removeItem(NEXT_STORAGE_KEY);
   }
+
+  // Full-page navigation (not fetch): the backend sets an HttpOnly state cookie
+  // on /api/auth/google that must round-trip through the browser to the
+  // callback. VITE_API_BASE_URL already includes the /api prefix.
+  window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
 }
 </script>
 
 <template>
   <main class="auth-page">
-    <form class="auth-card" @submit.prevent="onSubmit">
+    <div class="auth-card">
       <h1>Log in</h1>
-
-      <div class="field">
-        <label class="field-label">Email</label>
-        <input
-          v-model="email"
-          type="email"
-          required
-          autocomplete="email"
-        />
-      </div>
-
-      <div class="field">
-        <label class="field-label">Password</label>
-        <input
-          v-model="password"
-          type="password"
-          required
-          autocomplete="current-password"
-        />
-      </div>
-
-      <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
-
-      <button
-        type="submit"
-        class="btn btn-primary btn-block"
-        :disabled="submitting"
-      >
-        {{ submitting ? 'Logging in…' : 'Log in' }}
-      </button>
-
-      <p class="auth-foot">
-        No account?
-        <RouterLink to="/register" class="btn-link accent">Register</RouterLink>
+      <p class="dim" style="margin-bottom: 22px;">
+        Sign in with your Google account to continue.
       </p>
-    </form>
+
+      <button type="button" class="btn btn-primary btn-block" @click="onGoogleSignIn">
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="#FFFFFF"
+            d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" />
+          <path fill="#FFFFFF"
+            d="M9 18c2.43 0 4.467-.806 5.956-2.185l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+            opacity="0.85" />
+          <path fill="#FFFFFF"
+            d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"
+            opacity="0.7" />
+          <path fill="#FFFFFF"
+            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.166 6.656 3.58 9 3.58z"
+            opacity="0.55" />
+        </svg>
+        Continue with Google
+      </button>
+    </div>
   </main>
 </template>

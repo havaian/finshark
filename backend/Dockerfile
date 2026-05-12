@@ -7,37 +7,16 @@
 #
 #   docker build -f backend/Dockerfile -t acca-duo-backend .
 #
-# Alpine note: bcrypt is a native module. On alpine (musl libc) it can't use the
-# prebuilt linux-glibc binary, so the install step compiles from source. That
-# requires python3 + a C++ toolchain in the deps stage. The runtime stage stays
-# tiny because we only copy node_modules and dist over.
+# Migrations run at container start via `node-pg-migrate up` (see CMD).
+# Idempotent — already-applied migrations are tracked in the pgmigrations table
+# and skipped. No external migration tool needed in the image.
 
-# ---------- 1) base: node 24 + pnpm + dbmate ----------
+# ---------- 1) base: node 24 + pnpm ----------
 FROM node:24-alpine AS base
 WORKDIR /app
 
 # pnpm via corepack (bundled with Node). Pin to the version we use locally.
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
-
-# dbmate static binary, used to run migrations.
-# Pinned version; bump intentionally. We use the standard linux-{arch} build
-# (not "-musl-"), which is a statically linked Go binary that runs on Alpine
-# just fine because we don't need SQLite support — we're on Postgres.
-# Historical note: an earlier version of this Dockerfile pinned a URL like
-# `dbmate-linux-musl-amd64`, which 404s for recent releases.
-ARG DBMATE_VERSION=2.28.0
-ARG TARGETARCH
-RUN set -eux; \
-    apk add --no-cache curl ca-certificates; \
-    case "${TARGETARCH}" in \
-      amd64) DBMATE_ARCH=amd64 ;; \
-      arm64) DBMATE_ARCH=arm64 ;; \
-      *) echo "unsupported arch: ${TARGETARCH}" >&2; exit 1 ;; \
-    esac; \
-    curl -fsSL -o /usr/local/bin/dbmate \
-      "https://github.com/amacneil/dbmate/releases/download/v${DBMATE_VERSION}/dbmate-linux-${DBMATE_ARCH}"; \
-    chmod +x /usr/local/bin/dbmate; \
-    dbmate --version
 
 # ---------- 2) deps: install workspace deps (cached layer) ----------
 FROM base AS deps
@@ -79,12 +58,14 @@ COPY --chown=nodeapp:nodeapp --from=build /app/backend /app/backend
 
 # Run as non-roo
 USER nodeapp
-# CWD is the backend dir so `node dist/main.js` and the dbmate commands
-# from docker-compose.yml (`dbmate --env-file db/dbmate.env ...`) work
-# with the documented relative paths.
+# CWD is the backend dir so `node dist/main.js` and `node-pg-migrate up`
+# (which defaults to looking in ./migrations) work without extra flags.
 WORKDIR /app/backend
 
 EXPOSE 3001
+# Run migrations, then start the API. node-pg-migrate is idempotent and tracks
+# applied migrations in the pgmigrations table — already-applied ones are skipped.
+# If migrations fail, the container exits and won't start with a stale schema.
 # main.ts imports dotenv/config — when running in a container we rely on real
 # environment variables, not a .env file. dotenv silently no-ops if no file.
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "npx node-pg-migrate up && node dist/main.js"]

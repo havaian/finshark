@@ -12,9 +12,8 @@
 #   # logs:
 #   docker compose -f docker-compose.prod.yml logs -f backend
 #
-#   # run migrations against the external DB (one-off container):
-#   docker compose -f docker-compose.prod.yml run --rm backend \
-#     dbmate --env-file db/dbmate.env --migrations-dir db/migrations up
+#   # migrations: run automatically at backend container start via node-pg-migrate.
+#   # Idempotent — already-applied migrations are skipped via the pgmigrations table.
 #
 # IMPORTANT:
 #   - DATABASE_URL must point to your external Postgres reachable from inside

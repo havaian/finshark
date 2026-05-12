@@ -69,17 +69,20 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup -S nodeapp && adduser -S -G nodeapp nodeapp
 
-# Copy only what's needed at runtime.
-COPY --chown=nodeapp:nodeapp --from=build /app/backend/dist            ./dist
-COPY --chown=nodeapp:nodeapp --from=build /app/backend/package.json    ./package.json
-COPY --chown=nodeapp:nodeapp --from=build /app/backend/db              ./db
-COPY --chown=nodeapp:nodeapp --from=build /app/package.json            /app/package.json
-COPY --chown=nodeapp:nodeapp --from=build /app/pnpm-workspace.yaml     /app/pnpm-workspace.yaml
-COPY --chown=nodeapp:nodeapp --from=build /app/node_modules            /app/node_modules
-COPY --chown=nodeapp:nodeapp --from=build /app/backend/node_modules    ./node_modules
+# Copy only what's needed at runtime. Two COPYs is all this needs:
+# the workspace root (where pnpm hoists its store) and the entire backend dir.
+# pnpm's symlinks in /app/backend/node_modules point into /app/node_modules/.pnpm/,
+# so both paths must stay intact at their original locations.
+COPY --chown=nodeapp:nodeapp --from=build /app/package.json /app/pnpm-workspace.yaml /app/
+COPY --chown=nodeapp:nodeapp --from=build /app/node_modules /app/node_modules
+COPY --chown=nodeapp:nodeapp --from=build /app/backend /app/backend
 
 # Run as non-roo
 USER nodeapp
+# CWD is the backend dir so `node dist/main.js` and the dbmate commands
+# from docker-compose.yml (`dbmate --env-file db/dbmate.env ...`) work
+# with the documented relative paths.
+WORKDIR /app/backend
 
 EXPOSE 3001
 # main.ts imports dotenv/config — when running in a container we rely on real

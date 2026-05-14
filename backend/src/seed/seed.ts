@@ -12,18 +12,18 @@
 //   0 — success (one or more papers seeded, or all already present)
 //   1 — DB connection or insert error
 
-import 'dotenv/config';
-import postgres from 'postgres';
-import { F1_PAPER } from './data/f1';
-import { F5_PAPER } from './data/f5';
-import type { SeedPaper, SeedQuestion } from './data/types';
+import "dotenv/config";
+import postgres from "postgres";
+import { F1_PAPER } from "./data/f1";
+import { F5_PAPER } from "./data/f5";
+import type { SeedPaper, SeedQuestion } from "./data/types";
 
 const PAPERS: SeedPaper[] = [F1_PAPER, F5_PAPER];
 
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    console.error('DATABASE_URL is not set');
+    console.error("DATABASE_URL is not set");
     process.exit(1);
   }
 
@@ -42,9 +42,12 @@ async function main() {
 
       console.log(`[insert] paper ${paper.code} (${paper.name_en})`);
       await sql.begin(async (tx) => {
+        // NOTE: papers and learning_objectives tables don't have is_active —
+        // only questions do. Don't add it here unless you've also added a
+        // migration introducing the column.
         const paperRows = await tx<Array<{ id: string }>>`
-          INSERT INTO papers (code, name_en, name_ru, is_active)
-          VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru}, TRUE)
+          INSERT INTO papers (code, name_en, name_ru)
+          VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru})
           RETURNING id
         `;
         const paperId = paperRows[0].id;
@@ -52,11 +55,11 @@ async function main() {
         for (const lo of paper.learning_objectives) {
           const loRows = await tx<Array<{ id: string }>>`
             INSERT INTO learning_objectives (
-              paper_id, code, title_en, title_ru, description_en, description_ru, sort_order, is_active
+              paper_id, code, title_en, title_ru, description_en, description_ru, sort_order
             )
             VALUES (
               ${paperId}, ${lo.code}, ${lo.title_en}, ${lo.title_ru},
-              ${lo.description_en}, ${lo.description_ru}, ${lo.sort_order}, TRUE
+              ${lo.description_en}, ${lo.description_ru}, ${lo.sort_order}
             )
             RETURNING id
           `;
@@ -69,9 +72,9 @@ async function main() {
         }
       });
     }
-    console.log('seed: done');
+    console.log("seed: done");
   } catch (err) {
-    console.error('seed: failed', err);
+    console.error("seed: failed", err);
     process.exitCode = 1;
   } finally {
     await sql.end({ timeout: 5 });
@@ -84,9 +87,9 @@ async function main() {
 async function insertQuestion(
   tx: postgres.TransactionSql,
   lo_id: string,
-  q: SeedQuestion,
+  q: SeedQuestion
 ): Promise<void> {
-  if (q.type === 'mcq') {
+  if (q.type === "mcq") {
     // MCQ options must be persisted as a JSONB array. correct_answer_en is
     // the option key (e.g. 'A'); correct_answer_ru is unused for MCQ so we
     // store NULL — the lang resolver falls back to the EN value (the key).

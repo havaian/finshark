@@ -53,12 +53,13 @@ export class RemindersController {
   }
 
   // ADMIN — run the cron manually. Lets you verify the pipeline end-to-end
-  // without waiting for the scheduled time.
+  // without waiting for the scheduled time. Bypasses the per-user reminder-hour
+  // filter so a manual click actually sends to everyone eligible right now.
   // POST /api/admin/reminders/run
   @Post('admin/reminders/run')
   @UseGuards(JwtAuthGuard, AdminGuard)
   @HttpCode(HttpStatus.OK)
   async runNow() {
-    return this.reminders.runOnce();
+    return this.reminders.runOnce({ allHours: true });
   }
 }

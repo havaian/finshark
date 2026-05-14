@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
+import { useI18n } from 'vue-i18n';
 import { lessonsApi } from '../../api/lessons.api';
 import { useAuthStore } from '../../stores/auth.store';
 import type {
@@ -10,6 +11,10 @@ import type {
   LessonQuestion,
 } from '../../types/lesson';
 
+// Hearts are 3 per session — must match backend lesson_sessions.hearts_remaining default.
+const MAX_HEARTS = 3;
+
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
@@ -30,6 +35,9 @@ const feedback = ref<AttemptResult | null>(null);
 const completing = ref(false);
 const summary = ref<CompleteLessonResult | null>(null);
 
+// Live hearts count — drives the UI between attempts.
+const hearts = ref<number>(MAX_HEARTS);
+
 const current = computed<LessonQuestion | null>(() => queue.value[currentIndex.value] ?? null);
 const isLast = computed(() => currentIndex.value >= queue.value.length - 1);
 
@@ -40,6 +48,11 @@ const progressPct = computed(() => {
   const answered = feedback.value ? currentIndex.value + 1 : currentIndex.value;
   return Math.min(100, Math.round((answered / queue.value.length) * 100));
 });
+
+// Render `MAX_HEARTS` heart slots — filled for the first `hearts` of them, hollow for the rest.
+const heartSlots = computed(() =>
+  Array.from({ length: MAX_HEARTS }, (_, i) => i < hearts.value),
+);
 
 const shortAnswerInput = ref<HTMLTextAreaElement | null>(null);
 
@@ -54,10 +67,12 @@ async function load() {
       summary.value = s;
       queue.value = detail.questions;
       currentIndex.value = detail.questions.length;
+      hearts.value = 0;
       return;
     }
 
     queue.value = detail.questions;
+    hearts.value = detail.hearts_remaining;
 
     const answered = new Set(detail.answered_question_ids);
     let idx = 0;
@@ -91,10 +106,16 @@ async function onSubmit() {
 
   submitting.value = true;
   try {
-    feedback.value = await lessonsApi.attempt(sessionId, {
+    const result = await lessonsApi.attempt(sessionId, {
       question_id: q.id,
       user_answer: answer,
     });
+    feedback.value = result;
+    hearts.value = result.hearts_remaining;
+
+    // If the server says this attempt ended the session (hearts hit 0),
+    // we still show the feedback for the current question first, then
+    // jump straight to the out-of-hearts finale on Next.
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to submit answer';
   } finally {
@@ -103,9 +124,18 @@ async function onSubmit() {
 }
 
 async function onNext() {
+  // Capture before clearing — we need to know whether THIS feedback was the out-of-hearts one.
+  const endedOnThisAttempt = feedback.value?.session_ended_out_of_hearts === true;
+
   feedback.value = null;
   selectedOption.value = null;
   shortAnswer.value = '';
+
+  if (endedOnThisAttempt) {
+    // Session is server-side completed. Skip remaining questions and show the finale.
+    await onComplete();
+    return;
+  }
 
   if (isLast.value) {
     await onComplete();
@@ -133,7 +163,7 @@ async function onComplete() {
 }
 
 function onQuit() {
-  if (summary.value || confirm('Quit this lesson? Your answers so far are saved; you can resume the session anytime.')) {
+  if (summary.value || confirm(t('lesson.quit_confirm'))) {
     router.push({ name: 'dashboard' });
   }
 }
@@ -198,28 +228,33 @@ onUnmounted(() => {
     <div class="lesson-frame">
 
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
-      <p v-if="loading" class="dim text-sm">Loading lesson…</p>
+      <p v-if="loading" class="dim text-sm">{{ t('lesson.loading') }}</p>
 
-      <!-- Completion -->
+      <!-- Completion — distinct copy for the out-of-hearts case -->
       <section v-if="summary" class="card">
-        <h1>Lesson complete</h1>
+        <h1>
+          {{ summary.ended_out_of_hearts ? t('lesson.out_of_hearts_title') : t('lesson.complete_title') }}
+        </h1>
+        <p v-if="summary.ended_out_of_hearts" class="dim mt-4">
+          {{ t('lesson.out_of_hearts_body') }}
+        </p>
         <div class="stats mt-6">
           <div class="stat">
-            <div class="stat-lbl">Correct</div>
+            <div class="stat-lbl">{{ t('lesson.complete_correct') }}</div>
             <div class="stat-val">{{ summary.correct_count }}<span class="dim text-sm" style="font-size: 18px;"> / {{ summary.question_count }}</span></div>
           </div>
           <div class="stat">
-            <div class="stat-lbl">XP earned</div>
+            <div class="stat-lbl">{{ t('lesson.complete_xp_earned') }}</div>
             <div class="stat-val">+{{ summary.xp_earned }}</div>
           </div>
           <div class="stat stat-streak">
-            <div class="stat-lbl">Streak</div>
+            <div class="stat-lbl">{{ t('lesson.complete_streak') }}</div>
             <div class="stat-val">{{ summary.new_streak }} <span class="stat-fire">🔥</span></div>
           </div>
         </div>
         <div class="mt-6">
           <button class="btn btn-primary" @click="router.push({ name: 'dashboard' })">
-            Back to dashboard
+            {{ t('lesson.complete_back') }}
           </button>
         </div>
       </section>
@@ -228,9 +263,20 @@ onUnmounted(() => {
       <section v-else-if="current">
 
         <div class="lesson-top">
-          <button class="btn-link" @click="onQuit">← quit</button>
+          <button class="btn-link" @click="onQuit">{{ t('lesson.quit') }}</button>
           <div class="progress-track">
             <div class="progress-bar" :style="{ width: progressPct + '%' }"></div>
+          </div>
+          <div
+            class="hearts-row"
+            :aria-label="t('lesson.hearts_label') + ': ' + hearts + ' / ' + MAX_HEARTS"
+          >
+            <span
+              v-for="(filled, i) in heartSlots"
+              :key="i"
+              :class="['heart', filled ? 'filled' : 'empty']"
+              aria-hidden="true"
+            >{{ filled ? '♥' : '♡' }}</span>
           </div>
           <div class="progress-num mono">
             {{ String(currentIndex + 1).padStart(2, '0') }} / {{ String(queue.length).padStart(2, '0') }}
@@ -238,7 +284,7 @@ onUnmounted(() => {
         </div>
 
         <div v-if="current.concept_bite" class="bite">
-          <div class="bite-tag">concept</div>
+          <div class="bite-tag">{{ t('lesson.concept_tag') }}</div>
           {{ current.concept_bite }}
         </div>
 
@@ -268,9 +314,9 @@ onUnmounted(() => {
             :disabled="!!feedback"
             rows="3"
             maxlength="4000"
-            placeholder="Type your answer…"
+            :placeholder="t('lesson.short_answer_placeholder')"
           />
-          <p class="input-help">Enter to submit, Shift+Enter for newline.</p>
+          <p class="input-help">{{ t('lesson.short_answer_help') }}</p>
         </div>
 
         <!-- Feedback -->
@@ -281,28 +327,28 @@ onUnmounted(() => {
             <div class="sparkle s3">✦</div>
           </template>
           <div class="feedback-head">
-            {{ feedback.was_correct ? 'Correct' : 'Not quite.' }}
+            {{ feedback.was_correct ? t('lesson.correct') : t('lesson.wrong') }}
             <span v-if="feedback.xp_earned > 0" class="xp-badge">+{{ feedback.xp_earned }} XP</span>
           </div>
           <div v-if="!feedback.was_correct" class="mt-2 text-sm">
-            <span style="font-weight: 500;">Correct answer:</span> {{ feedback.correct_answer }}
+            <span style="font-weight: 500;">{{ t('lesson.correct_answer_label') }}</span> {{ feedback.correct_answer }}
           </div>
           <div class="feedback-body">{{ feedback.explanation }}</div>
           <div class="feedback-meta">
-            <span>Mastery {{ feedback.mastery_score }}%</span>
-            <span>Next review · {{ feedback.next_due_date }}</span>
+            <span>{{ t('lesson.mastery_label', { pct: feedback.mastery_score }) }}</span>
+            <span>{{ t('lesson.next_review_label', { date: feedback.next_due_date }) }}</span>
           </div>
         </div>
 
         <div class="lesson-foot">
-          <div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> select · <kbd>↵</kbd> continue</div>
+          <div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> {{ t('lesson.keys_help') }} · <kbd>↵</kbd></div>
           <button
             v-if="!feedback"
             class="btn btn-primary"
             :disabled="submitting || (current.type === 'mcq' ? !selectedOption : !shortAnswer.trim())"
             @click="onSubmit"
           >
-            {{ submitting ? 'Checking…' : 'Submit' }}
+            {{ submitting ? t('lesson.checking') : t('lesson.submit') }}
           </button>
           <button
             v-else
@@ -310,7 +356,15 @@ onUnmounted(() => {
             :disabled="completing"
             @click="onNext"
           >
-            {{ completing ? 'Finishing…' : isLast ? 'Finish lesson' : 'Next →' }}
+            {{
+              completing
+                ? t('lesson.finishing')
+                : feedback.session_ended_out_of_hearts
+                  ? t('lesson.finish')
+                  : isLast
+                    ? t('lesson.finish')
+                    : t('lesson.next')
+            }}
           </button>
         </div>
 

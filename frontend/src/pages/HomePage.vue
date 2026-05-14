@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
 import ThemeSwitch from '../components/ThemeSwitch.vue';
 
+const { t } = useI18n();
 const auth = useAuthStore();
 </script>
 
@@ -17,17 +19,17 @@ const auth = useAuthStore();
         <span style="font-size: 18px;">acca duo</span>
       </div>
 
-      <h1 style="font-size: 36px; letter-spacing: -0.03em;">10 minutes a day, towards ACCA.</h1>
+      <h1 style="font-size: 36px; letter-spacing: -0.03em;">{{ t('home.title') }}</h1>
       <p class="dim mt-4" style="font-size: 15px;">
-        Daily micro-lessons. Spaced repetition. Real exam topics.
+        {{ t('home.tagline') }}
       </p>
 
       <div class="row" style="justify-content: center; margin-top: 28px;">
         <template v-if="auth.isAuthenticated">
-          <RouterLink to="/dashboard" class="btn btn-primary">Go to dashboard</RouterLink>
+          <RouterLink to="/dashboard" class="btn btn-primary">{{ t('nav.dashboard') }}</RouterLink>
         </template>
         <template v-else>
-          <RouterLink to="/login" class="btn btn-primary">Log in with Google</RouterLink>
+          <RouterLink to="/login" class="btn btn-primary">{{ t('login.google_btn') }}</RouterLink>
         </template>
       </div>
     </div>

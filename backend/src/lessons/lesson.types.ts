@@ -1,4 +1,5 @@
 // Mirrors db/migrations/20260511000003_content_and_srs.sql
+//                  + db/migrations/20260513000002_hearts.js
 
 export interface LessonSessionRow {
   id: string;
@@ -7,6 +8,8 @@ export interface LessonSessionRow {
   completed_at: Date | null;
   question_count: number;
   correct_count: number;
+  hearts_remaining: number;       // 0..3
+  ended_out_of_hearts: boolean;   // true if completed because hearts hit 0
 }
 
 export interface AttemptRow {

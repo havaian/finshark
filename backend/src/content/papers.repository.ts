@@ -3,7 +3,7 @@ import type { Sql } from 'postgres';
 import { PG } from '../db/db.module';
 import type { PaperRow } from './content.types';
 
-const COLS = `id, code, name, created_at, updated_at`;
+const COLS = `id, code, name_en, name_ru, created_at, updated_at`;
 
 @Injectable()
 export class PapersRepository {
@@ -29,20 +29,35 @@ export class PapersRepository {
     return rows[0] ?? null;
   }
 
-  async create(input: { code: string; name: string }): Promise<PaperRow> {
+  async create(input: {
+    code: string;
+    name_en: string;
+    name_ru: string | null;
+  }): Promise<PaperRow> {
     const rows = await this.sql<PaperRow[]>`
-      INSERT INTO papers (code, name)
-      VALUES (${input.code}, ${input.name})
+      INSERT INTO papers (code, name_en, name_ru)
+      VALUES (${input.code}, ${input.name_en}, ${input.name_ru})
       RETURNING ${this.sql.unsafe(COLS)}
     `;
     return rows[0];
   }
 
-  async update(id: string, input: { code?: string; name?: string }): Promise<PaperRow | null> {
+  // Partial update. Pass `null` to explicitly clear name_ru; omit (undefined) to leave it.
+  async update(
+    id: string,
+    input: {
+      code?: string;
+      name_en?: string;
+      name_ru?: string | null;
+    },
+  ): Promise<PaperRow | null> {
     // Build a partial UPDATE without an ORM. Empty patch → just return current row.
-    const sets: Record<string, string> = {};
+    // Note: postgres.js sql(record) treats null as NULL, undefined keys are skipped
+    // by us here explicitly so the helper sees only the columns we want to set.
+    const sets: Record<string, string | null> = {};
     if (input.code !== undefined) sets.code = input.code;
-    if (input.name !== undefined) sets.name = input.name;
+    if (input.name_en !== undefined) sets.name_en = input.name_en;
+    if (input.name_ru !== undefined) sets.name_ru = input.name_ru;
 
     if (Object.keys(sets).length === 0) return this.findById(id);
 

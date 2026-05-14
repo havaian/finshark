@@ -377,33 +377,31 @@ textarea { resize: vertical; min-height: 80px; }
 .toggle:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* -----------------------------------------------------------
-   10) Theme switcher (segmented)
+   10) Theme toggle (icon button)
    ----------------------------------------------------------- */
 
-.theme-switch {
+.theme-toggle {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-}
-.theme-switch button {
-  background: transparent;
-  border: none;
-  padding: 4px 10px;
-  font-size: 12px;
   color: var(--text-dim);
-  border-radius: 5px;
   cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
-  font-family: "Geist Mono", monospace;
-  letter-spacing: 0.04em;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  padding: 0;
 }
-.theme-switch button:hover { color: var(--text); }
-.theme-switch button.active {
-  background: var(--bg-card);
+.theme-toggle:hover {
+  background: var(--bg-elev-hover);
   color: var(--text);
+  border-color: var(--border-strong);
+}
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* -----------------------------------------------------------
@@ -829,4 +827,337 @@ textarea { resize: vertical; min-height: 80px; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* -----------------------------------------------------------
+   20) Admin shell (sidebar layout)
+   ----------------------------------------------------------- */
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 18px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.admin-sidebar-head { padding: 0 6px 18px; border-bottom: 1px solid var(--border); }
+.admin-sidebar-sub  { color: var(--text-mute); font-size: 12px; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 0;
+  flex: 1;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.admin-nav-item:hover {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+.admin-nav-item.active {
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+  border-color: var(--accent-soft-bg);
+}
+
+.admin-sidebar-foot {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-sidebar-me { padding: 0 6px; }
+.admin-sidebar-me-name { font-weight: 500; font-size: 14px; }
+.admin-sidebar-me-email { margin-top: 2px; }
+
+.admin-content {
+  padding: 36px 32px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Tighter top padding inside admin pages (the shell already provides chrome). */
+.admin-content > .page { padding: 0; }
+.admin-content > .page .container,
+.admin-content > .page .container-wide,
+.admin-content > .page .container-narrow {
+  max-width: 100%;
+}
+
+/* Collapse the sidebar to a thinner column on narrow viewports.
+   Below 720px we just stack it on top — admin work isn't a primary mobile flow. */
+@media (max-width: 960px) {
+  .admin-shell { grid-template-columns: 200px 1fr; }
+  .admin-content { padding: 24px 20px; }
+}
+@media (max-width: 720px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .admin-nav { flex-direction: row; flex-wrap: wrap; }
+  .admin-sidebar-foot { padding-top: 10px; }
+}
+
+/* -----------------------------------------------------------
+   21) Language tabs (used in admin question editor)
+   ----------------------------------------------------------- */
+
+.lang-tabs {
+  display: inline-flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin: 10px 0 14px;
+}
+.lang-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: "Geist Mono", monospace;
+  letter-spacing: 0.04em;
+  margin-bottom: -1px;
+}
+.lang-tab:hover { color: var(--text); }
+.lang-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Russian prompt line shown under the English prompt in question list rows */
+.admin-question .q-prompt-ru { margin-top: 4px; }
+
+/* -----------------------------------------------------------
+   22) UI translations admin grid
+   ----------------------------------------------------------- */
+
+.btn.btn-sm { padding: 6px 12px; font-size: 13px; }
+
+.ui-trans-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.ui-trans-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 1fr;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: start;
+}
+.ui-trans-row:last-child { border-bottom: none; }
+.ui-trans-key {
+  word-break: break-all;
+  padding-top: 4px;
+}
+.ui-trans-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ui-trans-default {
+  font-style: italic;
+}
+.ui-trans-current {
+  font-size: 14px;
+  color: var(--text);
+  min-height: 22px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.ui-trans-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+@media (max-width: 800px) {
+  .ui-trans-row { grid-template-columns: 1fr; }
+}
+
+/* -----------------------------------------------------------
+   23) Hearts indicator in the lesson topbar
+   ----------------------------------------------------------- */
+
+.hearts-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+  line-height: 1;
+  margin: 0 10px;
+}
+.heart {
+  display: inline-block;
+  width: 18px;
+  text-align: center;
+}
+.heart.filled { color: var(--coral); }
+.heart.empty  { color: var(--text-mute); }
+
+/* -----------------------------------------------------------
+   24) Profile page
+   ----------------------------------------------------------- */
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profile-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-wrap {
+  position: relative;
+  margin-top: 12px;
+  height: 280px;
+}
+
+.profile-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.profile-grid-2 > .card { margin-top: 0; }
+@media (max-width: 720px) {
+  .profile-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* Github-style activity heatmap. 53 columns × 7 rows of 12px cells. */
+.activity-heatmap {
+  display: flex;
+  gap: 3px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.activity-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.activity-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--grey-band);
+}
+.activity-cell.intensity-1 { background: var(--accent-soft-bg); }
+.activity-cell.intensity-2 { background: rgba(124, 92, 255, 0.35); }
+.activity-cell.intensity-3 { background: rgba(124, 92, 255, 0.6); }
+.activity-cell.intensity-4 { background: var(--accent); }
+
+.danger-zone {
+  border-color: var(--danger-border);
+}
+
+/* -----------------------------------------------------------
+   25) Segmented control (theme/lang toggle in settings)
+   ----------------------------------------------------------- */
+
+.segmented {
+  display: inline-flex;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.segmented button {
+  background: transparent;
+  border: none;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--text-dim);
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.segmented button:hover { color: var(--text); }
+.segmented button.active {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+/* -----------------------------------------------------------
+   26) Modal (used by question generator)
+   ----------------------------------------------------------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
 }

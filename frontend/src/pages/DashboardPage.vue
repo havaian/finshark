@@ -2,12 +2,13 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
 import { lessonsApi } from '../api/lessons.api';
-import { authApi } from '../api/auth.api';
 import ThemeSwitch from '../components/ThemeSwitch.vue';
 import type { Paper } from '../types/content';
 
+const { t } = useI18n();
 const auth = useAuthStore();
 const router = useRouter();
 
@@ -16,7 +17,6 @@ const selectedPaperId = ref<string>('');
 const papersLoading = ref(false);
 const starting = ref(false);
 const errorMsg = ref<string | null>(null);
-const reminderToggleBusy = ref(false);
 
 const hasPapers = computed(() => papers.value.length > 0);
 
@@ -56,20 +56,6 @@ async function onStartLesson() {
   }
 }
 
-async function onToggleReminders() {
-  if (!auth.user || reminderToggleBusy.value) return;
-  const next = !auth.user.email_reminders_enabled;
-  reminderToggleBusy.value = true;
-  try {
-    const updated = await authApi.setEmailReminders(next);
-    auth.user = updated;
-  } catch (e) {
-    errorMsg.value = extractError(e) ?? 'failed to update preference';
-  } finally {
-    reminderToggleBusy.value = false;
-  }
-}
-
 function onLogout() {
   auth.logout();
   router.push({ name: 'login' });
@@ -95,80 +81,61 @@ function extractError(e: unknown): string | null {
         </div>
         <div class="topbar-right">
           <ThemeSwitch />
-          <button class="btn btn-ghost" @click="onLogout">Sign out</button>
+          <RouterLink to="/settings" class="btn btn-ghost">{{ t('nav.settings') }}</RouterLink>
+          <RouterLink to="/profile" class="btn btn-ghost">{{ t('nav.profile') }}</RouterLink>
+          <button class="btn btn-ghost" @click="onLogout">{{ t('common.sign_out') }}</button>
         </div>
       </div>
 
-      <h3>Welcome back<span v-if="auth.user">, {{ auth.user.display_name }}</span></h3>
-      <h1 style="margin-top: 8px;">Keep the streak alive.</h1>
+      <h3>{{ t('dashboard.welcome_back') }}<span v-if="auth.user">, {{ auth.user.display_name }}</span></h3>
+      <h1 style="margin-top: 8px;">{{ t('dashboard.keep_streak') }}</h1>
 
       <div class="stats mt-6" v-if="auth.user">
         <div class="stat stat-streak">
-          <div class="stat-lbl">Streak</div>
+          <div class="stat-lbl">{{ t('dashboard.streak') }}</div>
           <div class="stat-val">{{ auth.user.streak_count }} <span class="stat-fire">🔥</span></div>
         </div>
         <div class="stat">
-          <div class="stat-lbl">XP</div>
+          <div class="stat-lbl">{{ t('dashboard.xp') }}</div>
           <div class="stat-val">{{ auth.user.xp }}</div>
         </div>
         <div class="stat">
-          <div class="stat-lbl">Level</div>
+          <div class="stat-lbl">{{ t('dashboard.level') }}</div>
           <div class="stat-val">{{ auth.user.level }}</div>
         </div>
       </div>
 
       <section class="mt-8">
         <div class="row" style="justify-content: space-between; margin-bottom: 14px;">
-          <h2>Start a lesson</h2>
-          <RouterLink to="/progress" class="btn-link">View progress →</RouterLink>
+          <h2>{{ t('dashboard.start_lesson_heading') }}</h2>
+          <RouterLink to="/progress" class="btn-link">{{ t('dashboard.view_progress') }}</RouterLink>
         </div>
 
-        <p v-if="papersLoading" class="dim text-sm">Loading papers…</p>
+        <p v-if="papersLoading" class="dim text-sm">{{ t('dashboard.loading_papers') }}</p>
         <p v-else-if="!hasPapers" class="dim text-sm">
-          No papers available yet.
+          {{ t('dashboard.no_papers') }}
           <span v-if="auth.user?.is_admin">
-            Add one in
-            <RouterLink to="/admin/papers" class="btn-link accent">Admin</RouterLink>.
+            <RouterLink to="/admin/papers" class="btn-link accent">{{ t('dashboard.no_papers_admin') }}</RouterLink>
           </span>
         </p>
 
         <div v-else class="row">
           <select v-model="selectedPaperId" class="grow">
-            <option value="">Any paper</option>
+            <option value="">{{ t('dashboard.any_paper') }}</option>
             <option v-for="p in papers" :key="p.id" :value="p.id">
               {{ p.code }} — {{ p.name }}
             </option>
           </select>
           <button class="btn btn-primary" :disabled="starting" @click="onStartLesson">
-            {{ starting ? 'Starting…' : 'Start lesson' }}
+            {{ starting ? t('dashboard.starting') : t('dashboard.start_lesson_btn') }}
           </button>
         </div>
 
         <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
       </section>
 
-      <div class="divider"></div>
-
-      <div class="row" v-if="auth.user">
-        <div class="grow">
-          <div style="font-weight: 500;">Daily reminder emails</div>
-          <div class="dim text-sm" style="margin-top: 2px;">
-            A nudge at 18:00 if you haven't studied yet.
-          </div>
-        </div>
-        <button
-          class="toggle"
-          :class="{ on: auth.user.email_reminders_enabled }"
-          :disabled="reminderToggleBusy"
-          :aria-label="auth.user.email_reminders_enabled ? 'Turn off reminders' : 'Turn on reminders'"
-          @click="onToggleReminders"
-        >
-          <span class="toggle-knob"></span>
-        </button>
-      </div>
-
       <div v-if="auth.user?.is_admin" class="mt-8">
-        <RouterLink to="/admin/papers" class="btn btn-ghost">Admin</RouterLink>
+        <RouterLink to="/admin" class="btn btn-ghost">{{ t('nav.admin_panel') }}</RouterLink>
       </div>
 
     </div>

@@ -12,16 +12,23 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AccessTokenPayload } from '../auth/auth.service';
 import { ContentService } from './content.service';
+import { QuestionGenerationService } from './question-generation.service';
 import { CreatePaperDto, UpdatePaperDto } from './dto/paper.dto';
 import { CreateLoDto, UpdateLoDto } from './dto/learning-objective.dto';
 import { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
+import { GenerateQuestionsDto } from './dto/generate-questions.dto';
 
 // All routes under /api/admin require an authenticated admin user.
 @Controller('admin')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminContentController {
-  constructor(private readonly content: ContentService) {}
+  constructor(
+    private readonly content: ContentService,
+    private readonly generator: QuestionGenerationService,
+  ) {}
 
   // ---- papers ----
 
@@ -92,6 +99,25 @@ export class AdminContentController {
   @HttpCode(HttpStatus.CREATED)
   createQuestion(@Param('lo_id') lo_id: string, @Body() dto: CreateQuestionDto) {
     return this.content.createQuestion(lo_id, dto);
+  }
+
+  // Generate draft questions via LLM. Inserts them as is_active=false so they
+  // don't appear in lessons until an admin reviews and activates them.
+  // Returns the inserted rows so the frontend can refresh its list.
+  // Rate-limited per admin user; see QuestionGenerationService for the caps.
+  @Post('los/:lo_id/questions/generate')
+  @HttpCode(HttpStatus.CREATED)
+  generateQuestions(
+    @Param('lo_id') lo_id: string,
+    @Body() dto: GenerateQuestionsDto,
+    @CurrentUser() current: AccessTokenPayload,
+  ) {
+    return this.generator.generate({
+      admin_user_id: current.sub,
+      lo_id,
+      count: dto.count,
+      hints: dto.hints ?? '',
+    });
   }
 
   @Get('questions/:id')

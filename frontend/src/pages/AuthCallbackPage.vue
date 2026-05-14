@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
 
+const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -43,14 +45,14 @@ onMounted(async () => {
     const frag = parseFragment();
 
     if (frag.error) {
-        errorMsg.value = `Sign-in failed: ${frag.error}`;
+        errorMsg.value = `${t('login.error_callback')} (${frag.error})`;
         return;
     }
 
     const access = frag.access_token;
     const refresh = frag.refresh_token;
     if (!access || !refresh) {
-        errorMsg.value = 'Sign-in failed: missing tokens.';
+        errorMsg.value = t('login.error_callback');
         return;
     }
 
@@ -61,7 +63,7 @@ onMounted(async () => {
         history.replaceState(null, '', window.location.pathname);
         router.replace(consumeNext());
     } catch {
-        errorMsg.value = 'Sign-in failed: could not load your profile.';
+        errorMsg.value = t('login.error_callback');
     }
 });
 </script>
@@ -70,15 +72,14 @@ onMounted(async () => {
     <main class="auth-page">
         <div class="auth-card" style="text-align: center;">
             <template v-if="errorMsg">
-                <h1>Sign-in failed</h1>
+                <h1>{{ t('login.error_callback') }}</h1>
                 <p class="error-text" style="margin-top: 12px;">{{ errorMsg }}</p>
                 <RouterLink to="/login" class="btn btn-primary btn-block" style="margin-top: 22px;">
-                    Try again
+                    {{ t('login.google_btn') }}
                 </RouterLink>
             </template>
             <template v-else>
-                <h1>Signing you in…</h1>
-                <p class="dim" style="margin-top: 8px;">One moment.</p>
+                <h1>{{ t('common.loading') }}</h1>
             </template>
         </div>
     </main>

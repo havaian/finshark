@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
@@ -21,7 +22,13 @@ export class McqOptionDto {
 
   @IsString()
   @Length(1, 1000)
-  text!: string;
+  text_en!: string;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 1000)
+  text_ru?: string | null;
 }
 
 export class CreateQuestionDto {
@@ -33,7 +40,13 @@ export class CreateQuestionDto {
 
   @IsString()
   @Length(1, 4000)
-  prompt!: string;
+  prompt_en!: string;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  prompt_ru?: string | null;
 
   // Required for MCQ, must be absent/null for short_answer.
   // Cross-field rule is validated in the service layer for a clearer error message.
@@ -45,18 +58,39 @@ export class CreateQuestionDto {
   @Type(() => McqOptionDto)
   options?: McqOptionDto[] | null;
 
+  // For MCQ this is the option KEY (same across languages, hence _en only).
+  // For short_answer this is the canonical English answer; _ru is the canonical RU answer.
   @IsString()
   @Length(1, 1000)
-  correct_answer!: string;
+  correct_answer_en!: string;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 1000)
+  correct_answer_ru?: string | null;
 
   @IsString()
   @Length(1, 4000)
-  explanation!: string;
+  explanation_en!: string;
 
   @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
   @IsString()
-  @Length(0, 4000)
-  concept_bite?: string | null;
+  @Length(1, 4000)
+  explanation_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  concept_bite_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  concept_bite_ru?: string | null;
 }
 
 export class UpdateQuestionDto {
@@ -71,7 +105,13 @@ export class UpdateQuestionDto {
   @IsOptional()
   @IsString()
   @Length(1, 4000)
-  prompt?: string;
+  prompt_en?: string;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  prompt_ru?: string | null;
 
   @IsOptional()
   @IsArray()
@@ -84,17 +124,36 @@ export class UpdateQuestionDto {
   @IsOptional()
   @IsString()
   @Length(1, 1000)
-  correct_answer?: string;
+  correct_answer_en?: string;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 1000)
+  correct_answer_ru?: string | null;
 
   @IsOptional()
   @IsString()
   @Length(1, 4000)
-  explanation?: string;
+  explanation_en?: string;
 
   @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
   @IsString()
-  @Length(0, 4000)
-  concept_bite?: string | null;
+  @Length(1, 4000)
+  explanation_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  concept_bite_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  concept_bite_ru?: string | null;
 
   @IsOptional()
   @IsBoolean()

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
+import { useI18n } from 'vue-i18n';
 import { progressApi } from '../api/progress.api';
 import type {
   MasteryBand,
   ProgressHeatMapLo,
   ProgressResponse,
 } from '../types/progress';
+
+const { t } = useI18n();
 
 const data = ref<ProgressResponse | null>(null);
 const loading = ref(true);
@@ -41,12 +44,9 @@ const pillClass: Record<MasteryBand, string> = {
   learning:    'pill pill-amber',
   strong:      'pill pill-green',
 };
-const bandLabel: Record<MasteryBand, string> = {
-  not_started: 'Not started',
-  weak:        'Weak',
-  learning:    'Learning',
-  strong:      'Strong',
-};
+function bandLabel(b: MasteryBand): string {
+  return t(`progress.band_${b}`);
+}
 
 function masteryText(lo: ProgressHeatMapLo): string {
   if (lo.avg_mastery === null) return '—';
@@ -67,37 +67,37 @@ onMounted(load);
     <div class="container-wide">
 
       <div class="topbar">
-        <h1>Progress</h1>
-        <RouterLink to="/dashboard" class="btn-link">← Back to dashboard</RouterLink>
+        <h1>{{ t('progress.title') }}</h1>
+        <RouterLink to="/dashboard" class="btn-link">{{ t('nav.back_to_dashboard') }}</RouterLink>
       </div>
 
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
-      <p v-if="loading" class="dim text-sm">Loading progress…</p>
+      <p v-if="loading" class="dim text-sm">{{ t('progress.loading') }}</p>
 
       <template v-if="!loading && data">
         <!-- Heat map -->
         <section class="card">
           <div class="row" style="justify-content: space-between; margin-bottom: 6px;">
-            <h2>Syllabus coverage</h2>
+            <h2>{{ t('progress.syllabus_coverage') }}</h2>
             <div class="legend">
               <span
                 v-for="b in (['not_started','weak','learning','strong'] as MasteryBand[])"
                 :key="b"
                 :class="pillClass[b]"
               >
-                {{ bandLabel[b] }}
+                {{ bandLabel(b) }}
               </span>
             </div>
           </div>
 
           <p v-if="data.heat_map.length === 0" class="dim text-sm mt-4">
-            No papers yet. An admin needs to add at least one.
+            {{ t('progress.no_papers_yet') }}
           </p>
 
           <div v-for="paper in data.heat_map" :key="paper.paper_id" class="mt-4">
             <h3 style="margin-top: 14px;">{{ paper.paper_code }} · {{ paper.paper_name }}</h3>
             <p v-if="paper.los.length === 0" class="dim text-sm mt-2">
-              No learning objectives yet for this paper.
+              {{ t('progress.no_los_for_paper') }}
             </p>
             <div v-else class="heat">
               <div
@@ -120,22 +120,22 @@ onMounted(load);
 
         <!-- Weak topics -->
         <section class="card">
-          <h2>Weak topics</h2>
+          <h2>{{ t('progress.weak_topics') }}</h2>
           <p v-if="data.weak_topics.length === 0" class="dim text-sm mt-4">
-            No data yet — do a lesson and come back.
+            {{ t('progress.no_weak_topics') }}
           </p>
           <div v-else class="list mt-4">
             <div
-              v-for="t in data.weak_topics"
-              :key="t.lo_id"
+              v-for="topic in data.weak_topics"
+              :key="topic.lo_id"
               class="list-row"
             >
               <div>
-                <span class="mono dim text-xs">{{ t.paper_code }} / {{ t.lo_code }}</span>
-                <span class="list-row-title" style="margin-left: 14px;">{{ t.lo_title }}</span>
+                <span class="mono dim text-xs">{{ topic.paper_code }} / {{ topic.lo_code }}</span>
+                <span class="list-row-title" style="margin-left: 14px;">{{ topic.lo_title }}</span>
               </div>
               <div class="mono dim text-sm">
-                {{ Math.round(t.avg_mastery) }}% · {{ t.seen_questions }} qs
+                {{ Math.round(topic.avg_mastery) }}% · {{ topic.seen_questions }} qs
               </div>
             </div>
           </div>
@@ -143,9 +143,9 @@ onMounted(load);
 
         <!-- Recent sessions -->
         <section class="card">
-          <h2>Recent sessions</h2>
+          <h2>{{ t('progress.recent_sessions') }}</h2>
           <p v-if="data.recent_sessions.length === 0" class="dim text-sm mt-4">
-            No sessions yet.
+            {{ t('progress.no_sessions') }}
           </p>
           <div v-else class="list mt-4">
             <div
@@ -159,7 +159,7 @@ onMounted(load);
                   {{ s.correct_count }} / {{ s.question_count }}
                 </span>
                 <span :class="['badge', s.completed_at ? 'badge-done' : 'badge-wip']">
-                  {{ s.completed_at ? 'completed' : 'in progress' }}
+                  {{ s.completed_at ? t('progress.badge_completed') : t('progress.badge_in_progress') }}
                 </span>
               </div>
             </div>

@@ -3,7 +3,11 @@ import type { Sql } from 'postgres';
 import { PG } from '../db/db.module';
 import type { LearningObjectiveRow } from './content.types';
 
-const COLS = `id, paper_id, code, title, description, sort_order, created_at, updated_at`;
+const COLS = `
+  id, paper_id, code,
+  title_en, title_ru, description_en, description_ru,
+  sort_order, created_at, updated_at
+`;
 
 @Injectable()
 export class LearningObjectivesRepository {
@@ -28,18 +32,26 @@ export class LearningObjectivesRepository {
   async create(input: {
     paper_id: string;
     code: string;
-    title: string;
-    description?: string | null;
-    sort_order?: number;
+    title_en: string;
+    title_ru: string | null;
+    description_en: string | null;
+    description_ru: string | null;
+    sort_order: number;
   }): Promise<LearningObjectiveRow> {
     const rows = await this.sql<LearningObjectiveRow[]>`
-      INSERT INTO learning_objectives (paper_id, code, title, description, sort_order)
+      INSERT INTO learning_objectives (
+        paper_id, code,
+        title_en, title_ru, description_en, description_ru,
+        sort_order
+      )
       VALUES (
         ${input.paper_id},
         ${input.code},
-        ${input.title},
-        ${input.description ?? null},
-        ${input.sort_order ?? 0}
+        ${input.title_en},
+        ${input.title_ru},
+        ${input.description_en},
+        ${input.description_ru},
+        ${input.sort_order}
       )
       RETURNING ${this.sql.unsafe(COLS)}
     `;
@@ -48,12 +60,21 @@ export class LearningObjectivesRepository {
 
   async update(
     id: string,
-    input: { code?: string; title?: string; description?: string | null; sort_order?: number },
+    input: {
+      code?: string;
+      title_en?: string;
+      title_ru?: string | null;
+      description_en?: string | null;
+      description_ru?: string | null;
+      sort_order?: number;
+    },
   ): Promise<LearningObjectiveRow | null> {
     const sets: Record<string, string | number | null> = {};
     if (input.code !== undefined) sets.code = input.code;
-    if (input.title !== undefined) sets.title = input.title;
-    if (input.description !== undefined) sets.description = input.description;
+    if (input.title_en !== undefined) sets.title_en = input.title_en;
+    if (input.title_ru !== undefined) sets.title_ru = input.title_ru;
+    if (input.description_en !== undefined) sets.description_en = input.description_en;
+    if (input.description_ru !== undefined) sets.description_ru = input.description_ru;
     if (input.sort_order !== undefined) sets.sort_order = input.sort_order;
 
     if (Object.keys(sets).length === 0) return this.findById(id);

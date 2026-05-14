@@ -18,14 +18,23 @@
       Theme bootstrap. This runs synchronously before Vue/Pinia load so
       data-theme is already set on <html> when the first paint happens.
       Without this, dark-mode users would see a brief flash of light on reload.
+
+      We only support 'light' and 'dark' now. The 'system' check is preserved as
+      a fallback path for users who have the legacy value in localStorage
+      from before we removed it.
     -->
     <script>
       (function () {
         try {
           var raw = localStorage.getItem('acca_duo.theme');
-          var choice = (raw === 'light' || raw === 'dark' || raw === 'system') ? raw : 'system';
-          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var effective = choice === 'system' ? (prefersDark ? 'dark' : 'light') : choice;
+          var effective;
+          if (raw === 'light' || raw === 'dark') {
+            effective = raw;
+          } else {
+            // No saved value (or legacy 'system') — resolve from OS once.
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            effective = prefersDark ? 'dark' : 'light';
+          }
           document.documentElement.setAttribute('data-theme', effective);
         } catch (e) {
           // localStorage can fail in private mode / sandboxed iframes; fall back to dark.

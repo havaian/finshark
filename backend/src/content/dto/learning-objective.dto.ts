@@ -1,4 +1,11 @@
-import { IsInt, IsOptional, IsString, Length, Min } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateLoDto {
   @IsString()
@@ -7,11 +14,23 @@ export class CreateLoDto {
 
   @IsString()
   @Length(1, 200)
-  title!: string;
+  title_en!: string;
 
   @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
   @IsString()
-  description?: string | null;
+  @Length(1, 200)
+  title_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  description_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  description_ru?: string | null;
 
   @IsOptional()
   @IsInt()
@@ -28,11 +47,23 @@ export class UpdateLoDto {
   @IsOptional()
   @IsString()
   @Length(1, 200)
-  title?: string;
+  title_en?: string;
 
   @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
   @IsString()
-  description?: string | null;
+  @Length(1, 200)
+  title_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  description_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  description_ru?: string | null;
 
   @IsOptional()
   @IsInt()

@@ -14,6 +14,7 @@ export interface LessonQuestion {
 export interface StartLessonResult {
   session_id: string;
   questions: LessonQuestion[];
+  hearts_remaining: number;
 }
 
 export interface SessionDetail {
@@ -21,6 +22,8 @@ export interface SessionDetail {
   completed_at: string | null;
   question_count: number;
   correct_count: number;
+  hearts_remaining: number;
+  ended_out_of_hearts: boolean;
   questions: LessonQuestion[];
   answered_question_ids: string[];
 }
@@ -32,6 +35,9 @@ export interface AttemptResult {
   mastery_score: number;
   next_due_date: string;
   xp_earned: number;
+  hearts_remaining: number;
+  // True when this wrong answer triggered out-of-hearts auto-end.
+  session_ended_out_of_hearts: boolean;
 }
 
 export interface CompleteLessonResult {
@@ -42,4 +48,5 @@ export interface CompleteLessonResult {
   new_xp: number;
   new_level: number;
   new_streak: number;
+  ended_out_of_hearts: boolean;
 }

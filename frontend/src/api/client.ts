@@ -5,9 +5,10 @@ import axios, {
 } from "axios";
 import type { AuthTokens } from "../types/auth";
 
-// localStorage keys. Keep in sync with stores/auth.store.ts
+// localStorage keys. Keep in sync with stores/auth.store.ts + i18n/index.ts.
 const LS_ACCESS = "acca_duo.access_token";
 const LS_REFRESH = "acca_duo.refresh_token";
+const LS_LANG = "acca_duo.lang";
 
 // Extend axios request config to mark a request we've already retried
 // so we don't loop forever on a stuck 401.
@@ -20,11 +21,18 @@ export const api = axios.create({
   withCredentials: false,
 });
 
-// ---- request interceptor: attach access token if present ----
+// ---- request interceptor: attach access token + active language ----
 api.interceptors.request.use((config) => {
   const access = localStorage.getItem(LS_ACCESS);
   if (access && config.headers) {
     config.headers.Authorization = `Bearer ${access}`;
+  }
+  // X-Lang header — server resolves it through the @Lang decorator.
+  // We read from localStorage on every request (cheap) so the locale store
+  // doesn't need to be imported here, avoiding a circular import.
+  const lang = localStorage.getItem(LS_LANG);
+  if (config.headers && (lang === 'en' || lang === 'ru')) {
+    config.headers['X-Lang'] = lang;
   }
   return config;
 });

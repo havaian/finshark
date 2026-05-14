@@ -14,7 +14,15 @@ import type {
 } from './content.types';
 import type { CreatePaperDto, UpdatePaperDto } from './dto/paper.dto';
 import type { CreateLoDto, UpdateLoDto } from './dto/learning-objective.dto';
-import type { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
+import type {
+  CreateQuestionDto,
+  McqOptionDto,
+  UpdateQuestionDto,
+} from './dto/question.dto';
+
+// Admin-facing service. Always returns RAW rows (with both _en and _ru) so the
+// admin UI can edit either language. Public read endpoints in other controllers
+// use the toLocalized* helpers from content.types to project to a single language.
 
 @Injectable()
 export class ContentService {
@@ -39,7 +47,11 @@ export class ContentService {
   async createPaper(dto: CreatePaperDto): Promise<PaperRow> {
     const existing = await this.papers.findByCode(dto.code);
     if (existing) throw new BadRequestException(`paper code "${dto.code}" already exists`);
-    return this.papers.create(dto);
+    return this.papers.create({
+      code: dto.code,
+      name_en: dto.name_en,
+      name_ru: dto.name_ru ?? null,
+    });
   }
 
   async updatePaper(id: string, dto: UpdatePaperDto): Promise<PaperRow> {
@@ -72,8 +84,10 @@ export class ContentService {
     return this.los.create({
       paper_id,
       code: dto.code,
-      title: dto.title,
-      description: dto.description ?? null,
+      title_en: dto.title_en,
+      title_ru: dto.title_ru ?? null,
+      description_en: dto.description_en ?? null,
+      description_ru: dto.description_ru ?? null,
       sort_order: dto.sort_order ?? 0,
     });
   }
@@ -105,19 +119,23 @@ export class ContentService {
 
   async createQuestion(lo_id: string, dto: CreateQuestionDto): Promise<QuestionRow> {
     await this.getLo(lo_id);
-    const { type, options, correct_answer } = dto;
 
-    this.validateQuestionShape(type, options ?? null, correct_answer);
+    const opts = this.normalizeOptions(dto.options ?? null);
+    this.validateQuestionShape(dto.type, opts, dto.correct_answer_en);
 
     return this.questions.create({
       lo_id,
       type: dto.type,
       difficulty: dto.difficulty,
-      prompt: dto.prompt,
-      options: type === 'mcq' ? (options as McqOption[]) : null,
-      correct_answer,
-      explanation: dto.explanation,
-      concept_bite: dto.concept_bite ?? null,
+      prompt_en: dto.prompt_en,
+      prompt_ru: dto.prompt_ru ?? null,
+      options: dto.type === 'mcq' ? opts : null,
+      correct_answer_en: dto.correct_answer_en,
+      correct_answer_ru: dto.type === 'mcq' ? null : (dto.correct_answer_ru ?? null),
+      explanation_en: dto.explanation_en,
+      explanation_ru: dto.explanation_ru ?? null,
+      concept_bite_en: dto.concept_bite_en ?? null,
+      concept_bite_ru: dto.concept_bite_ru ?? null,
     });
   }
 
@@ -127,15 +145,34 @@ export class ContentService {
     // Determine the post-update shape so we can re-validate.
     const nextType = dto.type ?? current.type;
     const nextOptions =
-      dto.options !== undefined ? dto.options : current.options;
+      dto.options !== undefined
+        ? this.normalizeOptions(dto.options)
+        : current.options;
     const nextCorrect =
-      dto.correct_answer !== undefined ? dto.correct_answer : current.correct_answer;
+      dto.correct_answer_en !== undefined
+        ? dto.correct_answer_en
+        : current.correct_answer_en;
 
-    this.validateQuestionShape(nextType, nextOptions ?? null, nextCorrect);
+    this.validateQuestionShape(nextType, nextOptions, nextCorrect);
 
     // Normalise: if type is short_answer, force options to null.
-    const patch: UpdateQuestionDto = { ...dto };
+    // If type is mcq, force correct_answer_ru to null (option keys are language-neutral).
+    const patch: Parameters<QuestionsRepository['update']>[1] = {
+      type: dto.type,
+      difficulty: dto.difficulty,
+      prompt_en: dto.prompt_en,
+      prompt_ru: dto.prompt_ru,
+      options: dto.options !== undefined ? nextOptions : undefined,
+      correct_answer_en: dto.correct_answer_en,
+      correct_answer_ru: dto.correct_answer_ru,
+      explanation_en: dto.explanation_en,
+      explanation_ru: dto.explanation_ru,
+      concept_bite_en: dto.concept_bite_en,
+      concept_bite_ru: dto.concept_bite_ru,
+      is_active: dto.is_active,
+    };
     if (nextType === 'short_answer') patch.options = null;
+    if (nextType === 'mcq') patch.correct_answer_ru = null;
 
     const updated = await this.questions.update(id, patch);
     if (!updated) throw new NotFoundException('question not found after update');
@@ -161,10 +198,21 @@ export class ContentService {
 
   // ---- helpers ----
 
+  // Convert the DTO option shape (where text_ru is optional/undefined) into the
+  // strict storage shape (text_ru is `string | null`).
+  private normalizeOptions(opts: McqOptionDto[] | null): McqOption[] | null {
+    if (opts === null) return null;
+    return opts.map((o) => ({
+      key: o.key,
+      text_en: o.text_en,
+      text_ru: o.text_ru ?? null,
+    }));
+  }
+
   private validateQuestionShape(
     type: 'mcq' | 'short_answer',
     options: McqOption[] | null,
-    correct_answer: string,
+    correct_answer_en: string,
   ): void {
     if (type === 'mcq') {
       if (!options || options.length < 2) {
@@ -177,17 +225,17 @@ export class ContentService {
         }
         keys.add(opt.key);
       }
-      if (!keys.has(correct_answer)) {
+      if (!keys.has(correct_answer_en)) {
         throw new BadRequestException(
-          `correct_answer "${correct_answer}" must match one of the option keys`,
+          `correct_answer "${correct_answer_en}" must match one of the option keys`,
         );
       }
     } else {
       if (options && options.length > 0) {
         throw new BadRequestException('short_answer questions must not have options');
       }
-      if (!correct_answer.trim()) {
-        throw new BadRequestException('short_answer requires a non-empty correct_answer');
+      if (!correct_answer_en.trim()) {
+        throw new BadRequestException('short_answer requires a non-empty correct_answer_en');
       }
     }
   }

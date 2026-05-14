@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
+import { useI18n } from 'vue-i18n';
 import { adminApi } from '../../api/admin.api';
-import type { Paper } from '../../types/content';
+import type { PaperRaw } from '../../types/content';
 
-const papers = ref<Paper[]>([]);
+const { t } = useI18n();
+
+const papers = ref<PaperRaw[]>([]);
 const loading = ref(false);
 const errorMsg = ref<string | null>(null);
 
 const newCode = ref('');
-const newName = ref('');
+const newNameEn = ref('');
+const newNameRu = ref('');
 const creating = ref(false);
 
 async function load() {
@@ -25,14 +29,22 @@ async function load() {
 }
 
 async function onCreate() {
-  if (!newCode.value.trim() || !newName.value.trim()) return;
+  if (!newCode.value.trim() || !newNameEn.value.trim()) return;
   creating.value = true;
   errorMsg.value = null;
   try {
-    const created = await adminApi.createPaper({ code: newCode.value.trim(), name: newName.value.trim() });
-    papers.value = [...papers.value, created].sort((a, b) => a.code.localeCompare(b.code));
+    const created = await adminApi.createPaper({
+      code: newCode.value.trim(),
+      name_en: newNameEn.value.trim(),
+      // Send null when empty so the field is explicitly cleared rather than treated as missing.
+      name_ru: newNameRu.value.trim() ? newNameRu.value.trim() : null,
+    });
+    papers.value = [...papers.value, created].sort((a, b) =>
+      a.code.localeCompare(b.code),
+    );
     newCode.value = '';
-    newName.value = '';
+    newNameEn.value = '';
+    newNameRu.value = '';
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to create paper';
   } finally {
@@ -40,8 +52,8 @@ async function onCreate() {
   }
 }
 
-async function onDelete(p: Paper) {
-  if (!confirm(`Delete paper "${p.code}" and ALL its LOs and questions? This cascades.`)) return;
+async function onDelete(p: PaperRaw) {
+  if (!confirm(t('admin.papers.delete_confirm', { code: p.code }))) return;
   try {
     await adminApi.deletePaper(p.id);
     papers.value = papers.value.filter((x) => x.id !== p.id);
@@ -62,57 +74,69 @@ onMounted(load);
 </script>
 
 <template>
-  <main class="page">
-    <div class="container">
+  <div class="container">
 
-      <div class="topbar">
-        <h1>Papers</h1>
-        <RouterLink to="/dashboard" class="btn-link">← Back to dashboard</RouterLink>
+    <div class="topbar">
+      <h1>{{ t('admin.papers.title') }}</h1>
+    </div>
+
+    <form class="admin-form" @submit.prevent="onCreate">
+      <div class="row">
+        <input
+          v-model="newCode"
+          type="text"
+          :placeholder="t('admin.papers.add_code_ph')"
+          maxlength="16"
+          required
+          style="max-width: 140px;"
+        />
+        <input
+          v-model="newNameEn"
+          type="text"
+          :placeholder="t('admin.papers.add_name_en_ph')"
+          maxlength="200"
+          required
+          class="grow"
+        />
       </div>
+      <input
+        v-model="newNameRu"
+        type="text"
+        :placeholder="t('admin.papers.add_name_ru_ph')"
+        maxlength="200"
+      />
+      <button type="submit" class="btn btn-primary" :disabled="creating">
+        {{ creating ? t('common.adding') : t('common.add') }}
+      </button>
+    </form>
 
-      <form class="admin-form" @submit.prevent="onCreate">
-        <div class="row">
-          <input
-            v-model="newCode"
-            type="text"
-            placeholder="Code (e.g. F1)"
-            maxlength="16"
-            required
-            style="max-width: 140px;"
-          />
-          <input
-            v-model="newName"
-            type="text"
-            placeholder="Name (e.g. Business & Technology)"
-            maxlength="200"
-            required
-            class="grow"
-          />
-          <button type="submit" class="btn btn-primary" :disabled="creating">
-            {{ creating ? 'Adding…' : 'Add' }}
-          </button>
-        </div>
-      </form>
+    <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
+    <p v-if="loading" class="dim text-sm">{{ t('common.loading') }}</p>
 
-      <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
-      <p v-if="loading" class="dim text-sm">Loading…</p>
-
-      <div v-if="!loading" class="list-bordered">
-        <div v-for="p in papers" :key="p.id" class="list-row">
+    <div v-if="!loading" class="list-bordered">
+      <div v-for="p in papers" :key="p.id" class="list-row">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
           <div>
             <span style="font-weight: 500;">{{ p.code }}</span>
-            <span class="dim" style="margin-left: 12px;">{{ p.name }}</span>
+            <span class="dim" style="margin-left: 12px;">{{ p.name_en }}</span>
           </div>
-          <div class="row" style="gap: 14px;">
-            <RouterLink :to="`/admin/papers/${p.id}/los`" class="btn-link accent">LOs</RouterLink>
-            <button class="btn-link" style="color: var(--danger);" @click="onDelete(p)">Delete</button>
+          <div v-if="p.name_ru" class="dim text-sm" style="margin-left: 0;">
+            <span class="mono text-xs muted">RU</span> {{ p.name_ru }}
           </div>
         </div>
-        <div v-if="papers.length === 0" class="list-row dim text-sm">
-          No papers yet. Add one above to get started.
+        <div class="row" style="gap: 14px;">
+          <RouterLink :to="`/admin/papers/${p.id}/los`" class="btn-link accent">
+            {{ t('admin.los.title') }}
+          </RouterLink>
+          <button class="btn-link" style="color: var(--danger);" @click="onDelete(p)">
+            {{ t('common.delete') }}
+          </button>
         </div>
       </div>
-
+      <div v-if="papers.length === 0" class="list-row dim text-sm">
+        {{ t('admin.papers.empty') }}
+      </div>
     </div>
-  </main>
+
+  </div>
 </template>

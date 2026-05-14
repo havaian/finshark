@@ -8,11 +8,16 @@ import LoginPage from "../pages/LoginPage.vue";
 import AuthCallbackPage from "../pages/AuthCallbackPage.vue";
 import DashboardPage from "../pages/DashboardPage.vue";
 import ProgressPage from "../pages/ProgressPage.vue";
+import ProfilePage from "../pages/ProfilePage.vue";
+import SettingsPage from "../pages/SettingsPage.vue";
 import LessonPage from "../pages/lesson/LessonPage.vue";
 import UnsubscribePage from "../pages/UnsubscribePage.vue";
+import AdminLayout from "../pages/admin/AdminLayout.vue";
+import AdminUsersPage from "../pages/admin/AdminUsersPage.vue";
 import AdminPapersPage from "../pages/admin/AdminPapersPage.vue";
 import AdminLosPage from "../pages/admin/AdminLosPage.vue";
 import AdminQuestionsPage from "../pages/admin/AdminQuestionsPage.vue";
+import AdminLocalizationPage from "../pages/admin/AdminLocalizationPage.vue";
 import { useAuthStore } from "../stores/auth.store";
 
 // Route meta flags:
@@ -46,30 +51,51 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/profile",
+    name: "profile",
+    component: ProfilePage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/settings",
+    name: "settings",
+    component: SettingsPage,
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/lesson/:session_id",
     name: "lesson",
     component: LessonPage,
     meta: { requiresAuth: true },
   },
 
-  // Admin
+  // Admin — nested under AdminLayout. The layout provides the sidebar/topbar;
+  // each child page renders into its <RouterView/>.
   {
-    path: "/admin/papers",
-    name: "admin-papers",
-    component: AdminPapersPage,
+    path: "/admin",
+    component: AdminLayout,
     meta: { requiresAuth: true, requiresAdmin: true },
-  },
-  {
-    path: "/admin/papers/:paper_id/los",
-    name: "admin-los",
-    component: AdminLosPage,
-    meta: { requiresAuth: true, requiresAdmin: true },
-  },
-  {
-    path: "/admin/los/:lo_id/questions",
-    name: "admin-questions",
-    component: AdminQuestionsPage,
-    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      // Default admin landing — go straight to users since that's the most common admin task.
+      { path: "", redirect: "/admin/users" },
+      { path: "users", name: "admin-users", component: AdminUsersPage },
+      { path: "papers", name: "admin-papers", component: AdminPapersPage },
+      {
+        path: "papers/:paper_id/los",
+        name: "admin-los",
+        component: AdminLosPage,
+      },
+      {
+        path: "los/:lo_id/questions",
+        name: "admin-questions",
+        component: AdminQuestionsPage,
+      },
+      {
+        path: "localization",
+        name: "admin-localization",
+        component: AdminLocalizationPage,
+      },
+    ],
   },
 ];
 

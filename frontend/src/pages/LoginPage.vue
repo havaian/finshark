@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const route = useRoute();
 
 // Where to go after sign-in completes. Set by router.beforeEach when an
@@ -27,9 +29,9 @@ function onGoogleSignIn() {
 <template>
   <main class="auth-page">
     <div class="auth-card">
-      <h1>Log in</h1>
+      <h1>{{ t('login.title') }}</h1>
       <p class="dim" style="margin-bottom: 22px;">
-        Sign in with your Google account to continue.
+        {{ t('login.title') }} — {{ t('login.google_btn') }}
       </p>
 
       <button type="button" class="btn btn-primary btn-block" @click="onGoogleSignIn">
@@ -46,7 +48,7 @@ function onGoogleSignIn() {
             d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.166 6.656 3.58 9 3.58z"
             opacity="0.55" />
         </svg>
-        Continue with Google
+        {{ t('login.google_btn') }}
       </button>
     </div>
   </main>

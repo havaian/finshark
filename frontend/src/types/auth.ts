@@ -9,6 +9,9 @@ export interface PublicUser {
   last_active_date: string | null;
   is_admin: boolean;
   email_reminders_enabled: boolean;
+  reminder_hour_utc: number;
+  preferred_difficulty: 'easy' | 'medium' | 'hard' | null;
+  lesson_size: number;
 }
 
 // Mirrors backend/src/auth/auth.service.ts AuthTokens

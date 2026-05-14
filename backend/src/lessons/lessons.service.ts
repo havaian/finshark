@@ -25,25 +25,29 @@ import {
   type SrsState,
 } from "./srs";
 import type {
+  Lang,
+  LocalizedMcqOption,
   QuestionRow,
   QuestionDifficulty,
-  McqOption,
 } from "../content/content.types";
+import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
 
 // Public shape returned in the lesson queue. Note: NO correct_answer or explanation.
 // Those are only revealed in the attempt response, per question, after answering.
+// Fields are LANGUAGE-RESOLVED — frontend receives a single string per field.
 export interface LessonQuestion {
   id: string;
   type: "mcq" | "short_answer";
   difficulty: QuestionDifficulty;
   prompt: string;
-  options: McqOption[] | null; // for MCQ
+  options: LocalizedMcqOption[] | null; // for MCQ
   concept_bite: string | null;
 }
 
 export interface StartLessonResult {
   session_id: string;
   questions: LessonQuestion[];
+  hearts_remaining: number;
 }
 
 export interface AttemptResult {
@@ -53,6 +57,10 @@ export interface AttemptResult {
   mastery_score: number;
   next_due_date: string; // 'YYYY-MM-DD'
   xp_earned: number; // just for this attempt
+  hearts_remaining: number;
+  // True when this wrong answer triggered out-of-hearts auto-end. Frontend uses
+  // this to show the "out of hearts" finale instead of advancing to the next question.
+  session_ended_out_of_hearts: boolean;
 }
 
 export interface CompleteLessonResult {
@@ -63,6 +71,7 @@ export interface CompleteLessonResult {
   new_xp: number;
   new_level: number;
   new_streak: number;
+  ended_out_of_hearts: boolean;
 }
 
 // Returned by GET /lessons/:id — used to resume in-progress sessions after reload.
@@ -72,6 +81,8 @@ export interface SessionDetail {
   completed_at: string | null;
   question_count: number;
   correct_count: number;
+  hearts_remaining: number;
+  ended_out_of_hearts: boolean;
   questions: LessonQuestion[];
   answered_question_ids: string[];
 }
@@ -95,9 +106,19 @@ export class LessonsService {
 
   async start(
     user_id: string,
+    lang: Lang,
     opts: { paper_id?: string; size?: number }
   ): Promise<StartLessonResult> {
-    const size = opts.size ?? DEFAULT_LESSON_SIZE;
+    // Resolve lesson size precedence: explicit request param > user's saved
+    // preference > module default. The settings UI doesn't currently send size
+    // per-call — it just updates the stored preference — but accepting both
+    // keeps the API flexible (e.g. for future "extra practice" buttons).
+    let size = opts.size;
+    if (size === undefined) {
+      const user = await this.users.findById(user_id);
+      size = user?.lesson_size ?? DEFAULT_LESSON_SIZE;
+    }
+
     const queue = await this.buildQueue(user_id, opts.paper_id ?? null, size);
 
     if (queue.length === 0) {
@@ -118,7 +139,8 @@ export class LessonsService {
 
     return {
       session_id: session.id,
-      questions: queue.map((q) => this.toLessonQuestion(q)),
+      questions: queue.map((q) => this.toLessonQuestion(q, lang)),
+      hearts_remaining: session.hearts_remaining,
     };
   }
 
@@ -126,6 +148,7 @@ export class LessonsService {
 
   async getSession(
     user_id: string,
+    lang: Lang,
     session_id: string
   ): Promise<SessionDetail> {
     const session = await this.sessions.findById(session_id);
@@ -139,7 +162,7 @@ export class LessonsService {
     for (const qid of queueIds) {
       const q = await this.questions.findById(qid);
       if (!q) continue; // a question was hard-deleted; skip (rare)
-      hydrated.push(this.toLessonQuestion(q));
+      hydrated.push(this.toLessonQuestion(q, lang));
     }
 
     const answered = await this.attempts.questionIdsInSession(session_id);
@@ -151,6 +174,8 @@ export class LessonsService {
         : null,
       question_count: session.question_count,
       correct_count: session.correct_count,
+      hearts_remaining: session.hearts_remaining,
+      ended_out_of_hearts: session.ended_out_of_hearts,
       questions: hydrated,
       answered_question_ids: answered,
     };
@@ -160,6 +185,7 @@ export class LessonsService {
 
   async submitAttempt(
     user_id: string,
+    lang: Lang,
     session_id: string,
     question_id: string,
     user_answer: string
@@ -170,6 +196,13 @@ export class LessonsService {
       throw new ForbiddenException("session belongs to another user");
     if (session.completed_at)
       throw new BadRequestException("session already completed");
+
+    // Defense in depth: if hearts hit 0 we already auto-completed on the previous
+    // attempt. This branch only fires if the client raced before getting the
+    // completed_at marker; clean response so the client can show the finale.
+    if (session.hearts_remaining <= 0) {
+      throw new BadRequestException("session ended: no hearts remaining");
+    }
 
     const question = await this.questions.findById(question_id);
     if (!question) throw new NotFoundException("question not found");
@@ -188,7 +221,7 @@ export class LessonsService {
     // Kept OUTSIDE the transaction: short-answer grading may call an external LLM
     // and can take seconds. Holding a Postgres connection open across that is bad
     // for connection-pool throughput.
-    const grade = await this.grader.grade(question, user_id, user_answer);
+    const grade = await this.grader.grade(question, user_id, user_answer, lang);
 
     // Pre-compute SRS deltas using the latest state, so the transaction body is purely writes.
     const prevState = await this.uqs.findOne(user_id, question_id);
@@ -241,14 +274,21 @@ export class LessonsService {
         )
       `;
 
-      // 2) Bump the session's correct_count if applicable.
-      if (grade.was_correct) {
-        await tx`
-          UPDATE lesson_sessions
-          SET correct_count = correct_count + 1
-          WHERE id = ${session_id}
-        `;
-      }
+      // 2) Bump the session's correct_count if applicable, OR decrement hearts
+      // on a wrong answer. Either way we read back hearts_remaining for the response.
+      // GREATEST(hearts_remaining - 1, 0) prevents underflow against the CHECK constraint
+      // even if something else has already zeroed it; we treat zero as terminal regardless.
+      const sessionRows = await tx<Array<{ hearts_remaining: number }>>`
+        UPDATE lesson_sessions
+        SET
+          correct_count    = correct_count + ${grade.was_correct ? 1 : 0},
+          hearts_remaining = ${grade.was_correct
+            ? tx`hearts_remaining`
+            : tx`GREATEST(hearts_remaining - 1, 0)`}
+        WHERE id = ${session_id}
+        RETURNING hearts_remaining
+      `;
+      const heartsAfter = sessionRows[0]?.hearts_remaining ?? 0;
 
       // 3) Upsert SRS + mastery state.
       const rows = await tx<Array<{ mastery_score: number; due_date: Date }>>`
@@ -281,16 +321,42 @@ export class LessonsService {
           last_seen_at   = NOW()
         RETURNING mastery_score, due_date
       `;
-      return rows[0];
+      return { mastery: rows[0], hearts_remaining: heartsAfter };
     });
+
+    // Out-of-hearts auto-end. Runs OUTSIDE the attempt tx so the attempt is
+    // persisted even if the end-session write hits a transient error — we'd
+    // rather have an attempt recorded with stale completed_at than lose both.
+    // markEndedOutOfHearts is idempotent (returns null if already completed).
+    let sessionEnded = false;
+    if (newState.hearts_remaining <= 0) {
+      const ended = await this.sessions.markEndedOutOfHearts(session_id);
+      sessionEnded = ended !== null;
+    }
+
+    // Resolve language-specific output strings shown after the attempt.
+    // For MCQ correct_answer is the option key (language-neutral).
+    // For short_answer it's the canonical answer in the user's language.
+    const correctAnswerForResponse =
+      question.type === 'mcq'
+        ? question.correct_answer_en
+        : pickLocalized(question.correct_answer_en, question.correct_answer_ru, lang);
+
+    const explanationForResponse = pickLocalized(
+      question.explanation_en,
+      question.explanation_ru,
+      lang,
+    );
 
     return {
       was_correct: grade.was_correct,
-      correct_answer: question.correct_answer,
-      explanation: question.explanation,
-      mastery_score: newState.mastery_score,
-      next_due_date: this.toDateString(newState.due_date),
+      correct_answer: correctAnswerForResponse,
+      explanation: explanationForResponse,
+      mastery_score: newState.mastery.mastery_score,
+      next_due_date: this.toDateString(newState.mastery.due_date),
       xp_earned: grade.was_correct ? XP_PER_CORRECT : 0,
+      hearts_remaining: newState.hearts_remaining,
+      session_ended_out_of_hearts: sessionEnded,
     };
   }
 
@@ -317,6 +383,7 @@ export class LessonsService {
         new_xp: user.xp,
         new_level: user.level,
         new_streak: user.streak_count,
+        ended_out_of_hearts: session.ended_out_of_hearts,
       };
     }
 
@@ -328,6 +395,8 @@ export class LessonsService {
 
     // Compute the deltas. XP comes from correct attempts in this session;
     // streak is based on the user's last_active_date.
+    // Out-of-hearts sessions still get XP/streak for the questions they DID answer
+    // correctly — running out of hearts is a soft fail, not a forfeit.
     const xpEarned = completed.correct_count * XP_PER_CORRECT;
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
@@ -357,6 +426,7 @@ export class LessonsService {
       new_xp: updated.xp,
       new_level: updated.level,
       new_streak: updated.streak_count,
+      ended_out_of_hearts: completed.ended_out_of_hearts,
     };
   }
 
@@ -397,7 +467,8 @@ export class LessonsService {
     // Need more — pull from weak LOs.
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
-    const preferred = this.preferredDifficulty(user.level);
+    // User-set preference overrides the level-based heuristic. NULL = "auto".
+    const preferred = user.preferred_difficulty ?? this.preferredDifficulty(user.level);
     const remaining = size - queue.length;
 
     // Pick weak LOs to pull from. We over-fetch a bit so we have alternatives if
@@ -441,14 +512,21 @@ export class LessonsService {
     return "hard";
   }
 
-  private toLessonQuestion(q: QuestionRow): LessonQuestion {
+  // Project a raw QuestionRow to the language-resolved client shape.
+  private toLessonQuestion(q: QuestionRow, lang: Lang): LessonQuestion {
     return {
       id: q.id,
       type: q.type,
       difficulty: q.difficulty,
-      prompt: q.prompt,
-      options: q.options,
-      concept_bite: q.concept_bite,
+      prompt: pickLocalized(q.prompt_en, q.prompt_ru, lang),
+      options:
+        q.options === null
+          ? null
+          : q.options.map((opt) => ({
+              key: opt.key,
+              text: pickLocalized(opt.text_en, opt.text_ru, lang),
+            })),
+      concept_bite: pickLocalizedNullable(q.concept_bite_en, q.concept_bite_ru, lang),
     };
   }
 

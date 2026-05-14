@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { QuestionRow } from '../content/content.types';
+import type { QuestionRow, Lang } from '../content/content.types';
 import { LlmGraderService } from '../llm/llm-grader.service';
 
 export interface GradeResult {
@@ -14,15 +14,18 @@ export class GraderService {
   constructor(private readonly llm: LlmGraderService) {}
 
   // user_id is required so LLM grading can enforce its per-user daily cap.
+  // lang determines which language's correct_answer / prompt we compare against
+  // for short-answer grading. MCQ is language-neutral (we compare option keys).
   async grade(
     question: QuestionRow,
     user_id: string,
     user_answer: string,
+    lang: Lang,
   ): Promise<GradeResult> {
     if (question.type === 'mcq') {
       return this.gradeMcq(question, user_answer);
     }
-    const verdict = await this.llm.grade(question, user_id, user_answer);
+    const verdict = await this.llm.grade(question, user_id, user_answer, lang);
     return {
       was_correct: verdict.was_correct,
       llm_grade_json: verdict.llm_grade_json,
@@ -30,9 +33,10 @@ export class GraderService {
   }
 
   private gradeMcq(question: QuestionRow, user_answer: string): GradeResult {
-    // MCQ correct_answer stores the option key (e.g. "A"). Compare case-insensitively
+    // MCQ correct_answer_en stores the option key (e.g. "A"). The key is the same
+    // across languages, so no language switch needed here. Compare case-insensitively
     // and trim — admins sometimes save "A " with trailing space.
-    const expected = question.correct_answer.trim().toUpperCase();
+    const expected = question.correct_answer_en.trim().toUpperCase();
     const actual = user_answer.trim().toUpperCase();
     return { was_correct: expected === actual, llm_grade_json: null };
   }

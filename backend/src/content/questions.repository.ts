@@ -9,8 +9,13 @@ import type {
 } from "./content.types";
 
 const COLS = `
-  id, lo_id, type, difficulty, prompt, options,
-  correct_answer, explanation, concept_bite, is_active,
+  id, lo_id, type, difficulty,
+  prompt_en, prompt_ru,
+  options,
+  correct_answer_en, correct_answer_ru,
+  explanation_en, explanation_ru,
+  concept_bite_en, concept_bite_ru,
+  is_active,
   created_at, updated_at
 `;
 
@@ -43,33 +48,50 @@ export class QuestionsRepository {
     lo_id: string;
     type: QuestionType;
     difficulty: QuestionDifficulty;
-    prompt: string;
+    prompt_en: string;
+    prompt_ru: string | null;
     options: McqOption[] | null;
-    correct_answer: string;
-    explanation: string;
-    concept_bite?: string | null;
+    correct_answer_en: string;
+    correct_answer_ru: string | null;
+    explanation_en: string;
+    explanation_ru: string | null;
+    concept_bite_en: string | null;
+    concept_bite_ru: string | null;
+    is_active?: boolean;       // default true — new in question-generator
   }): Promise<QuestionRow> {
-    // postgres.js: passing a JS array/object as a JSONB-typed param works directly.
-    // We use sql.json(...) explicitly to be safe — avoids the array being treated as a postgres array.
+    // postgres.js: passing a JS array as a JSONB param via sql.json.
     // The `as any` is postgres.js's overly strict JSONValue type rejecting typed
     // object arrays; runtime is fine with anything JSON-serializable.
     const optionsParam =
       input.options === null ? null : this.sql.json(input.options as any);
+    // is_active default mirrors the schema default of TRUE. The generator uses
+    // FALSE so admin-generated drafts don't appear in lessons until reviewed.
+    const isActive = input.is_active ?? true;
 
     const rows = await this.sql<QuestionRow[]>`
       INSERT INTO questions (
-        lo_id, type, difficulty, prompt, options,
-        correct_answer, explanation, concept_bite
+        lo_id, type, difficulty,
+        prompt_en, prompt_ru,
+        options,
+        correct_answer_en, correct_answer_ru,
+        explanation_en, explanation_ru,
+        concept_bite_en, concept_bite_ru,
+        is_active
       )
       VALUES (
         ${input.lo_id},
         ${input.type},
         ${input.difficulty},
-        ${input.prompt},
+        ${input.prompt_en},
+        ${input.prompt_ru},
         ${optionsParam},
-        ${input.correct_answer},
-        ${input.explanation},
-        ${input.concept_bite ?? null}
+        ${input.correct_answer_en},
+        ${input.correct_answer_ru},
+        ${input.explanation_en},
+        ${input.explanation_ru},
+        ${input.concept_bite_en},
+        ${input.concept_bite_ru},
+        ${isActive}
       )
       RETURNING ${this.sql.unsafe(COLS)}
     `;
@@ -81,27 +103,37 @@ export class QuestionsRepository {
     input: {
       type?: QuestionType;
       difficulty?: QuestionDifficulty;
-      prompt?: string;
+      prompt_en?: string;
+      prompt_ru?: string | null;
       options?: McqOption[] | null;
-      correct_answer?: string;
-      explanation?: string;
-      concept_bite?: string | null;
+      correct_answer_en?: string;
+      correct_answer_ru?: string | null;
+      explanation_en?: string;
+      explanation_ru?: string | null;
+      concept_bite_en?: string | null;
+      concept_bite_ru?: string | null;
       is_active?: boolean;
     }
   ): Promise<QuestionRow | null> {
     const sets: Record<string, unknown> = {};
     if (input.type !== undefined) sets.type = input.type;
     if (input.difficulty !== undefined) sets.difficulty = input.difficulty;
-    if (input.prompt !== undefined) sets.prompt = input.prompt;
+    if (input.prompt_en !== undefined) sets.prompt_en = input.prompt_en;
+    if (input.prompt_ru !== undefined) sets.prompt_ru = input.prompt_ru;
     if (input.options !== undefined) {
       sets.options =
         input.options === null ? null : this.sql.json(input.options as any);
     }
-    if (input.correct_answer !== undefined)
-      sets.correct_answer = input.correct_answer;
-    if (input.explanation !== undefined) sets.explanation = input.explanation;
-    if (input.concept_bite !== undefined)
-      sets.concept_bite = input.concept_bite;
+    if (input.correct_answer_en !== undefined)
+      sets.correct_answer_en = input.correct_answer_en;
+    if (input.correct_answer_ru !== undefined)
+      sets.correct_answer_ru = input.correct_answer_ru;
+    if (input.explanation_en !== undefined) sets.explanation_en = input.explanation_en;
+    if (input.explanation_ru !== undefined) sets.explanation_ru = input.explanation_ru;
+    if (input.concept_bite_en !== undefined)
+      sets.concept_bite_en = input.concept_bite_en;
+    if (input.concept_bite_ru !== undefined)
+      sets.concept_bite_ru = input.concept_bite_ru;
     if (input.is_active !== undefined) sets.is_active = input.is_active;
 
     if (Object.keys(sets).length === 0) return this.findById(id);

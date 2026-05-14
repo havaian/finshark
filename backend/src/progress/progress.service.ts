@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ProgressRepository } from './progress.repository';
+import { pickLocalized, type Lang } from '../content/content.types';
 
 // Bands shared with the frontend. Keep them here as the single source of truth;
 // the frontend can use the same numbers in CSS classes without re-deriving them.
@@ -60,7 +61,7 @@ export interface ProgressResponse {
 export class ProgressService {
   constructor(private readonly repo: ProgressRepository) {}
 
-  async getForUser(user_id: string): Promise<ProgressResponse> {
+  async getForUser(user_id: string, lang: Lang): Promise<ProgressResponse> {
     const [rows, weak, sessions] = await Promise.all([
       this.repo.heatMap(user_id),
       this.repo.weakTopics(user_id, 5),
@@ -75,7 +76,7 @@ export class ProgressService {
         p = {
           paper_id: r.paper_id,
           paper_code: r.paper_code,
-          paper_name: r.paper_name,
+          paper_name: pickLocalized(r.paper_name_en, r.paper_name_ru, lang),
           los: [],
         };
         byPaper.set(r.paper_id, p);
@@ -83,7 +84,7 @@ export class ProgressService {
       p.los.push({
         lo_id: r.lo_id,
         lo_code: r.lo_code,
-        lo_title: r.lo_title,
+        lo_title: pickLocalized(r.lo_title_en, r.lo_title_ru, lang),
         total_questions: r.total_questions,
         seen_questions: r.seen_questions,
         avg_mastery: r.avg_mastery,
@@ -96,7 +97,7 @@ export class ProgressService {
       weak_topics: weak.map((w) => ({
         lo_id: w.lo_id,
         lo_code: w.lo_code,
-        lo_title: w.lo_title,
+        lo_title: pickLocalized(w.lo_title_en, w.lo_title_ru, lang),
         paper_code: w.paper_code,
         avg_mastery: w.avg_mastery,
         seen_questions: w.seen_questions,

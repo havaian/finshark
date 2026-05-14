@@ -407,7 +407,7 @@ onMounted(load);
         </section>
 
         <!-- Charts -->
-        <section class="card">
+        <section class="card mt-6">
           <h2>{{ t('profile.chart_accuracy_by_paper') }}</h2>
           <div v-if="stats.accuracy_by_paper.length > 0" class="chart-wrap">
             <canvas ref="accuracyByPaperCanvas"></canvas>
@@ -415,7 +415,7 @@ onMounted(load);
           <p v-else class="dim text-sm mt-4">{{ t('progress.no_weak_topics') }}</p>
         </section>
 
-        <section class="card">
+        <section class="card mt-6">
           <h2>{{ t('profile.chart_activity_heatmap') }}</h2>
           <div class="activity-heatmap">
             <div v-for="(week, wi) in heatmapWeeks" :key="wi" class="activity-col">
@@ -429,7 +429,7 @@ onMounted(load);
           </div>
         </section>
 
-        <section class="card">
+        <section class="card mt-6">
           <h2>{{ t('profile.chart_mastery_over_time') }}</h2>
           <div v-if="stats.mastery_history.length > 0" class="chart-wrap">
             <canvas ref="masteryCanvas"></canvas>
@@ -437,7 +437,7 @@ onMounted(load);
           <p v-else class="dim text-sm mt-4">{{ t('progress.no_weak_topics') }}</p>
         </section>
 
-        <div class="profile-grid-2">
+        <div class="profile-grid-2 mt-6">
           <section class="card">
             <h2>{{ t('profile.chart_difficulty_breakdown') }}</h2>
             <div v-if="stats.difficulty_breakdown.length > 0" class="chart-wrap">
@@ -456,7 +456,7 @@ onMounted(load);
         </div>
 
         <!-- Danger zone -->
-        <section class="card danger-zone">
+        <section class="card danger-zone mt-6">
           <h2 style="color: var(--danger);">{{ t('profile.danger_zone') }}</h2>
           <p class="dim text-sm mt-2">{{ t('profile.delete_account_warning') }}</p>
 

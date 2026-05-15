@@ -24,7 +24,7 @@ import { toPublicUser } from '../users/user.types';
 // The cookie name we use to round-trip the OAuth state value. The cookie
 // lives only between /auth/google and /auth/google/callback — a few seconds
 // in normal use, up to STATE_TTL_MS in pathological cases.
-const STATE_COOKIE = 'acca_duo_oauth_state';
+const STATE_COOKIE = 'finshark_oauth_state';
 
 @Controller('auth')
 export class AuthController {

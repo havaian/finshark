@@ -16,7 +16,7 @@ const auth = useAuthStore();
 
       <div class="brand" style="justify-content: center; margin-bottom: 28px;">
         <div class="brand-mark"></div>
-        <span style="font-size: 18px;">acca duo</span>
+        <span style="font-size: 18px;">Finshark</span>
       </div>
 
       <h1 style="font-size: 36px; letter-spacing: -0.03em;">{{ t('home.title') }}</h1>

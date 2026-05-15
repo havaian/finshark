@@ -9,7 +9,7 @@ const route = useRoute();
 // unauthenticated user hits a protected route. Stash it in sessionStorage so
 // the /auth/callback page can read it after Google's redirect — query params
 // don't survive the round-trip through Google.
-const NEXT_STORAGE_KEY = 'acca_duo.post_login_next';
+const NEXT_STORAGE_KEY = 'finshark.post_login_next';
 
 function onGoogleSignIn() {
   const next = typeof route.query.next === 'string' ? route.query.next : null;

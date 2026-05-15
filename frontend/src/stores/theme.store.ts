@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 
 export type Theme = 'light' | 'dark';
 
-const LS_THEME = 'acca_duo.theme';
+const LS_THEME = 'finshark.theme';
 
 // Read the stored theme. Falls back to OS preference for first-time visitors
 // AND for users who previously had 'system' saved (legacy value from when we

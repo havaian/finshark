@@ -1,9 +1,9 @@
-# acca-duo
+# finshark
 
 Duolingo-style web app for ACCA practice.
 
 ```
-acca-duo/
+finshark/
 ├── backend/                 NestJS + raw SQL via postgres.js
 │   ├── db/migrations/       dbmate SQL migrations
 │   └── Dockerfile
@@ -24,7 +24,7 @@ docker compose up
 
 - Backend at http://localhost:3001/api (hot reload on file changes)
 - Frontend at http://localhost:5173 (Vite HMR)
-- Postgres at localhost:5432 (user `acca`, password `acca_dev_password`, db `acca_duo`)
+- Postgres at localhost:5432 (user `acca`, password `acca_dev_password`, db `finshark`)
 
 First-run migrations:
 ```
@@ -71,7 +71,7 @@ Optional: see `backend/.env.example` for `LLM_PROVIDER`, `EMAIL_MODE` + `SMTP_*`
 Targets external Postgres. You provide a `.env` at repo root with required vars:
 
 ```
-DATABASE_URL=postgres://user:pass@your-host:5432/acca_duo
+DATABASE_URL=postgres://user:pass@your-host:5432/finshark
 CORS_ORIGIN=https://app.yourdomain.com
 APP_PUBLIC_URL=https://app.yourdomain.com
 PUBLIC_API_BASE_URL=https://api.yourdomain.com/api

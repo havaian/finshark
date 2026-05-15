@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1.7
 
-# Multi-stage build for @acca-duo/backend on Alpine.
+# Multi-stage build for @finshark/backend on Alpine.
 #
 # IMPORTANT: this Dockerfile expects the build context to be the REPO ROOT.
 # The pnpm workspace needs pnpm-workspace.yaml + both package.json files visible.
 #
-#   docker build -f backend/Dockerfile -t acca-duo-backend .
+#   docker build -f backend/Dockerfile -t finshark-backend .
 #
 # Migrations run at container start via `node-pg-migrate up` (see CMD).
 # Idempotent — already-applied migrations are tracked in the pgmigrations table
@@ -34,13 +34,13 @@ COPY frontend/package.json frontend/
 # Install deps for backend + its workspace dependents. Dev deps included; needed by build stage.
 # No lockfile committed, so plain install (not --frozen-lockfile).
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
-    pnpm install --filter @acca-duo/backend...
+    pnpm install --filter @finshark/backend...
 
 # ---------- 3) build: compile TypeScript ----------
 FROM deps AS build
 WORKDIR /app
 COPY backend/ backend/
-RUN pnpm --filter @acca-duo/backend build
+RUN pnpm --filter @finshark/backend build
 
 # ---------- 4) prod: slim runtime image ----------
 FROM base AS prod

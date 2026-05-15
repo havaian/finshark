@@ -8,7 +8,7 @@ export type Lang = (typeof SUPPORTED_LANGS)[number];
 export const DEFAULT_LANG: Lang = 'ru';
 
 // Read the saved language from localStorage. Falls back to the default.
-const LS_LANG = 'acca_duo.lang';
+const LS_LANG = 'finshark.lang';
 export function readLangFromStorage(): Lang {
   if (typeof localStorage === 'undefined') return DEFAULT_LANG;
   const raw = localStorage.getItem(LS_LANG);

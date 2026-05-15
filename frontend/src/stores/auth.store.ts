@@ -4,7 +4,7 @@ import { authApi } from "../api/auth.api";
 import { onForcedLogout, TOKEN_STORAGE_KEYS } from "../api/client";
 import type { PublicUser } from "../types/auth";
 
-const LS_USER = "acca_duo.user";
+const LS_USER = "finshark.user";
 
 function readUserFromStorage(): PublicUser | null {
   const raw = localStorage.getItem(LS_USER);

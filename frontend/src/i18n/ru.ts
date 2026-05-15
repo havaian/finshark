@@ -51,7 +51,7 @@ export default {
   },
 
   home: {
-    title: 'ACCA Duo',
+    title: 'Finshark',
     tagline: 'Ежедневные мини-уроки для подготовки к экзаменам ACCA.',
     cta: 'Начать',
   },

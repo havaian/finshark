@@ -304,7 +304,7 @@ async function saveName() {
     if (me.value) me.value.display_name = updated.display_name;
     if (auth.user) auth.user.display_name = updated.display_name;
     // Persist updated user to localStorage so other tabs see the new name.
-    localStorage.setItem('acca_duo.user', JSON.stringify(updated));
+    localStorage.setItem('finshark.user', JSON.stringify(updated));
     editName.value = false;
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to update name';

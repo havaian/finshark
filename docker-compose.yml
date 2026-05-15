@@ -28,8 +28,8 @@ services:
       context: .
       dockerfile: backend/Dockerfile
       target: prod
-    image: acca-duo-backend:latest
-    container_name: acca-duo-backend
+    image: finshark-backend:latest
+    container_name: finshark-backend
     env_file:
       - ./.env
     ports:
@@ -44,8 +44,8 @@ services:
       args:
         # Vite bakes this URL into the bundle at build time.
         VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    image: acca-duo-frontend:latest
-    container_name: acca-duo-frontend
+    image: finshark-frontend:latest
+    container_name: finshark-frontend
     ports:
       - "${FRONTEND_PORT:-8080}:80"
     depends_on:

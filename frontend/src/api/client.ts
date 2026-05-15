@@ -6,9 +6,9 @@ import axios, {
 import type { AuthTokens } from "../types/auth";
 
 // localStorage keys. Keep in sync with stores/auth.store.ts + i18n/index.ts.
-const LS_ACCESS = "acca_duo.access_token";
-const LS_REFRESH = "acca_duo.refresh_token";
-const LS_LANG = "acca_duo.lang";
+const LS_ACCESS = "finshark.access_token";
+const LS_REFRESH = "finshark.refresh_token";
+const LS_LANG = "finshark.lang";
 
 // Extend axios request config to mark a request we've already retried
 // so we don't loop forever on a stuck 401.

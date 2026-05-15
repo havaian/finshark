@@ -11,7 +11,7 @@ const auth = useAuthStore();
 const errorMsg = ref<string | null>(null);
 
 // Must match the key written by LoginPage before redirecting to Google.
-const NEXT_STORAGE_KEY = 'acca_duo.post_login_next';
+const NEXT_STORAGE_KEY = 'finshark.post_login_next';
 
 // Parse the URL fragment that the backend put after the '#'.
 // Backend writes either:

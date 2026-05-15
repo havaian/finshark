@@ -56,7 +56,7 @@ async function persistPreference(payload: UpdatePreferencesPayload, field: strin
   try {
     const updated = await profileApi.updatePreferences(payload);
     auth.user = updated;
-    localStorage.setItem('acca_duo.user', JSON.stringify(updated));
+    localStorage.setItem('finshark.user', JSON.stringify(updated));
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to update settings';
   } finally {

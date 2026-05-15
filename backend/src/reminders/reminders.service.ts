@@ -112,7 +112,7 @@ export class RemindersService {
       ``,
       `Pick up where you left off: ${appUrl}/dashboard`,
       ``,
-      `— ACCA Duo`,
+      `— Finshark`,
       ``,
       `--`,
       `Don't want these emails? Unsubscribe: ${unsubUrl}`,

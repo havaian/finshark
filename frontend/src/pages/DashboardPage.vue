@@ -77,7 +77,7 @@ function extractError(e: unknown): string | null {
       <div class="topbar">
         <div class="brand">
           <div class="brand-mark"></div>
-          <span>acca duo</span>
+          <span>Finshark</span>
         </div>
         <div class="topbar-right">
           <ThemeSwitch />

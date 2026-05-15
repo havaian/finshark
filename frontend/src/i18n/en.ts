@@ -52,7 +52,7 @@ export default {
   },
 
   home: {
-    title: 'ACCA Duo',
+    title: 'Finshark',
     tagline: 'Daily micro-lessons for the ACCA exams.',
     cta: 'Get started',
   },

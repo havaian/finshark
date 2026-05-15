@@ -46,7 +46,7 @@ function onExit() {
       <div class="admin-sidebar-head">
         <div class="brand">
           <div class="brand-mark"></div>
-          <span>acca duo</span>
+          <span>Finshark</span>
         </div>
         <div class="admin-sidebar-sub">{{ t('admin.panel') }}</div>
       </div>

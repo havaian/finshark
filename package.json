@@ -1,5 +1,5 @@
 {
-  "name": "acca-duo",
+  "name": "finshark",
   "version": "0.0.1",
   "private": true,
   "packageManager": "pnpm@9.0.0",
@@ -7,13 +7,13 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "dev:backend": "pnpm --filter @acca-duo/backend dev",
-    "dev:frontend": "pnpm --filter @acca-duo/frontend dev",
-    "build:backend": "pnpm --filter @acca-duo/backend build",
-    "build:frontend": "pnpm --filter @acca-duo/frontend build",
-    "db:up": "pnpm --filter @acca-duo/backend db:up",
-    "db:down": "pnpm --filter @acca-duo/backend db:down",
-    "db:status": "pnpm --filter @acca-duo/backend db:status",
-    "db:new": "pnpm --filter @acca-duo/backend db:new"
+    "dev:backend": "pnpm --filter @finshark/backend dev",
+    "dev:frontend": "pnpm --filter @finshark/frontend dev",
+    "build:backend": "pnpm --filter @finshark/backend build",
+    "build:frontend": "pnpm --filter @finshark/frontend build",
+    "db:up": "pnpm --filter @finshark/backend db:up",
+    "db:down": "pnpm --filter @finshark/backend db:down",
+    "db:status": "pnpm --filter @finshark/backend db:status",
+    "db:new": "pnpm --filter @finshark/backend db:new"
   }
 }

@@ -1,13 +1,13 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import postgres from 'postgres';
-import { PG } from '../db/db.module';
-import { F1_PAPER } from './data/f1';
-import { F2_PAPER } from './data/f2';
-import { F3_PAPER } from './data/f3';
-import { BADGES } from './data/badges';
-import { ACHIEVEMENTS } from './data/achievements';
-import type { SeedPaper, SeedQuestion } from './data/types';
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import type { Sql } from "postgres";
+import postgres from "postgres";
+import { PG } from "../db/db.module";
+import { F1_PAPER } from "./data/f1";
+import { F2_PAPER } from "./data/f2";
+import { F3_PAPER } from "./data/f3";
+import { BADGES } from "./data/badges";
+import { ACHIEVEMENTS } from "./data/achievements";
+import type { SeedPaper, SeedQuestion } from "./data/types";
 
 // Source-of-truth for which papers ship in the seed. Kept here so both the
 // CLI script (seed.ts) and the admin "drop & reseed" button hit the same data.
@@ -89,14 +89,30 @@ export class SeedService {
       // Count what we're about to wipe so the result is informative. We do
       // counts BEFORE the deletes because cascaded deletes don't surface in
       // the rowCount of the trigger DELETE.
-      const beforeAttempts            = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM attempts`;
-      const beforeSessions            = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM lesson_sessions`;
-      const beforeUqs                 = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM user_question_state`;
-      const beforePapers              = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM papers`;
-      const beforeUserBadges          = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM user_badges`;
-      const beforeUserAchProgress     = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM user_achievement_progress`;
-      const beforeMasterySnapshots    = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM mastery_snapshots`;
-      const usersCount                = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM users`;
+      const beforeAttempts = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM attempts`;
+      const beforeSessions = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM lesson_sessions`;
+      const beforeUqs = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM user_question_state`;
+      const beforePapers = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM papers`;
+      const beforeUserBadges = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM user_badges`;
+      const beforeUserAchProgress = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM user_achievement_progress`;
+      const beforeMasterySnapshots = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM mastery_snapshots`;
+      const usersCount = await tx<
+        Array<{ c: string }>
+      >`SELECT COUNT(*)::text AS c FROM users`;
 
       // ── Wipe progress / content ──────────────────────────────────
       // Order chosen so we never violate ON DELETE RESTRICT on questions.
@@ -157,18 +173,24 @@ export class SeedService {
       }
 
       return {
-        papers_dropped:             parseInt(beforePapers[0]?.c ?? '0', 10),
-        papers_inserted:            papersInserted,
-        badges_upserted:            badgesCount,
-        achievements_upserted:      achievementsCount,
-        questions_inserted:         questionsInserted,
-        attempts_deleted:           parseInt(beforeAttempts[0]?.c ?? '0', 10),
-        sessions_deleted:           parseInt(beforeSessions[0]?.c ?? '0', 10),
-        uqs_deleted:                parseInt(beforeUqs[0]?.c ?? '0', 10),
-        user_badges_deleted:        parseInt(beforeUserBadges[0]?.c ?? '0', 10),
-        user_achievement_progress_deleted: parseInt(beforeUserAchProgress[0]?.c ?? '0', 10),
-        mastery_snapshots_deleted:  parseInt(beforeMasterySnapshots[0]?.c ?? '0', 10),
-        users_progress_reset:       parseInt(usersCount[0]?.c ?? '0', 10),
+        papers_dropped: parseInt(beforePapers[0]?.c ?? "0", 10),
+        papers_inserted: papersInserted,
+        badges_upserted: badgesCount,
+        achievements_upserted: achievementsCount,
+        questions_inserted: questionsInserted,
+        attempts_deleted: parseInt(beforeAttempts[0]?.c ?? "0", 10),
+        sessions_deleted: parseInt(beforeSessions[0]?.c ?? "0", 10),
+        uqs_deleted: parseInt(beforeUqs[0]?.c ?? "0", 10),
+        user_badges_deleted: parseInt(beforeUserBadges[0]?.c ?? "0", 10),
+        user_achievement_progress_deleted: parseInt(
+          beforeUserAchProgress[0]?.c ?? "0",
+          10
+        ),
+        mastery_snapshots_deleted: parseInt(
+          beforeMasterySnapshots[0]?.c ?? "0",
+          10
+        ),
+        users_progress_reset: parseInt(usersCount[0]?.c ?? "0", 10),
       };
     });
   }
@@ -179,7 +201,9 @@ export class SeedService {
   // include it in their summary. Accepts the root sql or a transaction handle
   // — postgres.js's TransactionSql is structurally compatible with Sql for
   // tagged-template usage.
-  private async upsertBadges(handle: Sql | postgres.TransactionSql): Promise<number> {
+  private async upsertBadges(
+    handle: Sql | postgres.TransactionSql
+  ): Promise<number> {
     for (const b of BADGES) {
       await handle`
         INSERT INTO badges (code, name_en, name_ru, description_en, description_ru, icon, sort_order)
@@ -199,7 +223,9 @@ export class SeedService {
   // Upsert the static achievements catalog. Same pattern as upsertBadges but
   // also handles the `levels` jsonb column. Never rename a code — it's the
   // FK target in user_achievement_progress and the key in METRICS_BY_CODE.
-  private async upsertAchievements(handle: Sql | postgres.TransactionSql): Promise<number> {
+  private async upsertAchievements(
+    handle: Sql | postgres.TransactionSql
+  ): Promise<number> {
     for (const a of ACHIEVEMENTS) {
       const levelsJson = handle.json(a.levels as unknown as postgres.JSONValue);
       await handle`
@@ -229,7 +255,7 @@ export class SeedService {
   // Returns the number of questions inserted (for the reseed summary).
   private async insertPaperWithChildren(
     tx: postgres.TransactionSql,
-    paper: SeedPaper,
+    paper: SeedPaper
   ): Promise<number> {
     const paperRows = await tx<Array<{ id: string }>>`
       INSERT INTO papers (code, name_en, name_ru)
@@ -276,16 +302,17 @@ export class SeedService {
   private async insertQuestion(
     tx: postgres.TransactionSql,
     lo_id: string,
-    q: SeedQuestion,
+    q: SeedQuestion
   ): Promise<void> {
-    if (q.type === 'mcq') {
+    if (q.type === "mcq") {
       // Belt-and-braces: scrub why_wrong from the correct option so storage
       // invariant holds even if the seed author forgot.
       const cleanedOptions = q.options.map((o) => {
         if (o.key === q.correct_answer_en) {
           // Strip why_wrong on correct option.
           const { why_wrong_en, why_wrong_ru, ...rest } = o;
-          void why_wrong_en; void why_wrong_ru;
+          void why_wrong_en;
+          void why_wrong_ru;
           return { ...rest, why_wrong_en: null, why_wrong_ru: null };
         }
         return {
@@ -294,7 +321,9 @@ export class SeedService {
           why_wrong_ru: o.why_wrong_ru ?? null,
         };
       });
-      const optionsJson = tx.json(cleanedOptions as unknown as postgres.JSONValue);
+      const optionsJson = tx.json(
+        cleanedOptions as unknown as postgres.JSONValue
+      );
       await tx`
         INSERT INTO questions (
           lo_id, type, difficulty,
@@ -316,7 +345,7 @@ export class SeedService {
           TRUE
         )
       `;
-    } else if (q.type === 'number_entry') {
+    } else if (q.type === "number_entry") {
       await tx`
         INSERT INTO questions (
           lo_id, type, difficulty,

@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 
 // Row returned by the heat map query — one per LO, with paper context for grouping.
 // avg_mastery is NULL when the user has no state rows for any question in the LO.
@@ -18,9 +18,9 @@ export interface HeatMapRow {
   lo_title_en: string;
   lo_title_ru: string | null;
   lo_sort_order: number;
-  total_questions: number;     // questions in the LO (active only)
-  seen_questions: number;      // distinct questions the user has state for
-  avg_mastery: number | null;  // average mastery_score over user's state rows in this LO
+  total_questions: number; // questions in the LO (active only)
+  seen_questions: number; // distinct questions the user has state for
+  avg_mastery: number | null; // average mastery_score over user's state rows in this LO
 }
 
 export interface WeakTopicRow {
@@ -96,7 +96,10 @@ export class ProgressRepository {
   }
 
   // Last N completed-or-started sessions, newest first.
-  async recentSessions(user_id: string, limit: number): Promise<RecentSessionRow[]> {
+  async recentSessions(
+    user_id: string,
+    limit: number
+  ): Promise<RecentSessionRow[]> {
     return this.sql<RecentSessionRow[]>`
       SELECT id, started_at, completed_at, question_count, correct_count
       FROM lesson_sessions

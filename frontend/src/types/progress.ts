@@ -1,4 +1,4 @@
-export type MasteryBand = 'not_started' | 'weak' | 'learning' | 'strong';
+export type MasteryBand = "not_started" | "weak" | "learning" | "strong";
 
 export interface ProgressHeatMapLo {
   lo_id: string;

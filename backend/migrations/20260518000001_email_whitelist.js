@@ -28,9 +28,9 @@ exports.shorthands = undefined;
 
 exports.up = (pgm) => {
   pgm.createTable('email_whitelist', {
-    id:         { type: 'bigserial', primaryKey: true },
-    pattern:    { type: 'text', notNull: true, unique: true },
-    note:       { type: 'text' },
+    id: { type: 'bigserial', primaryKey: true },
+    pattern: { type: 'text', notNull: true, unique: true },
+    note: { type: 'text' },
     created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
     created_by_user_id: {
       type: 'bigint',

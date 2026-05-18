@@ -8,14 +8,14 @@ import {
   Param,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../auth/guards/admin.guard';
-import { UiTranslationsService } from './ui-translations.service';
-import { UpsertUiTranslationDto } from './dto/ui-translation.dto';
-import type { Lang } from './content.types';
+} from "@nestjs/common";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { AdminGuard } from "../auth/guards/admin.guard";
+import { UiTranslationsService } from "./ui-translations.service";
+import { UpsertUiTranslationDto } from "./dto/ui-translation.dto";
+import type { Lang } from "./content.types";
 
-@Controller('admin/ui-translations')
+@Controller("admin/ui-translations")
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminUiTranslationsController {
   constructor(private readonly service: UiTranslationsService) {}
@@ -36,9 +36,12 @@ export class AdminUiTranslationsController {
 
   // DELETE /api/admin/ui-translations/:lang/:key
   // Note: key comes second because lang is a closed set; routes are nicer that way.
-  @Delete(':lang/:key')
+  @Delete(":lang/:key")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('lang') lang: string, @Param('key') key: string): Promise<void> {
+  async delete(
+    @Param("lang") lang: string,
+    @Param("key") key: string
+  ): Promise<void> {
     await this.service.delete(key, lang as Lang);
   }
 }

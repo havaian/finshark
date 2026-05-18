@@ -3,8 +3,8 @@
 //  - "Raw" (admin) — both _en and _ru fields. Used in admin editor pages.
 //  - Localized   (public) — single resolved string per field. Used in dashboard, lesson, progress.
 
-export type QuestionType = 'mcq' | 'short_answer' | 'number_entry';
-export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
+export type QuestionType = "mcq" | "short_answer" | "number_entry";
+export type QuestionDifficulty = "easy" | "medium" | "hard";
 
 // ---- Raw (admin) shapes ----
 
@@ -124,7 +124,7 @@ export interface Question {
 
 export interface UiTranslation {
   key: string;
-  lang: 'en' | 'ru';
+  lang: "en" | "ru";
   value: string;
 }
 

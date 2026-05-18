@@ -1,8 +1,8 @@
 // Shared types for seed content files. These describe the input shape — the
 // seed runner does the actual DB insert mapping.
 
-export type SeedDifficulty = 'easy' | 'medium' | 'hard';
-export type SeedQuestionType = 'mcq' | 'short_answer' | 'number_entry';
+export type SeedDifficulty = "easy" | "medium" | "hard";
+export type SeedQuestionType = "mcq" | "short_answer" | "number_entry";
 
 export interface SeedMcqOption {
   key: string;
@@ -22,12 +22,12 @@ export interface SeedMcqOption {
 // For number_entry, `options` is absent, `correct_answer_en` holds the numeric
 // value as a string (e.g. "12500"), and `acceptable_tolerance` (optional) sets ±X.
 export interface SeedMcqQuestion {
-  type: 'mcq';
+  type: "mcq";
   difficulty: SeedDifficulty;
   prompt_en: string;
   prompt_ru: string;
   options: SeedMcqOption[];
-  correct_answer_en: string;        // option key, e.g. 'A'
+  correct_answer_en: string; // option key, e.g. 'A'
   explanation_en: string;
   explanation_ru: string;
   concept_bite_en?: string;
@@ -35,12 +35,12 @@ export interface SeedMcqQuestion {
 }
 
 export interface SeedShortAnswerQuestion {
-  type: 'short_answer';
+  type: "short_answer";
   difficulty: SeedDifficulty;
   prompt_en: string;
   prompt_ru: string;
-  correct_answer_en: string;        // canonical English answer
-  correct_answer_ru: string;        // canonical Russian answer
+  correct_answer_en: string; // canonical English answer
+  correct_answer_ru: string; // canonical Russian answer
   explanation_en: string;
   explanation_ru: string;
   concept_bite_en?: string;
@@ -48,12 +48,12 @@ export interface SeedShortAnswerQuestion {
 }
 
 export interface SeedNumberEntryQuestion {
-  type: 'number_entry';
+  type: "number_entry";
   difficulty: SeedDifficulty;
   prompt_en: string;
   prompt_ru: string;
-  correct_answer_en: string;        // numeric value as string, no commas/units
-  acceptable_tolerance?: number;    // optional ±X tolerance; omit for exact match
+  correct_answer_en: string; // numeric value as string, no commas/units
+  acceptable_tolerance?: number; // optional ±X tolerance; omit for exact match
   explanation_en: string;
   explanation_ru: string;
   concept_bite_en?: string;
@@ -66,7 +66,7 @@ export type SeedQuestion =
   | SeedNumberEntryQuestion;
 
 export interface SeedLearningObjective {
-  code: string;                     // e.g. 'A', 'B'
+  code: string; // e.g. 'A', 'B'
   title_en: string;
   title_ru: string;
   description_en: string;
@@ -81,7 +81,7 @@ export interface SeedLearningObjective {
 }
 
 export interface SeedPaper {
-  code: string;                     // e.g. 'F1', 'F5'
+  code: string; // e.g. 'F1', 'F5'
   name_en: string;
   name_ru: string;
   learning_objectives: SeedLearningObjective[];

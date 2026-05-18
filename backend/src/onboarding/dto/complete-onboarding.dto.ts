@@ -6,7 +6,7 @@ import {
   IsString,
   Max,
   Min,
-} from 'class-validator';
+} from "class-validator";
 
 // Submission payload from the onboarding wizard. ALL fields are optional —
 // the "skip" path sends an empty body (the service sets onboarded_at=NOW()
@@ -21,8 +21,8 @@ import {
 // a UUID. We accept it as a plain @IsString() — IsUUID would reject valid IDs.
 export class CompleteOnboardingDto {
   @IsOptional()
-  @IsEnum(['beginner', 'intermediate', 'advanced'])
-  bg_level?: 'beginner' | 'intermediate' | 'advanced';
+  @IsEnum(["beginner", "intermediate", "advanced"])
+  bg_level?: "beginner" | "intermediate" | "advanced";
 
   @IsOptional()
   @IsInt()

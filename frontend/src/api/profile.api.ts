@@ -1,5 +1,5 @@
-import { api } from './client';
-import type { PublicUser } from '../types/auth';
+import { api } from "./client";
+import type { PublicUser } from "../types/auth";
 
 export interface ProfileMe extends PublicUser {
   created_at: string;
@@ -15,13 +15,13 @@ export interface AccuracyByPaperRow {
 }
 
 export interface DifficultyBreakdownRow {
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   attempts: number;
   correct: number;
 }
 
 export interface TypeBreakdownRow {
-  type: 'mcq' | 'short_answer' | 'number_entry';
+  type: "mcq" | "short_answer" | "number_entry";
   attempts: number;
   correct: number;
 }
@@ -52,7 +52,7 @@ export interface ProfileStats {
 
 export interface UpdatePreferencesPayload {
   reminder_hour_utc?: number;
-  preferred_difficulty?: 'easy' | 'medium' | 'hard' | null;
+  preferred_difficulty?: "easy" | "medium" | "hard" | null;
   lesson_size?: number;
   email_reminders_enabled?: boolean;
   // Leaderboards opt-in (3.3). Settings toggle + leaderboard page banner
@@ -61,20 +61,21 @@ export interface UpdatePreferencesPayload {
 }
 
 export const profileApi = {
-  getMe: async (): Promise<ProfileMe> =>
-    (await api.get<ProfileMe>('/me')).data,
+  getMe: async (): Promise<ProfileMe> => (await api.get<ProfileMe>("/me")).data,
 
   updateDisplayName: async (display_name: string): Promise<PublicUser> =>
-    (await api.patch<PublicUser>('/me', { display_name })).data,
+    (await api.patch<PublicUser>("/me", { display_name })).data,
 
-  updatePreferences: async (payload: UpdatePreferencesPayload): Promise<PublicUser> =>
-    (await api.patch<PublicUser>('/me/preferences', payload)).data,
+  updatePreferences: async (
+    payload: UpdatePreferencesPayload
+  ): Promise<PublicUser> =>
+    (await api.patch<PublicUser>("/me/preferences", payload)).data,
 
   getStats: async (): Promise<ProfileStats> =>
-    (await api.get<ProfileStats>('/me/stats')).data,
+    (await api.get<ProfileStats>("/me/stats")).data,
 
   deleteAccount: async (confirm_email: string): Promise<void> => {
     // Axios delete with body — needs the `data` option, not the 2nd positional.
-    await api.delete('/me', { data: { confirm_email } });
+    await api.delete("/me", { data: { confirm_email } });
   },
 };

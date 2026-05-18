@@ -1,5 +1,5 @@
-import { IsIn, IsString, Length } from 'class-validator';
-import { SUPPORTED_LANGS, type Lang } from '../content.types';
+import { IsIn, IsString, Length } from "class-validator";
+import { SUPPORTED_LANGS, type Lang } from "../content.types";
 
 export class UpsertUiTranslationDto {
   // Key validation done in service for clearer message;

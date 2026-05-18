@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { ProgressRepository } from './progress.repository';
-import { pickLocalized, type Lang } from '../content/content.types';
+import { Injectable } from "@nestjs/common";
+import { ProgressRepository } from "./progress.repository";
+import { pickLocalized, type Lang } from "../content/content.types";
 
 // Bands shared with the frontend. Keep them here as the single source of truth;
 // the frontend can use the same numbers in CSS classes without re-deriving them.
@@ -8,13 +8,13 @@ import { pickLocalized, type Lang } from '../content/content.types';
 //   weak        — 1..39
 //   learning    — 40..69
 //   strong      — 70..100
-export type MasteryBand = 'not_started' | 'weak' | 'learning' | 'strong';
+export type MasteryBand = "not_started" | "weak" | "learning" | "strong";
 
 export function bandFor(avg: number | null): MasteryBand {
-  if (avg === null || avg === undefined) return 'not_started';
-  if (avg < 40) return 'weak';
-  if (avg < 70) return 'learning';
-  return 'strong';
+  if (avg === null || avg === undefined) return "not_started";
+  if (avg < 40) return "weak";
+  if (avg < 70) return "learning";
+  return "strong";
 }
 
 export interface ProgressHeatMapLo {

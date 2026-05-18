@@ -5,7 +5,7 @@ import {
   Length,
   Min,
   ValidateIf,
-} from 'class-validator';
+} from "class-validator";
 
 // Cap theory at ~5000 chars (~750 words) — well above the 150-300 word target
 // but a safety guard against pathological pastes.

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { WhitelistRow } from './whitelist.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { WhitelistRow } from "./whitelist.types";
 
 const COLS = `id, pattern, note, created_at, created_by_user_id`;
 
@@ -58,7 +58,10 @@ export class WhitelistRepository {
   // Update the note on an existing row. Pattern itself is immutable from the
   // UI — deleting + re-adding is the correct way to change a pattern, since
   // changes might invalidate already-logged-in users.
-  async updateNote(id: string, note: string | null): Promise<WhitelistRow | null> {
+  async updateNote(
+    id: string,
+    note: string | null
+  ): Promise<WhitelistRow | null> {
     const rows = await this.sql<WhitelistRow[]>`
       UPDATE email_whitelist SET note = ${note}
       WHERE id = ${id}

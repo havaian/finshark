@@ -163,34 +163,18 @@ onMounted(() => {
 
         <div class="mt-6">
           <label class="field-label">{{ t('tfa_setup.code_label') }}</label>
-          <input
-            v-model="code"
-            type="text"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            maxlength="6"
-            placeholder="123456"
-            class="tfa-input"
-            style="margin-top: 6px;"
-            @keydown.enter="code.length >= 6 && !submitting && verify()"
-          />
+          <input v-model="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+            placeholder="123456" class="tfa-input" style="margin-top: 6px;"
+            @keydown.enter="code.length >= 6 && !submitting && verify()" />
         </div>
 
         <p v-if="errorMsg" class="error-text mt-4">{{ errorMsg }}</p>
 
         <div class="row mt-6" style="gap: 8px;">
-          <button
-            class="btn btn-primary"
-            :disabled="submitting || code.trim().length < 6"
-            @click="verify"
-          >
+          <button class="btn btn-primary" :disabled="submitting || code.trim().length < 6" @click="verify">
             {{ submitting ? t('common.saving') : t('tfa_setup.enable') }}
           </button>
-          <button
-            class="btn btn-ghost"
-            :disabled="submitting"
-            @click="step = 'scan'; code = ''; errorMsg = null"
-          >
+          <button class="btn btn-ghost" :disabled="submitting" @click="step = 'scan'; code = ''; errorMsg = null">
             {{ t('tfa_setup.back') }}
           </button>
         </div>
@@ -217,11 +201,7 @@ onMounted(() => {
           <span>{{ t('tfa_setup.saved_confirm') }}</span>
         </label>
 
-        <button
-          class="btn btn-primary btn-block mt-6"
-          :disabled="!savedConfirmed"
-          @click="finishAndExit"
-        >
+        <button class="btn btn-primary btn-block mt-6" :disabled="!savedConfirmed" @click="finishAndExit">
           {{ t('tfa_setup.finish') }}
         </button>
       </section>
@@ -235,6 +215,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
 }
+
 .tfa-qr-img {
   width: 240px;
   height: 240px;
@@ -244,6 +225,7 @@ onMounted(() => {
   border-radius: 8px;
   border: 1px solid var(--border);
 }
+
 .tfa-secret-text {
   display: block;
   margin-top: 6px;
@@ -256,6 +238,7 @@ onMounted(() => {
   letter-spacing: 0.06em;
   word-break: break-all;
 }
+
 .tfa-input {
   width: 100%;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -263,6 +246,7 @@ onMounted(() => {
   letter-spacing: 0.08em;
   text-align: center;
 }
+
 .tfa-recovery-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -271,6 +255,7 @@ onMounted(() => {
   margin: 0;
   padding: 0;
 }
+
 .tfa-recovery-list code {
   display: block;
   padding: 8px 10px;
@@ -280,6 +265,7 @@ onMounted(() => {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 13px;
 }
+
 @media (max-width: 480px) {
   .tfa-recovery-list {
     grid-template-columns: 1fr;

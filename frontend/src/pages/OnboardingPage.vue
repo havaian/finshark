@@ -37,9 +37,9 @@ const errorMsg = ref<string | null>(null);
 const timeBudgetOptions = [5, 10, 15, 20, 30, 45, 60];
 
 const bgLevelOptions = computed<Array<{ value: BgLevel; titleKey: string; descKey: string }>>(() => [
-  { value: 'beginner',     titleKey: 'onboarding.bg.beginner_title',     descKey: 'onboarding.bg.beginner_desc' },
+  { value: 'beginner', titleKey: 'onboarding.bg.beginner_title', descKey: 'onboarding.bg.beginner_desc' },
   { value: 'intermediate', titleKey: 'onboarding.bg.intermediate_title', descKey: 'onboarding.bg.intermediate_desc' },
-  { value: 'advanced',     titleKey: 'onboarding.bg.advanced_title',     descKey: 'onboarding.bg.advanced_desc' },
+  { value: 'advanced', titleKey: 'onboarding.bg.advanced_title', descKey: 'onboarding.bg.advanced_desc' },
 ]);
 
 async function loadPapers() {
@@ -136,13 +136,8 @@ onMounted(() => {
       <section class="onboarding-section">
         <h2>{{ t('onboarding.bg.question') }}</h2>
         <div class="onboarding-cards">
-          <button
-            v-for="opt in bgLevelOptions"
-            :key="opt.value"
-            type="button"
-            :class="['onboarding-card', { selected: bgLevel === opt.value }]"
-            @click="bgLevel = opt.value"
-          >
+          <button v-for="opt in bgLevelOptions" :key="opt.value" type="button"
+            :class="['onboarding-card', { selected: bgLevel === opt.value }]" @click="bgLevel = opt.value">
             <span class="onboarding-card-title">{{ t(opt.titleKey) }}</span>
             <span class="onboarding-card-desc">{{ t(opt.descKey) }}</span>
           </button>
@@ -153,13 +148,8 @@ onMounted(() => {
         <h2>{{ t('onboarding.time.question') }}</h2>
         <p class="dim text-sm">{{ t('onboarding.time.help') }}</p>
         <div class="onboarding-chips">
-          <button
-            v-for="n in timeBudgetOptions"
-            :key="n"
-            type="button"
-            :class="['onboarding-chip', { selected: timeBudget === n }]"
-            @click="timeBudget = n"
-          >
+          <button v-for="n in timeBudgetOptions" :key="n" type="button"
+            :class="['onboarding-chip', { selected: timeBudget === n }]" @click="timeBudget = n">
             {{ t('onboarding.time.minutes', { n }) }}
           </button>
         </div>
@@ -173,13 +163,9 @@ onMounted(() => {
           {{ t('onboarding.paper.empty') }}
         </p>
         <div v-else class="onboarding-chips">
-          <button
-            v-for="p in papers"
-            :key="p.id"
-            type="button"
+          <button v-for="p in papers" :key="p.id" type="button"
             :class="['onboarding-chip', 'onboarding-chip-paper', { selected: preferredPaperId === p.id }]"
-            @click="preferredPaperId = preferredPaperId === p.id ? null : p.id"
-          >
+            @click="preferredPaperId = preferredPaperId === p.id ? null : p.id">
             <span class="mono">{{ p.code }}</span>
             <span>{{ p.name }}</span>
           </button>

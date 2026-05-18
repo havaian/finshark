@@ -1,10 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 import type {
   AchievementRow,
   UserAchievementProgressRow,
-} from './achievements.types';
+} from "./achievements.types";
 
 const ACH_COLS = `
   code, name_en, name_ru, description_en, description_ru, icon, sort_order,
@@ -33,7 +33,7 @@ export class AchievementsRepository {
   // evaluator calls this once per evaluation; the API layer maps over the
   // catalog and looks up here per code.
   async findProgressByUser(
-    user_id: string,
+    user_id: string
   ): Promise<Map<string, UserAchievementProgressRow>> {
     const rows = await this.sql<UserAchievementProgressRow[]>`
       SELECT ${this.sql.unsafe(PROG_COLS)}

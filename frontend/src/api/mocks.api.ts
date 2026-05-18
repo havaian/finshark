@@ -1,5 +1,5 @@
-import { api } from './client';
-import type { MockBreakdown, StartMockResult } from '../types/mocks';
+import { api } from "./client";
+import type { MockBreakdown, StartMockResult } from "../types/mocks";
 
 export const mocksApi = {
   // POST /mocks → start a new mock session.
@@ -8,7 +8,7 @@ export const mocksApi = {
     question_count: number;
     time_limit_seconds?: number;
   }): Promise<StartMockResult> =>
-    (await api.post<StartMockResult>('/mocks', input)).data,
+    (await api.post<StartMockResult>("/mocks", input)).data,
 
   // GET /mocks/:id/breakdown → per-LO accuracy + wrong question IDs.
   breakdown: async (session_id: string): Promise<MockBreakdown> =>

@@ -1,12 +1,12 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { UsersModule } from '../users/users.module';
-import { WhitelistModule } from '../whitelist/whitelist.module';
-import { TotpModule } from '../totp/totp.module';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { RefreshTokensRepository } from './refresh-tokens.repository';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { AdminGuard } from './guards/admin.guard';
+import { forwardRef, Module } from "@nestjs/common";
+import { UsersModule } from "../users/users.module";
+import { WhitelistModule } from "../whitelist/whitelist.module";
+import { TotpModule } from "../totp/totp.module";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
+import { RefreshTokensRepository } from "./refresh-tokens.repository";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { AdminGuard } from "./guards/admin.guard";
 
 @Module({
   // forwardRef on WhitelistModule because WhitelistModule also imports

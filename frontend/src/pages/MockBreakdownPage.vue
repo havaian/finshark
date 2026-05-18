@@ -120,10 +120,8 @@ onMounted(load);
                 <span class="dim text-sm">{{ lo.correct }} / {{ lo.total }}</span>
               </div>
               <div class="mock-lo-bar-track">
-                <div
-                  class="mock-lo-bar-fill"
-                  :style="{ width: lo.accuracy_pct + '%', background: loBarColor(lo.accuracy_pct) }"
-                ></div>
+                <div class="mock-lo-bar-fill"
+                  :style="{ width: lo.accuracy_pct + '%', background: loBarColor(lo.accuracy_pct) }"></div>
               </div>
               <div class="mock-lo-pct mono dim text-xs">{{ lo.accuracy_pct }}%</div>
             </li>
@@ -135,12 +133,7 @@ onMounted(load);
           <RouterLink to="/dashboard" class="btn btn-ghost">
             {{ t('mocks.done_btn') }}
           </RouterLink>
-          <button
-            v-if="hasWrongs"
-            class="btn btn-primary"
-            :disabled="startingReview"
-            @click="onStartReview"
-          >
+          <button v-if="hasWrongs" class="btn btn-primary" :disabled="startingReview" @click="onStartReview">
             {{ startingReview ? t('mocks.review_starting') : t('mocks.review_btn') }}
           </button>
         </div>

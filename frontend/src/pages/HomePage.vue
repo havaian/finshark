@@ -70,6 +70,30 @@ onMounted(() => {
       </div>
     </section>
 
+    <!-- "Why Finshark" — brand/manifesto block. Sits between hero and features
+         so the reader gets the *why* before the *what*. Three short cards;
+         shark metaphor stays controlled (smell/sense, not aggression). -->
+    <section class="landing-why">
+      <div class="landing-container">
+        <h2 class="landing-section-title">{{ t('landing.why_title') }}</h2>
+        <p class="landing-why-lede dim">{{ t('landing.why_lede') }}</p>
+        <div class="landing-why-grid">
+          <div class="landing-why-card">
+            <h3>{{ t('landing.why_1_title') }}</h3>
+            <p class="dim">{{ t('landing.why_1_body') }}</p>
+          </div>
+          <div class="landing-why-card">
+            <h3>{{ t('landing.why_2_title') }}</h3>
+            <p class="dim">{{ t('landing.why_2_body') }}</p>
+          </div>
+          <div class="landing-why-card">
+            <h3>{{ t('landing.why_3_title') }}</h3>
+            <p class="dim">{{ t('landing.why_3_body') }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Features grid: 3 cards. Kept minimal — emoji-style icons (no asset
          pipeline) and one-line headlines. -->
     <section id="features" class="landing-features">
@@ -127,6 +151,37 @@ onMounted(() => {
             </div>
           </li>
         </ol>
+      </div>
+    </section>
+
+    <!-- FAQ — native <details>/<summary> for accordion behaviour. No JS,
+         keyboard-accessible by default. Five Qs covering the sceptic's
+         questions: not-a-textbook, scope, time, past-exam-Qs, sources. -->
+    <section class="landing-faq">
+      <div class="landing-container landing-faq-inner">
+        <h2 class="landing-section-title">{{ t('landing.faq_title') }}</h2>
+        <div class="landing-faq-list">
+          <details class="landing-faq-item">
+            <summary>{{ t('landing.faq_1_q') }}</summary>
+            <p class="dim">{{ t('landing.faq_1_a') }}</p>
+          </details>
+          <details class="landing-faq-item">
+            <summary>{{ t('landing.faq_2_q') }}</summary>
+            <p class="dim">{{ t('landing.faq_2_a') }}</p>
+          </details>
+          <details class="landing-faq-item">
+            <summary>{{ t('landing.faq_3_q') }}</summary>
+            <p class="dim">{{ t('landing.faq_3_a') }}</p>
+          </details>
+          <details class="landing-faq-item">
+            <summary>{{ t('landing.faq_4_q') }}</summary>
+            <p class="dim">{{ t('landing.faq_4_a') }}</p>
+          </details>
+          <details class="landing-faq-item">
+            <summary>{{ t('landing.faq_5_q') }}</summary>
+            <p class="dim">{{ t('landing.faq_5_a') }}</p>
+          </details>
+        </div>
       </div>
     </section>
 

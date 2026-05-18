@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -12,10 +12,10 @@ import {
   Min,
   ValidateIf,
   ValidateNested,
-} from 'class-validator';
+} from "class-validator";
 
-export const QUESTION_TYPES = ['mcq', 'short_answer', 'number_entry'] as const;
-export const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+export const QUESTION_TYPES = ["mcq", "short_answer", "number_entry"] as const;
+export const DIFFICULTIES = ["easy", "medium", "hard"] as const;
 
 export class McqOptionDto {
   @IsString()

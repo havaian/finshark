@@ -1,4 +1,10 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsString } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsBoolean,
+  IsString,
+} from "class-validator";
 
 // Used by the admin content browser to operate on multiple drafts at once
 // (activate / delete in bulk). Capped at 200 per call so a typo can't wipe

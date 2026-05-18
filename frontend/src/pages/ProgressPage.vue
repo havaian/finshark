@@ -36,15 +36,15 @@ async function load() {
 
 const tileClass: Record<MasteryBand, string> = {
   not_started: 'tile tile-grey',
-  weak:        'tile tile-red',
-  learning:    'tile tile-amber',
-  strong:      'tile tile-green',
+  weak: 'tile tile-red',
+  learning: 'tile tile-amber',
+  strong: 'tile tile-green',
 };
 const pillClass: Record<MasteryBand, string> = {
   not_started: 'pill pill-grey',
-  weak:        'pill pill-red',
-  learning:    'pill pill-amber',
-  strong:      'pill pill-green',
+  weak: 'pill pill-red',
+  learning: 'pill pill-amber',
+  strong: 'pill pill-green',
 };
 function bandLabel(b: MasteryBand): string {
   return t(`progress.band_${b}`);
@@ -82,11 +82,8 @@ onMounted(load);
           <div class="row" style="justify-content: space-between; margin-bottom: 6px;">
             <h2>{{ t('progress.syllabus_coverage') }}</h2>
             <div class="legend">
-              <span
-                v-for="b in (['not_started','weak','learning','strong'] as MasteryBand[])"
-                :key="b"
-                :class="pillClass[b]"
-              >
+              <span v-for="b in (['not_started', 'weak', 'learning', 'strong'] as MasteryBand[])" :key="b"
+                :class="pillClass[b]">
                 {{ bandLabel(b) }}
               </span>
             </div>
@@ -102,12 +99,7 @@ onMounted(load);
               {{ t('progress.no_los_for_paper') }}
             </p>
             <div v-else class="heat">
-              <div
-                v-for="lo in paper.los"
-                :key="lo.lo_id"
-                :class="tileClass[lo.band]"
-                :title="lo.lo_title"
-              >
+              <div v-for="lo in paper.los" :key="lo.lo_id" :class="tileClass[lo.band]" :title="lo.lo_title">
                 <div>
                   <div class="tile-code">{{ lo.lo_code }}</div>
                   <div class="tile-title">{{ lo.lo_title }}</div>
@@ -127,11 +119,7 @@ onMounted(load);
             {{ t('progress.no_weak_topics') }}
           </p>
           <div v-else class="list mt-4">
-            <div
-              v-for="topic in data.weak_topics"
-              :key="topic.lo_id"
-              class="list-row"
-            >
+            <div v-for="topic in data.weak_topics" :key="topic.lo_id" class="list-row">
               <div>
                 <span class="mono dim text-xs">{{ topic.paper_code }} / {{ topic.lo_code }}</span>
                 <span class="list-row-title" style="margin-left: 14px;">{{ topic.lo_title }}</span>
@@ -150,11 +138,7 @@ onMounted(load);
             {{ t('progress.no_sessions') }}
           </p>
           <div v-else class="list mt-4">
-            <div
-              v-for="s in data.recent_sessions"
-              :key="s.id"
-              class="list-row"
-            >
+            <div v-for="s in data.recent_sessions" :key="s.id" class="list-row">
               <div class="mono dim text-sm">{{ formatDate(s.started_at) }}</div>
               <div class="row">
                 <span class="mono list-row-title">

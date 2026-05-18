@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { LearningObjectiveRow } from './content.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { LearningObjectiveRow } from "./content.types";
 
 const COLS = `
   id, paper_id, code,
@@ -25,7 +25,9 @@ export class LearningObjectivesRepository {
 
   async findById(id: string): Promise<LearningObjectiveRow | null> {
     const rows = await this.sql<LearningObjectiveRow[]>`
-      SELECT ${this.sql.unsafe(COLS)} FROM learning_objectives WHERE id = ${id} LIMIT 1
+      SELECT ${this.sql.unsafe(
+        COLS
+      )} FROM learning_objectives WHERE id = ${id} LIMIT 1
     `;
     return rows[0] ?? null;
   }
@@ -87,14 +89,16 @@ export class LearningObjectivesRepository {
       theory_en?: string | null;
       theory_ru?: string | null;
       sort_order?: number;
-    },
+    }
   ): Promise<LearningObjectiveRow | null> {
     const sets: Record<string, string | number | null> = {};
     if (input.code !== undefined) sets.code = input.code;
     if (input.title_en !== undefined) sets.title_en = input.title_en;
     if (input.title_ru !== undefined) sets.title_ru = input.title_ru;
-    if (input.description_en !== undefined) sets.description_en = input.description_en;
-    if (input.description_ru !== undefined) sets.description_ru = input.description_ru;
+    if (input.description_en !== undefined)
+      sets.description_en = input.description_en;
+    if (input.description_ru !== undefined)
+      sets.description_ru = input.description_ru;
     if (input.theory_en !== undefined) sets.theory_en = input.theory_en;
     if (input.theory_ru !== undefined) sets.theory_ru = input.theory_ru;
     if (input.sort_order !== undefined) sets.sort_order = input.sort_order;
@@ -110,7 +114,8 @@ export class LearningObjectivesRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const rows = await this.sql`DELETE FROM learning_objectives WHERE id = ${id} RETURNING id`;
+    const rows = await this
+      .sql`DELETE FROM learning_objectives WHERE id = ${id} RETURNING id`;
     return rows.length > 0;
   }
 }

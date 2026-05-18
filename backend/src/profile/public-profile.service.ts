@@ -1,8 +1,8 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import { BadgesService } from '../badges/badges.service';
-import type { Lang } from '../content/content.types';
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import { BadgesService } from "../badges/badges.service";
+import type { Lang } from "../content/content.types";
 
 // Public-profile response: a sanitized view of someone else's profile that
 // any authenticated user can fetch. Deliberately excludes everything sensitive:
@@ -22,9 +22,9 @@ export interface PublicProfileResponse {
   level: number;
   xp: number;
   streak_count: number;
-  created_at: string;             // ISO timestamp
-  total_lessons: number;          // completed sessions
-  accuracy_pct: number | null;    // null when zero attempts
+  created_at: string; // ISO timestamp
+  total_lessons: number; // completed sessions
+  accuracy_pct: number | null; // null when zero attempts
   badges: Array<{
     code: string;
     name: string;
@@ -38,14 +38,17 @@ export interface PublicProfileResponse {
 export class PublicProfileService {
   constructor(
     @Inject(PG) private readonly sql: Sql,
-    private readonly badges: BadgesService,
+    private readonly badges: BadgesService
   ) {}
 
   // Resolve a user by id and return the sanitized public profile.
   // Throws NotFoundException if the id doesn't match any user — we don't
   // want to silently return empty data, since "missing" and "exists but
   // hidden" should be indistinguishable for callers (here both 404).
-  async getById(viewed_user_id: string, lang: Lang): Promise<PublicProfileResponse> {
+  async getById(
+    viewed_user_id: string,
+    lang: Lang
+  ): Promise<PublicProfileResponse> {
     // Single-row identity + cheap aggregates inlined. We deliberately don't
     // pull from profile_stats repo: that returns more than we want, and
     // would mean re-implementing the filter in two places. Just compute the
@@ -64,7 +67,7 @@ export class PublicProfileService {
       FROM users
       WHERE id = ${viewed_user_id}
     `;
-    if (idRows.length === 0) throw new NotFoundException('user not found');
+    if (idRows.length === 0) throw new NotFoundException("user not found");
     const u = idRows[0];
 
     // Completed sessions count.

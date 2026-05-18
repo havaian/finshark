@@ -9,13 +9,13 @@ import {
   Patch,
   Post,
   UseGuards,
-} from '@nestjs/common';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../auth/guards/admin.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AccessTokenPayload } from '../auth/auth.service';
-import { WhitelistService } from './whitelist.service';
+} from "@nestjs/common";
+import { IsOptional, IsString, MaxLength } from "class-validator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { AdminGuard } from "../auth/guards/admin.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import type { AccessTokenPayload } from "../auth/auth.service";
+import { WhitelistService } from "./whitelist.service";
 
 class AddPatternDto {
   @IsString()
@@ -37,7 +37,7 @@ class UpdateNoteDto {
 
 // Admin-only CRUD over the email whitelist.
 // Mounted under /api/admin/whitelist alongside other admin endpoints.
-@Controller('admin/whitelist')
+@Controller("admin/whitelist")
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminWhitelistController {
   constructor(private readonly whitelist: WhitelistService) {}
@@ -56,14 +56,14 @@ export class AdminWhitelistController {
     });
   }
 
-  @Patch(':id/note')
-  updateNote(@Param('id') id: string, @Body() dto: UpdateNoteDto) {
+  @Patch(":id/note")
+  updateNote(@Param("id") id: string, @Body() dto: UpdateNoteDto) {
     return this.whitelist.updateNote(id, dto.note ?? null);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param("id") id: string): Promise<void> {
     await this.whitelist.remove(id);
   }
 }

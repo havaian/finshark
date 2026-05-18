@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module';
-import { LessonsModule } from '../lessons/lessons.module';
-import { ContentModule } from '../content/content.module';
-import { MocksController } from './mocks.controller';
-import { MocksService } from './mocks.service';
+import { Module } from "@nestjs/common";
+import { AuthModule } from "../auth/auth.module";
+import { LessonsModule } from "../lessons/lessons.module";
+import { ContentModule } from "../content/content.module";
+import { MocksController } from "./mocks.controller";
+import { MocksService } from "./mocks.service";
 
 // Mocks depend on:
 //   - AuthModule for JwtAuthGuard

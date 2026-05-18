@@ -30,9 +30,9 @@ exports.up = (pgm) => {
 // import step for that, mirroring the up() comment above in reverse.
 exports.down = (pgm) => {
   pgm.createTable('ui_translations', {
-    key:        { type: 'text', notNull: true },
-    lang:       { type: 'text', notNull: true },
-    value:      { type: 'text', notNull: true },
+    key: { type: 'text', notNull: true },
+    lang: { type: 'text', notNull: true },
+    value: { type: 'text', notNull: true },
     created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
     updated_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
   });

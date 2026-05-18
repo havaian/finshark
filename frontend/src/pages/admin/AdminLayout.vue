@@ -26,10 +26,10 @@ interface NavItem {
 }
 
 const navItems = computed<NavItem[]>(() => [
-  { to: '/admin/users',        labelKey: 'admin.users.title',        activePrefixes: ['/admin/users'] },
-  { to: '/admin/whitelist',    labelKey: 'admin.whitelist.title',    activePrefixes: ['/admin/whitelist'] },
+  { to: '/admin/users', labelKey: 'admin.users.title', activePrefixes: ['/admin/users'] },
+  { to: '/admin/whitelist', labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] },
   // Unified content browser — the only editor for papers/LOs/questions now.
-  { to: '/admin/content',      labelKey: 'admin.content.title',      activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
+  { to: '/admin/content', labelKey: 'admin.content.title', activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
   { to: '/admin/localization', labelKey: 'admin.localization.title', activePrefixes: ['/admin/localization'] },
 ]);
 
@@ -54,12 +54,8 @@ function onExit() {
       </div>
 
       <nav class="admin-nav">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          :class="['admin-nav-item', { active: isActive(item) }]"
-        >
+        <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
+          :class="['admin-nav-item', { active: isActive(item) }]">
           {{ t(item.labelKey) }}
         </RouterLink>
       </nav>

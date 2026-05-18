@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 
 // Snapshot of user-level facts the rules need. Built ONCE per evaluation call
 // so we don't fan out into multiple queries per rule. Adding a new badge rule:
@@ -31,13 +31,15 @@ export class BadgeContextRepository {
   // and Postgres tolerates this style fine. All subqueries default to 0 / FALSE
   // for users with no data via COALESCE / EXISTS.
   async build(user_id: string): Promise<BadgeContext> {
-    const rows = await this.sql<Array<{
-      xp: number;
-      streak_count: number;
-      distinct_papers_studied: number;
-      lo_mastered_count: number;
-      has_any_attempt: boolean;
-    }>>`
+    const rows = await this.sql<
+      Array<{
+        xp: number;
+        streak_count: number;
+        distinct_papers_studied: number;
+        lo_mastered_count: number;
+        has_any_attempt: boolean;
+      }>
+    >`
       SELECT
         u.xp                                                            AS xp,
         u.streak_count                                                  AS streak_count,
@@ -84,20 +86,20 @@ type Rule = (ctx: BadgeContext) => boolean;
 // init time logs a warning if these drift.
 export const RULES: Record<string, Rule> = {
   // Streak family
-  streak_7:   (c) => c.streak_count >= 7,
-  streak_30:  (c) => c.streak_count >= 30,
+  streak_7: (c) => c.streak_count >= 7,
+  streak_30: (c) => c.streak_count >= 30,
   streak_100: (c) => c.streak_count >= 100,
 
   // XP family
-  xp_500:   (c) => c.xp >= 500,
-  xp_2500:  (c) => c.xp >= 2500,
+  xp_500: (c) => c.xp >= 500,
+  xp_2500: (c) => c.xp >= 2500,
   xp_10000: (c) => c.xp >= 10000,
 
   // Paper exploration
-  paper_started:  (c) => c.has_any_attempt,
+  paper_started: (c) => c.has_any_attempt,
   paper_explorer: (c) => c.distinct_papers_studied >= 3,
 
   // Mastery
-  lo_mastered_1:  (c) => c.lo_mastered_count >= 1,
+  lo_mastered_1: (c) => c.lo_mastered_count >= 1,
   lo_mastered_10: (c) => c.lo_mastered_count >= 10,
 };

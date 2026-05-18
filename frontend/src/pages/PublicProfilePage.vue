@@ -161,12 +161,7 @@ onMounted(load);
             {{ t('public_profile.no_badges') }}
           </p>
           <div v-else class="badges-grid mt-4">
-            <div
-              v-for="b in profile.badges"
-              :key="b.code"
-              class="badge-tile"
-              :title="b.description"
-            >
+            <div v-for="b in profile.badges" :key="b.code" class="badge-tile" :title="b.description">
               <div class="badge-tile-icon">{{ b.icon }}</div>
               <div class="badge-tile-name">{{ b.name }}</div>
               <div v-if="b.earned_at" class="dim text-xs mt-1">
@@ -186,12 +181,7 @@ onMounted(load);
             {{ t('public_profile.no_achievements') }}
           </p>
           <div v-else class="achievements-public-grid mt-4">
-            <div
-              v-for="a in achievements"
-              :key="a.code"
-              class="achievement-public-tile"
-              :title="a.description"
-            >
+            <div v-for="a in achievements" :key="a.code" class="achievement-public-tile" :title="a.description">
               <div class="achievement-public-icon">{{ a.icon }}</div>
               <div class="achievement-public-name">{{ a.name }}</div>
               <div class="achievement-public-level">
@@ -222,11 +212,13 @@ onMounted(load);
   grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
+
 @media (max-width: 720px) {
   .public-profile-stats {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
 @media (max-width: 380px) {
   .public-profile-stats {
     grid-template-columns: 1fr;

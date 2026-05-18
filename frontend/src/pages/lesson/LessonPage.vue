@@ -400,7 +400,8 @@ onUnmounted(() => {
         <div class="stats mt-6">
           <div class="stat">
             <div class="stat-lbl">{{ t('lesson.complete_correct') }}</div>
-            <div class="stat-val">{{ summary.correct_count }}<span class="dim text-sm" style="font-size: 18px;"> / {{ summary.question_count }}</span></div>
+            <div class="stat-val">{{ summary.correct_count }}<span class="dim text-sm" style="font-size: 18px;"> / {{
+              summary.question_count }}</span></div>
           </div>
           <div class="stat">
             <div class="stat-lbl">{{ t('lesson.complete_xp_earned') }}</div>
@@ -418,12 +419,7 @@ onUnmounted(() => {
         <div v-if="newlyEarnedDetails.length > 0" class="badge-earned-ribbon">
           <div class="badge-earned-title">{{ t('lesson.badges_earned_title') }}</div>
           <div class="badge-earned-row">
-            <div
-              v-for="b in newlyEarnedDetails"
-              :key="b.code"
-              class="badge-earned-tile"
-              :title="b.description"
-            >
+            <div v-for="b in newlyEarnedDetails" :key="b.code" class="badge-earned-tile" :title="b.description">
               <span class="badge-earned-icon">{{ b.icon }}</span>
               <span class="badge-earned-name">{{ b.name }}</span>
             </div>
@@ -469,24 +465,13 @@ onUnmounted(() => {
           <!-- Mock: countdown timer instead of hearts. Hearts are decorative
                for mocks (the column still exists in the DB) so we replace the
                whole slot rather than mix them. -->
-          <div
-            v-if="isMock"
-            :class="['mock-timer mono', { warning: timerWarning }]"
-            :aria-label="t('lesson.mock_timer_label') + ': ' + timerDisplay"
-          >
+          <div v-if="isMock" :class="['mock-timer mono', { warning: timerWarning }]"
+            :aria-label="t('lesson.mock_timer_label') + ': ' + timerDisplay">
             {{ timerDisplay }}
           </div>
-          <div
-            v-else
-            class="hearts-row"
-            :aria-label="t('lesson.hearts_label') + ': ' + hearts + ' / ' + MAX_HEARTS"
-          >
-            <span
-              v-for="(filled, i) in heartSlots"
-              :key="i"
-              :class="['heart', filled ? 'filled' : 'empty']"
-              aria-hidden="true"
-            >{{ filled ? '♥' : '♡' }}</span>
+          <div v-else class="hearts-row" :aria-label="t('lesson.hearts_label') + ': ' + hearts + ' / ' + MAX_HEARTS">
+            <span v-for="(filled, i) in heartSlots" :key="i" :class="['heart', filled ? 'filled' : 'empty']"
+              aria-hidden="true">{{ filled ? '♥' : '♡' }}</span>
           </div>
           <div class="progress-num mono">
             {{ String(currentIndex + 1).padStart(2, '0') }} / {{ String(queue.length).padStart(2, '0') }}
@@ -502,14 +487,8 @@ onUnmounted(() => {
 
         <!-- MCQ -->
         <div v-if="current.type === 'mcq' && current.options" class="options">
-          <button
-            v-for="(opt, i) in current.options"
-            :key="opt.key"
-            type="button"
-            :class="optionClass(opt.key)"
-            :disabled="!!feedback"
-            @click="selectedOption = opt.key"
-          >
+          <button v-for="(opt, i) in current.options" :key="opt.key" type="button" :class="optionClass(opt.key)"
+            :disabled="!!feedback" @click="selectedOption = opt.key">
             <span class="option-key">{{ opt.key }}</span>
             <span>{{ opt.text }}</span>
             <span v-if="!feedback" class="dim text-xs mono" style="margin-left: auto;">{{ i + 1 }}</span>
@@ -518,14 +497,8 @@ onUnmounted(() => {
 
         <!-- Short answer -->
         <div v-else-if="current.type === 'short_answer'" class="mt-4">
-          <textarea
-            ref="shortAnswerInput"
-            v-model="shortAnswer"
-            :disabled="!!feedback"
-            rows="3"
-            maxlength="4000"
-            :placeholder="t('lesson.short_answer_placeholder')"
-          />
+          <textarea ref="shortAnswerInput" v-model="shortAnswer" :disabled="!!feedback" rows="3" maxlength="4000"
+            :placeholder="t('lesson.short_answer_placeholder')" />
           <p class="input-help">{{ t('lesson.short_answer_help') }}</p>
         </div>
 
@@ -533,24 +506,13 @@ onUnmounted(() => {
              single numeric value. inputmode=decimal triggers numeric keyboards
              on mobile while still allowing typed characters on desktop. -->
         <div v-else-if="current.type === 'number_entry'" class="mt-4 number-entry">
-          <input
-            ref="numberAnswerInput"
-            v-model="numberAnswer"
-            type="text"
-            inputmode="decimal"
-            autocomplete="off"
-            spellcheck="false"
-            :disabled="!!feedback"
-            maxlength="40"
-            :placeholder="t('lesson.number_entry_placeholder')"
-            class="number-input"
-          />
+          <input ref="numberAnswerInput" v-model="numberAnswer" type="text" inputmode="decimal" autocomplete="off"
+            spellcheck="false" :disabled="!!feedback" maxlength="40" :placeholder="t('lesson.number_entry_placeholder')"
+            class="number-input" />
           <p class="input-help">
             <span>{{ t('lesson.number_entry_help') }}</span>
-            <span
-              v-if="current.acceptable_tolerance !== null && current.acceptable_tolerance > 0"
-              class="tolerance-hint"
-            >
+            <span v-if="current.acceptable_tolerance !== null && current.acceptable_tolerance > 0"
+              class="tolerance-hint">
               {{ t('lesson.number_entry_tolerance', { tol: current.acceptable_tolerance }) }}
             </span>
           </p>
@@ -575,15 +537,8 @@ onUnmounted(() => {
           <!-- "Why are the others wrong?" — only on wrong MCQ when at least one
                wrong option has a baked-in explanation. Per-option text comes
                from the lesson queue payload; no additional API call. -->
-          <div
-            v-if="!feedback.was_correct && wrongOptionsForFeedback.length > 0"
-            class="why-wrong-section"
-          >
-            <button
-              type="button"
-              class="btn-link why-wrong-toggle"
-              @click="showWhyWrong = !showWhyWrong"
-            >
+          <div v-if="!feedback.was_correct && wrongOptionsForFeedback.length > 0" class="why-wrong-section">
+            <button type="button" class="btn-link why-wrong-toggle" @click="showWhyWrong = !showWhyWrong">
               {{ showWhyWrong ? t('lesson.why_wrong_hide') : t('lesson.why_wrong_show') }}
             </button>
             <ul v-if="showWhyWrong" class="why-wrong-list">
@@ -609,24 +564,14 @@ onUnmounted(() => {
               <kbd>↵</kbd> {{ t('lesson.keys_help_text') }}
             </template>
           </div>
-          <button
-            v-if="!feedback"
-            class="btn btn-primary"
-            :disabled="submitting || (
-              current.type === 'mcq' ? !selectedOption :
+          <button v-if="!feedback" class="btn btn-primary" :disabled="submitting || (
+            current.type === 'mcq' ? !selectedOption :
               current.type === 'number_entry' ? !numberAnswer.trim() :
-              !shortAnswer.trim()
-            )"
-            @click="onSubmit"
-          >
+                !shortAnswer.trim()
+          )" @click="onSubmit">
             {{ submitting ? t('lesson.checking') : t('lesson.submit') }}
           </button>
-          <button
-            v-else
-            class="btn btn-primary"
-            :disabled="completing"
-            @click="onNext"
-          >
+          <button v-else class="btn btn-primary" :disabled="completing" @click="onNext">
             {{
               completing
                 ? t('lesson.finishing')

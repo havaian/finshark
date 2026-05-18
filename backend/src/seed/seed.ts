@@ -155,7 +155,8 @@ async function insertQuestion(
       if (o.key === q.correct_answer_en) {
         // Strip why_wrong on correct option.
         const { why_wrong_en, why_wrong_ru, ...rest } = o;
-        void why_wrong_en; void why_wrong_ru;
+        void why_wrong_en;
+        void why_wrong_ru;
         return { ...rest, why_wrong_en: null, why_wrong_ru: null };
       }
       return {
@@ -164,7 +165,9 @@ async function insertQuestion(
         why_wrong_ru: o.why_wrong_ru ?? null,
       };
     });
-    const optionsJson = tx.json(cleanedOptions as unknown as postgres.JSONValue);
+    const optionsJson = tx.json(
+      cleanedOptions as unknown as postgres.JSONValue
+    );
     await tx`
       INSERT INTO questions (
         lo_id, type, difficulty,

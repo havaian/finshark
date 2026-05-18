@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api } from "./client";
 import type {
   ContentTreePaper,
   LearningObjectiveRaw,
@@ -8,9 +8,9 @@ import type {
   QuestionDifficulty,
   QuestionType,
   UiTranslation,
-} from '../types/content';
-import type { PublicUser } from '../types/auth';
-import type { WhitelistEntry } from '../types/whitelist';
+} from "../types/content";
+import type { PublicUser } from "../types/auth";
+import type { WhitelistEntry } from "../types/whitelist";
 
 // All endpoints below require an authenticated admin. Axios attaches the bearer
 // token automatically via the interceptor in client.ts.
@@ -19,21 +19,22 @@ import type { WhitelistEntry } from '../types/whitelist';
 export const adminApi = {
   // ---- Users (admin management) ----
   listUsers: async (): Promise<PublicUser[]> =>
-    (await api.get<PublicUser[]>('/admin/users')).data,
+    (await api.get<PublicUser[]>("/admin/users")).data,
 
   setUserAdmin: async (id: string, is_admin: boolean): Promise<PublicUser> =>
-    (await api.patch<PublicUser>(`/admin/users/${id}/admin`, { is_admin })).data,
+    (await api.patch<PublicUser>(`/admin/users/${id}/admin`, { is_admin }))
+      .data,
 
   // ---- Papers ----
   listPapers: async (): Promise<PaperRaw[]> =>
-    (await api.get<PaperRaw[]>('/admin/papers')).data,
+    (await api.get<PaperRaw[]>("/admin/papers")).data,
 
   createPaper: async (input: {
     code: string;
     name_en: string;
     name_ru?: string | null;
   }): Promise<PaperRaw> =>
-    (await api.post<PaperRaw>('/admin/papers', input)).data,
+    (await api.post<PaperRaw>("/admin/papers", input)).data,
 
   updatePaper: async (
     id: string,
@@ -41,7 +42,7 @@ export const adminApi = {
       code: string;
       name_en: string;
       name_ru: string | null;
-    }>,
+    }>
   ): Promise<PaperRaw> =>
     (await api.patch<PaperRaw>(`/admin/papers/${id}`, input)).data,
 
@@ -51,7 +52,8 @@ export const adminApi = {
 
   // ---- Learning Objectives ----
   listLos: async (paper_id: string): Promise<LearningObjectiveRaw[]> =>
-    (await api.get<LearningObjectiveRaw[]>(`/admin/papers/${paper_id}/los`)).data,
+    (await api.get<LearningObjectiveRaw[]>(`/admin/papers/${paper_id}/los`))
+      .data,
 
   getLo: async (id: string): Promise<LearningObjectiveRaw> =>
     (await api.get<LearningObjectiveRaw>(`/admin/los/${id}`)).data,
@@ -67,10 +69,14 @@ export const adminApi = {
       theory_en?: string | null;
       theory_ru?: string | null;
       sort_order?: number;
-    },
+    }
   ): Promise<LearningObjectiveRaw> =>
-    (await api.post<LearningObjectiveRaw>(`/admin/papers/${paper_id}/los`, input))
-      .data,
+    (
+      await api.post<LearningObjectiveRaw>(
+        `/admin/papers/${paper_id}/los`,
+        input
+      )
+    ).data,
 
   updateLo: async (
     id: string,
@@ -83,7 +89,7 @@ export const adminApi = {
       theory_en: string | null;
       theory_ru: string | null;
       sort_order: number;
-    }>,
+    }>
   ): Promise<LearningObjectiveRaw> =>
     (await api.patch<LearningObjectiveRaw>(`/admin/los/${id}`, input)).data,
 
@@ -110,7 +116,7 @@ export const adminApi = {
       concept_bite_en?: string | null;
       concept_bite_ru?: string | null;
       acceptable_tolerance?: number | null;
-    },
+    }
   ): Promise<QuestionRaw> =>
     (await api.post<QuestionRaw>(`/admin/los/${lo_id}/questions`, input)).data,
 
@@ -130,7 +136,7 @@ export const adminApi = {
       concept_bite_ru: string | null;
       acceptable_tolerance: number | null;
       is_active: boolean;
-    }>,
+    }>
   ): Promise<QuestionRaw> =>
     (await api.patch<QuestionRaw>(`/admin/questions/${id}`, input)).data,
 
@@ -144,41 +150,60 @@ export const adminApi = {
   // validation. The returned length is the actual count inserted.
   generateQuestions: async (
     lo_id: string,
-    input: { count: number; hints?: string },
+    input: { count: number; hints?: string }
   ): Promise<QuestionRaw[]> =>
-    (await api.post<QuestionRaw[]>(`/admin/los/${lo_id}/questions/generate`, input)).data,
+    (
+      await api.post<QuestionRaw[]>(
+        `/admin/los/${lo_id}/questions/generate`,
+        input
+      )
+    ).data,
 
   // ---- Content tree (admin browser) ----
   // Returns papers nested with their LOs and per-LO question counts. One
   // network call powers the sidebar tree on the content browser page.
   getContentTree: async (): Promise<ContentTreePaper[]> =>
-    (await api.get<ContentTreePaper[]>('/admin/content/tree')).data,
+    (await api.get<ContentTreePaper[]>("/admin/content/tree")).data,
 
   // Bulk-set is_active on multiple questions. Returns the updated rows.
   setQuestionsActive: async (
     ids: string[],
-    is_active: boolean,
+    is_active: boolean
   ): Promise<QuestionRaw[]> =>
-    (await api.post<QuestionRaw[]>('/admin/questions/batch/active', { ids, is_active })).data,
+    (
+      await api.post<QuestionRaw[]>("/admin/questions/batch/active", {
+        ids,
+        is_active,
+      })
+    ).data,
 
   // Bulk hard-delete. Throws 400 if any selected question has dependent
   // attempts (entire batch rolls back in that case).
   deleteQuestionsMany: async (ids: string[]): Promise<{ deleted: number }> =>
-    (await api.post<{ deleted: number }>('/admin/questions/batch/delete', { ids })).data,
+    (
+      await api.post<{ deleted: number }>("/admin/questions/batch/delete", {
+        ids,
+      })
+    ).data,
 
   // ---- UI translations (DB overrides for static locale strings) ----
   listUiTranslations: async (): Promise<UiTranslation[]> =>
-    (await api.get<UiTranslation[]>('/admin/ui-translations')).data,
+    (await api.get<UiTranslation[]>("/admin/ui-translations")).data,
 
   upsertUiTranslation: async (input: {
     key: string;
-    lang: 'en' | 'ru';
+    lang: "en" | "ru";
     value: string;
   }): Promise<UiTranslation> =>
-    (await api.post<UiTranslation>('/admin/ui-translations', input)).data,
+    (await api.post<UiTranslation>("/admin/ui-translations", input)).data,
 
-  deleteUiTranslation: async (key: string, lang: 'en' | 'ru'): Promise<void> => {
-    await api.delete(`/admin/ui-translations/${lang}/${encodeURIComponent(key)}`);
+  deleteUiTranslation: async (
+    key: string,
+    lang: "en" | "ru"
+  ): Promise<void> => {
+    await api.delete(
+      `/admin/ui-translations/${lang}/${encodeURIComponent(key)}`
+    );
   },
 
   // ---- Whitelist ----
@@ -186,13 +211,20 @@ export const adminApi = {
   // (@example.com). Backend validates the shape; admin UI shows a chip per
   // entry indicating which kind it is.
   listWhitelist: async (): Promise<WhitelistEntry[]> =>
-    (await api.get<WhitelistEntry[]>('/admin/whitelist')).data,
+    (await api.get<WhitelistEntry[]>("/admin/whitelist")).data,
 
-  addWhitelist: async (input: { pattern: string; note?: string | null }): Promise<WhitelistEntry> =>
-    (await api.post<WhitelistEntry>('/admin/whitelist', input)).data,
+  addWhitelist: async (input: {
+    pattern: string;
+    note?: string | null;
+  }): Promise<WhitelistEntry> =>
+    (await api.post<WhitelistEntry>("/admin/whitelist", input)).data,
 
-  updateWhitelistNote: async (id: string, note: string | null): Promise<WhitelistEntry> =>
-    (await api.patch<WhitelistEntry>(`/admin/whitelist/${id}/note`, { note })).data,
+  updateWhitelistNote: async (
+    id: string,
+    note: string | null
+  ): Promise<WhitelistEntry> =>
+    (await api.patch<WhitelistEntry>(`/admin/whitelist/${id}/note`, { note }))
+      .data,
 
   deleteWhitelist: async (id: string): Promise<void> => {
     await api.delete(`/admin/whitelist/${id}`);
@@ -213,5 +245,5 @@ export const adminApi = {
     user_badges_deleted: number;
     mastery_snapshots_deleted: number;
     users_progress_reset: number;
-  }> => (await api.post('/admin/system/reseed')).data,
+  }> => (await api.post("/admin/system/reseed")).data,
 };

@@ -3,15 +3,15 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { WhitelistRepository } from './whitelist.repository';
+} from "@nestjs/common";
+import { WhitelistRepository } from "./whitelist.repository";
 import {
   classifyPattern,
   isEmailAllowed,
   normalisePattern,
   toPublicWhitelistEntry,
   type PublicWhitelistEntry,
-} from './whitelist.types';
+} from "./whitelist.types";
 
 @Injectable()
 export class WhitelistService {
@@ -46,12 +46,12 @@ export class WhitelistService {
     const normalised = normalisePattern(input.pattern);
     if (!normalised) {
       throw new BadRequestException(
-        'pattern must be an email (user@example.com) or domain (@example.com)',
+        "pattern must be an email (user@example.com) or domain (@example.com)"
       );
     }
     const noteClean = input.note?.trim() || null;
     if (noteClean && noteClean.length > 500) {
-      throw new BadRequestException('note is too long (max 500 chars)');
+      throw new BadRequestException("note is too long (max 500 chars)");
     }
 
     const inserted = await this.repo.insert({
@@ -60,7 +60,9 @@ export class WhitelistService {
       created_by_user_id: input.created_by_user_id,
     });
     if (!inserted) {
-      throw new ConflictException(`pattern "${normalised}" is already in the whitelist`);
+      throw new ConflictException(
+        `pattern "${normalised}" is already in the whitelist`
+      );
     }
     return toPublicWhitelistEntry(inserted);
   }
@@ -68,19 +70,22 @@ export class WhitelistService {
   // Admin: update note. Pattern itself stays immutable (delete+re-add to
   // change it — that way audit trail (created_at, created_by_user_id) is
   // accurate, and we don't accidentally widen scope under the same id).
-  async updateNote(id: string, note: string | null): Promise<PublicWhitelistEntry> {
+  async updateNote(
+    id: string,
+    note: string | null
+  ): Promise<PublicWhitelistEntry> {
     const noteClean = note?.trim() || null;
     if (noteClean && noteClean.length > 500) {
-      throw new BadRequestException('note is too long (max 500 chars)');
+      throw new BadRequestException("note is too long (max 500 chars)");
     }
     const updated = await this.repo.updateNote(id, noteClean);
-    if (!updated) throw new NotFoundException('whitelist entry not found');
+    if (!updated) throw new NotFoundException("whitelist entry not found");
     return toPublicWhitelistEntry(updated);
   }
 
   async remove(id: string): Promise<void> {
     const ok = await this.repo.deleteById(id);
-    if (!ok) throw new NotFoundException('whitelist entry not found');
+    if (!ok) throw new NotFoundException("whitelist entry not found");
   }
 
   // Convenience for the auth flow: log + classify what the admin would see.

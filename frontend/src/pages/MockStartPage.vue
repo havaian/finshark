@@ -110,13 +110,8 @@ onMounted(loadPapers);
             {{ t('mocks.no_papers') }}
           </div>
           <div v-else class="mock-paper-options">
-            <button
-              v-for="p in papers"
-              :key="p.id"
-              type="button"
-              :class="['mock-option', { selected: paperId === p.id }]"
-              @click="paperId = p.id"
-            >
+            <button v-for="p in papers" :key="p.id" type="button"
+              :class="['mock-option', { selected: paperId === p.id }]" @click="paperId = p.id">
               <span class="mono">{{ p.code }}</span>
               <span class="dim" style="margin-left: 8px;">{{ p.name }}</span>
             </button>
@@ -127,13 +122,9 @@ onMounted(loadPapers);
         <div class="field mt-4">
           <label class="field-label">{{ t('mocks.count_label') }}</label>
           <div class="mock-presets">
-            <button
-              v-for="n in COUNT_PRESETS"
-              :key="n"
-              type="button"
+            <button v-for="n in COUNT_PRESETS" :key="n" type="button"
               :class="['mock-option mock-option-compact', { selected: questionCount === n }]"
-              @click="questionCount = n"
-            >
+              @click="questionCount = n">
               {{ n }}
             </button>
           </div>
@@ -143,13 +134,8 @@ onMounted(loadPapers);
         <div class="field mt-4">
           <label class="field-label">{{ t('mocks.time_label') }}</label>
           <div class="mock-presets">
-            <button
-              v-for="m in MINUTE_PRESETS"
-              :key="m"
-              type="button"
-              :class="['mock-option mock-option-compact', { selected: minutes === m }]"
-              @click="minutes = m"
-            >
+            <button v-for="m in MINUTE_PRESETS" :key="m" type="button"
+              :class="['mock-option mock-option-compact', { selected: minutes === m }]" @click="minutes = m">
               {{ t('mocks.time_minutes', { n: m }) }}
             </button>
           </div>
@@ -159,11 +145,7 @@ onMounted(loadPapers);
         <p v-if="submitError" class="error-text">{{ submitError }}</p>
 
         <div class="row mt-6" style="justify-content: flex-end;">
-          <button
-            class="btn btn-primary"
-            :disabled="!canSubmit"
-            @click="onStart"
-          >
+          <button class="btn btn-primary" :disabled="!canSubmit" @click="onStart">
             {{ submitting ? t('mocks.starting') : t('mocks.start_btn') }}
           </button>
         </div>

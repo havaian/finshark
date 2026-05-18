@@ -6,9 +6,9 @@ export interface TotpStatus {
 }
 
 export interface TotpSetupBeginResult {
-  secret_b32: string;      // Base32 secret (also encoded in the QR)
-  qr_data_url: string;     // data:image/png;base64,... ready for <img src>
-  otpauth_uri: string;     // raw otpauth:// URI (debug; can show as text)
+  secret_b32: string; // Base32 secret (also encoded in the QR)
+  qr_data_url: string; // data:image/png;base64,... ready for <img src>
+  otpauth_uri: string; // raw otpauth:// URI (debug; can show as text)
 }
 
 export interface TotpSetupVerifyResult {

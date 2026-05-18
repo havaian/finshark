@@ -10,16 +10,17 @@
 // All helpers accept either an ISO string OR a Date instance; null/empty
 // inputs return an em-dash placeholder so callers don't need to null-check.
 
-import { i18n } from './index';
+import { i18n } from "./index";
 
-function activeLang(): 'en' | 'ru' {
+function activeLang(): "en" | "ru" {
   // i18n.global.locale.value is a Ref<string> in Composition mode.
-  const raw = (i18n.global as unknown as { locale: { value: string } }).locale.value;
-  return raw === 'en' ? 'en' : 'ru';
+  const raw = (i18n.global as unknown as { locale: { value: string } }).locale
+    .value;
+  return raw === "en" ? "en" : "ru";
 }
 
 function intlLocale(): string {
-  return activeLang() === 'ru' ? 'ru-RU' : 'en-US';
+  return activeLang() === "ru" ? "ru-RU" : "en-US";
 }
 
 // Coerce input to Date or return null for invalid/empty values.
@@ -34,12 +35,12 @@ function toDate(input: string | Date | null | undefined): Date | null {
 // long-form date displays where time isn't relevant.
 export function fmtDate(input: string | Date | null | undefined): string {
   const d = toDate(input);
-  if (!d) return '—';
+  if (!d) return "—";
   try {
     return new Intl.DateTimeFormat(intlLocale(), {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(d);
   } catch {
     return d.toISOString().slice(0, 10);
@@ -51,18 +52,18 @@ export function fmtDate(input: string | Date | null | undefined): string {
 // the surrounding tabular-numeric typography.
 export function fmtDateTime(input: string | Date | null | undefined): string {
   const d = toDate(input);
-  if (!d) return '—';
+  if (!d) return "—";
   try {
     return new Intl.DateTimeFormat(intlLocale(), {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
     }).format(d);
   } catch {
-    return d.toISOString().slice(0, 16).replace('T', ' ');
+    return d.toISOString().slice(0, 16).replace("T", " ");
   }
 }
 
@@ -71,7 +72,7 @@ export function fmtDateTime(input: string | Date | null | undefined): string {
 // because relative phrasing gets clumsy beyond that.
 export function fmtRelative(input: string | Date | null | undefined): string {
   const d = toDate(input);
-  if (!d) return '—';
+  if (!d) return "—";
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const day = 24 * 60 * 60 * 1000;
@@ -79,8 +80,10 @@ export function fmtRelative(input: string | Date | null | undefined): string {
   if (diffMs < 7 * day) {
     try {
       const days = Math.floor(diffMs / day);
-      const rtf = new Intl.RelativeTimeFormat(intlLocale(), { numeric: 'auto' });
-      return rtf.format(-days, 'day');
+      const rtf = new Intl.RelativeTimeFormat(intlLocale(), {
+        numeric: "auto",
+      });
+      return rtf.format(-days, "day");
     } catch {
       // fall through to fmtDate
     }

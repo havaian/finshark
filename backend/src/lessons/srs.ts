@@ -15,7 +15,11 @@ export function qualityFromCorrect(was_correct: boolean): number {
 }
 
 // Reference: https://en.wikipedia.org/wiki/SuperMemo#Description_of_SM-2_algorithm
-export function applySm2(prev: SrsState, quality: number, today: Date): SrsState {
+export function applySm2(
+  prev: SrsState,
+  quality: number,
+  today: Date
+): SrsState {
   // Ease factor adjustment.
   // EF' = EF + (0.1 − (5 − q) × (0.08 + (5 − q) × 0.02))
   const efDelta = 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02);
@@ -51,7 +55,10 @@ export function applySm2(prev: SrsState, quality: number, today: Date): SrsState
 }
 
 // Mastery: +10 correct, -20 wrong, clamped [0,100]. Per spec.
-export function applyMastery(prev_mastery: number, was_correct: boolean): number {
+export function applyMastery(
+  prev_mastery: number,
+  was_correct: boolean
+): number {
   const delta = was_correct ? 10 : -20;
   const next = prev_mastery + delta;
   if (next < 0) return 0;
@@ -77,13 +84,16 @@ export function levelFromXp(xp: number): number {
 export function nextStreak(
   current_streak: number,
   last_active_date: Date | null,
-  today: Date,
+  today: Date
 ): number {
   if (!last_active_date) return 1;
-  const diffDays = daysBetween(toUtcDateOnly(last_active_date), toUtcDateOnly(today));
-  if (diffDays === 0) return current_streak;       // already active today
-  if (diffDays === 1) return current_streak + 1;   // streak continues
-  return 1;                                        // broke the streak; this session restarts it
+  const diffDays = daysBetween(
+    toUtcDateOnly(last_active_date),
+    toUtcDateOnly(today)
+  );
+  if (diffDays === 0) return current_streak; // already active today
+  if (diffDays === 1) return current_streak + 1; // streak continues
+  return 1; // broke the streak; this session restarts it
 }
 
 // ---- date helpers (UTC-day-granularity) ----
@@ -95,7 +105,9 @@ export function addDays(d: Date, days: number): Date {
 }
 
 export function toUtcDateOnly(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  );
 }
 
 export function daysBetween(a: Date, b: Date): number {

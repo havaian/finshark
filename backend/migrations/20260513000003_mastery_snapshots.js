@@ -12,8 +12,8 @@ exports.shorthands = undefined;
 
 exports.up = (pgm) => {
   pgm.createTable('mastery_snapshots', {
-    user_id:    { type: 'bigint', notNull: true, references: 'users(id)', onDelete: 'CASCADE' },
-    snap_date:  { type: 'date', notNull: true },
+    user_id: { type: 'bigint', notNull: true, references: 'users(id)', onDelete: 'CASCADE' },
+    snap_date: { type: 'date', notNull: true },
     avg_mastery: { type: 'real', notNull: true },  // 0..100
     created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
   });

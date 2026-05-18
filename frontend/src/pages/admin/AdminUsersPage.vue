@@ -80,12 +80,8 @@ onMounted(load);
 
     <div class="topbar">
       <h1>{{ t('admin.users.title') }}</h1>
-      <input
-        v-model="filterText"
-        type="text"
-        :placeholder="t('admin.users.filter_placeholder')"
-        style="max-width: 280px;"
-      />
+      <input v-model="filterText" type="text" :placeholder="t('admin.users.filter_placeholder')"
+        style="max-width: 280px;" />
     </div>
 
     <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
@@ -96,30 +92,23 @@ onMounted(load);
         <div style="display: flex; flex-direction: column; gap: 4px;">
           <div>
             <span style="font-weight: 500;">{{ u.display_name }}</span>
-            <span v-if="u.is_admin" class="pill pill-accent" style="margin-left: 10px;">{{ t('admin.users.admin_badge') }}</span>
-            <span v-if="auth.user?.id === u.id" class="pill pill-grey" style="margin-left: 6px;">{{ t('admin.users.you_badge') }}</span>
+            <span v-if="u.is_admin" class="pill pill-accent" style="margin-left: 10px;">{{ t('admin.users.admin_badge')
+              }}</span>
+            <span v-if="auth.user?.id === u.id" class="pill pill-grey" style="margin-left: 6px;">{{
+              t('admin.users.you_badge') }}</span>
           </div>
           <div class="dim text-sm">{{ u.email }}</div>
           <div class="mono text-xs muted">
-            {{ t('dashboard.streak') }} {{ u.streak_count }} · {{ t('dashboard.xp') }} {{ u.xp }} · {{ t('dashboard.level') }} {{ u.level }} · {{ fmtDate(u.last_active_date) }}
+            {{ t('dashboard.streak') }} {{ u.streak_count }} · {{ t('dashboard.xp') }} {{ u.xp }} · {{
+              t('dashboard.level') }} {{ u.level }} · {{ fmtDate(u.last_active_date) }}
           </div>
         </div>
         <div class="row" style="gap: 12px;">
-          <button
-            v-if="!u.is_admin"
-            class="btn btn-ghost"
-            :disabled="busyIds.has(u.id)"
-            @click="toggleAdmin(u)"
-          >
+          <button v-if="!u.is_admin" class="btn btn-ghost" :disabled="busyIds.has(u.id)" @click="toggleAdmin(u)">
             {{ busyIds.has(u.id) ? t('admin.users.updating') : t('admin.users.make_admin') }}
           </button>
-          <button
-            v-else
-            class="btn btn-ghost"
-            :disabled="busyIds.has(u.id) || auth.user?.id === u.id"
-            :title="auth.user?.id === u.id ? t('admin.users.cannot_self_demote') : ''"
-            @click="toggleAdmin(u)"
-          >
+          <button v-else class="btn btn-ghost" :disabled="busyIds.has(u.id) || auth.user?.id === u.id"
+            :title="auth.user?.id === u.id ? t('admin.users.cannot_self_demote') : ''" @click="toggleAdmin(u)">
             {{ busyIds.has(u.id) ? t('admin.users.updating') : t('admin.users.remove_admin') }}
           </button>
         </div>

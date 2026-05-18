@@ -3,9 +3,9 @@
 // PNG). `secret_b32` is shown alongside for users whose authenticator can't
 // scan a QR — they enter the secret manually.
 export interface TotpSetupBeginResult {
-  secret_b32: string;       // Base32 TOTP secret (also encoded in the QR)
-  qr_data_url: string;      // data:image/png;base64,... for direct <img src>
-  otpauth_uri: string;      // raw otpauth:// URI (kept for debugging/tests)
+  secret_b32: string; // Base32 TOTP secret (also encoded in the QR)
+  qr_data_url: string; // data:image/png;base64,... for direct <img src>
+  otpauth_uri: string; // raw otpauth:// URI (kept for debugging/tests)
 }
 
 // Returned by setup-verify. Recovery codes are surfaced ONCE — we never

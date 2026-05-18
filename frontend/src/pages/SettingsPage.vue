@@ -245,7 +245,7 @@ function copyRegenCodes() {
   if (!navigator.clipboard) return;
   navigator.clipboard
     .writeText(regenNewCodes.value.join('\n'))
-    .catch(() => {});
+    .catch(() => { });
 }
 
 function finishRegen() {
@@ -314,16 +314,10 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
         <div class="row mt-4">
           <span class="grow">{{ t('theme.label') }}</span>
           <div class="segmented">
-            <button
-              type="button"
-              :class="{ active: theme.theme === 'light' }"
-              @click="onThemeChange('light')"
-            >{{ t('theme.light') }}</button>
-            <button
-              type="button"
-              :class="{ active: theme.theme === 'dark' }"
-              @click="onThemeChange('dark')"
-            >{{ t('theme.dark') }}</button>
+            <button type="button" :class="{ active: theme.theme === 'light' }" @click="onThemeChange('light')">{{
+              t('theme.light') }}</button>
+            <button type="button" :class="{ active: theme.theme === 'dark' }" @click="onThemeChange('dark')">{{
+              t('theme.dark') }}</button>
           </div>
         </div>
       </section>
@@ -334,16 +328,10 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
         <div class="row mt-4">
           <span class="grow">{{ t('lang.label') }}</span>
           <div class="segmented">
-            <button
-              type="button"
-              :class="{ active: locale.lang === 'ru' }"
-              @click="onLangChange('ru')"
-            >{{ t('lang.name_ru') }}</button>
-            <button
-              type="button"
-              :class="{ active: locale.lang === 'en' }"
-              @click="onLangChange('en')"
-            >{{ t('lang.name_en') }}</button>
+            <button type="button" :class="{ active: locale.lang === 'ru' }" @click="onLangChange('ru')">{{
+              t('lang.name_ru') }}</button>
+            <button type="button" :class="{ active: locale.lang === 'en' }" @click="onLangChange('en')">{{
+              t('lang.name_en') }}</button>
           </div>
         </div>
       </section>
@@ -354,12 +342,8 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
 
         <div class="row mt-4">
           <span class="grow">{{ t('settings.lesson_size') }}</span>
-          <select
-            :value="lessonSize"
-            :disabled="savingField === 'lesson_size'"
-            @change="lessonSize = parseInt(($event.target as HTMLSelectElement).value, 10)"
-            style="max-width: 120px;"
-          >
+          <select :value="lessonSize" :disabled="savingField === 'lesson_size'"
+            @change="lessonSize = parseInt(($event.target as HTMLSelectElement).value, 10)" style="max-width: 120px;">
             <option v-for="n in LESSON_SIZES" :key="n" :value="n">{{ n }}</option>
           </select>
           <span v-if="justSaved === 'lesson_size'" class="dim text-xs">{{ t('admin.localization.saved') }} ✓</span>
@@ -367,18 +351,15 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
 
         <div class="row mt-4">
           <span class="grow">{{ t('settings.preferred_difficulty') }}</span>
-          <select
-            :value="difficulty"
-            :disabled="savingField === 'preferred_difficulty'"
-            @change="difficulty = ($event.target as HTMLSelectElement).value as DiffChoice"
-            style="max-width: 200px;"
-          >
+          <select :value="difficulty" :disabled="savingField === 'preferred_difficulty'"
+            @change="difficulty = ($event.target as HTMLSelectElement).value as DiffChoice" style="max-width: 200px;">
             <option value="auto">{{ t('settings.preferred_difficulty_auto') }}</option>
             <option value="easy">{{ t('admin.questions.difficulty_easy') }}</option>
             <option value="medium">{{ t('admin.questions.difficulty_medium') }}</option>
             <option value="hard">{{ t('admin.questions.difficulty_hard') }}</option>
           </select>
-          <span v-if="justSaved === 'preferred_difficulty'" class="dim text-xs">{{ t('admin.localization.saved') }} ✓</span>
+          <span v-if="justSaved === 'preferred_difficulty'" class="dim text-xs">{{ t('admin.localization.saved') }}
+            ✓</span>
         </div>
       </section>
 
@@ -393,25 +374,17 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
               {{ t('dashboard.daily_reminders_sub') }}
             </div>
           </div>
-          <button
-            class="toggle"
-            :class="{ on: remindersEnabled }"
-            :disabled="savingField === 'email_reminders'"
+          <button class="toggle" :class="{ on: remindersEnabled }" :disabled="savingField === 'email_reminders'"
             :aria-label="remindersEnabled ? t('dashboard.reminders_on') : t('dashboard.reminders_off')"
-            @click="remindersEnabled = !remindersEnabled"
-          >
+            @click="remindersEnabled = !remindersEnabled">
             <span class="toggle-knob"></span>
           </button>
         </div>
 
         <div class="row mt-4" :style="{ opacity: remindersEnabled ? 1 : 0.5 }">
           <span class="grow">{{ t('settings.reminder_hour') }}</span>
-          <select
-            :value="reminderHour"
-            :disabled="!remindersEnabled || savingField === 'reminder_hour'"
-            @change="reminderHour = parseInt(($event.target as HTMLSelectElement).value, 10)"
-            style="max-width: 120px;"
-          >
+          <select :value="reminderHour" :disabled="!remindersEnabled || savingField === 'reminder_hour'"
+            @change="reminderHour = parseInt(($event.target as HTMLSelectElement).value, 10)" style="max-width: 120px;">
             <option v-for="h in hours" :key="h" :value="h">{{ fmtHour(h) }}</option>
           </select>
           <span v-if="justSaved === 'reminder_hour'" class="dim text-xs">{{ t('admin.localization.saved') }} ✓</span>
@@ -428,13 +401,9 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
               {{ t('settings.leaderboard_optin_sub') }}
             </div>
           </div>
-          <button
-            class="toggle"
-            :class="{ on: leaderboardOptIn }"
-            :disabled="savingField === 'leaderboard_opt_in'"
+          <button class="toggle" :class="{ on: leaderboardOptIn }" :disabled="savingField === 'leaderboard_opt_in'"
             :aria-label="leaderboardOptIn ? t('settings.leaderboard_on') : t('settings.leaderboard_off')"
-            @click="leaderboardOptIn = !leaderboardOptIn"
-          >
+            @click="leaderboardOptIn = !leaderboardOptIn">
             <span class="toggle-knob"></span>
           </button>
         </div>
@@ -469,18 +438,10 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
             </div>
           </div>
 
-          <button
-            v-if="!twoFactorEnabled"
-            class="btn btn-primary"
-            @click="goEnable2fa"
-          >
+          <button v-if="!twoFactorEnabled" class="btn btn-primary" @click="goEnable2fa">
             {{ t('settings.tfa_enable_btn') }}
           </button>
-          <button
-            v-else-if="!showDisable2faForm"
-            class="btn btn-ghost"
-            @click="openDisable2faForm"
-          >
+          <button v-else-if="!showDisable2faForm" class="btn btn-ghost" @click="openDisable2faForm">
             {{ t('settings.tfa_disable_btn') }}
           </button>
         </div>
@@ -489,30 +450,16 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
              code) so a stolen session can't strip the factor. -->
         <div v-if="twoFactorEnabled && showDisable2faForm" class="mt-4">
           <label class="field-label">{{ t('settings.tfa_disable_code_label') }}</label>
-          <input
-            v-model="disable2faCode"
-            type="text"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            maxlength="32"
-            placeholder="123456"
-            style="margin-top: 6px; font-family: ui-monospace, monospace; letter-spacing: 0.06em;"
-            @keydown.enter="disable2faCode.length >= 6 && !disable2faSubmitting && confirmDisable2fa()"
-          />
+          <input v-model="disable2faCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="32"
+            placeholder="123456" style="margin-top: 6px; font-family: ui-monospace, monospace; letter-spacing: 0.06em;"
+            @keydown.enter="disable2faCode.length >= 6 && !disable2faSubmitting && confirmDisable2fa()" />
           <p v-if="disable2faError" class="error-text mt-2">{{ disable2faError }}</p>
           <div class="row mt-4" style="gap: 8px;">
-            <button
-              class="btn btn-danger"
-              :disabled="disable2faSubmitting || disable2faCode.trim().length < 6"
-              @click="confirmDisable2fa"
-            >
+            <button class="btn btn-danger" :disabled="disable2faSubmitting || disable2faCode.trim().length < 6"
+              @click="confirmDisable2fa">
               {{ disable2faSubmitting ? t('common.saving') : t('settings.tfa_disable_confirm') }}
             </button>
-            <button
-              class="btn btn-ghost"
-              :disabled="disable2faSubmitting"
-              @click="cancelDisable2fa"
-            >
+            <button class="btn btn-ghost" :disabled="disable2faSubmitting" @click="cancelDisable2fa">
               {{ t('common.cancel') }}
             </button>
           </div>
@@ -548,30 +495,16 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
           <p class="dim text-sm mt-2">{{ t('settings.tfa_regenerate_hint') }}</p>
 
           <label class="field-label mt-4">{{ t('settings.tfa_regenerate_code_label') }}</label>
-          <input
-            v-model="regenCode"
-            type="text"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            maxlength="32"
-            placeholder="123456"
-            style="margin-top: 6px; font-family: ui-monospace, monospace; letter-spacing: 0.06em;"
-            @keydown.enter="regenCode.length >= 6 && !regenSubmitting && confirmRegen()"
-          />
+          <input v-model="regenCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="32"
+            placeholder="123456" style="margin-top: 6px; font-family: ui-monospace, monospace; letter-spacing: 0.06em;"
+            @keydown.enter="regenCode.length >= 6 && !regenSubmitting && confirmRegen()" />
           <p v-if="regenError" class="error-text mt-2">{{ regenError }}</p>
           <div class="row mt-4" style="gap: 8px;">
-            <button
-              class="btn btn-primary"
-              :disabled="regenSubmitting || regenCode.trim().length < 6"
-              @click="confirmRegen"
-            >
+            <button class="btn btn-primary" :disabled="regenSubmitting || regenCode.trim().length < 6"
+              @click="confirmRegen">
               {{ regenSubmitting ? t('common.saving') : t('settings.tfa_regenerate_confirm') }}
             </button>
-            <button
-              class="btn btn-ghost"
-              :disabled="regenSubmitting"
-              @click="cancelRegen"
-            >
+            <button class="btn btn-ghost" :disabled="regenSubmitting" @click="cancelRegen">
               {{ t('common.cancel') }}
             </button>
           </div>
@@ -597,11 +530,7 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
             <span>{{ t('tfa_setup.saved_confirm') }}</span>
           </label>
 
-          <button
-            class="btn btn-primary btn-block mt-4"
-            :disabled="!regenSavedConfirmed"
-            @click="finishRegen"
-          >
+          <button class="btn btn-primary btn-block mt-4" :disabled="!regenSavedConfirmed" @click="finishRegen">
             {{ t('tfa_setup.finish') }}
           </button>
         </div>

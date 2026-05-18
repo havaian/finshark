@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { BadgeRow, UserBadgeRow } from './badges.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { BadgeRow, UserBadgeRow } from "./badges.types";
 
 const BADGE_COLS = `
   code, name_en, name_ru, description_en, description_ru, icon, sort_order,
@@ -23,9 +23,7 @@ export class BadgesRepository {
 
   // Earned events for a single user, keyed by badge_code. Used by the rule
   // evaluator (to know what NOT to insert) and by the profile page renderer.
-  async findEarnedByUser(
-    user_id: string,
-  ): Promise<Map<string, Date>> {
+  async findEarnedByUser(user_id: string): Promise<Map<string, Date>> {
     const rows = await this.sql<Array<{ badge_code: string; earned_at: Date }>>`
       SELECT badge_code, earned_at
       FROM user_badges
@@ -54,7 +52,7 @@ export class BadgesRepository {
     const rows = await this.sql<Array<{ count: string }>>`
       SELECT COUNT(*)::text AS count FROM user_badges WHERE user_id = ${user_id}
     `;
-    return parseInt(rows[0]?.count ?? '0', 10);
+    return parseInt(rows[0]?.count ?? "0", 10);
   }
 
   // Bulk fetch for admin/debug use. Not currently exposed via API.

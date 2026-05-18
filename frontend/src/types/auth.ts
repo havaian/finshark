@@ -1,5 +1,5 @@
 // Mirrors backend/src/users/user.types.ts PublicUser
-export type BgLevel = 'beginner' | 'intermediate' | 'advanced';
+export type BgLevel = "beginner" | "intermediate" | "advanced";
 
 export interface PublicUser {
   id: string;
@@ -12,7 +12,7 @@ export interface PublicUser {
   is_admin: boolean;
   email_reminders_enabled: boolean;
   reminder_hour_utc: number;
-  preferred_difficulty: 'easy' | 'medium' | 'hard' | null;
+  preferred_difficulty: "easy" | "medium" | "hard" | null;
   lesson_size: number;
   // Onboarding (3.1)
   bg_level: BgLevel | null;

@@ -31,8 +31,8 @@ api.interceptors.request.use((config) => {
   // We read from localStorage on every request (cheap) so the locale store
   // doesn't need to be imported here, avoiding a circular import.
   const lang = localStorage.getItem(LS_LANG);
-  if (config.headers && (lang === 'en' || lang === 'ru')) {
-    config.headers['X-Lang'] = lang;
+  if (config.headers && (lang === "en" || lang === "ru")) {
+    config.headers["X-Lang"] = lang;
   }
   return config;
 });

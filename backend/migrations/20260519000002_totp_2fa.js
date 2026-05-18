@@ -40,9 +40,9 @@ exports.shorthands = undefined;
 exports.up = (pgm) => {
   pgm.addColumns('users', {
     // Base32 TOTP secret. otplib generates these; we store as-is.
-    totp_secret:       { type: 'text', notNull: false },
+    totp_secret: { type: 'text', notNull: false },
     // Set on first successful TOTP verification during setup.
-    totp_enrolled_at:  { type: 'timestamptz', notNull: false },
+    totp_enrolled_at: { type: 'timestamptz', notNull: false },
   });
 
   pgm.createTable('user_totp_recovery_codes', {
@@ -56,9 +56,9 @@ exports.up = (pgm) => {
     // scrypt hash of the code in the format "salt:derivedKey" (both hex).
     // We store the salt inline rather than in a separate column because the
     // verifier reads them as a unit and never separately.
-    code_hash:    { type: 'text', notNull: true },
-    used_at:      { type: 'timestamptz', notNull: false },
-    created_at:   { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
+    code_hash: { type: 'text', notNull: true },
+    used_at: { type: 'timestamptz', notNull: false },
+    created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
   });
 
   // UNIQUE on (user_id, code_hash) so the verifier can probe each code by

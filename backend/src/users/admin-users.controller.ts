@@ -8,14 +8,14 @@ import {
   Param,
   Patch,
   UseGuards,
-} from '@nestjs/common';
-import { IsBoolean } from 'class-validator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../auth/guards/admin.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AccessTokenPayload } from '../auth/auth.service';
-import { UsersRepository } from './users.repository';
-import { toPublicUser } from './user.types';
+} from "@nestjs/common";
+import { IsBoolean } from "class-validator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { AdminGuard } from "../auth/guards/admin.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import type { AccessTokenPayload } from "../auth/auth.service";
+import { UsersRepository } from "./users.repository";
+import { toPublicUser } from "./user.types";
 
 class SetAdminDto {
   @IsBoolean()
@@ -24,7 +24,7 @@ class SetAdminDto {
 
 // Admin-only: list all users + promote/demote admin.
 // Mounted under /api/admin/users to sit alongside /api/admin/papers etc.
-@Controller('admin/users')
+@Controller("admin/users")
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminUsersController {
   constructor(private readonly users: UsersRepository) {}
@@ -40,14 +40,14 @@ export class AdminUsersController {
   //   - 404 if user not found
   //   - 400 self-demote (would lock the current admin out)
   //   - 400 demoting the last remaining admin (would lock everyone out)
-  @Patch(':id/admin')
+  @Patch(":id/admin")
   async setAdmin(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() dto: SetAdminDto,
-    @CurrentUser() current: AccessTokenPayload,
+    @CurrentUser() current: AccessTokenPayload
   ) {
     const target = await this.users.findById(id);
-    if (!target) throw new NotFoundException('user not found');
+    if (!target) throw new NotFoundException("user not found");
 
     // No-op: nothing to do but still respond with the current shape.
     if (target.is_admin === dto.is_admin) {
@@ -58,19 +58,19 @@ export class AdminUsersController {
     if (dto.is_admin === false) {
       if (current.sub === id) {
         throw new ForbiddenException(
-          'you cannot remove your own admin rights — ask another admin to do it',
+          "you cannot remove your own admin rights — ask another admin to do it"
         );
       }
       const adminCount = await this.users.countAdmins();
       if (adminCount <= 1) {
         throw new BadRequestException(
-          'cannot demote the last remaining admin — promote someone else first',
+          "cannot demote the last remaining admin — promote someone else first"
         );
       }
     }
 
     const updated = await this.users.setAdmin(id, dto.is_admin);
-    if (!updated) throw new NotFoundException('user not found after update');
+    if (!updated) throw new NotFoundException("user not found after update");
     return toPublicUser(updated);
   }
 }

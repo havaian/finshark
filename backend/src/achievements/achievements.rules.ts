@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 
 // Snapshot of the user-level metrics every achievement maps to. Built ONCE
 // per evaluation so we don't fan out into one query per achievement.
@@ -32,11 +32,11 @@ export interface AchievementMetrics {
 // mapping explicit means an evaluator pass over the catalog reads the right
 // field for each row without dispatching through a switch.
 export const METRICS_BY_CODE: Record<string, keyof AchievementMetrics> = {
-  lessons_completed: 'lessons_completed',
-  streak_days:       'streak_days',
-  xp_earned:         'xp_earned',
-  perfect_lessons:   'perfect_lessons',
-  mocks_passed:      'mocks_passed',
+  lessons_completed: "lessons_completed",
+  streak_days: "streak_days",
+  xp_earned: "xp_earned",
+  perfect_lessons: "perfect_lessons",
+  mocks_passed: "mocks_passed",
 };
 
 @Injectable()

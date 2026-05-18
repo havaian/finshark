@@ -197,12 +197,12 @@ function openEditModal(q: QuestionRaw) {
   editPromptRu.value = q.prompt_ru ?? '';
   editOptions.value = q.options
     ? q.options.map((o) => ({
-        key: o.key,
-        text_en: o.text_en,
-        text_ru: o.text_ru ?? '',
-        why_wrong_en: o.why_wrong_en ?? '',
-        why_wrong_ru: o.why_wrong_ru ?? '',
-      } as McqOptionRaw))
+      key: o.key,
+      text_en: o.text_en,
+      text_ru: o.text_ru ?? '',
+      why_wrong_en: o.why_wrong_en ?? '',
+      why_wrong_ru: o.why_wrong_ru ?? '',
+    } as McqOptionRaw))
     : [];
   editCorrectEn.value = q.correct_answer_en;
   editCorrectRu.value = q.correct_answer_ru ?? '';
@@ -237,17 +237,17 @@ async function saveEdit() {
     const options =
       editType.value === 'mcq'
         ? editOptions.value
-            .filter((o) => o.key.trim() && o.text_en.trim())
-            .map((o) => {
-              const isCorrect = o.key.trim() === correctKey;
-              return {
-                key: o.key.trim(),
-                text_en: o.text_en.trim(),
-                text_ru: blankToNull(o.text_ru ?? ''),
-                why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
-                why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
-              };
-            })
+          .filter((o) => o.key.trim() && o.text_en.trim())
+          .map((o) => {
+            const isCorrect = o.key.trim() === correctKey;
+            return {
+              key: o.key.trim(),
+              text_en: o.text_en.trim(),
+              text_ru: blankToNull(o.text_ru ?? ''),
+              why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
+              why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
+            };
+          })
         : null;
 
     const tolRaw = editAcceptableTolerance.value.trim();
@@ -638,17 +638,17 @@ async function submitCreateQuestion() {
     const options =
       editType.value === 'mcq'
         ? editOptions.value
-            .filter((o) => o.key.trim() && o.text_en.trim())
-            .map((o) => {
-              const isCorrect = o.key.trim() === correctKey;
-              return {
-                key: o.key.trim(),
-                text_en: o.text_en.trim(),
-                text_ru: blankToNull(o.text_ru ?? ''),
-                why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
-                why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
-              };
-            })
+          .filter((o) => o.key.trim() && o.text_en.trim())
+          .map((o) => {
+            const isCorrect = o.key.trim() === correctKey;
+            return {
+              key: o.key.trim(),
+              text_en: o.text_en.trim(),
+              text_ru: blankToNull(o.text_ru ?? ''),
+              why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
+              why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
+            };
+          })
         : null;
     const tolRaw = editAcceptableTolerance.value.trim();
     let tolerance: number | null = null;
@@ -734,20 +734,11 @@ onMounted(reloadTree);
         <h2>{{ t('admin.content.title') }}</h2>
         <div class="row" style="gap: 8px; align-items: center; flex-wrap: wrap;">
           <!-- Add paper — moved here from the legacy AdminPapersPage. -->
-          <button
-            type="button"
-            class="btn-link accent"
-            @click="openAddPaper"
-          >
+          <button type="button" class="btn-link accent" @click="openAddPaper">
             + {{ t('admin.papers.add_btn') }}
           </button>
           <!-- Drop & reseed: destructive — danger styling. -->
-          <button
-            type="button"
-            class="btn-link"
-            style="color: var(--danger);"
-            @click="openReseedModal"
-          >
+          <button type="button" class="btn-link" style="color: var(--danger);" @click="openReseedModal">
             {{ t('admin.content.reseed_btn') }}
           </button>
         </div>
@@ -762,11 +753,7 @@ onMounted(reloadTree);
       </div>
 
       <div v-for="p in tree" :key="p.id" class="content-tree-paper">
-        <button
-          type="button"
-          class="content-tree-paper-head"
-          @click="togglePaper(p.id)"
-        >
+        <button type="button" class="content-tree-paper-head" @click="togglePaper(p.id)">
           <span class="content-tree-arrow">
             {{ collapsedPapers.has(p.id) ? '▸' : '▾' }}
           </span>
@@ -779,22 +766,15 @@ onMounted(reloadTree);
           <button type="button" class="btn-link accent text-xs" @click="openAddLo(p.id)">
             + {{ t('admin.los.add_btn') }}
           </button>
-          <button
-            type="button"
-            class="btn-link text-xs"
-            style="color: var(--danger);"
-            @click="deletePaper(p.id, p.code)"
-          >
+          <button type="button" class="btn-link text-xs" style="color: var(--danger);"
+            @click="deletePaper(p.id, p.code)">
             {{ t('admin.papers.delete_btn') }}
           </button>
         </div>
         <ul v-if="!collapsedPapers.has(p.id)" class="content-tree-los">
           <li v-for="lo in p.learning_objectives" :key="lo.id" class="content-tree-lo-wrap">
-            <button
-              type="button"
-              :class="['content-tree-lo', { active: selectedLoId === lo.id }]"
-              @click="selectLo(lo.id)"
-            >
+            <button type="button" :class="['content-tree-lo', { active: selectedLoId === lo.id }]"
+              @click="selectLo(lo.id)">
               <span class="content-tree-lo-code mono">{{ lo.code }}</span>
               <span class="content-tree-lo-title">{{ lo.title_en }}</span>
               <span class="content-tree-lo-counts">
@@ -806,12 +786,8 @@ onMounted(reloadTree);
                 </span>
               </span>
             </button>
-            <button
-              type="button"
-              class="content-tree-lo-del"
-              :title="t('common.delete')"
-              @click.stop="deleteLo(lo, p.code)"
-            >×</button>
+            <button type="button" class="content-tree-lo-del" :title="t('common.delete')"
+              @click.stop="deleteLo(lo, p.code)">×</button>
           </li>
           <li v-if="p.learning_objectives.length === 0" class="dim text-xs" style="padding: 8px 12px;">
             {{ t('admin.content.no_los') }}
@@ -858,29 +834,19 @@ onMounted(reloadTree);
         <!-- Tabs + search -->
         <div class="content-toolbar">
           <div class="content-tabs">
-            <button
-              type="button"
-              :class="['content-tab', { active: statusTab === 'active' }]"
-              @click="setTab('active')"
-            >
+            <button type="button" :class="['content-tab', { active: statusTab === 'active' }]"
+              @click="setTab('active')">
               {{ t('admin.content.tab_active') }}
               <span class="content-tab-count">{{ activeCount }}</span>
             </button>
-            <button
-              type="button"
-              :class="['content-tab', { active: statusTab === 'drafts' }]"
-              @click="setTab('drafts')"
-            >
+            <button type="button" :class="['content-tab', { active: statusTab === 'drafts' }]"
+              @click="setTab('drafts')">
               {{ t('admin.content.tab_drafts') }}
               <span class="content-tab-count">{{ draftCount }}</span>
             </button>
           </div>
-          <input
-            v-model="searchTerm"
-            type="search"
-            class="content-search"
-            :placeholder="t('admin.content.search_ph')"
-          />
+          <input v-model="searchTerm" type="search" class="content-search"
+            :placeholder="t('admin.content.search_ph')" />
         </div>
 
         <!-- Batch toolbar — appears when in Drafts tab with selection -->
@@ -889,21 +855,11 @@ onMounted(reloadTree);
             {{ t('admin.content.selected_count', { count: selectedIds.size }) }}
           </span>
           <div class="row" style="gap: 8px;">
-            <button
-              type="button"
-              class="btn btn-primary btn-sm"
-              :disabled="batchBusy"
-              @click="batchActivate"
-            >
+            <button type="button" class="btn btn-primary btn-sm" :disabled="batchBusy" @click="batchActivate">
               {{ batchBusy ? t('common.saving') : t('admin.content.batch_activate') }}
             </button>
-            <button
-              type="button"
-              class="btn btn-ghost btn-sm"
-              :disabled="batchBusy"
-              style="color: var(--danger);"
-              @click="batchDelete"
-            >
+            <button type="button" class="btn btn-ghost btn-sm" :disabled="batchBusy" style="color: var(--danger);"
+              @click="batchDelete">
               {{ t('admin.content.batch_delete') }}
             </button>
           </div>
@@ -925,26 +881,14 @@ onMounted(reloadTree);
 
           <!-- "Select all in view" header — only shown on Drafts tab with results. -->
           <label v-if="statusTab === 'drafts' && filteredQuestions.length > 0" class="content-select-all">
-            <input
-              type="checkbox"
-              :checked="allFilteredSelected"
-              @change="toggleSelectAll"
-            />
+            <input type="checkbox" :checked="allFilteredSelected" @change="toggleSelectAll" />
             <span class="dim text-xs">{{ t('admin.content.select_all_in_view') }}</span>
           </label>
 
-          <article
-            v-for="q in filteredQuestions"
-            :key="q.id"
-            :class="['content-question', { draft: !q.is_active }]"
-          >
+          <article v-for="q in filteredQuestions" :key="q.id" :class="['content-question', { draft: !q.is_active }]">
             <header class="content-question-head">
               <label v-if="statusTab === 'drafts'" class="content-question-check">
-                <input
-                  type="checkbox"
-                  :checked="selectedIds.has(q.id)"
-                  @change="toggleSelected(q.id)"
-                />
+                <input type="checkbox" :checked="selectedIds.has(q.id)" @change="toggleSelected(q.id)" />
               </label>
               <span class="content-question-type">{{ typeLabel(q.type) }}</span>
               <span class="dim">·</span>
@@ -977,15 +921,13 @@ onMounted(reloadTree);
     <!-- Backdrop click closes only when not saving — prevents losing edits to an accidental click.
          The same modal is reused for both editing existing questions and
          creating new ones; `creatingQuestion` flag determines mode. -->
-    <div
-      v-if="editingQuestion || creatingQuestion"
-      class="modal-backdrop"
-      @click="!savingEdit && (creatingQuestion ? closeCreateQuestion() : closeEditModal())"
-    >
+    <div v-if="editingQuestion || creatingQuestion" class="modal-backdrop"
+      @click="!savingEdit && (creatingQuestion ? closeCreateQuestion() : closeEditModal())">
       <div class="modal-card modal-card-wide" @click.stop>
         <header class="modal-head">
           <h2>{{ creatingQuestion ? t('admin.content.create_modal_title') : t('admin.content.edit_modal_title') }}</h2>
-          <button type="button" class="btn-link" @click="creatingQuestion ? closeCreateQuestion() : closeEditModal()">✕</button>
+          <button type="button" class="btn-link"
+            @click="creatingQuestion ? closeCreateQuestion() : closeEditModal()">✕</button>
         </header>
 
         <div class="form-grid-2">
@@ -1009,29 +951,18 @@ onMounted(reloadTree);
 
         <div v-if="editType === 'number_entry'" class="field mt-2">
           <label class="field-label">{{ t('admin.questions.tolerance_label') }}</label>
-          <input
-            v-model="editAcceptableTolerance"
-            type="text"
-            inputmode="decimal"
-            maxlength="20"
-            :placeholder="t('admin.questions.tolerance_ph')"
-          />
+          <input v-model="editAcceptableTolerance" type="text" inputmode="decimal" maxlength="20"
+            :placeholder="t('admin.questions.tolerance_ph')" />
           <p class="input-help">{{ t('admin.questions.tolerance_help') }}</p>
         </div>
 
         <div class="lang-tabs" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            :class="['lang-tab', { active: editLang === 'en' }]"
-            @click="editLang = 'en'"
-          >{{ t('admin.questions.lang_tab_en') }}</button>
-          <button
-            type="button"
-            role="tab"
-            :class="['lang-tab', { active: editLang === 'ru' }]"
-            @click="editLang = 'ru'"
-          >{{ t('admin.questions.lang_tab_ru') }}</button>
+          <button type="button" role="tab" :class="['lang-tab', { active: editLang === 'en' }]"
+            @click="editLang = 'en'">{{
+              t('admin.questions.lang_tab_en') }}</button>
+          <button type="button" role="tab" :class="['lang-tab', { active: editLang === 'ru' }]"
+            @click="editLang = 'ru'">{{
+              t('admin.questions.lang_tab_ru') }}</button>
         </div>
 
         <!-- EN pane -->
@@ -1053,12 +984,8 @@ onMounted(reloadTree);
                   <input v-model="opt.text_en" type="text" class="grow" maxlength="500" />
                 </div>
                 <div v-if="opt.key.trim() !== editCorrectEn.trim()" class="option-why-wrong">
-                  <input
-                    v-model="opt.why_wrong_en"
-                    type="text"
-                    maxlength="2000"
-                    :placeholder="t('admin.questions.why_wrong_en_ph')"
-                  />
+                  <input v-model="opt.why_wrong_en" type="text" maxlength="2000"
+                    :placeholder="t('admin.questions.why_wrong_en_ph')" />
                 </div>
               </div>
             </div>
@@ -1072,13 +999,8 @@ onMounted(reloadTree);
                   : t('admin.questions.correct_label_short_en')
               }}
             </label>
-            <input
-              v-model="editCorrectEn"
-              type="text"
-              :inputmode="editType === 'number_entry' ? 'decimal' : undefined"
-              maxlength="500"
-              required
-            />
+            <input v-model="editCorrectEn" type="text" :inputmode="editType === 'number_entry' ? 'decimal' : undefined"
+              maxlength="500" required />
           </div>
           <div class="field mt-2">
             <label class="field-label">{{ t('admin.questions.explanation_en') }}</label>
@@ -1105,12 +1027,8 @@ onMounted(reloadTree);
                   <input v-model="opt.text_ru" type="text" class="grow" maxlength="500" />
                 </div>
                 <div v-if="opt.key.trim() !== editCorrectEn.trim()" class="option-why-wrong">
-                  <input
-                    v-model="opt.why_wrong_ru"
-                    type="text"
-                    maxlength="2000"
-                    :placeholder="t('admin.questions.why_wrong_ru_ph')"
-                  />
+                  <input v-model="opt.why_wrong_ru" type="text" maxlength="2000"
+                    :placeholder="t('admin.questions.why_wrong_ru_ph')" />
                 </div>
               </div>
             </div>
@@ -1126,10 +1044,13 @@ onMounted(reloadTree);
         </div>
 
         <div class="admin-edit-actions">
-          <button class="btn btn-primary" :disabled="savingEdit" @click="creatingQuestion ? submitCreateQuestion() : saveEdit()">
-            {{ savingEdit ? t('common.saving') : (creatingQuestion ? t('admin.content.create_question_btn') : t('common.save_changes')) }}
+          <button class="btn btn-primary" :disabled="savingEdit"
+            @click="creatingQuestion ? submitCreateQuestion() : saveEdit()">
+            {{ savingEdit ? t('common.saving') : (creatingQuestion ? t('admin.content.create_question_btn') :
+              t('common.save_changes')) }}
           </button>
-          <button class="btn btn-ghost" :disabled="savingEdit" @click="creatingQuestion ? closeCreateQuestion() : closeEditModal()">
+          <button class="btn btn-ghost" :disabled="savingEdit"
+            @click="creatingQuestion ? closeCreateQuestion() : closeEditModal()">
             {{ t('common.cancel') }}
           </button>
         </div>
@@ -1141,20 +1062,11 @@ onMounted(reloadTree);
          run button enables. Backdrop click is allowed only when not busy so an
          in-flight wipe can't be cancelled mid-flight (the request still
          completes server-side, but we don't want the UI lying about state). -->
-    <div
-      v-if="reseedModalOpen"
-      class="modal-backdrop"
-      @click="closeReseedModal"
-    >
+    <div v-if="reseedModalOpen" class="modal-backdrop" @click="closeReseedModal">
       <div class="modal-card" @click.stop>
         <header class="modal-head">
           <h2 style="color: var(--danger);">{{ t('admin.content.reseed_modal_title') }}</h2>
-          <button
-            type="button"
-            class="btn-link"
-            :disabled="reseedBusy"
-            @click="closeReseedModal"
-          >✕</button>
+          <button type="button" class="btn-link" :disabled="reseedBusy" @click="closeReseedModal">✕</button>
         </header>
 
         <p class="dim text-sm">{{ t('admin.content.reseed_warn_1') }}</p>
@@ -1166,14 +1078,8 @@ onMounted(reloadTree);
         <p class="dim text-sm mt-4">
           {{ t('admin.content.reseed_confirm_prompt', { word: RESEED_CONFIRM_LITERAL }) }}
         </p>
-        <input
-          v-model="reseedConfirmText"
-          type="text"
-          :placeholder="RESEED_CONFIRM_LITERAL"
-          :disabled="reseedBusy"
-          class="mt-2"
-          style="font-family: var(--font-mono, monospace);"
-        />
+        <input v-model="reseedConfirmText" type="text" :placeholder="RESEED_CONFIRM_LITERAL" :disabled="reseedBusy"
+          class="mt-2" style="font-family: var(--font-mono, monospace);" />
 
         <p v-if="reseedError" class="error-text mt-4">{{ reseedError }}</p>
 
@@ -1183,28 +1089,22 @@ onMounted(reloadTree);
             {{ t('admin.content.reseed_done') }}
           </div>
           <ul class="dim text-xs mt-2" style="padding-left: 20px; line-height: 1.7;">
-            <li>{{ t('admin.content.reseed_stat_papers', { dropped: reseedResult.papers_dropped, inserted: reseedResult.papers_inserted }) }}</li>
+            <li>{{ t('admin.content.reseed_stat_papers', {
+              dropped: reseedResult.papers_dropped, inserted:
+                reseedResult.papers_inserted }) }}</li>
             <li>{{ t('admin.content.reseed_stat_questions', { count: reseedResult.questions_inserted }) }}</li>
-            <li>{{ t('admin.content.reseed_stat_progress', { sessions: reseedResult.sessions_deleted, attempts: reseedResult.attempts_deleted, users: reseedResult.users_progress_reset }) }}</li>
+            <li>{{ t('admin.content.reseed_stat_progress', {
+              sessions: reseedResult.sessions_deleted, attempts:
+                reseedResult.attempts_deleted, users: reseedResult.users_progress_reset }) }}</li>
             <li>{{ t('admin.content.reseed_stat_badges', { count: reseedResult.user_badges_deleted }) }}</li>
           </ul>
         </div>
 
         <div class="admin-edit-actions mt-4">
-          <button
-            type="button"
-            class="btn btn-danger"
-            :disabled="!reseedConfirmReady || reseedBusy"
-            @click="runReseed"
-          >
+          <button type="button" class="btn btn-danger" :disabled="!reseedConfirmReady || reseedBusy" @click="runReseed">
             {{ reseedBusy ? t('admin.content.reseed_running') : t('admin.content.reseed_run_btn') }}
           </button>
-          <button
-            type="button"
-            class="btn btn-ghost"
-            :disabled="reseedBusy"
-            @click="closeReseedModal"
-          >
+          <button type="button" class="btn btn-ghost" :disabled="reseedBusy" @click="closeReseedModal">
             {{ t('common.cancel') }}
           </button>
         </div>
@@ -1212,11 +1112,7 @@ onMounted(reloadTree);
     </div>
 
     <!-- ─── Add paper modal ─── -->
-    <div
-      v-if="showAddPaper"
-      class="modal-backdrop"
-      @click="closeAddPaper"
-    >
+    <div v-if="showAddPaper" class="modal-backdrop" @click="closeAddPaper">
       <div class="modal-card" @click.stop>
         <header class="modal-head">
           <h2>{{ t('admin.papers.add_modal_title') }}</h2>
@@ -1236,11 +1132,8 @@ onMounted(reloadTree);
         </div>
         <p v-if="addPaperError" class="error-text">{{ addPaperError }}</p>
         <div class="admin-edit-actions mt-4">
-          <button
-            class="btn btn-primary"
-            :disabled="addPaperBusy || !newPaperCode.trim() || !newPaperNameEn.trim()"
-            @click="submitAddPaper"
-          >
+          <button class="btn btn-primary" :disabled="addPaperBusy || !newPaperCode.trim() || !newPaperNameEn.trim()"
+            @click="submitAddPaper">
             {{ addPaperBusy ? t('common.adding') : t('common.add') }}
           </button>
           <button class="btn btn-ghost" :disabled="addPaperBusy" @click="closeAddPaper">
@@ -1251,11 +1144,7 @@ onMounted(reloadTree);
     </div>
 
     <!-- ─── Add LO modal ─── -->
-    <div
-      v-if="showAddLoForPaper"
-      class="modal-backdrop"
-      @click="closeAddLo"
-    >
+    <div v-if="showAddLoForPaper" class="modal-backdrop" @click="closeAddLo">
       <div class="modal-card modal-card-wide" @click.stop>
         <header class="modal-head">
           <h2>{{ t('admin.los.add_modal_title') }}</h2>
@@ -1297,11 +1186,8 @@ onMounted(reloadTree);
         </div>
         <p v-if="addLoError" class="error-text">{{ addLoError }}</p>
         <div class="admin-edit-actions mt-4">
-          <button
-            class="btn btn-primary"
-            :disabled="addLoBusy || !newLoCode.trim() || !newLoTitleEn.trim()"
-            @click="submitAddLo"
-          >
+          <button class="btn btn-primary" :disabled="addLoBusy || !newLoCode.trim() || !newLoTitleEn.trim()"
+            @click="submitAddLo">
             {{ addLoBusy ? t('common.adding') : t('common.add') }}
           </button>
           <button class="btn btn-ghost" :disabled="addLoBusy" @click="closeAddLo">
@@ -1312,11 +1198,7 @@ onMounted(reloadTree);
     </div>
 
     <!-- ─── Edit theory modal ─── -->
-    <div
-      v-if="theoryEditOpen"
-      class="modal-backdrop"
-      @click="closeTheoryEdit"
-    >
+    <div v-if="theoryEditOpen" class="modal-backdrop" @click="closeTheoryEdit">
       <div class="modal-card modal-card-wide" @click.stop>
         <header class="modal-head">
           <h2>{{ t('admin.content.edit_theory') }}</h2>
@@ -1343,11 +1225,7 @@ onMounted(reloadTree);
     </div>
 
     <!-- ─── LLM generate modal ─── -->
-    <div
-      v-if="showLlmModal"
-      class="modal-backdrop"
-      @click="closeLlmModal"
-    >
+    <div v-if="showLlmModal" class="modal-backdrop" @click="closeLlmModal">
       <div class="modal-card" @click.stop>
         <header class="modal-head">
           <h2>{{ t('admin.content.llm_modal_title') }}</h2>
@@ -1360,20 +1238,13 @@ onMounted(reloadTree);
         </div>
         <div class="field mt-2">
           <label class="field-label">{{ t('admin.content.llm_hints_label') }}</label>
-          <textarea
-            v-model="llmHints"
-            rows="3"
-            maxlength="1000"
-            :placeholder="t('admin.content.llm_hints_ph')"
-          ></textarea>
+          <textarea v-model="llmHints" rows="3" maxlength="1000"
+            :placeholder="t('admin.content.llm_hints_ph')"></textarea>
         </div>
         <p v-if="llmError" class="error-text">{{ llmError }}</p>
         <div class="admin-edit-actions mt-4">
-          <button
-            class="btn btn-primary"
-            :disabled="llmBusy || llmCount < 1 || llmCount > 20"
-            @click="submitLlmGenerate"
-          >
+          <button class="btn btn-primary" :disabled="llmBusy || llmCount < 1 || llmCount > 20"
+            @click="submitLlmGenerate">
             {{ llmBusy ? t('admin.content.llm_running') : t('admin.content.llm_generate_btn') }}
           </button>
           <button class="btn btn-ghost" :disabled="llmBusy" @click="closeLlmModal">

@@ -33,20 +33,20 @@ exports.shorthands = undefined;
 
 exports.up = (pgm) => {
   pgm.createTable('achievements', {
-    code:           { type: 'text', primaryKey: true },
-    name_en:        { type: 'text', notNull: true },
-    name_ru:        { type: 'text' },
+    code: { type: 'text', primaryKey: true },
+    name_en: { type: 'text', notNull: true },
+    name_ru: { type: 'text' },
     description_en: { type: 'text', notNull: true },
     description_ru: { type: 'text' },
-    icon:           { type: 'text', notNull: true, default: '✦' },
-    sort_order:     { type: 'integer', notNull: true, default: 0 },
+    icon: { type: 'text', notNull: true, default: '✦' },
+    sort_order: { type: 'integer', notNull: true, default: 0 },
     // jsonb array of { level: int, threshold: int, name_en: text, name_ru: text }
     // ordered ascending by `level`. Threshold semantics: current_value >= threshold
     // unlocks that level. The seeder validates the shape; we don't add a CHECK
     // constraint because jsonb constraints get clumsy.
-    levels:         { type: 'jsonb', notNull: true },
-    created_at:     { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
-    updated_at:     { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
+    levels: { type: 'jsonb', notNull: true },
+    created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
+    updated_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
   });
 
   pgm.createTable('user_achievement_progress', {
@@ -67,9 +67,9 @@ exports.up = (pgm) => {
     },
     // Latest cached metric value (e.g. 47 lessons completed). NOT NULL with
     // default 0 so the row can be inserted before the evaluator has run.
-    current_value:   { type: 'integer', notNull: true, default: 0 },
+    current_value: { type: 'integer', notNull: true, default: 0 },
     // Highest unlocked level. 0 means "in catalogue but not unlocked yet".
-    current_level:   { type: 'integer', notNull: true, default: 0 },
+    current_level: { type: 'integer', notNull: true, default: 0 },
     // { "1": "ISO8601 timestamp", "2": "...", ... } — earned-at per level.
     // jsonb (not jsonb[]) because we want key-based lookups / partial updates.
     unlocked_at_per_level: {
@@ -77,8 +77,8 @@ exports.up = (pgm) => {
       notNull: true,
       default: pgm.func(`'{}'::jsonb`),
     },
-    created_at:      { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
-    updated_at:      { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
+    created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
+    updated_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
   });
 
   // One progress row per (user, achievement). The evaluator relies on this

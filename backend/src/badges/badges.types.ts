@@ -31,18 +31,18 @@ export interface PublicBadge {
   earned_at: string | null;
 }
 
-export type Lang = 'en' | 'ru';
+export type Lang = "en" | "ru";
 
 export function toPublicBadge(
   row: BadgeRow,
   earned_at: Date | null,
-  lang: Lang,
+  lang: Lang
 ): PublicBadge {
   return {
     code: row.code,
-    name: lang === 'ru' && row.name_ru ? row.name_ru : row.name_en,
+    name: lang === "ru" && row.name_ru ? row.name_ru : row.name_en,
     description:
-      lang === 'ru' && row.description_ru
+      lang === "ru" && row.description_ru
         ? row.description_ru
         : row.description_en,
     icon: row.icon,

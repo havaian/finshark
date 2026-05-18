@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { UsersRepository } from './users.repository';
-import { AdminBootstrapService } from './admin-bootstrap.service';
+import { Module } from "@nestjs/common";
+import { UsersRepository } from "./users.repository";
+import { AdminBootstrapService } from "./admin-bootstrap.service";
 
 // AdminBootstrapService runs once on boot. It only needs UsersRepository
 // (no auth-side deps), so it lives here. The admin users controller lives in

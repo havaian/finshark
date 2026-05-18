@@ -1,5 +1,5 @@
-import { api } from './client';
-import type { BgLevel, PublicUser } from '../types/auth';
+import { api } from "./client";
+import type { BgLevel, PublicUser } from "../types/auth";
 
 export interface OnboardingStatus {
   onboarded: boolean;
@@ -19,10 +19,10 @@ export interface CompleteOnboardingInput {
 export const onboardingApi = {
   // Used by the route guard. Cheap (single users-row read).
   getStatus: async (): Promise<OnboardingStatus> =>
-    (await api.get<OnboardingStatus>('/onboarding/status')).data,
+    (await api.get<OnboardingStatus>("/onboarding/status")).data,
 
   // Empty body = skip path (just stamps onboarded_at). Returns updated PublicUser
   // so the auth store can refresh in one call without a follow-up /me request.
   complete: async (input: CompleteOnboardingInput): Promise<PublicUser> =>
-    (await api.post<PublicUser>('/onboarding/complete', input)).data,
+    (await api.post<PublicUser>("/onboarding/complete", input)).data,
 };

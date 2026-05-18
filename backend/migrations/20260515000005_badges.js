@@ -19,15 +19,15 @@ exports.shorthands = undefined;
 
 exports.up = (pgm) => {
   pgm.createTable('badges', {
-    code:        { type: 'text', primaryKey: true },
-    name_en:     { type: 'text', notNull: true },
-    name_ru:     { type: 'text' },
+    code: { type: 'text', primaryKey: true },
+    name_en: { type: 'text', notNull: true },
+    name_ru: { type: 'text' },
     description_en: { type: 'text', notNull: true },
     description_ru: { type: 'text' },
-    icon:        { type: 'text', notNull: true, default: '★' },
-    sort_order:  { type: 'integer', notNull: true, default: 0 },
-    created_at:  { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
-    updated_at:  { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
+    icon: { type: 'text', notNull: true, default: '★' },
+    sort_order: { type: 'integer', notNull: true, default: 0 },
+    created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
+    updated_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
   });
 
   pgm.createTable('user_badges', {

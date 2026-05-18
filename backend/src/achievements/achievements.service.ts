@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { AchievementsRepository } from './achievements.repository';
+import { Injectable, Logger } from "@nestjs/common";
+import { AchievementsRepository } from "./achievements.repository";
 import {
   AchievementMetricsRepository,
   METRICS_BY_CODE,
   type AchievementMetrics,
-} from './achievements.rules';
+} from "./achievements.rules";
 import {
   toPublicAchievement,
   toPublicEarnedAchievement,
@@ -13,7 +13,7 @@ import {
   type PublicAchievement,
   type PublicEarnedAchievement,
   type UserAchievementProgressRow,
-} from './achievements.types';
+} from "./achievements.types";
 
 // Result of one evaluation pass — what (if anything) the user just unlocked.
 // The caller (LessonsService.complete) can use this to toast "Level 2 in
@@ -30,7 +30,7 @@ export class AchievementsService {
 
   constructor(
     private readonly achievements: AchievementsRepository,
-    private readonly metricsRepo: AchievementMetricsRepository,
+    private readonly metricsRepo: AchievementMetricsRepository
   ) {}
 
   // Called after a lesson session OR mock completes — same hook point as
@@ -60,7 +60,7 @@ export class AchievementsService {
           // seed introduced a code that nobody hooked into rules.ts. We skip
           // it (don't insert a zero-progress row that would never advance).
           this.logger.warn(
-            `achievement '${row.code}' has no METRICS_BY_CODE entry; skipping`,
+            `achievement '${row.code}' has no METRICS_BY_CODE entry; skipping`
           );
           continue;
         }
@@ -124,7 +124,9 @@ export class AchievementsService {
       return unlocks;
     } catch (err) {
       this.logger.error(
-        `achievement evaluation failed for user ${user_id}: ${err instanceof Error ? err.message : String(err)}`,
+        `achievement evaluation failed for user ${user_id}: ${
+          err instanceof Error ? err.message : String(err)
+        }`
       );
       return [];
     }
@@ -138,7 +140,7 @@ export class AchievementsService {
       this.achievements.findProgressByUser(user_id),
     ]);
     return catalog.map((row) =>
-      toPublicAchievement(row, progressMap.get(row.code) ?? null, lang),
+      toPublicAchievement(row, progressMap.get(row.code) ?? null, lang)
     );
   }
 
@@ -147,7 +149,7 @@ export class AchievementsService {
   // viewer sees them in the same order as the owner's profile.
   async getEarnedForUser(
     user_id: string,
-    lang: Lang,
+    lang: Lang
   ): Promise<PublicEarnedAchievement[]> {
     const [catalog, progressMap] = await Promise.all([
       this.achievements.listAll(),
@@ -158,7 +160,7 @@ export class AchievementsService {
       const earned = toPublicEarnedAchievement(
         row,
         progressMap.get(row.code) ?? null,
-        lang,
+        lang
       );
       if (earned) out.push(earned);
     }
@@ -167,7 +169,10 @@ export class AchievementsService {
 
   // Helper for tests / debug: not exposed via API.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private _typingGuard(_r: AchievementRow, _p: UserAchievementProgressRow): void {
+  private _typingGuard(
+    _r: AchievementRow,
+    _p: UserAchievementProgressRow
+  ): void {
     // no-op
   }
 }

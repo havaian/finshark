@@ -1,16 +1,16 @@
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import App from './App.vue';
-import router from './router';
-import './style.css';
-import { i18n, applyOverrides, readLangFromStorage } from './i18n';
-import { api } from './api/client';
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import App from "./App.vue";
+import router from "./router";
+import "./style.css";
+import { i18n, applyOverrides, readLangFromStorage } from "./i18n";
+import { api } from "./api/client";
 
 const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(i18n);
-app.mount('#app');
+app.mount("#app");
 
 // Fetch UI overrides for the current language and merge over the static
 // locale. Overrides live as JSON files on the backend (backend/locales/) and

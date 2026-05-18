@@ -1,7 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { TotpAuditEvent, TotpAuditRow } from './totp.audit';
+import { Inject, Injectable } from "@nestjs/common";
+import type postgres from "postgres";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { TotpAuditEvent, TotpAuditRow } from "./totp.audit";
 
 // Recovery-code row as returned by SELECT. We only ever read code_hash and
 // flip used_at — the plaintext code never goes through this repository.
@@ -68,7 +69,9 @@ export class TotpRepository {
   // All unused recovery codes for a user. The verifier reads these and
   // compares each candidate hash; we can't query by hash directly because
   // the verifier reconstructs the hash with the per-row salt.
-  async findUnusedRecoveryCodes(user_id: string): Promise<TotpRecoveryCodeRow[]> {
+  async findUnusedRecoveryCodes(
+    user_id: string
+  ): Promise<TotpRecoveryCodeRow[]> {
     return this.sql<TotpRecoveryCodeRow[]>`
       SELECT id::text, user_id::text, code_hash, used_at, created_at
       FROM user_totp_recovery_codes
@@ -99,7 +102,7 @@ export class TotpRepository {
       FROM user_totp_recovery_codes
       WHERE user_id = ${user_id} AND used_at IS NULL
     `;
-    return parseInt(rows[0]?.c ?? '0', 10);
+    return parseInt(rows[0]?.c ?? "0", 10);
   }
 
   // ── Failed attempts (per-user lockout) ────────────────────────────────
@@ -129,14 +132,15 @@ export class TotpRepository {
       WHERE user_id = ${opts.user_id}
         AND created_at > NOW() - (${opts.window_minutes}::int * INTERVAL '1 minute')
     `;
-    return parseInt(rows[0]?.c ?? '0', 10);
+    return parseInt(rows[0]?.c ?? "0", 10);
   }
 
   // Clear all failed attempts for a user. Called after a successful verify
   // — wiping is cheaper than letting the table grow unbounded waiting for
   // the window to expire on every row.
   async clearFailedAttempts(user_id: string): Promise<void> {
-    await this.sql`DELETE FROM user_totp_failed_attempts WHERE user_id = ${user_id}`;
+    await this
+      .sql`DELETE FROM user_totp_failed_attempts WHERE user_id = ${user_id}`;
   }
 
   // ── Audit log ─────────────────────────────────────────────────────────
@@ -156,7 +160,7 @@ export class TotpRepository {
         ${opts.user_id},
         ${opts.event},
         ${opts.ip},
-        ${this.sql.json((opts.meta ?? {}) as Record<string, unknown>)}
+        ${this.sql.json((opts.meta ?? {}) as unknown as postgres.JSONValue)}
       )
     `;
   }

@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { ProfileStatsRepository } from './profile-stats.repository';
-import { pickLocalized, type Lang } from '../content/content.types';
+import { Injectable, Logger } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { ProfileStatsRepository } from "./profile-stats.repository";
+import { pickLocalized, type Lang } from "../content/content.types";
 
-const ACTIVITY_DAYS = 365;       // year-long heatmap (Github-style)
+const ACTIVITY_DAYS = 365; // year-long heatmap (Github-style)
 const MASTERY_HISTORY_DAYS = 90; // 3 months of daily snapshots
 
 export interface ProfileStatsResponse {
@@ -11,7 +11,7 @@ export interface ProfileStatsResponse {
     total_sessions_completed: number;
     total_questions_answered: number;
     total_correct: number;
-    accuracy_pct: number | null;  // null when no attempts
+    accuracy_pct: number | null; // null when no attempts
   };
   accuracy_by_paper: Array<{
     paper_id: string;
@@ -22,21 +22,21 @@ export interface ProfileStatsResponse {
     accuracy_pct: number;
   }>;
   difficulty_breakdown: Array<{
-    difficulty: 'easy' | 'medium' | 'hard';
+    difficulty: "easy" | "medium" | "hard";
     attempts: number;
     correct: number;
   }>;
   type_breakdown: Array<{
-    type: 'mcq' | 'short_answer';
+    type: "mcq" | "short_answer";
     attempts: number;
     correct: number;
   }>;
   activity_heatmap: Array<{
-    day: string;                  // 'YYYY-MM-DD'
+    day: string; // 'YYYY-MM-DD'
     attempts_count: number;
   }>;
   mastery_history: Array<{
-    snap_date: string;            // 'YYYY-MM-DD'
+    snap_date: string; // 'YYYY-MM-DD'
     avg_mastery: number;
   }>;
 }
@@ -48,21 +48,16 @@ export class ProfileStatsService {
   constructor(private readonly repo: ProfileStatsRepository) {}
 
   async getForUser(user_id: string, lang: Lang): Promise<ProfileStatsResponse> {
-    const [
-      overall,
-      byPaper,
-      diff,
-      type,
-      activity,
-      mastery,
-    ] = await Promise.all([
-      this.repo.overall(user_id),
-      this.repo.accuracyByPaper(user_id),
-      this.repo.difficultyBreakdown(user_id),
-      this.repo.typeBreakdown(user_id),
-      this.repo.activityHeatmap(user_id, ACTIVITY_DAYS),
-      this.repo.masteryHistory(user_id, MASTERY_HISTORY_DAYS),
-    ]);
+    const [overall, byPaper, diff, type, activity, mastery] = await Promise.all(
+      [
+        this.repo.overall(user_id),
+        this.repo.accuracyByPaper(user_id),
+        this.repo.difficultyBreakdown(user_id),
+        this.repo.typeBreakdown(user_id),
+        this.repo.activityHeatmap(user_id, ACTIVITY_DAYS),
+        this.repo.masteryHistory(user_id, MASTERY_HISTORY_DAYS),
+      ]
+    );
 
     const accuracy_pct =
       overall.total_questions_answered === 0
@@ -111,7 +106,7 @@ export class ProfileStatsService {
   // Runs every day at 00:30 UTC. Idempotent — re-running just refreshes today's value.
   // If this fires multiple times within a day (manual trigger after a deploy),
   // the row for today is overwritten with the current average, which is the desired behaviour.
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'mastery-snapshots' })
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: "mastery-snapshots" })
   async snapshotJob(): Promise<void> {
     try {
       const n = await this.repo.writeTodaysSnapshots();

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { UserQuestionStateRow } from './lesson.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { UserQuestionStateRow } from "./lesson.types";
 
 const COLS = `
   user_id, question_id, ease_factor, interval_days, repetitions, due_date,
@@ -12,7 +12,10 @@ const COLS = `
 export class UserQuestionStateRepository {
   constructor(@Inject(PG) private readonly sql: Sql) {}
 
-  async findOne(user_id: string, question_id: string): Promise<UserQuestionStateRow | null> {
+  async findOne(
+    user_id: string,
+    question_id: string
+  ): Promise<UserQuestionStateRow | null> {
     const rows = await this.sql<UserQuestionStateRow[]>`
       SELECT ${this.sql.unsafe(COLS)}
       FROM user_question_state
@@ -29,11 +32,25 @@ export class UserQuestionStateRepository {
     user_id: string;
     paper_id?: string | null;
     limit: number;
-  }): Promise<Array<{ question_id: string; lo_id: string; difficulty: string; due_date: Date }>> {
+  }): Promise<
+    Array<{
+      question_id: string;
+      lo_id: string;
+      difficulty: string;
+      due_date: Date;
+    }>
+  > {
     const paperFilter = input.paper_id
       ? this.sql`AND lo.paper_id = ${input.paper_id}`
       : this.sql``;
-    return this.sql<Array<{ question_id: string; lo_id: string; difficulty: string; due_date: Date }>>`
+    return this.sql<
+      Array<{
+        question_id: string;
+        lo_id: string;
+        difficulty: string;
+        due_date: Date;
+      }>
+    >`
       SELECT uqs.question_id, q.lo_id, q.difficulty::text AS difficulty, uqs.due_date
       FROM user_question_state uqs
       JOIN questions q ON q.id = uqs.question_id
@@ -61,11 +78,25 @@ export class UserQuestionStateRepository {
     user_id: string;
     paper_id?: string | null;
     limit: number;
-  }): Promise<Array<{ question_id: string; lo_id: string; difficulty: string; due_date: Date }>> {
+  }): Promise<
+    Array<{
+      question_id: string;
+      lo_id: string;
+      difficulty: string;
+      due_date: Date;
+    }>
+  > {
     const paperFilter = input.paper_id
       ? this.sql`AND lo.paper_id = ${input.paper_id}`
       : this.sql``;
-    return this.sql<Array<{ question_id: string; lo_id: string; difficulty: string; due_date: Date }>>`
+    return this.sql<
+      Array<{
+        question_id: string;
+        lo_id: string;
+        difficulty: string;
+        due_date: Date;
+      }>
+    >`
       SELECT question_id, lo_id, difficulty, due_date FROM (
         SELECT DISTINCT ON (q.lo_id)
           uqs.question_id, q.lo_id, q.difficulty::text AS difficulty, uqs.due_date
@@ -92,7 +123,14 @@ export class UserQuestionStateRepository {
     paper_id?: string | null;
     exclude_ids: string[];
     limit: number;
-  }): Promise<Array<{ question_id: string; lo_id: string; difficulty: string; due_date: Date }>> {
+  }): Promise<
+    Array<{
+      question_id: string;
+      lo_id: string;
+      difficulty: string;
+      due_date: Date;
+    }>
+  > {
     if (input.limit <= 0) return [];
     const paperFilter = input.paper_id
       ? this.sql`AND lo.paper_id = ${input.paper_id}`
@@ -102,8 +140,15 @@ export class UserQuestionStateRepository {
     const excludeIds =
       input.exclude_ids.length > 0
         ? input.exclude_ids
-        : ['00000000-0000-0000-0000-000000000000'];
-    return this.sql<Array<{ question_id: string; lo_id: string; difficulty: string; due_date: Date }>>`
+        : ["00000000-0000-0000-0000-000000000000"];
+    return this.sql<
+      Array<{
+        question_id: string;
+        lo_id: string;
+        difficulty: string;
+        due_date: Date;
+      }>
+    >`
       SELECT uqs.question_id, q.lo_id, q.difficulty::text AS difficulty, uqs.due_date
       FROM user_question_state uqs
       JOIN questions q ON q.id = uqs.question_id
@@ -162,7 +207,7 @@ export class UserQuestionStateRepository {
     user_id: string;
     lo_id: string;
     limit: number;
-    preferred_difficulty: 'easy' | 'medium' | 'hard';
+    preferred_difficulty: "easy" | "medium" | "hard";
     error_rate_bias?: boolean;
   }): Promise<Array<{ id: string; difficulty: string }>> {
     if (input.error_rate_bias) {
@@ -241,7 +286,9 @@ export class UserQuestionStateRepository {
         due_date       = EXCLUDED.due_date,
         mastery_score  = EXCLUDED.mastery_score,
         times_seen     = user_question_state.times_seen + 1,
-        times_correct  = user_question_state.times_correct + ${input.was_correct ? 1 : 0},
+        times_correct  = user_question_state.times_correct + ${
+          input.was_correct ? 1 : 0
+        },
         last_seen_at   = NOW()
       RETURNING ${this.sql.unsafe(COLS)}
     `;

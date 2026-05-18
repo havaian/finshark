@@ -1,10 +1,10 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { LlmGradeCacheRepository } from './llm-grade-cache.repository';
-import { LlmGraderService, LLM_PROVIDER_TOKEN } from './llm-grader.service';
-import { OpenAiGraderProvider } from './providers/openai.provider';
-import { AnthropicGraderProvider } from './providers/anthropic.provider';
-import type { LlmGradingProvider } from './providers/provider.interface';
+import { Global, Module } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { LlmGradeCacheRepository } from "./llm-grade-cache.repository";
+import { LlmGraderService, LLM_PROVIDER_TOKEN } from "./llm-grader.service";
+import { OpenAiGraderProvider } from "./providers/openai.provider";
+import { AnthropicGraderProvider } from "./providers/anthropic.provider";
+import type { LlmGradingProvider } from "./providers/provider.interface";
 
 // We register BOTH provider classes so the factory can pick one at runtime.
 // Only the one named in LLM_PROVIDER is actually returned via the LLM_PROVIDER_TOKEN.
@@ -22,11 +22,13 @@ import type { LlmGradingProvider } from './providers/provider.interface';
       useFactory: (
         config: ConfigService,
         openai: OpenAiGraderProvider,
-        anthropic: AnthropicGraderProvider,
+        anthropic: AnthropicGraderProvider
       ): LlmGradingProvider | null => {
-        const provider = (config.get<string>('LLM_PROVIDER') ?? 'none').toLowerCase();
-        if (provider === 'openai') return openai;
-        if (provider === 'anthropic') return anthropic;
+        const provider = (
+          config.get<string>("LLM_PROVIDER") ?? "none"
+        ).toLowerCase();
+        if (provider === "openai") return openai;
+        if (provider === "anthropic") return anthropic;
         return null;
       },
     },

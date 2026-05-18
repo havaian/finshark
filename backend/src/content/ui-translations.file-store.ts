@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import type { Lang } from './content.types';
+import { Injectable, Logger } from "@nestjs/common";
+import { promises as fs } from "fs";
+import * as path from "path";
+import type { Lang } from "./content.types";
 
 // File-backed UI translation overrides. Replaces the previous DB-backed
 // `ui_translations` table.
@@ -34,9 +34,14 @@ import type { Lang } from './content.types';
 //     3) <module-dir>/../../locales (dev: run via ts-node from project root)
 //   First existing dir wins.
 
-interface OverridesMap { [key: string]: string }
+interface OverridesMap {
+  [key: string]: string;
+}
 
-interface PendingLock { promise: Promise<void>; resolve: () => void }
+interface PendingLock {
+  promise: Promise<void>;
+  resolve: () => void;
+}
 
 @Injectable()
 export class UiTranslationsFileStore {
@@ -50,10 +55,10 @@ export class UiTranslationsFileStore {
 
     const candidates = [
       process.env.LOCALES_DIR,
-      path.resolve(process.cwd(), 'locales'),
+      path.resolve(process.cwd(), "locales"),
       // Fallback when dist code lives in /app/dist and locales are at /app/locales:
-      path.resolve(process.cwd(), '..', 'locales'),
-    ].filter((p): p is string => typeof p === 'string' && p.length > 0);
+      path.resolve(process.cwd(), "..", "locales"),
+    ].filter((p): p is string => typeof p === "string" && p.length > 0);
 
     for (const c of candidates) {
       try {
@@ -68,7 +73,7 @@ export class UiTranslationsFileStore {
       }
     }
     // Last resort: create the first candidate so writes don't fail.
-    const fallback = candidates[0] ?? path.resolve(process.cwd(), 'locales');
+    const fallback = candidates[0] ?? path.resolve(process.cwd(), "locales");
     await fs.mkdir(fallback, { recursive: true });
     this.resolvedDir = fallback;
     this.log.warn(`locales dir not found; created ${fallback}`);
@@ -120,28 +125,34 @@ export class UiTranslationsFileStore {
     const file = await this.fileFor(lang);
     let raw: string;
     try {
-      raw = await fs.readFile(file, 'utf8');
+      raw = await fs.readFile(file, "utf8");
     } catch (e: unknown) {
       const err = e as NodeJS.ErrnoException;
-      if (err.code === 'ENOENT') return {};
+      if (err.code === "ENOENT") return {};
       throw e;
     }
     const trimmed = raw.trim();
-    if (trimmed === '') return {};
+    if (trimmed === "") return {};
     try {
       const parsed = JSON.parse(trimmed) as unknown;
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         // Filter to (string → string) — drops anything weird that crept in.
         const out: OverridesMap = {};
-        for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-          if (typeof v === 'string') out[k] = v;
+        for (const [k, v] of Object.entries(
+          parsed as Record<string, unknown>
+        )) {
+          if (typeof v === "string") out[k] = v;
         }
         return out;
       }
       this.log.warn(`${lang}.json is not a JSON object — treating as empty`);
       return {};
     } catch (e) {
-      this.log.warn(`${lang}.json is invalid JSON — treating as empty: ${(e as Error).message}`);
+      this.log.warn(
+        `${lang}.json is invalid JSON — treating as empty: ${
+          (e as Error).message
+        }`
+      );
       return {};
     }
   }
@@ -152,13 +163,13 @@ export class UiTranslationsFileStore {
   // stable across writes.
   private async writeMap(lang: Lang, map: OverridesMap): Promise<void> {
     const file = await this.fileFor(lang);
-    const tmp = file + '.tmp';
+    const tmp = file + ".tmp";
     const sorted: OverridesMap = {};
     for (const k of Object.keys(map).sort()) sorted[k] = map[k];
-    const body = JSON.stringify(sorted, null, 2) + '\n';
-    const handle = await fs.open(tmp, 'w');
+    const body = JSON.stringify(sorted, null, 2) + "\n";
+    const handle = await fs.open(tmp, "w");
     try {
-      await handle.writeFile(body, 'utf8');
+      await handle.writeFile(body, "utf8");
       await handle.sync();
     } finally {
       await handle.close();
@@ -178,12 +189,14 @@ export class UiTranslationsFileStore {
   // updated_at, since files don't carry per-key timestamps).
   async findAll(): Promise<Array<{ key: string; lang: Lang; value: string }>> {
     const [en, ru] = await Promise.all([
-      this.readMap('en'),
-      this.readMap('ru'),
+      this.readMap("en"),
+      this.readMap("ru"),
     ]);
     const rows: Array<{ key: string; lang: Lang; value: string }> = [];
-    for (const k of Object.keys(en).sort()) rows.push({ key: k, lang: 'en', value: en[k] });
-    for (const k of Object.keys(ru).sort()) rows.push({ key: k, lang: 'ru', value: ru[k] });
+    for (const k of Object.keys(en).sort())
+      rows.push({ key: k, lang: "en", value: en[k] });
+    for (const k of Object.keys(ru).sort())
+      rows.push({ key: k, lang: "ru", value: ru[k] });
     return rows;
   }
 

@@ -33,14 +33,14 @@ export interface UserAchievementProgressRow {
   updated_at: Date;
 }
 
-export type Lang = 'en' | 'ru';
+export type Lang = "en" | "ru";
 
 // What the frontend consumes — localised, with progress-bar fields pre-computed
 // so the UI doesn't need to think about thresholds.
 export interface PublicAchievementLevel {
   level: number;
   threshold: number;
-  name: string;          // localised (en/ru)
+  name: string; // localised (en/ru)
   unlocked: boolean;
   unlocked_at: string | null; // ISO timestamp, null if not unlocked
 }
@@ -52,8 +52,8 @@ export interface PublicAchievement {
   icon: string;
   sort_order: number;
   current_value: number;
-  current_level: number;     // 0..N
-  max_level: number;         // total levels defined
+  current_level: number; // 0..N
+  max_level: number; // total levels defined
   // Highest level the user has unlocked (mirrors current_level, or null if 0).
   // Helps the UI render "Trainee / Affiliate / Member" badge text.
   current_level_name: string | null;
@@ -74,12 +74,12 @@ export interface PublicEarnedAchievement {
   icon: string;
   sort_order: number;
   current_level: number;
-  current_level_name: string;     // we only include earned (level >= 1) so this is non-null
-  unlocked_at: string | null;     // when current_level was unlocked
+  current_level_name: string; // we only include earned (level >= 1) so this is non-null
+  unlocked_at: string | null; // when current_level was unlocked
 }
 
 function pickLang(en: string, ru: string | null, lang: Lang): string {
-  return lang === 'ru' && ru ? ru : en;
+  return lang === "ru" && ru ? ru : en;
 }
 
 // Build the full public payload (used on /me/achievements). Includes locked
@@ -87,7 +87,7 @@ function pickLang(en: string, ru: string | null, lang: Lang): string {
 export function toPublicAchievement(
   row: AchievementRow,
   progress: UserAchievementProgressRow | null,
-  lang: Lang,
+  lang: Lang
 ): PublicAchievement {
   // Sort levels ascending by `level` defensively — the seed gives us ascending
   // order already, but jsonb makes no ordering guarantees on insertion.
@@ -95,7 +95,7 @@ export function toPublicAchievement(
 
   const currentValue = progress?.current_value ?? 0;
   const currentLevel = progress?.current_level ?? 0;
-  const unlockedMap  = progress?.unlocked_at_per_level ?? {};
+  const unlockedMap = progress?.unlocked_at_per_level ?? {};
 
   const levels: PublicAchievementLevel[] = sorted.map((lv) => ({
     level: lv.level,
@@ -137,7 +137,7 @@ export function toPublicAchievement(
 export function toPublicEarnedAchievement(
   row: AchievementRow,
   progress: UserAchievementProgressRow | null,
-  lang: Lang,
+  lang: Lang
 ): PublicEarnedAchievement | null {
   const currentLevel = progress?.current_level ?? 0;
   if (currentLevel < 1) return null;

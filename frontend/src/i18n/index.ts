@@ -1,22 +1,22 @@
-import { createI18n, type Composer, type I18nOptions } from 'vue-i18n';
-import en from './en';
-import ru from './ru';
+import { createI18n, type Composer, type I18nOptions } from "vue-i18n";
+import en from "./en";
+import ru from "./ru";
 
 // Supported languages — must mirror backend src/content/content.types.ts SUPPORTED_LANGS.
-export const SUPPORTED_LANGS = ['en', 'ru'] as const;
+export const SUPPORTED_LANGS = ["en", "ru"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
-export const DEFAULT_LANG: Lang = 'ru';
+export const DEFAULT_LANG: Lang = "ru";
 
 // Read the saved language from localStorage. Falls back to the default.
-const LS_LANG = 'finshark.lang';
+const LS_LANG = "finshark.lang";
 export function readLangFromStorage(): Lang {
-  if (typeof localStorage === 'undefined') return DEFAULT_LANG;
+  if (typeof localStorage === "undefined") return DEFAULT_LANG;
   const raw = localStorage.getItem(LS_LANG);
-  if (raw === 'en' || raw === 'ru') return raw;
+  if (raw === "en" || raw === "ru") return raw;
   return DEFAULT_LANG;
 }
 export function writeLangToStorage(lang: Lang): void {
-  if (typeof localStorage === 'undefined') return;
+  if (typeof localStorage === "undefined") return;
   localStorage.setItem(LS_LANG, lang);
 }
 
@@ -26,7 +26,7 @@ export function writeLangToStorage(lang: Lang): void {
 const options: I18nOptions = {
   legacy: false,
   locale: readLangFromStorage(),
-  fallbackLocale: 'en',
+  fallbackLocale: "en",
   messages: { en, ru },
   missingWarn: false,
   fallbackWarn: false,
@@ -44,12 +44,16 @@ function composer(): Composer {
 // Deep-set a value at a dot-path on an object, creating intermediate objects.
 // Used to apply flat DB overrides ({"dashboard.welcome": "..."}) onto the
 // nested messages tree vue-i18n expects.
-function setDeep(target: Record<string, unknown>, path: string, value: string): void {
-  const parts = path.split('.');
+function setDeep(
+  target: Record<string, unknown>,
+  path: string,
+  value: string
+): void {
+  const parts = path.split(".");
   let cur: Record<string, unknown> = target;
   for (let i = 0; i < parts.length - 1; i++) {
     const p = parts[i];
-    if (typeof cur[p] !== 'object' || cur[p] === null) {
+    if (typeof cur[p] !== "object" || cur[p] === null) {
       cur[p] = {};
     }
     cur = cur[p] as Record<string, unknown>;
@@ -60,7 +64,10 @@ function setDeep(target: Record<string, unknown>, path: string, value: string): 
 // Merge DB overrides into the active locale. Called from main.ts after the
 // /api/ui-translations/:lang fetch completes (or fails silently).
 // We mutate the existing messages object so reactive consumers update.
-export function applyOverrides(lang: Lang, overrides: Record<string, string>): void {
+export function applyOverrides(
+  lang: Lang,
+  overrides: Record<string, string>
+): void {
   const c = composer();
   const allMessages = c.messages.value as Record<Lang, Record<string, unknown>>;
   const messages = allMessages[lang];

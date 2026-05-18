@@ -1,8 +1,8 @@
-import { Controller, Logger, Post, UseGuards } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../auth/guards/admin.guard';
-import { SeedService, type ReseedResult } from './seed.service';
+import { Controller, Logger, Post, UseGuards } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { AdminGuard } from "../auth/guards/admin.guard";
+import { SeedService, type ReseedResult } from "./seed.service";
 
 // Admin-only endpoint that wipes content + progress and reseeds the catalog
 // from the bundled seed data. Destructive — guarded by both JwtAuthGuard and
@@ -12,7 +12,7 @@ import { SeedService, type ReseedResult } from './seed.service';
 //
 // Mounted under /api/admin/system to leave room for future system-level
 // operations (e.g. /admin/system/health).
-@Controller('admin/system')
+@Controller("admin/system")
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminSeedController {
   private readonly log = new Logger(AdminSeedController.name);
@@ -30,10 +30,10 @@ export class AdminSeedController {
   //
   // Throttling: 3 calls per minute per IP. Reseed is a heavy operation; this
   // is a safety net on top of the disable-on-click in the UI.
-  @Post('reseed')
+  @Post("reseed")
   @Throttle({ default: { ttl: 60_000, limit: 3 } })
   async reseed(): Promise<ReseedResult> {
-    this.log.warn('admin reseed: dropping content + progress and reseeding');
+    this.log.warn("admin reseed: dropping content + progress and reseeding");
     const result = await this.seed.dropAndReseedContent();
     this.log.warn(`admin reseed: done — ${JSON.stringify(result)}`);
     return result;

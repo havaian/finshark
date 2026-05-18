@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { LessonSessionRow, SessionMode } from './lesson.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { LessonSessionRow, SessionMode } from "./lesson.types";
 
 const COLS = `
   id, user_id, started_at, completed_at,
@@ -26,7 +26,7 @@ export class LessonSessionsRepository {
     paper_id?: string | null;
     source_session_id?: string | null;
   }): Promise<LessonSessionRow> {
-    const mode = input.mode ?? 'lesson';
+    const mode = input.mode ?? "lesson";
     const rows = await this.sql<LessonSessionRow[]>`
       INSERT INTO lesson_sessions (
         user_id, question_count,
@@ -47,7 +47,9 @@ export class LessonSessionsRepository {
 
   async findById(id: string): Promise<LessonSessionRow | null> {
     const rows = await this.sql<LessonSessionRow[]>`
-      SELECT ${this.sql.unsafe(COLS)} FROM lesson_sessions WHERE id = ${id} LIMIT 1
+      SELECT ${this.sql.unsafe(
+        COLS
+      )} FROM lesson_sessions WHERE id = ${id} LIMIT 1
     `;
     return rows[0] ?? null;
   }

@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { UsersRepository } from '../users/users.repository';
-import type { UserRow, BgLevel } from '../users/user.types';
-import { toPublicUser } from '../users/user.types';
-import type { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { UsersRepository } from "../users/users.repository";
+import type { UserRow, BgLevel } from "../users/user.types";
+import { toPublicUser } from "../users/user.types";
+import type { CompleteOnboardingDto } from "./dto/complete-onboarding.dto";
 
 // Onboarding orchestration. Owns the derivation rules from background level
 // + time budget to initial preference values. Once onboarded, the lesson
@@ -19,8 +19,10 @@ const SECS_PER_QUESTION = 40;
 // to 'easy' (mostly easy questions with the occasional medium). Advanced
 // default to NULL → the auto heuristic, which mostly serves medium/hard.
 // Intermediate explicitly NULL too so they get the full mix.
-function defaultDifficultyFor(bg: BgLevel | null): 'easy' | 'medium' | 'hard' | null {
-  if (bg === 'beginner') return 'easy';
+function defaultDifficultyFor(
+  bg: BgLevel | null
+): "easy" | "medium" | "hard" | null {
+  if (bg === "beginner") return "easy";
   // intermediate and advanced both get NULL = auto/full mix.
   return null;
 }
@@ -44,7 +46,7 @@ export class OnboardingService {
   // could pre-fill them, though we don't expose that UI yet).
   async getStatus(userId: string) {
     const user = await this.users.findById(userId);
-    if (!user) throw new NotFoundException('user not found');
+    if (!user) throw new NotFoundException("user not found");
     return {
       onboarded: user.onboarded_at !== null,
       onboarded_at: user.onboarded_at ? user.onboarded_at.toISOString() : null,
@@ -62,7 +64,7 @@ export class OnboardingService {
     // time_budget is set, and always derive preferred_difficulty if bg_level
     // is set. Both derivations are deterministic so a user who re-runs
     // onboarding with the same answers gets the same preferences.
-    const patch: Parameters<UsersRepository['applyOnboarding']>[1] = {};
+    const patch: Parameters<UsersRepository["applyOnboarding"]>[1] = {};
 
     if (dto.bg_level !== undefined) {
       patch.bg_level = dto.bg_level;
@@ -85,13 +87,16 @@ export class OnboardingService {
 
     // applyOnboarding always sets onboarded_at = NOW(), even for an empty patch.
     const updatedCore = await this.users.applyOnboarding(userId, patch);
-    if (!updatedCore) throw new NotFoundException('user not found');
+    if (!updatedCore) throw new NotFoundException("user not found");
 
     // Handle email reminders separately if provided — that lives on its own
     // dedicated setter to keep the existing preferences API consistent.
     let updated = updatedCore;
     if (dto.email_reminders_enabled !== undefined) {
-      const r = await this.users.setEmailReminders(userId, dto.email_reminders_enabled);
+      const r = await this.users.setEmailReminders(
+        userId,
+        dto.email_reminders_enabled
+      );
       if (r) updated = r;
     }
 

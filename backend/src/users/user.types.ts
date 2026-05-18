@@ -1,13 +1,13 @@
 // Row shape returned by `SELECT * FROM users`. Mirrors the migrations.
 // Keep in sync with db/migrations/*_users*.sql, *_google_auth.sql,
 // *_user_preferences.sql, *_onboarding.sql
-export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
-export type BgLevel = 'beginner' | 'intermediate' | 'advanced';
+export type QuestionDifficulty = "easy" | "medium" | "hard";
+export type BgLevel = "beginner" | "intermediate" | "advanced";
 
 export interface UserRow {
-  id: string;                // bigint comes back as string from postgres.js
+  id: string; // bigint comes back as string from postgres.js
   email: string;
-  google_sub: string;        // Google's stable user identifier (sub claim)
+  google_sub: string; // Google's stable user identifier (sub claim)
   display_name: string;
   streak_count: number;
   xp: number;
@@ -15,14 +15,14 @@ export interface UserRow {
   last_active_date: Date | null;
   is_admin: boolean;
   email_reminders_enabled: boolean;
-  reminder_hour_utc: number;                  // 0..23
+  reminder_hour_utc: number; // 0..23
   preferred_difficulty: QuestionDifficulty | null; // null = auto
-  lesson_size: number;                        // 3..10
+  lesson_size: number; // 3..10
   // Onboarding fields (3.1)
-  bg_level: BgLevel | null;                   // null = skipped or pre-onboarding
-  time_budget_minutes: number;                // 5..60, defaults 15
-  preferred_paper_id: string | null;          // FK to papers.id, nullable
-  onboarded_at: Date | null;                  // null = still needs to onboard
+  bg_level: BgLevel | null; // null = skipped or pre-onboarding
+  time_budget_minutes: number; // 5..60, defaults 15
+  preferred_paper_id: string | null; // FK to papers.id, nullable
+  onboarded_at: Date | null; // null = still needs to onboard
   // Leaderboards (3.3). Opt-in default false — users only appear if they
   // explicitly enable this from Settings or onboarding.
   leaderboard_opt_in: boolean;

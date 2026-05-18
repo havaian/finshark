@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 
 @Injectable()
 export class LessonSessionQuestionsRepository {
@@ -17,7 +17,12 @@ export class LessonSessionQuestionsRepository {
     // postgres.js helpers: pass an array of objects to `sql(rows, 'session_id', 'question_id', 'position')`
     // to build a multi-row VALUES list with the named columns.
     await this.sql`
-      INSERT INTO lesson_session_questions ${this.sql(rows, 'session_id', 'question_id', 'position')}
+      INSERT INTO lesson_session_questions ${this.sql(
+        rows,
+        "session_id",
+        "question_id",
+        "position"
+      )}
     `;
   }
 

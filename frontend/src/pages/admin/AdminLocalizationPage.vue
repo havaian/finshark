@@ -56,8 +56,13 @@ async function load() {
     const rows = await adminApi.listUiTranslations();
     const next: Record<string, Partial<Record<Lang, string>>> = {};
     for (const row of rows) {
-      if (!next[row.key]) next[row.key] = {};
-      next[row.key][row.lang] = row.value;
+      // Destructure with an explicit Lang annotation on `lang`. The Volar
+      // ts-plugin in the editor sometimes loses the narrow `'en' | 'ru'` type
+      // when `row.lang` is read off a property — annotating it locally makes
+      // the index access on `bucket[lang]` unambiguously typed.
+      const { key, lang, value }: { key: string; lang: Lang; value: string } = row;
+      const bucket = (next[key] ??= {});
+      bucket[lang] = value;
     }
     overrides.value = next;
   } catch (e) {
@@ -165,12 +170,7 @@ onMounted(load);
         <h1>{{ t('admin.localization.title') }}</h1>
         <p class="dim text-sm mt-2">{{ t('admin.localization.sub') }}</p>
       </div>
-      <input
-        v-model="filterText"
-        type="text"
-        placeholder="key or text"
-        style="max-width: 280px;"
-      />
+      <input v-model="filterText" type="text" placeholder="key or text" style="max-width: 280px;" />
     </div>
 
     <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
@@ -194,30 +194,17 @@ onMounted(load);
               <button class="btn-link accent" @click="startEdit(key, 'en')">
                 {{ overrideFor(key, 'en') ? t('common.edit') : t('common.add') }}
               </button>
-              <button
-                v-if="overrideFor(key, 'en')"
-                class="btn-link"
-                style="color: var(--danger);"
-                :disabled="isBusy(key, 'en')"
-                @click="onDelete(key, 'en')"
-              >
+              <button v-if="overrideFor(key, 'en')" class="btn-link" style="color: var(--danger);"
+                :disabled="isBusy(key, 'en')" @click="onDelete(key, 'en')">
                 {{ t('common.delete') }}
               </button>
             </div>
           </template>
           <template v-else>
-            <textarea
-              v-model="editing[`${key}::en`]"
-              rows="2"
-              maxlength="10000"
-              :placeholder="t('admin.localization.add_value_ph')"
-            />
+            <textarea v-model="editing[`${key}::en`]" rows="2" maxlength="10000"
+              :placeholder="t('admin.localization.add_value_ph')" />
             <div class="ui-trans-actions">
-              <button
-                class="btn btn-primary btn-sm"
-                :disabled="isBusy(key, 'en')"
-                @click="saveEdit(key, 'en')"
-              >
+              <button class="btn btn-primary btn-sm" :disabled="isBusy(key, 'en')" @click="saveEdit(key, 'en')">
                 {{ isBusy(key, 'en') ? t('admin.localization.saving') : t('common.save') }}
               </button>
               <button class="btn btn-ghost btn-sm" @click="cancelEdit(key, 'en')">{{ t('common.cancel') }}</button>
@@ -239,30 +226,17 @@ onMounted(load);
               <button class="btn-link accent" @click="startEdit(key, 'ru')">
                 {{ overrideFor(key, 'ru') ? t('common.edit') : t('common.add') }}
               </button>
-              <button
-                v-if="overrideFor(key, 'ru')"
-                class="btn-link"
-                style="color: var(--danger);"
-                :disabled="isBusy(key, 'ru')"
-                @click="onDelete(key, 'ru')"
-              >
+              <button v-if="overrideFor(key, 'ru')" class="btn-link" style="color: var(--danger);"
+                :disabled="isBusy(key, 'ru')" @click="onDelete(key, 'ru')">
                 {{ t('common.delete') }}
               </button>
             </div>
           </template>
           <template v-else>
-            <textarea
-              v-model="editing[`${key}::ru`]"
-              rows="2"
-              maxlength="10000"
-              :placeholder="t('admin.localization.add_value_ph')"
-            />
+            <textarea v-model="editing[`${key}::ru`]" rows="2" maxlength="10000"
+              :placeholder="t('admin.localization.add_value_ph')" />
             <div class="ui-trans-actions">
-              <button
-                class="btn btn-primary btn-sm"
-                :disabled="isBusy(key, 'ru')"
-                @click="saveEdit(key, 'ru')"
-              >
+              <button class="btn btn-primary btn-sm" :disabled="isBusy(key, 'ru')" @click="saveEdit(key, 'ru')">
                 {{ isBusy(key, 'ru') ? t('admin.localization.saving') : t('common.save') }}
               </button>
               <button class="btn btn-ghost btn-sm" @click="cancelEdit(key, 'ru')">{{ t('common.cancel') }}</button>

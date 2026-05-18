@@ -141,32 +141,17 @@ onMounted(load);
         <h1>{{ t('admin.whitelist.title') }}</h1>
         <p class="dim text-sm mt-2">{{ t('admin.whitelist.sub') }}</p>
       </div>
-      <input
-        v-model="filterText"
-        type="text"
-        :placeholder="t('admin.whitelist.filter_placeholder')"
-        style="max-width: 280px;"
-      />
+      <input v-model="filterText" type="text" :placeholder="t('admin.whitelist.filter_placeholder')"
+        style="max-width: 280px;" />
     </div>
 
     <!-- Add form -->
     <form class="admin-form" @submit.prevent="onAdd">
       <div class="row">
-        <input
-          v-model="newPattern"
-          type="text"
-          :placeholder="t('admin.whitelist.add_pattern_ph')"
-          maxlength="254"
-          required
-          class="grow"
-        />
-        <input
-          v-model="newNote"
-          type="text"
-          :placeholder="t('admin.whitelist.add_note_ph')"
-          maxlength="500"
-          class="grow"
-        />
+        <input v-model="newPattern" type="text" :placeholder="t('admin.whitelist.add_pattern_ph')" maxlength="254"
+          required class="grow" />
+        <input v-model="newNote" type="text" :placeholder="t('admin.whitelist.add_note_ph')" maxlength="500"
+          class="grow" />
       </div>
       <button type="submit" class="btn btn-primary" :disabled="adding">
         {{ adding ? t('common.adding') : t('admin.whitelist.add_btn') }}
@@ -194,28 +179,14 @@ onMounted(load);
             <span v-else class="muted">{{ t('admin.whitelist.no_note') }}</span>
           </div>
           <div v-else class="row" style="gap: 8px; align-items: center;">
-            <input
-              :value="editingNote.get(e.id)"
-              @input="editingNote.set(e.id, ($event.target as HTMLInputElement).value)"
-              type="text"
-              maxlength="500"
-              :placeholder="t('admin.whitelist.add_note_ph')"
-              class="grow"
-            />
-            <button
-              type="button"
-              class="btn btn-primary btn-sm"
-              :disabled="busyIds.has(e.id)"
-              @click="saveEditNote(e)"
-            >
+            <input :value="editingNote.get(e.id)"
+              @input="editingNote.set(e.id, ($event.target as HTMLInputElement).value)" type="text" maxlength="500"
+              :placeholder="t('admin.whitelist.add_note_ph')" class="grow" />
+            <button type="button" class="btn btn-primary btn-sm" :disabled="busyIds.has(e.id)" @click="saveEditNote(e)">
               {{ busyIds.has(e.id) ? t('common.saving') : t('common.save') }}
             </button>
-            <button
-              type="button"
-              class="btn btn-ghost btn-sm"
-              :disabled="busyIds.has(e.id)"
-              @click="cancelEditNote(e.id)"
-            >
+            <button type="button" class="btn btn-ghost btn-sm" :disabled="busyIds.has(e.id)"
+              @click="cancelEditNote(e.id)">
               {{ t('common.cancel') }}
             </button>
           </div>
@@ -224,20 +195,11 @@ onMounted(load);
         </div>
 
         <div class="row" style="gap: 14px;">
-          <button
-            v-if="!editingNote.has(e.id)"
-            class="btn-link accent"
-            :disabled="busyIds.has(e.id)"
-            @click="startEditNote(e)"
-          >
+          <button v-if="!editingNote.has(e.id)" class="btn-link accent" :disabled="busyIds.has(e.id)"
+            @click="startEditNote(e)">
             {{ e.note ? t('common.edit') : t('admin.whitelist.add_note') }}
           </button>
-          <button
-            class="btn-link"
-            style="color: var(--danger);"
-            :disabled="busyIds.has(e.id)"
-            @click="onDelete(e)"
-          >
+          <button class="btn-link" style="color: var(--danger);" :disabled="busyIds.has(e.id)" @click="onDelete(e)">
             {{ t('common.delete') }}
           </button>
         </div>

@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import {
-  SUPPORTED_LANGS,
-  type Lang,
-} from './content.types';
-import { UiTranslationsFileStore } from './ui-translations.file-store';
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { SUPPORTED_LANGS, type Lang } from "./content.types";
+import { UiTranslationsFileStore } from "./ui-translations.file-store";
 
 // Shape returned to the admin UI. Matches the old DB-backed row shape minus
 // created_at / updated_at (files don't carry per-key timestamps). The admin
@@ -40,20 +41,20 @@ export class UiTranslationsService {
       throw new BadRequestException(`unsupported lang "${input.lang}"`);
     }
     const key = input.key.trim();
-    if (!key) throw new BadRequestException('key is required');
+    if (!key) throw new BadRequestException("key is required");
     if (!/^[A-Za-z0-9_.\-]+$/.test(key)) {
       throw new BadRequestException(
-        'key may only contain letters, digits, underscore, dot, hyphen',
+        "key may only contain letters, digits, underscore, dot, hyphen"
       );
     }
     if (key.length > 200) {
-      throw new BadRequestException('key is too long (max 200 chars)');
+      throw new BadRequestException("key is too long (max 200 chars)");
     }
-    if (typeof input.value !== 'string') {
-      throw new BadRequestException('value must be a string');
+    if (typeof input.value !== "string") {
+      throw new BadRequestException("value must be a string");
     }
     if (input.value.length > 10_000) {
-      throw new BadRequestException('value is too long (max 10000 chars)');
+      throw new BadRequestException("value is too long (max 10000 chars)");
     }
 
     return this.store.upsert({ key, lang: input.lang, value: input.value });
@@ -65,6 +66,6 @@ export class UiTranslationsService {
       throw new BadRequestException(`unsupported lang "${lang}"`);
     }
     const ok = await this.store.delete(key, lang);
-    if (!ok) throw new NotFoundException('translation override not found');
+    if (!ok) throw new NotFoundException("translation override not found");
   }
 }

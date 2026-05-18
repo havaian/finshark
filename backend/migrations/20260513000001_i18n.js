@@ -55,9 +55,9 @@ exports.up = (pgm) => {
 
   pgm.createTable('ui_translations', {
     // No surrogate key — natural composite PK on (key, lang).
-    key:        { type: 'text', notNull: true },           // e.g. 'dashboard.welcome'
-    lang:       { type: 'text', notNull: true },           // 'en' | 'ru' — app-validated
-    value:      { type: 'text', notNull: true },
+    key: { type: 'text', notNull: true },           // e.g. 'dashboard.welcome'
+    lang: { type: 'text', notNull: true },           // 'en' | 'ru' — app-validated
+    value: { type: 'text', notNull: true },
     created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
     updated_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
   });

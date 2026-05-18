@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api } from "./client";
 
 // Mirrors backend src/profile/public-profile.service.ts PublicProfileResponse.
 export interface PublicProfileBadge {

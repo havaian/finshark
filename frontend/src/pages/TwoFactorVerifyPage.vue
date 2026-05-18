@@ -116,26 +116,15 @@ onMounted(() => {
           <template v-if="!recoveryMode">{{ t('tfa_verify.label_totp') }}</template>
           <template v-else>{{ t('tfa_verify.label_recovery') }}</template>
         </label>
-        <input
-          v-model="code"
-          :type="recoveryMode ? 'text' : 'text'"
-          :inputmode="recoveryMode ? 'text' : 'numeric'"
+        <input v-model="code" :type="recoveryMode ? 'text' : 'text'" :inputmode="recoveryMode ? 'text' : 'numeric'"
           :autocomplete="recoveryMode ? 'off' : 'one-time-code'"
-          :placeholder="recoveryMode ? 'ABCDE-FGHIJ-KLMNO-PQRST-UVWXY' : '123456'"
-          :maxlength="recoveryMode ? 32 : 6"
-          class="tfa-input"
-          style="margin-top: 6px;"
-          @keydown.enter="canSubmit && submit()"
-        />
+          :placeholder="recoveryMode ? 'ABCDE-FGHIJ-KLMNO-PQRST-UVWXY' : '123456'" :maxlength="recoveryMode ? 32 : 6"
+          class="tfa-input" style="margin-top: 6px;" @keydown.enter="canSubmit && submit()" />
       </div>
 
       <p v-if="errorMsg" class="error-text mt-4">{{ errorMsg }}</p>
 
-      <button
-        class="btn btn-primary btn-block mt-6"
-        :disabled="!canSubmit"
-        @click="submit"
-      >
+      <button class="btn btn-primary btn-block mt-6" :disabled="!canSubmit" @click="submit">
         {{ submitting ? t('common.saving') : t('tfa_verify.submit') }}
       </button>
 
@@ -163,11 +152,13 @@ onMounted(() => {
   letter-spacing: 0.08em;
   text-align: center;
 }
+
 .link-subtle {
   color: var(--text-mute);
   font-size: 13px;
   text-decoration: underline;
 }
+
 .link-subtle:hover {
   color: var(--text);
 }

@@ -79,9 +79,9 @@ const deleting = ref(false);
 
 // Chart canvas refs and instances (kept so we can destroy on theme change).
 const accuracyByPaperCanvas = ref<HTMLCanvasElement | null>(null);
-const difficultyCanvas      = ref<HTMLCanvasElement | null>(null);
-const typeCanvas            = ref<HTMLCanvasElement | null>(null);
-const masteryCanvas         = ref<HTMLCanvasElement | null>(null);
+const difficultyCanvas = ref<HTMLCanvasElement | null>(null);
+const typeCanvas = ref<HTMLCanvasElement | null>(null);
+const masteryCanvas = ref<HTMLCanvasElement | null>(null);
 const chartInstances = new Map<string, Chart>();
 
 const accuracyPctDisplay = computed(() => {
@@ -205,13 +205,13 @@ function renderCharts() {
   if (!stats.value) return;
   // Read theme-aware colors from CSS variables so charts match the rest of the app.
   const computedStyle = getComputedStyle(document.documentElement);
-  const text   = computedStyle.getPropertyValue('--text').trim() || '#f5f5f7';
-  const dim    = computedStyle.getPropertyValue('--text-dim').trim() || '#a0a0a8';
+  const text = computedStyle.getPropertyValue('--text').trim() || '#f5f5f7';
+  const dim = computedStyle.getPropertyValue('--text-dim').trim() || '#a0a0a8';
   const border = computedStyle.getPropertyValue('--border').trim() || '#2a2a30';
   const accent = computedStyle.getPropertyValue('--accent').trim() || '#7c5cff';
   const success = computedStyle.getPropertyValue('--success').trim() || '#4ade80';
   const danger = computedStyle.getPropertyValue('--danger').trim() || '#f87171';
-  const amber  = computedStyle.getPropertyValue('--amber').trim() || '#f5b955';
+  const amber = computedStyle.getPropertyValue('--amber').trim() || '#f5b955';
 
   const commonOpts = {
     responsive: true,
@@ -423,9 +423,9 @@ const heatmapData = computed<{ weeks: HeatCell[][]; months: MonthLabel[] }>(() =
       const count = byDay.get(iso) ?? 0;
       const intensity =
         count === 0 ? 0 :
-        count < 3   ? 1 :
-        count < 8   ? 2 :
-        count < 16  ? 3 : 4;
+          count < 3 ? 1 :
+            count < 8 ? 2 :
+              count < 16 ? 3 : 4;
       week.push({ date: iso, count, intensity });
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
@@ -617,12 +617,8 @@ onMounted(load);
             <!-- Month labels row: only renders for months whose column ≥ 1
                  (avoids overlap with the weekday label column on the far left). -->
             <div class="activity-months">
-              <span
-                v-for="m in heatmapData.months"
-                :key="m.key"
-                class="activity-month-label"
-                :style="{ left: (m.col * 15) + 'px' }"
-              >{{ m.short }}</span>
+              <span v-for="m in heatmapData.months" :key="m.key" class="activity-month-label"
+                :style="{ left: (m.col * 15) + 'px' }">{{ m.short }}</span>
             </div>
 
             <div class="activity-body">
@@ -636,24 +632,16 @@ onMounted(load);
 
               <div class="activity-heatmap">
                 <div v-for="(week, wi) in heatmapData.weeks" :key="wi" class="activity-col">
-                  <div
-                    v-for="cell in week"
-                    :key="cell.date"
-                    :class="['activity-cell', `intensity-${cell.intensity}`]"
-                    @mouseenter="onCellEnter(cell, $event)"
-                    @mouseleave="onCellLeave"
-                  ></div>
+                  <div v-for="cell in week" :key="cell.date" :class="['activity-cell', `intensity-${cell.intensity}`]"
+                    @mouseenter="onCellEnter(cell, $event)" @mouseleave="onCellLeave"></div>
                 </div>
               </div>
             </div>
 
             <!-- Floating tooltip. Positioned at hoverPos (centred above cell),
                  anchored bottom-up via `transform`. Only renders when hovering. -->
-            <div
-              v-if="hoverCell && hoverPos"
-              class="activity-tooltip"
-              :style="{ left: hoverPos.x + 'px', top: hoverPos.y + 'px' }"
-            >
+            <div v-if="hoverCell && hoverPos" class="activity-tooltip"
+              :style="{ left: hoverPos.x + 'px', top: hoverPos.y + 'px' }">
               <div class="activity-tooltip-count">
                 {{ t('profile.heatmap_tooltip_count', { count: hoverCell.count }) }}
               </div>
@@ -692,10 +680,7 @@ onMounted(load);
              alongside what they've earned. Unearned tiles get .locked styling
              (greyscale + opacity). Section hides entirely on fetch failure
              (badges.length === 0 AND not loading) — graceful degradation. -->
-        <section
-          v-if="badgesLoading || badges.length > 0"
-          class="card badges-section mt-6"
-        >
+        <section v-if="badgesLoading || badges.length > 0" class="card badges-section mt-6">
           <header class="badges-section-head">
             <h2>{{ t('profile.badges_section') }}</h2>
             <span v-if="!badgesLoading" class="dim text-sm">
@@ -706,12 +691,8 @@ onMounted(load);
             {{ t('profile.badges_loading') }}
           </p>
           <div v-else class="badges-grid">
-            <div
-              v-for="b in badges"
-              :key="b.code"
-              :class="['badge-tile', { locked: !b.earned }]"
-              :title="b.description"
-            >
+            <div v-for="b in badges" :key="b.code" :class="['badge-tile', { locked: !b.earned }]"
+              :title="b.description">
               <span class="badge-tile-icon">{{ b.icon }}</span>
               <span class="badge-tile-name">{{ b.name }}</span>
               <span v-if="!b.earned" class="badge-tile-locked-label dim text-xs">
@@ -726,10 +707,7 @@ onMounted(load);
              as the simpler signal, then drills into the progress bars. Each
              card shows: icon, name, current level name + number, progress
              bar to next threshold, raw current_value / next_threshold. -->
-        <section
-          v-if="achievementsLoading || achievements.length > 0"
-          class="card achievements-section mt-6"
-        >
+        <section v-if="achievementsLoading || achievements.length > 0" class="card achievements-section mt-6">
           <header class="badges-section-head">
             <h2>{{ t('profile.achievements_section') }}</h2>
             <span v-if="!achievementsLoading" class="dim text-sm">
@@ -743,11 +721,8 @@ onMounted(load);
             {{ t('profile.achievements_loading') }}
           </p>
           <div v-else class="achievements-grid">
-            <div
-              v-for="a in achievements"
-              :key="a.code"
-              :class="['achievement-card', { locked: a.current_level === 0 }]"
-            >
+            <div v-for="a in achievements" :key="a.code"
+              :class="['achievement-card', { locked: a.current_level === 0 }]">
               <div class="achievement-card-head">
                 <span class="achievement-icon">{{ a.icon }}</span>
                 <div class="achievement-titleblock">
@@ -768,12 +743,11 @@ onMounted(load);
               </div>
               <div class="achievement-progress">
                 <div class="achievement-progress-bar">
-                  <div
-                    class="achievement-progress-fill"
-                    :style="{ width: a.next_threshold === null
+                  <div class="achievement-progress-fill" :style="{
+                    width: a.next_threshold === null
                       ? '100%'
-                      : Math.min(100, Math.round((a.current_value / a.next_threshold) * 100)) + '%' }"
-                  />
+                      : Math.min(100, Math.round((a.current_value / a.next_threshold) * 100)) + '%'
+                  }" />
                 </div>
                 <div class="achievement-progress-label dim text-xs">
                   <template v-if="a.next_threshold === null">
@@ -803,18 +777,11 @@ onMounted(load);
 
           <div v-else class="mt-4">
             <label class="field-label">{{ t('profile.delete_account_confirm') }}</label>
-            <input
-              v-model="deleteConfirm"
-              type="email"
-              :placeholder="me.email"
-              style="margin-top: 6px;"
-            />
+            <input v-model="deleteConfirm" type="email" :placeholder="me.email" style="margin-top: 6px;" />
             <div class="row mt-4" style="gap: 8px;">
-              <button
-                class="btn btn-danger"
+              <button class="btn btn-danger"
                 :disabled="deleting || deleteConfirm.trim().toLowerCase() !== me.email.toLowerCase()"
-                @click="deleteAccount"
-              >
+                @click="deleteAccount">
                 {{ deleting ? t('common.saving') : t('profile.delete_account') }}
               </button>
               <button class="btn btn-ghost" :disabled="deleting" @click="showDelete = false; deleteConfirm = ''">

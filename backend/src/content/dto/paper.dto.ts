@@ -1,4 +1,4 @@
-import { IsOptional, IsString, Length, ValidateIf } from 'class-validator';
+import { IsOptional, IsString, Length, ValidateIf } from "class-validator";
 
 export class CreatePaperDto {
   @IsString()

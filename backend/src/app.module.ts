@@ -1,33 +1,33 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
-import { DbModule } from './db/db.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { AdminUsersModule } from './users/admin-users.module';
-import { ContentModule } from './content/content.module';
-import { LessonsModule } from './lessons/lessons.module';
-import { LlmModule } from './llm/llm.module';
-import { ProgressModule } from './progress/progress.module';
-import { ProfileModule } from './profile/profile.module';
-import { EmailModule } from './email/email.module';
-import { RemindersModule } from './reminders/reminders.module';
-import { OnboardingModule } from './onboarding/onboarding.module';
-import { LeaderboardsModule } from './leaderboards/leaderboards.module';
-import { BadgesModule } from './badges/badges.module';
-import { AchievementsModule } from './achievements/achievements.module';
-import { MocksModule } from './mocks/mocks.module';
-import { SeedModule } from './seed/seed.module';
-import { WhitelistModule } from './whitelist/whitelist.module';
-import { TotpModule } from './totp/totp.module';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { ScheduleModule } from "@nestjs/schedule";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
+import { DbModule } from "./db/db.module";
+import { AuthModule } from "./auth/auth.module";
+import { UsersModule } from "./users/users.module";
+import { AdminUsersModule } from "./users/admin-users.module";
+import { ContentModule } from "./content/content.module";
+import { LessonsModule } from "./lessons/lessons.module";
+import { LlmModule } from "./llm/llm.module";
+import { ProgressModule } from "./progress/progress.module";
+import { ProfileModule } from "./profile/profile.module";
+import { EmailModule } from "./email/email.module";
+import { RemindersModule } from "./reminders/reminders.module";
+import { OnboardingModule } from "./onboarding/onboarding.module";
+import { LeaderboardsModule } from "./leaderboards/leaderboards.module";
+import { BadgesModule } from "./badges/badges.module";
+import { AchievementsModule } from "./achievements/achievements.module";
+import { MocksModule } from "./mocks/mocks.module";
+import { SeedModule } from "./seed/seed.module";
+import { WhitelistModule } from "./whitelist/whitelist.module";
+import { TotpModule } from "./totp/totp.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env'],
+      envFilePath: [".env"],
     }),
     ScheduleModule.forRoot(),
     // Default: 60 requests per 60 seconds per IP. Tight limits applied per-route

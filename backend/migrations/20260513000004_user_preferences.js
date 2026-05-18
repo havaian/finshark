@@ -15,9 +15,9 @@ exports.shorthands = undefined;
 
 exports.up = (pgm) => {
   pgm.addColumns('users', {
-    reminder_hour_utc:     { type: 'integer', notNull: true, default: 18 },
-    preferred_difficulty:  { type: 'question_difficulty' }, // nullable = auto
-    lesson_size:           { type: 'integer', notNull: true, default: 5 },
+    reminder_hour_utc: { type: 'integer', notNull: true, default: 18 },
+    preferred_difficulty: { type: 'question_difficulty' }, // nullable = auto
+    lesson_size: { type: 'integer', notNull: true, default: 5 },
   });
   pgm.addConstraint('users', 'chk_reminder_hour_range', {
     check: 'reminder_hour_utc BETWEEN 0 AND 23',

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { PaperRow } from './content.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { PaperRow } from "./content.types";
 
 const COLS = `id, code, name_en, name_ru, created_at, updated_at`;
 
@@ -49,7 +49,7 @@ export class PapersRepository {
       code?: string;
       name_en?: string;
       name_ru?: string | null;
-    },
+    }
   ): Promise<PaperRow | null> {
     // Build a partial UPDATE without an ORM. Empty patch → just return current row.
     // Note: postgres.js sql(record) treats null as NULL, undefined keys are skipped
@@ -70,7 +70,8 @@ export class PapersRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const rows = await this.sql`DELETE FROM papers WHERE id = ${id} RETURNING id`;
+    const rows = await this
+      .sql`DELETE FROM papers WHERE id = ${id} RETURNING id`;
     return rows.length > 0;
   }
 

@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 
 export interface LlmGradeCacheRow {
   id: string;
@@ -25,7 +25,7 @@ export class LlmGradeCacheRepository {
 
   async find(
     question_id: string,
-    normalized_user_answer: string,
+    normalized_user_answer: string
   ): Promise<LlmGradeCacheRow | null> {
     const rows = await this.sql<LlmGradeCacheRow[]>`
       SELECT ${this.sql.unsafe(COLS)}
@@ -77,6 +77,6 @@ export class LlmGradeCacheRepository {
         AND a.answered_at >= DATE_TRUNC('day', NOW())
         AND a.llm_grade_json ->> 'provider' IN ('openai', 'anthropic')
     `;
-    return parseInt(rows[0]?.n ?? '0', 10);
+    return parseInt(rows[0]?.n ?? "0", 10);
   }
 }

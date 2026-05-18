@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import type { QuestionRow, Lang } from '../content/content.types';
-import { LlmGraderService } from '../llm/llm-grader.service';
+import { Injectable } from "@nestjs/common";
+import type { QuestionRow, Lang } from "../content/content.types";
+import { LlmGraderService } from "../llm/llm-grader.service";
 
 export interface GradeResult {
   was_correct: boolean;
@@ -21,12 +21,12 @@ export class GraderService {
     question: QuestionRow,
     user_id: string,
     user_answer: string,
-    lang: Lang,
+    lang: Lang
   ): Promise<GradeResult> {
-    if (question.type === 'mcq') {
+    if (question.type === "mcq") {
       return this.gradeMcq(question, user_answer);
     }
-    if (question.type === 'number_entry') {
+    if (question.type === "number_entry") {
       const numeric = this.gradeNumber(question, user_answer);
       // If the user submitted gibberish that didn't parse, fall through to the
       // LLM path so the verdict is reasoned about (and may catch "12 (rounded)"
@@ -63,7 +63,7 @@ export class GraderService {
   //  - leading + sign or surrounding parentheses for negatives ("(150)" = -150)
   private gradeNumber(
     question: QuestionRow,
-    user_answer: string,
+    user_answer: string
   ): GradeResult | null {
     const userNum = this.parseNumber(user_answer);
     const expectedNum = this.parseNumber(question.correct_answer_en);
@@ -80,11 +80,11 @@ export class GraderService {
 
   private parseNumber(raw: string): number | null {
     let s = raw.trim();
-    if (s === '') return null;
+    if (s === "") return null;
 
     // Accountancy convention: (123) means -123.
     let negative = false;
-    if (s.startsWith('(') && s.endsWith(')')) {
+    if (s.startsWith("(") && s.endsWith(")")) {
       negative = true;
       s = s.slice(1, -1).trim();
     }
@@ -94,18 +94,18 @@ export class GraderService {
     //   "1.234,56" → EU: dot is thousands, comma is decimal.
     //   "1234,56"  → ambiguous; treat comma as decimal (no dot present).
     //   "1234.56"  → standard.
-    const hasDot = s.includes('.');
-    const hasComma = s.includes(',');
+    const hasDot = s.includes(".");
+    const hasComma = s.includes(",");
     if (hasDot && hasComma) {
       // Whichever appears LAST in the string is the decimal mark.
-      const lastDot = s.lastIndexOf('.');
-      const lastComma = s.lastIndexOf(',');
+      const lastDot = s.lastIndexOf(".");
+      const lastComma = s.lastIndexOf(",");
       if (lastComma > lastDot) {
         // EU: dot=thousands, comma=decimal
-        s = s.replace(/\./g, '').replace(',', '.');
+        s = s.replace(/\./g, "").replace(",", ".");
       } else {
         // US/UK: comma=thousands, dot=decimal
-        s = s.replace(/,/g, '');
+        s = s.replace(/,/g, "");
       }
     } else if (hasComma) {
       // Only comma — treat as decimal mark (single comma) or thousands sep
@@ -113,12 +113,12 @@ export class GraderService {
       // heuristic: if there's exactly one comma followed by 1-2 digits, it's
       // a decimal. Otherwise treat as thousands sep.
       const m = s.match(/^-?\d+,(\d{1,2})$/);
-      if (m) s = s.replace(',', '.');
-      else s = s.replace(/,/g, '');
+      if (m) s = s.replace(",", ".");
+      else s = s.replace(/,/g, "");
     }
 
     // Drop a leading '+' since parseFloat handles signs but not all whitespace.
-    if (s.startsWith('+')) s = s.slice(1);
+    if (s.startsWith("+")) s = s.slice(1);
 
     const n = parseFloat(s);
     if (!Number.isFinite(n)) return null;

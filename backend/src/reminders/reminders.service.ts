@@ -1,12 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Cron } from '@nestjs/schedule';
-import { UsersRepository } from '../users/users.repository';
-import { EmailService } from '../email/email.service';
-import { ReminderEmailsSentRepository } from './reminder-emails-sent.repository';
-import { UnsubscribeTokens } from './unsubscribe.tokens';
-import { toUtcDateOnly } from '../lessons/srs';
-import type { UserRow } from '../users/user.types';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Cron } from "@nestjs/schedule";
+import { UsersRepository } from "../users/users.repository";
+import { EmailService } from "../email/email.service";
+import { ReminderEmailsSentRepository } from "./reminder-emails-sent.repository";
+import { UnsubscribeTokens } from "./unsubscribe.tokens";
+import { toUtcDateOnly } from "../lessons/srs";
+import type { UserRow } from "../users/user.types";
 
 // Default cron: hourly. Each run picks up users whose reminder_hour_utc
 // matches the current UTC hour. Override via REMINDER_CRON env.
@@ -20,7 +20,7 @@ import type { UserRow } from '../users/user.types';
 // fixed hour regardless of their preference, override REMINDER_CRON and remove
 // the hour filter in runOnce (or simply set everyone's reminder_hour_utc to
 // the chosen hour via SQL).
-const CRON_EXPR = process.env.REMINDER_CRON?.trim() || '0 * * * *';
+const CRON_EXPR = process.env.REMINDER_CRON?.trim() || "0 * * * *";
 
 @Injectable()
 export class RemindersService {
@@ -31,11 +31,11 @@ export class RemindersService {
     private readonly users: UsersRepository,
     private readonly email: EmailService,
     private readonly sent: ReminderEmailsSentRepository,
-    private readonly tokens: UnsubscribeTokens,
+    private readonly tokens: UnsubscribeTokens
   ) {}
 
   // The decorator argument is read once at import time.
-  @Cron(CRON_EXPR, { name: 'daily-reminder-emails' })
+  @Cron(CRON_EXPR, { name: "daily-reminder-emails" })
   async runScheduled(): Promise<void> {
     await this.runOnce();
   }
@@ -44,7 +44,9 @@ export class RemindersService {
   // When called from the cron we filter to users whose reminder_hour_utc
   // matches the current UTC hour. When called from the admin trigger we
   // bypass that filter (admin probably wants to test the whole pipeline).
-  async runOnce(opts?: { allHours?: boolean }): Promise<{ sent: number; skipped: number; failed: number }> {
+  async runOnce(opts?: {
+    allHours?: boolean;
+  }): Promise<{ sent: number; skipped: number; failed: number }> {
     const today = toUtcDateOnly(new Date());
     const allRecipients = await this.users.findReminderRecipients(today);
     const currentHour = new Date().getUTCHours();
@@ -66,7 +68,7 @@ export class RemindersService {
       try {
         await this.email.send({
           to: u.email,
-          from: this.config.getOrThrow<string>('EMAIL_FROM'),
+          from: this.config.getOrThrow<string>("EMAIL_FROM"),
           subject: this.subjectFor(u),
           text: this.bodyFor(u),
         });
@@ -77,13 +79,15 @@ export class RemindersService {
         // The next day they'll be eligible again if still inactive.
         failed++;
         this.log.error(
-          `failed to send reminder to user ${u.id}: ${(err as Error).message}`,
+          `failed to send reminder to user ${u.id}: ${(err as Error).message}`
         );
       }
     }
 
     this.log.log(
-      `reminder run finished: sent=${sent} skipped=${skipped} failed=${failed} (provider=${this.email.isRealProvider() ? 'real' : 'log'})`,
+      `reminder run finished: sent=${sent} skipped=${skipped} failed=${failed} (provider=${
+        this.email.isRealProvider() ? "real" : "log"
+      })`
     );
     return { sent, skipped, failed };
   }
@@ -91,14 +95,19 @@ export class RemindersService {
   // ---- email content ----
 
   private subjectFor(u: UserRow): string {
-    if (u.streak_count >= 2) return `🔥 Keep your ${u.streak_count}-day ACCA streak`;
+    if (u.streak_count >= 2)
+      return `🔥 Keep your ${u.streak_count}-day ACCA streak`;
     return `Time for today's ACCA lesson`;
   }
 
   private bodyFor(u: UserRow): string {
-    const appUrl = this.config.getOrThrow<string>('APP_PUBLIC_URL').replace(/\/$/, '');
+    const appUrl = this.config
+      .getOrThrow<string>("APP_PUBLIC_URL")
+      .replace(/\/$/, "");
     const unsubToken = this.tokens.sign(u.id);
-    const unsubUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
+    const unsubUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(
+      unsubToken
+    )}`;
 
     const streakLine =
       u.streak_count >= 2
@@ -116,6 +125,6 @@ export class RemindersService {
       ``,
       `--`,
       `Don't want these emails? Unsubscribe: ${unsubUrl}`,
-    ].join('\n');
+    ].join("\n");
   }
 }

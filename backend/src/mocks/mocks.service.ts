@@ -3,17 +3,20 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { Inject } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import { LessonsService } from '../lessons/lessons.service';
-import { LessonSessionsRepository } from '../lessons/lesson-sessions.repository';
-import { LessonSessionQuestionsRepository } from '../lessons/lesson-session-questions.repository';
-import { AttemptsRepository } from '../lessons/attempts.repository';
-import { QuestionsRepository } from '../content/questions.repository';
-import type { LessonQuestion, LessonTheoryBite } from '../lessons/lessons.service';
-import type { Lang } from '../content/content.types';
+} from "@nestjs/common";
+import { Inject } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import { LessonsService } from "../lessons/lessons.service";
+import { LessonSessionsRepository } from "../lessons/lesson-sessions.repository";
+import { LessonSessionQuestionsRepository } from "../lessons/lesson-session-questions.repository";
+import { AttemptsRepository } from "../lessons/attempts.repository";
+import { QuestionsRepository } from "../content/questions.repository";
+import type {
+  LessonQuestion,
+  LessonTheoryBite,
+} from "../lessons/lessons.service";
+import type { Lang } from "../content/content.types";
 
 // MocksService runs alongside LessonsService and reuses much of its surface
 // area. The mock is just a lesson_session with mode='mock' — the attempt
@@ -66,7 +69,7 @@ export class MocksService {
     private readonly sessionQuestions: LessonSessionQuestionsRepository,
     private readonly attempts: AttemptsRepository,
     private readonly questions: QuestionsRepository,
-    private readonly lessons: LessonsService,
+    private readonly lessons: LessonsService
   ) {}
 
   // POST /mocks — start a new mock for the given paper.
@@ -77,30 +80,30 @@ export class MocksService {
       paper_id: string;
       question_count: number;
       time_limit_seconds?: number;
-    },
+    }
   ): Promise<StartMockResult> {
     const queue = await this.questions.findRandomForMock(
       opts.paper_id,
-      opts.question_count,
+      opts.question_count
     );
 
     if (queue.length === 0) {
       throw new BadRequestException(
-        'no active questions available for this paper — admin must add or activate questions first',
+        "no active questions available for this paper — admin must add or activate questions first"
       );
     }
 
     const session = await this.sessions.create({
       user_id,
       question_count: queue.length,
-      mode: 'mock',
+      mode: "mock",
       paper_id: opts.paper_id,
       time_limit_seconds: opts.time_limit_seconds ?? null,
     });
 
     await this.sessionQuestions.insertMany(
       session.id,
-      queue.map((q) => q.id),
+      queue.map((q) => q.id)
     );
 
     return {
@@ -118,16 +121,16 @@ export class MocksService {
   // someone else's; 400 if it hasn't been completed yet.
   async breakdown(user_id: string, session_id: string): Promise<MockBreakdown> {
     const session = await this.sessions.findById(session_id);
-    if (!session) throw new NotFoundException('session not found');
-    if (session.mode !== 'mock')
-      throw new NotFoundException('not a mock session');
+    if (!session) throw new NotFoundException("session not found");
+    if (session.mode !== "mock")
+      throw new NotFoundException("not a mock session");
     if (session.user_id !== user_id)
-      throw new ForbiddenException('session belongs to another user');
+      throw new ForbiddenException("session belongs to another user");
     if (!session.completed_at)
-      throw new BadRequestException('mock not completed yet');
+      throw new BadRequestException("mock not completed yet");
     if (!session.paper_id)
       throw new BadRequestException(
-        'mock has no paper_id — should not happen given chk_mock_has_paper',
+        "mock has no paper_id — should not happen given chk_mock_has_paper"
       );
 
     // One SQL: attempts + question→lo join + LO title + correct/total per LO.
@@ -198,16 +201,16 @@ export class MocksService {
   async startReview(
     user_id: string,
     mock_session_id: string,
-    lang: Lang,
+    lang: Lang
   ): Promise<StartMockResult> {
     const session = await this.sessions.findById(mock_session_id);
-    if (!session) throw new NotFoundException('session not found');
-    if (session.mode !== 'mock')
-      throw new NotFoundException('not a mock session');
+    if (!session) throw new NotFoundException("session not found");
+    if (session.mode !== "mock")
+      throw new NotFoundException("not a mock session");
     if (session.user_id !== user_id)
-      throw new ForbiddenException('session belongs to another user');
+      throw new ForbiddenException("session belongs to another user");
     if (!session.completed_at)
-      throw new BadRequestException('mock not completed yet');
+      throw new BadRequestException("mock not completed yet");
 
     // Pull the wrong question_ids ordered by their position in the mock queue.
     type WrongRow = { question_id: string };
@@ -222,7 +225,7 @@ export class MocksService {
     `;
 
     if (wrongRows.length === 0) {
-      throw new BadRequestException('no wrong questions to review');
+      throw new BadRequestException("no wrong questions to review");
     }
 
     // Load full question rows, filtering out anything that was retired since
@@ -234,7 +237,7 @@ export class MocksService {
     });
     if (questionRows.length === 0) {
       throw new BadRequestException(
-        'all wrong-answer questions have been retired — nothing to review',
+        "all wrong-answer questions have been retired — nothing to review"
       );
     }
 
@@ -242,26 +245,27 @@ export class MocksService {
     // questionRows (returned in arbitrary DB order) to match the wrong order.
     const wrongOrder = new Map(ids.map((id, i) => [id, i]));
     questionRows.sort(
-      (a, b) =>
-        (wrongOrder.get(a.id) ?? 0) - (wrongOrder.get(b.id) ?? 0),
+      (a, b) => (wrongOrder.get(a.id) ?? 0) - (wrongOrder.get(b.id) ?? 0)
     );
 
     const review = await this.sessions.create({
       user_id,
       question_count: questionRows.length,
-      mode: 'lesson',
+      mode: "lesson",
       paper_id: session.paper_id,
       source_session_id: mock_session_id,
     });
 
     await this.sessionQuestions.insertMany(
       review.id,
-      questionRows.map((q) => q.id),
+      questionRows.map((q) => q.id)
     );
 
     return {
       session_id: review.id,
-      questions: questionRows.map((q) => this.lessons.toLessonQuestion(q, lang)),
+      questions: questionRows.map((q) =>
+        this.lessons.toLessonQuestion(q, lang)
+      ),
       hearts_remaining: review.hearts_remaining,
       // Review sessions DO get theory bites — they're a learning flow, unlike
       // the original mock. Reuse the lessons-service helper.

@@ -114,11 +114,7 @@ onMounted(() => {
           <p class="dim text-sm">{{ t('leaderboards.optin_body') }}</p>
           <p v-if="optInError" class="error-text">{{ optInError }}</p>
         </div>
-        <button
-          class="btn btn-primary"
-          :disabled="togglingOptIn"
-          @click="onOptIn"
-        >
+        <button class="btn btn-primary" :disabled="togglingOptIn" @click="onOptIn">
           {{ togglingOptIn ? t('common.saving') : t('leaderboards.optin_enable') }}
         </button>
       </div>
@@ -126,13 +122,8 @@ onMounted(() => {
       <!-- Filter toolbar: window tabs + paper picker -->
       <div class="leaderboard-toolbar">
         <div class="content-tabs">
-          <button
-            v-for="w in (['week', 'month', 'all'] as const)"
-            :key="w"
-            type="button"
-            :class="['content-tab', { active: window_ === w }]"
-            @click="window_ = w"
-          >
+          <button v-for="w in (['week', 'month', 'all'] as const)" :key="w" type="button"
+            :class="['content-tab', { active: window_ === w }]" @click="window_ = w">
             {{ t(`leaderboards.window_${w}`) }}
           </button>
         </div>
@@ -165,11 +156,7 @@ onMounted(() => {
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="e in entries"
-            :key="e.user_id"
-            :class="{ 'lb-row-self': e.user_id === currentUserId }"
-          >
+          <tr v-for="e in entries" :key="e.user_id" :class="{ 'lb-row-self': e.user_id === currentUserId }">
             <td class="lb-col-rank mono">{{ e.rank }}</td>
             <td>
               <!-- Clickable name → public profile page. Stays a regular row

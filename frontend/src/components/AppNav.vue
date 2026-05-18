@@ -26,10 +26,10 @@ const auth = useAuthStore();
 interface NavItem { to: string; labelKey: string; exact?: boolean }
 
 const navItems = computed<NavItem[]>(() => [
-  { to: '/dashboard',    labelKey: 'nav.dashboard', exact: true },
-  { to: '/progress',     labelKey: 'nav.progress' },
+  { to: '/dashboard', labelKey: 'nav.dashboard', exact: true },
+  { to: '/progress', labelKey: 'nav.progress' },
   { to: '/leaderboards', labelKey: 'nav.leaderboards' },
-  { to: '/mocks/start',  labelKey: 'nav.mocks' },
+  { to: '/mocks/start', labelKey: 'nav.mocks' },
 ]);
 
 function isActive(item: NavItem): boolean {
@@ -54,12 +54,8 @@ function onLogout() {
         </RouterLink>
 
         <div class="app-nav-links">
-          <RouterLink
-            v-for="item in navItems"
-            :key="item.to"
-            :to="item.to"
-            :class="['app-nav-link', { active: isActive(item) }]"
-          >
+          <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
+            :class="['app-nav-link', { active: isActive(item) }]">
             {{ t(item.labelKey) }}
           </RouterLink>
         </div>
@@ -86,11 +82,7 @@ function onLogout() {
         <ThemeSwitch />
 
         <!-- Admin entry: vivid styling so it stands out. Only rendered for admins. -->
-        <RouterLink
-          v-if="auth.user?.is_admin"
-          to="/admin"
-          class="app-nav-admin-btn"
-        >
+        <RouterLink v-if="auth.user?.is_admin" to="/admin" class="app-nav-admin-btn">
           {{ t('nav.admin_panel') }}
         </RouterLink>
 

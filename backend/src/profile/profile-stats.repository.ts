@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
 
 export interface OverallStatsRow {
   total_sessions_completed: number;
@@ -18,13 +18,13 @@ export interface AccuracyByPaperRow {
 }
 
 export interface DifficultyBreakdownRow {
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   attempts: number;
   correct: number;
 }
 
 export interface TypeBreakdownRow {
-  type: 'mcq' | 'short_answer';
+  type: "mcq" | "short_answer";
   attempts: number;
   correct: number;
 }
@@ -47,11 +47,13 @@ export class ProfileStatsRepository {
 
   // Top-line numbers.
   async overall(user_id: string): Promise<OverallStatsRow> {
-    const rows = await this.sql<Array<{
-      total_sessions_completed: string;
-      total_questions_answered: string;
-      total_correct: string;
-    }>>`
+    const rows = await this.sql<
+      Array<{
+        total_sessions_completed: string;
+        total_questions_answered: string;
+        total_correct: string;
+      }>
+    >`
       SELECT
         (SELECT COUNT(*)::text FROM lesson_sessions WHERE user_id = ${user_id} AND completed_at IS NOT NULL) AS total_sessions_completed,
         (SELECT COUNT(*)::text FROM attempts WHERE user_id = ${user_id})                                      AS total_questions_answered,
@@ -86,7 +88,9 @@ export class ProfileStatsRepository {
     `;
   }
 
-  async difficultyBreakdown(user_id: string): Promise<DifficultyBreakdownRow[]> {
+  async difficultyBreakdown(
+    user_id: string
+  ): Promise<DifficultyBreakdownRow[]> {
     return this.sql<DifficultyBreakdownRow[]>`
       SELECT
         q.difficulty                                    AS difficulty,
@@ -115,7 +119,10 @@ export class ProfileStatsRepository {
   // Per-day attempt counts over the last `days` calendar days (UTC).
   // Days with zero attempts are not in the result — frontend fills in zeros
   // when rendering the heatmap grid.
-  async activityHeatmap(user_id: string, days: number): Promise<ActivityHeatmapRow[]> {
+  async activityHeatmap(
+    user_id: string,
+    days: number
+  ): Promise<ActivityHeatmapRow[]> {
     return this.sql<ActivityHeatmapRow[]>`
       SELECT
         (a.answered_at AT TIME ZONE 'UTC')::date  AS day,
@@ -129,7 +136,10 @@ export class ProfileStatsRepository {
   }
 
   // Daily mastery snapshots for the chart. Limited to the last `days` days.
-  async masteryHistory(user_id: string, days: number): Promise<MasterySnapshotRow[]> {
+  async masteryHistory(
+    user_id: string,
+    days: number
+  ): Promise<MasterySnapshotRow[]> {
     return this.sql<MasterySnapshotRow[]>`
       SELECT snap_date, avg_mastery
       FROM mastery_snapshots

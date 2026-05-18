@@ -59,7 +59,7 @@ export class QuestionsRepository {
     concept_bite_en: string | null;
     concept_bite_ru: string | null;
     acceptable_tolerance?: number | null; // number_entry only
-    is_active?: boolean;       // default true — new in question-generator
+    is_active?: boolean; // default true — new in question-generator
   }): Promise<QuestionRow> {
     // postgres.js: passing a JS array as a JSONB param via sql.json.
     // The `as any` is postgres.js's overly strict JSONValue type rejecting typed
@@ -134,8 +134,10 @@ export class QuestionsRepository {
       sets.correct_answer_en = input.correct_answer_en;
     if (input.correct_answer_ru !== undefined)
       sets.correct_answer_ru = input.correct_answer_ru;
-    if (input.explanation_en !== undefined) sets.explanation_en = input.explanation_en;
-    if (input.explanation_ru !== undefined) sets.explanation_ru = input.explanation_ru;
+    if (input.explanation_en !== undefined)
+      sets.explanation_en = input.explanation_en;
+    if (input.explanation_ru !== undefined)
+      sets.explanation_ru = input.explanation_ru;
     if (input.concept_bite_en !== undefined)
       sets.concept_bite_en = input.concept_bite_en;
     if (input.concept_bite_ru !== undefined)
@@ -167,7 +169,10 @@ export class QuestionsRepository {
   // No transaction needed — single UPDATE is atomic in Postgres.
   // Empty input → returns []. No error on missing IDs (just returns the ones
   // that existed and matched).
-  async setActiveMany(ids: string[], is_active: boolean): Promise<QuestionRow[]> {
+  async setActiveMany(
+    ids: string[],
+    is_active: boolean
+  ): Promise<QuestionRow[]> {
     if (ids.length === 0) return [];
     return this.sql<QuestionRow[]>`
       UPDATE questions
@@ -201,7 +206,10 @@ export class QuestionsRepository {
   // different selections.
   //
   // If the paper has fewer than N active questions, returns whatever exists.
-  async findRandomForMock(paper_id: string, count: number): Promise<QuestionRow[]> {
+  async findRandomForMock(
+    paper_id: string,
+    count: number
+  ): Promise<QuestionRow[]> {
     const safeCount = Math.max(1, Math.min(200, count));
     // We embed ${this.sql.unsafe(COLS)} inside the SELECT after q.* expansion
     // would be ambiguous. Instead we use a two-step SELECT: outer pulls fully-
@@ -235,7 +243,10 @@ export class QuestionsRepository {
   // Used by the post-mock review-session flow: fetch the full question rows
   // for the IDs the user got wrong. Filters to active only so we don't preload
   // a retired question into a review session. Empty input → empty output.
-  async findManyByIds(ids: string[], opts?: { activeOnly?: boolean }): Promise<QuestionRow[]> {
+  async findManyByIds(
+    ids: string[],
+    opts?: { activeOnly?: boolean }
+  ): Promise<QuestionRow[]> {
     if (ids.length === 0) return [];
     if (opts?.activeOnly) {
       return this.sql<QuestionRow[]>`

@@ -2,24 +2,24 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { PapersRepository } from './papers.repository';
-import { LearningObjectivesRepository } from './learning-objectives.repository';
-import { QuestionsRepository } from './questions.repository';
+} from "@nestjs/common";
+import { PapersRepository } from "./papers.repository";
+import { LearningObjectivesRepository } from "./learning-objectives.repository";
+import { QuestionsRepository } from "./questions.repository";
 import type {
   LearningObjectiveRow,
   McqOption,
   PaperRow,
   QuestionRow,
   QuestionType,
-} from './content.types';
-import type { CreatePaperDto, UpdatePaperDto } from './dto/paper.dto';
-import type { CreateLoDto, UpdateLoDto } from './dto/learning-objective.dto';
+} from "./content.types";
+import type { CreatePaperDto, UpdatePaperDto } from "./dto/paper.dto";
+import type { CreateLoDto, UpdateLoDto } from "./dto/learning-objective.dto";
 import type {
   CreateQuestionDto,
   McqOptionDto,
   UpdateQuestionDto,
-} from './dto/question.dto';
+} from "./dto/question.dto";
 
 // Admin-facing service. Always returns RAW rows (with both _en and _ru) so the
 // admin UI can edit either language. Public read endpoints in other controllers
@@ -30,7 +30,7 @@ export class ContentService {
   constructor(
     private readonly papers: PapersRepository,
     private readonly los: LearningObjectivesRepository,
-    private readonly questions: QuestionsRepository,
+    private readonly questions: QuestionsRepository
   ) {}
 
   // ---- papers ----
@@ -41,13 +41,14 @@ export class ContentService {
 
   async getPaper(id: string): Promise<PaperRow> {
     const paper = await this.papers.findById(id);
-    if (!paper) throw new NotFoundException('paper not found');
+    if (!paper) throw new NotFoundException("paper not found");
     return paper;
   }
 
   async createPaper(dto: CreatePaperDto): Promise<PaperRow> {
     const existing = await this.papers.findByCode(dto.code);
-    if (existing) throw new BadRequestException(`paper code "${dto.code}" already exists`);
+    if (existing)
+      throw new BadRequestException(`paper code "${dto.code}" already exists`);
     return this.papers.create({
       code: dto.code,
       name_en: dto.name_en,
@@ -58,13 +59,13 @@ export class ContentService {
   async updatePaper(id: string, dto: UpdatePaperDto): Promise<PaperRow> {
     await this.getPaper(id);
     const updated = await this.papers.update(id, dto);
-    if (!updated) throw new NotFoundException('paper not found after update');
+    if (!updated) throw new NotFoundException("paper not found after update");
     return updated;
   }
 
   async deletePaper(id: string): Promise<void> {
     const ok = await this.papers.delete(id);
-    if (!ok) throw new NotFoundException('paper not found');
+    if (!ok) throw new NotFoundException("paper not found");
   }
 
   // ---- content tree (admin browser) ----
@@ -149,7 +150,10 @@ export class ContentService {
 
   // Bulk activate/deactivate. Empty list is a no-op; bad IDs are silently
   // dropped (no error if some don't exist).
-  async setQuestionsActive(ids: string[], is_active: boolean): Promise<QuestionRow[]> {
+  async setQuestionsActive(
+    ids: string[],
+    is_active: boolean
+  ): Promise<QuestionRow[]> {
     return this.questions.setActiveMany(ids, is_active);
   }
 
@@ -161,9 +165,9 @@ export class ContentService {
       return await this.questions.deleteMany(ids);
     } catch (err) {
       const code = (err as { code?: string }).code;
-      if (code === '23503') {
+      if (code === "23503") {
         throw new BadRequestException(
-          'cannot delete: one or more questions have attempts. Retire them with is_active=false instead.',
+          "cannot delete: one or more questions have attempts. Retire them with is_active=false instead."
         );
       }
       throw err;
@@ -173,17 +177,20 @@ export class ContentService {
   // ---- learning objectives ----
 
   async listLos(paper_id: string): Promise<LearningObjectiveRow[]> {
-    await this.getPaper(paper_id);  // 404 if paper missing
+    await this.getPaper(paper_id); // 404 if paper missing
     return this.los.findByPaper(paper_id);
   }
 
   async getLo(id: string): Promise<LearningObjectiveRow> {
     const lo = await this.los.findById(id);
-    if (!lo) throw new NotFoundException('learning objective not found');
+    if (!lo) throw new NotFoundException("learning objective not found");
     return lo;
   }
 
-  async createLo(paper_id: string, dto: CreateLoDto): Promise<LearningObjectiveRow> {
+  async createLo(
+    paper_id: string,
+    dto: CreateLoDto
+  ): Promise<LearningObjectiveRow> {
     await this.getPaper(paper_id);
     return this.los.create({
       paper_id,
@@ -201,13 +208,13 @@ export class ContentService {
   async updateLo(id: string, dto: UpdateLoDto): Promise<LearningObjectiveRow> {
     await this.getLo(id);
     const updated = await this.los.update(id, dto);
-    if (!updated) throw new NotFoundException('lo not found after update');
+    if (!updated) throw new NotFoundException("lo not found after update");
     return updated;
   }
 
   async deleteLo(id: string): Promise<void> {
     const ok = await this.los.delete(id);
-    if (!ok) throw new NotFoundException('learning objective not found');
+    if (!ok) throw new NotFoundException("learning objective not found");
   }
 
   // ---- questions ----
@@ -219,11 +226,14 @@ export class ContentService {
 
   async getQuestion(id: string): Promise<QuestionRow> {
     const q = await this.questions.findById(id);
-    if (!q) throw new NotFoundException('question not found');
+    if (!q) throw new NotFoundException("question not found");
     return q;
   }
 
-  async createQuestion(lo_id: string, dto: CreateQuestionDto): Promise<QuestionRow> {
+  async createQuestion(
+    lo_id: string,
+    dto: CreateQuestionDto
+  ): Promise<QuestionRow> {
     await this.getLo(lo_id);
 
     const opts = this.normalizeOptions(dto.options ?? null);
@@ -231,7 +241,11 @@ export class ContentService {
 
     // Canonicalize: correct option must have why_wrong = null in storage so the
     // frontend can rely on "why_wrong present ⇒ this option was wrong".
-    const cleanedOpts = this.scrubCorrectOptionWhyWrong(opts, dto.type, dto.correct_answer_en);
+    const cleanedOpts = this.scrubCorrectOptionWhyWrong(
+      opts,
+      dto.type,
+      dto.correct_answer_en
+    );
 
     return this.questions.create({
       lo_id,
@@ -239,21 +253,24 @@ export class ContentService {
       difficulty: dto.difficulty,
       prompt_en: dto.prompt_en,
       prompt_ru: dto.prompt_ru ?? null,
-      options: dto.type === 'mcq' ? cleanedOpts : null,
+      options: dto.type === "mcq" ? cleanedOpts : null,
       correct_answer_en: dto.correct_answer_en,
       // MCQ + number_entry are language-neutral on correct answer; only short_answer uses _ru.
       correct_answer_ru:
-        dto.type === 'short_answer' ? (dto.correct_answer_ru ?? null) : null,
+        dto.type === "short_answer" ? dto.correct_answer_ru ?? null : null,
       explanation_en: dto.explanation_en,
       explanation_ru: dto.explanation_ru ?? null,
       concept_bite_en: dto.concept_bite_en ?? null,
       concept_bite_ru: dto.concept_bite_ru ?? null,
       acceptable_tolerance:
-        dto.type === 'number_entry' ? (dto.acceptable_tolerance ?? null) : null,
+        dto.type === "number_entry" ? dto.acceptable_tolerance ?? null : null,
     });
   }
 
-  async updateQuestion(id: string, dto: UpdateQuestionDto): Promise<QuestionRow> {
+  async updateQuestion(
+    id: string,
+    dto: UpdateQuestionDto
+  ): Promise<QuestionRow> {
     const current = await this.getQuestion(id);
 
     // Determine the post-update shape so we can re-validate.
@@ -278,7 +295,7 @@ export class ContentService {
     // Normalise: if type is short_answer or number_entry, force options to null.
     // If type is mcq or number_entry, force correct_answer_ru to null.
     // If type is not number_entry, force acceptable_tolerance to null.
-    const patch: Parameters<QuestionsRepository['update']>[1] = {
+    const patch: Parameters<QuestionsRepository["update"]>[1] = {
       type: dto.type,
       difficulty: dto.difficulty,
       prompt_en: dto.prompt_en,
@@ -293,26 +310,29 @@ export class ContentService {
       acceptable_tolerance: dto.acceptable_tolerance,
       is_active: dto.is_active,
     };
-    if (nextType === 'short_answer' || nextType === 'number_entry') patch.options = null;
-    if (nextType === 'mcq' || nextType === 'number_entry') patch.correct_answer_ru = null;
-    if (nextType !== 'number_entry') patch.acceptable_tolerance = null;
+    if (nextType === "short_answer" || nextType === "number_entry")
+      patch.options = null;
+    if (nextType === "mcq" || nextType === "number_entry")
+      patch.correct_answer_ru = null;
+    if (nextType !== "number_entry") patch.acceptable_tolerance = null;
 
     const updated = await this.questions.update(id, patch);
-    if (!updated) throw new NotFoundException('question not found after update');
+    if (!updated)
+      throw new NotFoundException("question not found after update");
     return updated;
   }
 
   async deleteQuestion(id: string): Promise<void> {
     try {
       const ok = await this.questions.delete(id);
-      if (!ok) throw new NotFoundException('question not found');
+      if (!ok) throw new NotFoundException("question not found");
     } catch (err) {
       // attempts.question_id is ON DELETE RESTRICT — if attempts exist, PG throws 23503.
       // Map to a friendlier 400.
       const code = (err as { code?: string }).code;
-      if (code === '23503') {
+      if (code === "23503") {
         throw new BadRequestException(
-          'cannot delete: question has attempts. Set is_active=false to retire instead.',
+          "cannot delete: question has attempts. Set is_active=false to retire instead."
         );
       }
       throw err;
@@ -341,24 +361,26 @@ export class ContentService {
   private scrubCorrectOptionWhyWrong(
     opts: McqOption[] | null,
     type: QuestionType,
-    correct_answer_en: string,
+    correct_answer_en: string
   ): McqOption[] | null {
-    if (type !== 'mcq' || opts === null) return opts;
+    if (type !== "mcq" || opts === null) return opts;
     return opts.map((o) =>
       o.key === correct_answer_en
         ? { ...o, why_wrong_en: null, why_wrong_ru: null }
-        : o,
+        : o
     );
   }
 
   private validateQuestionShape(
     type: QuestionType,
     options: McqOption[] | null,
-    correct_answer_en: string,
+    correct_answer_en: string
   ): void {
-    if (type === 'mcq') {
+    if (type === "mcq") {
       if (!options || options.length < 2) {
-        throw new BadRequestException('mcq questions require at least 2 options');
+        throw new BadRequestException(
+          "mcq questions require at least 2 options"
+        );
       }
       const keys = new Set<string>();
       for (const opt of options) {
@@ -369,32 +391,40 @@ export class ContentService {
       }
       if (!keys.has(correct_answer_en)) {
         throw new BadRequestException(
-          `correct_answer "${correct_answer_en}" must match one of the option keys`,
+          `correct_answer "${correct_answer_en}" must match one of the option keys`
         );
       }
-    } else if (type === 'number_entry') {
+    } else if (type === "number_entry") {
       if (options && options.length > 0) {
-        throw new BadRequestException('number_entry questions must not have options');
+        throw new BadRequestException(
+          "number_entry questions must not have options"
+        );
       }
       if (!correct_answer_en.trim()) {
-        throw new BadRequestException('number_entry requires a non-empty correct_answer_en');
+        throw new BadRequestException(
+          "number_entry requires a non-empty correct_answer_en"
+        );
       }
       // Must parse as a finite number. Same parser the grader uses would be
       // ideal, but a lightweight check here suffices — the grader is more
       // forgiving than the validator on purpose.
-      const n = parseFloat(correct_answer_en.replace(/,/g, ''));
+      const n = parseFloat(correct_answer_en.replace(/,/g, ""));
       if (!Number.isFinite(n)) {
         throw new BadRequestException(
-          `number_entry correct_answer_en "${correct_answer_en}" must be a valid number`,
+          `number_entry correct_answer_en "${correct_answer_en}" must be a valid number`
         );
       }
     } else {
       // short_answer
       if (options && options.length > 0) {
-        throw new BadRequestException('short_answer questions must not have options');
+        throw new BadRequestException(
+          "short_answer questions must not have options"
+        );
       }
       if (!correct_answer_en.trim()) {
-        throw new BadRequestException('short_answer requires a non-empty correct_answer_en');
+        throw new BadRequestException(
+          "short_answer requires a non-empty correct_answer_en"
+        );
       }
     }
   }

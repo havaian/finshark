@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 import {
   LeaderboardsRepository,
   type LeaderboardRow,
   type LeaderboardWindow,
-} from './leaderboards.repository';
+} from "./leaderboards.repository";
 
 @Injectable()
 export class LeaderboardsService {

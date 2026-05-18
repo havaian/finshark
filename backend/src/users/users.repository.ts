@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Sql } from 'postgres';
-import { PG } from '../db/db.module';
-import type { UserRow } from './user.types';
+import { Inject, Injectable } from "@nestjs/common";
+import type { Sql } from "postgres";
+import { PG } from "../db/db.module";
+import type { UserRow } from "./user.types";
 
 // Centralised so every SELECT * matches the UserRow shape.
 const USER_COLS = `
@@ -127,7 +127,7 @@ export class UsersRepository {
     const rows = await this.sql<Array<{ count: string }>>`
       SELECT COUNT(*)::text AS count FROM users WHERE is_admin = TRUE
     `;
-    return parseInt(rows[0]?.count ?? '0', 10);
+    return parseInt(rows[0]?.count ?? "0", 10);
   }
 
   // Update preference fields (lesson size, preferred difficulty, reminder hour,
@@ -137,15 +137,17 @@ export class UsersRepository {
     id: string,
     input: {
       reminder_hour_utc?: number;
-      preferred_difficulty?: 'easy' | 'medium' | 'hard' | null;
+      preferred_difficulty?: "easy" | "medium" | "hard" | null;
       lesson_size?: number;
       email_reminders_enabled?: boolean;
       leaderboard_opt_in?: boolean;
-    },
+    }
   ): Promise<UserRow | null> {
     const sets: Record<string, unknown> = {};
-    if (input.reminder_hour_utc !== undefined) sets.reminder_hour_utc = input.reminder_hour_utc;
-    if (input.preferred_difficulty !== undefined) sets.preferred_difficulty = input.preferred_difficulty;
+    if (input.reminder_hour_utc !== undefined)
+      sets.reminder_hour_utc = input.reminder_hour_utc;
+    if (input.preferred_difficulty !== undefined)
+      sets.preferred_difficulty = input.preferred_difficulty;
     if (input.lesson_size !== undefined) sets.lesson_size = input.lesson_size;
     if (input.email_reminders_enabled !== undefined)
       sets.email_reminders_enabled = input.email_reminders_enabled;
@@ -177,19 +179,22 @@ export class UsersRepository {
   async applyOnboarding(
     id: string,
     input: {
-      bg_level?: 'beginner' | 'intermediate' | 'advanced' | null;
+      bg_level?: "beginner" | "intermediate" | "advanced" | null;
       time_budget_minutes?: number;
       preferred_paper_id?: string | null;
       // Derived from bg_level + time_budget by the service. Pass undefined to leave alone.
-      preferred_difficulty?: 'easy' | 'medium' | 'hard' | null;
+      preferred_difficulty?: "easy" | "medium" | "hard" | null;
       lesson_size?: number;
-    },
+    }
   ): Promise<UserRow | null> {
     const sets: Record<string, unknown> = { onboarded_at: new Date() };
     if (input.bg_level !== undefined) sets.bg_level = input.bg_level;
-    if (input.time_budget_minutes !== undefined) sets.time_budget_minutes = input.time_budget_minutes;
-    if (input.preferred_paper_id !== undefined) sets.preferred_paper_id = input.preferred_paper_id;
-    if (input.preferred_difficulty !== undefined) sets.preferred_difficulty = input.preferred_difficulty;
+    if (input.time_budget_minutes !== undefined)
+      sets.time_budget_minutes = input.time_budget_minutes;
+    if (input.preferred_paper_id !== undefined)
+      sets.preferred_paper_id = input.preferred_paper_id;
+    if (input.preferred_difficulty !== undefined)
+      sets.preferred_difficulty = input.preferred_difficulty;
     if (input.lesson_size !== undefined) sets.lesson_size = input.lesson_size;
 
     const rows = await this.sql<UserRow[]>`
@@ -201,7 +206,10 @@ export class UsersRepository {
   }
 
   // Update display name. Returns the updated row or null if not found.
-  async updateDisplayName(id: string, display_name: string): Promise<UserRow | null> {
+  async updateDisplayName(
+    id: string,
+    display_name: string
+  ): Promise<UserRow | null> {
     const rows = await this.sql<UserRow[]>`
       UPDATE users SET display_name = ${display_name}
       WHERE id = ${id}
@@ -218,13 +226,17 @@ export class UsersRepository {
   // ON DELETE CASCADE, so attempts go away with their sessions. The same
   // attempts.user_id has ON DELETE CASCADE which doubly covers it.
   async deleteUser(id: string): Promise<boolean> {
-    const rows = await this.sql`DELETE FROM users WHERE id = ${id} RETURNING id`;
+    const rows = await this
+      .sql`DELETE FROM users WHERE id = ${id} RETURNING id`;
     return rows.length > 0;
   }
 
   // Toggle the user's reminder-email preference. Returns the updated row or null
   // if the id isn't found.
-  async setEmailReminders(id: string, enabled: boolean): Promise<UserRow | null> {
+  async setEmailReminders(
+    id: string,
+    enabled: boolean
+  ): Promise<UserRow | null> {
     const rows = await this.sql<UserRow[]>`
       UPDATE users SET email_reminders_enabled = ${enabled}
       WHERE id = ${id}
@@ -235,7 +247,10 @@ export class UsersRepository {
 
   // Toggle whether the user appears on leaderboards. Privacy default is OFF;
   // the user must explicitly opt in either from Settings or onboarding.
-  async setLeaderboardOptIn(id: string, opted_in: boolean): Promise<UserRow | null> {
+  async setLeaderboardOptIn(
+    id: string,
+    opted_in: boolean
+  ): Promise<UserRow | null> {
     const rows = await this.sql<UserRow[]>`
       UPDATE users SET leaderboard_opt_in = ${opted_in}
       WHERE id = ${id}

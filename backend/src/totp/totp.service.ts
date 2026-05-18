@@ -7,23 +7,23 @@ import {
   NotFoundException,
   UnauthorizedException,
   forwardRef,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
-import * as jwt from 'jsonwebtoken';
-import { authenticator } from 'otplib';
-import * as QRCode from 'qrcode';
-import { UsersRepository } from '../users/users.repository';
-import { AuthService } from '../auth/auth.service';
-import type { AuthTokens } from '../auth/auth.service';
-import { toPublicUser } from '../users/user.types';
-import type { PublicUser } from '../users/user.types';
-import { TotpRepository } from './totp.repository';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as crypto from "crypto";
+import * as jwt from "jsonwebtoken";
+import { authenticator } from "otplib";
+import * as QRCode from "qrcode";
+import { UsersRepository } from "../users/users.repository";
+import { AuthService } from "../auth/auth.service";
+import type { AuthTokens } from "../auth/auth.service";
+import { toPublicUser } from "../users/user.types";
+import type { PublicUser } from "../users/user.types";
+import { TotpRepository } from "./totp.repository";
 import type {
   TotpSetupBeginResult,
   TotpSetupVerifyResult,
   TotpStatusResult,
-} from './totp.types';
+} from "./totp.types";
 
 // otplib defaults: 30s step, SHA-1, 6 digits, window=0. We bump window to
 // ±1 step (so 30s clock skew on the phone is forgiven). Don't bump higher —
@@ -37,7 +37,7 @@ authenticator.options = { window: 1 };
 const RECOVERY_CODE_COUNT = 10;
 const RECOVERY_CODE_GROUPS = 5;
 const RECOVERY_CODE_GROUP_LEN = 5;
-const RECOVERY_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I
+const RECOVERY_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
 
 // scrypt cost. N=2^14 is the Node default for `crypto.scryptSync`; bumping
 // to 2^15 puts each verify around 100ms — acceptable for a code path that
@@ -52,7 +52,7 @@ const PENDING_2FA_TTL_SECONDS = 5 * 60;
 
 // JWT marker so the verify endpoint can refuse access/refresh tokens that
 // might accidentally land on this codepath.
-const PENDING_2FA_TYP = 'pending_2fa';
+const PENDING_2FA_TYP = "pending_2fa";
 
 // Per-user lockout — caps the total attack rate against ONE account
 // regardless of source IP. The ThrottlerModule guards the same endpoint
@@ -76,7 +76,7 @@ export class TotpService {
     // forwardRef because AuthService eventually imports TotpService to call
     // requiresTwoFactor + mintPending2faToken at Google-callback time.
     @Inject(forwardRef(() => AuthService))
-    private readonly auth: AuthService,
+    private readonly auth: AuthService
   ) {}
 
   // ── Setup flow ────────────────────────────────────────────────────────
@@ -95,26 +95,26 @@ export class TotpService {
   // not this flow.
   async setupBegin(user_id: string): Promise<TotpSetupBeginResult> {
     const user = await this.users.findById(user_id);
-    if (!user) throw new NotFoundException('user not found');
+    if (!user) throw new NotFoundException("user not found");
     if (!user.is_admin) {
       // Defence-in-depth — the controller also guards by AdminGuard, but
       // checking here keeps the service self-protective if it's ever
       // wired into a non-admin route.
-      throw new ForbiddenException('2FA is admin-only');
+      throw new ForbiddenException("2FA is admin-only");
     }
     if (user.totp_secret) {
       // Already enrolled. Force disable-first rather than silently rotating —
       // a user who already has 2FA and gets here might be mid-attack.
-      throw new BadRequestException('2FA already enabled — disable first');
+      throw new BadRequestException("2FA already enabled — disable first");
     }
 
     const secret_b32 = authenticator.generateSecret();
-    const issuer = 'Finshark';
+    const issuer = "Finshark";
     const otpauth_uri = authenticator.keyuri(user.email, issuer, secret_b32);
     // toDataURL returns a "data:image/png;base64,..." string that the
     // frontend uses verbatim as <img src>.
     const qr_data_url = await QRCode.toDataURL(otpauth_uri, {
-      errorCorrectionLevel: 'M',
+      errorCorrectionLevel: "M",
       margin: 1,
       width: 240,
     });
@@ -132,17 +132,17 @@ export class TotpService {
     ip: string | null;
   }): Promise<TotpSetupVerifyResult> {
     const user = await this.users.findById(opts.user_id);
-    if (!user) throw new NotFoundException('user not found');
-    if (!user.is_admin) throw new ForbiddenException('2FA is admin-only');
+    if (!user) throw new NotFoundException("user not found");
+    if (!user.is_admin) throw new ForbiddenException("2FA is admin-only");
     if (user.totp_secret) {
-      throw new BadRequestException('2FA already enabled — disable first');
+      throw new BadRequestException("2FA already enabled — disable first");
     }
 
     if (!this.verifyTotpCode(opts.secret_b32, opts.code)) {
       // Setup-verify is pre-enrollment, so it doesn't count toward the
       // lockout window (the user has no enrolled secret yet — there's
       // nothing to brute-force). Just fail.
-      throw new UnauthorizedException('invalid 2FA code');
+      throw new UnauthorizedException("invalid 2FA code");
     }
 
     // Generate recovery codes, hash them, persist hashes + the secret in
@@ -162,7 +162,7 @@ export class TotpService {
     });
 
     this.log.warn(`2FA enrolled for admin user ${opts.user_id}`);
-    await this.recordAudit(opts.user_id, 'enrolled', opts.ip);
+    await this.recordAudit(opts.user_id, "enrolled", opts.ip);
     return { ok: true, recovery_codes: plaintextCodes };
   }
 
@@ -177,9 +177,9 @@ export class TotpService {
     ip: string | null;
   }): Promise<{ ok: true }> {
     const user = await this.users.findById(opts.user_id);
-    if (!user) throw new NotFoundException('user not found');
+    if (!user) throw new NotFoundException("user not found");
     if (!user.totp_secret) {
-      throw new BadRequestException('2FA not enabled');
+      throw new BadRequestException("2FA not enabled");
     }
 
     // Lockout applies here too — disable is just as sensitive as a login
@@ -191,13 +191,13 @@ export class TotpService {
       user.totp_secret,
       opts.code,
       opts.ip,
-      'disable',
+      "disable"
     );
-    if (!ok) throw new UnauthorizedException('invalid 2FA code');
+    if (!ok) throw new UnauthorizedException("invalid 2FA code");
 
     await this.totp.disable(opts.user_id);
     this.log.warn(`2FA disabled for admin user ${opts.user_id}`);
-    await this.recordAudit(opts.user_id, 'disabled', opts.ip);
+    await this.recordAudit(opts.user_id, "disabled", opts.ip);
     // Clear failed-attempts on success (also covers the case where the
     // user fat-fingered a few times before getting it right).
     await this.totp.clearFailedAttempts(opts.user_id).catch(() => {});
@@ -218,10 +218,10 @@ export class TotpService {
     ip: string | null;
   }): Promise<TotpSetupVerifyResult> {
     const user = await this.users.findById(opts.user_id);
-    if (!user) throw new NotFoundException('user not found');
-    if (!user.is_admin) throw new ForbiddenException('2FA is admin-only');
+    if (!user) throw new NotFoundException("user not found");
+    if (!user.is_admin) throw new ForbiddenException("2FA is admin-only");
     if (!user.totp_secret) {
-      throw new BadRequestException('2FA not enabled');
+      throw new BadRequestException("2FA not enabled");
     }
 
     await this.enforceLockout(opts.user_id, opts.ip);
@@ -231,9 +231,9 @@ export class TotpService {
       user.totp_secret,
       opts.code,
       opts.ip,
-      'regenerate',
+      "regenerate"
     );
-    if (!ok) throw new UnauthorizedException('invalid 2FA code');
+    if (!ok) throw new UnauthorizedException("invalid 2FA code");
 
     const plaintextCodes = this.generateRecoveryCodes();
     const hashes = plaintextCodes.map((c) => this.hashRecoveryCode(c));
@@ -242,10 +242,17 @@ export class TotpService {
       hashes,
     });
 
-    this.log.warn(`2FA recovery codes regenerated for admin user ${opts.user_id}`);
-    await this.recordAudit(opts.user_id, 'recovery_codes_regenerated', opts.ip, {
-      count: plaintextCodes.length,
-    });
+    this.log.warn(
+      `2FA recovery codes regenerated for admin user ${opts.user_id}`
+    );
+    await this.recordAudit(
+      opts.user_id,
+      "recovery_codes_regenerated",
+      opts.ip,
+      {
+        count: plaintextCodes.length,
+      }
+    );
     await this.totp.clearFailedAttempts(opts.user_id).catch(() => {});
     return { ok: true, recovery_codes: plaintextCodes };
   }
@@ -254,7 +261,7 @@ export class TotpService {
   // affordance. Doesn't leak secret or recovery state.
   async status(user_id: string): Promise<TotpStatusResult> {
     const user = await this.users.findById(user_id);
-    if (!user) throw new NotFoundException('user not found');
+    if (!user) throw new NotFoundException("user not found");
     return {
       enabled: user.totp_secret !== null,
       enrolled_at: user.totp_enrolled_at
@@ -297,7 +304,7 @@ export class TotpService {
   // Uses JWT_ACCESS_SECRET (we already have it) with a `typ: 'pending_2fa'`
   // marker so verify can reject regular access tokens accidentally passed.
   mintPending2faToken(user_id: string): string {
-    const secret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const secret = this.config.getOrThrow<string>("JWT_ACCESS_SECRET");
     return this.signPending(user_id, secret);
   }
 
@@ -312,11 +319,11 @@ export class TotpService {
   }): Promise<{ user: PublicUser; tokens: AuthTokens }> {
     const user_id = this.verifyPending(opts.pending_2fa_token);
     const user = await this.users.findById(user_id);
-    if (!user) throw new UnauthorizedException('invalid 2FA challenge');
+    if (!user) throw new UnauthorizedException("invalid 2FA challenge");
     if (!user.totp_secret) {
       // The pending token was issued for a user who has since disabled 2FA.
       // Don't silently succeed — fail closed; they should re-do Google.
-      throw new UnauthorizedException('2FA not enabled');
+      throw new UnauthorizedException("2FA not enabled");
     }
 
     // Per-user lockout — runs BEFORE we even attempt validation so a
@@ -329,9 +336,9 @@ export class TotpService {
       user.totp_secret,
       opts.code,
       opts.ip,
-      'login',
+      "login"
     );
-    if (!ok) throw new UnauthorizedException('invalid 2FA code');
+    if (!ok) throw new UnauthorizedException("invalid 2FA code");
 
     // Success — clear the failure budget so a future fat-finger doesn't
     // hit the lockout immediately.
@@ -355,7 +362,7 @@ export class TotpService {
   // window, the user becomes unlocked naturally.
   private async enforceLockout(
     user_id: string,
-    ip: string | null,
+    ip: string | null
   ): Promise<void> {
     const recent = await this.totp.countRecentFailedAttempts({
       user_id,
@@ -366,20 +373,20 @@ export class TotpService {
       // the first call to refuse). Subsequent refuses are noisy and don't
       // add forensic value beyond the original lock-out event.
       if (recent === LOCKOUT_THRESHOLD) {
-        await this.recordAudit(user_id, 'locked_out', ip, {
+        await this.recordAudit(user_id, "locked_out", ip, {
           recent_failures: recent,
           window_minutes: LOCKOUT_WINDOW_MINUTES,
         });
       }
       // Same wording as a bad code so we don't disclose the lockout state.
-      throw new UnauthorizedException('invalid 2FA code');
+      throw new UnauthorizedException("invalid 2FA code");
     }
   }
 
   // 6-digit TOTP check. Trim/strip whitespace so a paste with a space
   // doesn't fail. otplib.check is constant-time internally.
   private verifyTotpCode(secret_b32: string, raw: string): boolean {
-    const cleaned = (raw ?? '').replace(/\s+/g, '');
+    const cleaned = (raw ?? "").replace(/\s+/g, "");
     if (!/^\d{6}$/.test(cleaned)) return false;
     try {
       return authenticator.check(cleaned, secret_b32);
@@ -400,9 +407,9 @@ export class TotpService {
     secret_b32: string,
     raw: string,
     ip: string | null,
-    context: 'login' | 'disable' | 'regenerate',
+    context: "login" | "disable" | "regenerate"
   ): Promise<boolean> {
-    const cleanedDigits = (raw ?? '').replace(/\s+/g, '');
+    const cleanedDigits = (raw ?? "").replace(/\s+/g, "");
     if (/^\d{6}$/.test(cleanedDigits)) {
       if (this.verifyTotpCode(secret_b32, cleanedDigits)) return true;
       // 6 digits but didn't validate — DON'T fall through to recovery, that
@@ -427,7 +434,7 @@ export class TotpService {
         const consumed = await this.totp.consumeRecoveryCode(row.id);
         if (consumed) {
           const remaining = await this.totp.countUnusedRecoveryCodes(user_id);
-          await this.recordAudit(user_id, 'recovery_code_consumed', ip, {
+          await this.recordAudit(user_id, "recovery_code_consumed", ip, {
             remaining,
             context,
           });
@@ -445,13 +452,13 @@ export class TotpService {
   private async recordAudit(
     user_id: string,
     event:
-      | 'enrolled'
-      | 'disabled'
-      | 'recovery_codes_regenerated'
-      | 'recovery_code_consumed'
-      | 'locked_out',
+      | "enrolled"
+      | "disabled"
+      | "recovery_codes_regenerated"
+      | "recovery_code_consumed"
+      | "locked_out",
     ip: string | null,
-    meta?: Record<string, unknown>,
+    meta?: Record<string, unknown>
   ): Promise<void> {
     try {
       await this.totp.recordAuditEvent({ user_id, event, ip, meta });
@@ -459,7 +466,7 @@ export class TotpService {
       this.log.error(
         `audit insert failed for user ${user_id} / event ${event}: ${
           err instanceof Error ? err.message : String(err)
-        }`,
+        }`
       );
     }
   }
@@ -471,7 +478,7 @@ export class TotpService {
     for (let i = 0; i < RECOVERY_CODE_COUNT; i++) {
       const groups: string[] = [];
       for (let g = 0; g < RECOVERY_CODE_GROUPS; g++) {
-        let s = '';
+        let s = "";
         // crypto.randomInt is uniformly distributed; using % on randomBytes
         // would bias the alphabet.
         for (let c = 0; c < RECOVERY_CODE_GROUP_LEN; c++) {
@@ -480,7 +487,7 @@ export class TotpService {
         }
         groups.push(s);
       }
-      out.push(groups.join('-'));
+      out.push(groups.join("-"));
     }
     return out;
   }
@@ -490,7 +497,7 @@ export class TotpService {
   // recovery-code shape (so we can fail fast without scanning the DB).
   private normalizeRecoveryCode(raw: string): string | null {
     if (!raw) return null;
-    const stripped = raw.replace(/[\s-]/g, '').toUpperCase();
+    const stripped = raw.replace(/[\s-]/g, "").toUpperCase();
     const expectedLen = RECOVERY_CODE_GROUPS * RECOVERY_CODE_GROUP_LEN;
     if (stripped.length !== expectedLen) return null;
     // Validate every char is in the alphabet — protects against weird
@@ -504,11 +511,11 @@ export class TotpService {
       groups.push(
         stripped.slice(
           i * RECOVERY_CODE_GROUP_LEN,
-          (i + 1) * RECOVERY_CODE_GROUP_LEN,
-        ),
+          (i + 1) * RECOVERY_CODE_GROUP_LEN
+        )
       );
     }
-    return groups.join('-');
+    return groups.join("-");
   }
 
   // Hash a recovery code with scrypt. Stored as "salt:derivedKey" both hex.
@@ -517,24 +524,24 @@ export class TotpService {
   private hashRecoveryCode(code: string): string {
     const normalized = this.normalizeRecoveryCode(code);
     if (!normalized) {
-      throw new Error('cannot hash malformed recovery code');
+      throw new Error("cannot hash malformed recovery code");
     }
     const salt = crypto.randomBytes(SCRYPT_SALT_BYTES);
     const derived = crypto.scryptSync(normalized, salt, SCRYPT_KEYLEN, {
       N: SCRYPT_N,
     });
-    return `${salt.toString('hex')}:${derived.toString('hex')}`;
+    return `${salt.toString("hex")}:${derived.toString("hex")}`;
   }
 
   // Constant-time compare against a stored "salt:key" hash.
   private verifyRecoveryHash(plaintext: string, stored: string): boolean {
-    const parts = stored.split(':');
+    const parts = stored.split(":");
     if (parts.length !== 2) return false;
     const saltHex = parts[0];
     const keyHex = parts[1];
     try {
-      const salt = Buffer.from(saltHex, 'hex');
-      const expected = Buffer.from(keyHex, 'hex');
+      const salt = Buffer.from(saltHex, "hex");
+      const expected = Buffer.from(keyHex, "hex");
       const actual = crypto.scryptSync(plaintext, salt, SCRYPT_KEYLEN, {
         N: SCRYPT_N,
       });
@@ -553,7 +560,7 @@ export class TotpService {
   // missing email/sub in the AccessTokenPayload shape. Belt + braces.
   private signPending(user_id: string, secret: string): string {
     return jwt.sign({ sub: user_id, typ: PENDING_2FA_TYP }, secret, {
-      expiresIn: PENDING_2FA_TTL_SECONDS as jwt.SignOptions['expiresIn'],
+      expiresIn: PENDING_2FA_TTL_SECONDS as jwt.SignOptions["expiresIn"],
     });
   }
 
@@ -562,22 +569,22 @@ export class TotpService {
   // error for expired vs typ-mismatch vs bad signature — no oracle for an
   // attacker probing tokens.
   private verifyPending(token: string): string {
-    const secret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const secret = this.config.getOrThrow<string>("JWT_ACCESS_SECRET");
     try {
       const decoded = jwt.verify(token, secret) as {
         sub?: string;
         typ?: string;
       };
       if (decoded.typ !== PENDING_2FA_TYP) {
-        throw new UnauthorizedException('invalid 2FA challenge');
+        throw new UnauthorizedException("invalid 2FA challenge");
       }
       if (!decoded.sub) {
-        throw new UnauthorizedException('invalid 2FA challenge');
+        throw new UnauthorizedException("invalid 2FA challenge");
       }
       return decoded.sub;
     } catch (e) {
       if (e instanceof UnauthorizedException) throw e;
-      throw new UnauthorizedException('invalid 2FA challenge');
+      throw new UnauthorizedException("invalid 2FA challenge");
     }
   }
 }

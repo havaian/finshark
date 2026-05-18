@@ -1,14 +1,14 @@
 // Mirrors db/migrations/20260511000003_content_and_srs.js
 //                  + db/migrations/20260513000001_i18n.js
 
-export type QuestionType = 'mcq' | 'short_answer' | 'number_entry';
-export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
+export type QuestionType = "mcq" | "short_answer" | "number_entry";
+export type QuestionDifficulty = "easy" | "medium" | "hard";
 
 // Supported UI/content languages. Add to this tuple to add a language;
 // the type system will then force every consumer to handle it.
-export const SUPPORTED_LANGS = ['en', 'ru'] as const;
+export const SUPPORTED_LANGS = ["en", "ru"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
-export const DEFAULT_LANG: Lang = 'ru';
+export const DEFAULT_LANG: Lang = "ru";
 
 // Raw row shapes — store BOTH languages. _en is required (canonical), _ru is optional.
 // Frontend / public-facing layer either picks one (via Accept-Language) and
@@ -42,9 +42,9 @@ export interface LearningObjectiveRow {
 
 // Inner shape of questions.options JSONB for MCQ.
 export interface McqOption {
-  key: string;             // "A" | "B" | ... — admin-defined but app validates
+  key: string; // "A" | "B" | ... — admin-defined but app validates
   text_en: string;
-  text_ru: string | null;  // optional; falls back to text_en in clients
+  text_ru: string | null; // optional; falls back to text_en in clients
   // Per-option "why this is wrong" explanations, shown to the user after
   // submitting a wrong answer on MCQ. Always null for the correct option.
   // Optional during content authoring; admin UI shows a hint when missing.
@@ -139,16 +139,20 @@ export interface LocalizedQuestion {
 // ----------------------------------------------------------------
 
 // Pick a localized string with fallback to EN. Used pervasively.
-export function pickLocalized(en: string, ru: string | null, lang: Lang): string {
-  if (lang === 'ru') return ru ?? en;
+export function pickLocalized(
+  en: string,
+  ru: string | null,
+  lang: Lang
+): string {
+  if (lang === "ru") return ru ?? en;
   return en;
 }
 export function pickLocalizedNullable(
   en: string | null,
   ru: string | null,
-  lang: Lang,
+  lang: Lang
 ): string | null {
-  if (lang === 'ru') return ru ?? en;
+  if (lang === "ru") return ru ?? en;
   return en;
 }
 
@@ -164,14 +168,18 @@ export function toLocalizedPaper(row: PaperRow, lang: Lang): LocalizedPaper {
 
 export function toLocalizedLo(
   row: LearningObjectiveRow,
-  lang: Lang,
+  lang: Lang
 ): LocalizedLearningObjective {
   return {
     id: row.id,
     paper_id: row.paper_id,
     code: row.code,
     title: pickLocalized(row.title_en, row.title_ru, lang),
-    description: pickLocalizedNullable(row.description_en, row.description_ru, lang),
+    description: pickLocalizedNullable(
+      row.description_en,
+      row.description_ru,
+      lang
+    ),
     theory: pickLocalizedNullable(row.theory_en, row.theory_ru, lang),
     sort_order: row.sort_order,
     created_at: row.created_at.toISOString(),
@@ -181,7 +189,7 @@ export function toLocalizedLo(
 
 export function toLocalizedQuestion(
   row: QuestionRow,
-  lang: Lang,
+  lang: Lang
 ): LocalizedQuestion {
   return {
     id: row.id,
@@ -198,15 +206,19 @@ export function toLocalizedQuestion(
             why_wrong: pickLocalizedNullable(
               opt.why_wrong_en ?? null,
               opt.why_wrong_ru ?? null,
-              lang,
+              lang
             ),
           })),
     correct_answer:
-      row.type === 'mcq'
+      row.type === "mcq"
         ? row.correct_answer_en // option key — same in every language
         : pickLocalized(row.correct_answer_en, row.correct_answer_ru, lang),
     explanation: pickLocalized(row.explanation_en, row.explanation_ru, lang),
-    concept_bite: pickLocalizedNullable(row.concept_bite_en, row.concept_bite_ru, lang),
+    concept_bite: pickLocalizedNullable(
+      row.concept_bite_en,
+      row.concept_bite_ru,
+      lang
+    ),
     acceptable_tolerance: row.acceptable_tolerance,
     is_active: row.is_active,
     created_at: row.created_at.toISOString(),

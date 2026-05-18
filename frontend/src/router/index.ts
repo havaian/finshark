@@ -16,20 +16,22 @@ import { useAuthStore } from "../stores/auth.store";
 // reached by a subset of users (admin). Each becomes its own chunk so the
 // initial dashboard load doesn't ship them. Vue Router resolves the promise
 // the first time the route is visited.
-const ProfilePage         = () => import("../pages/ProfilePage.vue");
-const PublicProfilePage   = () => import("../pages/PublicProfilePage.vue");
-const ProgressPage        = () => import("../pages/ProgressPage.vue");
-const SettingsPage        = () => import("../pages/SettingsPage.vue");
-const LeaderboardsPage    = () => import("../pages/LeaderboardsPage.vue");
-const MockStartPage       = () => import("../pages/MockStartPage.vue");
-const MockBreakdownPage   = () => import("../pages/MockBreakdownPage.vue");
-const AdminLayout         = () => import("../pages/admin/AdminLayout.vue");
-const AdminUsersPage      = () => import("../pages/admin/AdminUsersPage.vue");
-const AdminLocalizationPage = () => import("../pages/admin/AdminLocalizationPage.vue");
-const AdminContentPage    = () => import("../pages/admin/AdminContentPage.vue");
-const AdminWhitelistPage  = () => import("../pages/admin/AdminWhitelistPage.vue");
+const ProfilePage = () => import("../pages/ProfilePage.vue");
+const PublicProfilePage = () => import("../pages/PublicProfilePage.vue");
+const ProgressPage = () => import("../pages/ProgressPage.vue");
+const SettingsPage = () => import("../pages/SettingsPage.vue");
+const LeaderboardsPage = () => import("../pages/LeaderboardsPage.vue");
+const MockStartPage = () => import("../pages/MockStartPage.vue");
+const MockBreakdownPage = () => import("../pages/MockBreakdownPage.vue");
+const AdminLayout = () => import("../pages/admin/AdminLayout.vue");
+const AdminUsersPage = () => import("../pages/admin/AdminUsersPage.vue");
+const AdminLocalizationPage = () =>
+  import("../pages/admin/AdminLocalizationPage.vue");
+const AdminContentPage = () => import("../pages/admin/AdminContentPage.vue");
+const AdminWhitelistPage = () =>
+  import("../pages/admin/AdminWhitelistPage.vue");
 const TwoFactorVerifyPage = () => import("../pages/TwoFactorVerifyPage.vue");
-const TwoFactorSetupPage  = () => import("../pages/TwoFactorSetupPage.vue");
+const TwoFactorSetupPage = () => import("../pages/TwoFactorSetupPage.vue");
 
 // Route meta flags:
 //   requiresAuth          — redirect to /login if not authed
@@ -61,7 +63,12 @@ const routes: RouteRecordRaw[] = [
     component: TwoFactorVerifyPage,
     meta: { skipsOnboardingGuard: true },
   },
-  { path: "/unsubscribe", name: "unsubscribe", component: UnsubscribePage, meta: { skipsOnboardingGuard: true } },
+  {
+    path: "/unsubscribe",
+    name: "unsubscribe",
+    component: UnsubscribePage,
+    meta: { skipsOnboardingGuard: true },
+  },
   {
     path: "/onboarding",
     name: "onboarding",

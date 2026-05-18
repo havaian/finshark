@@ -135,7 +135,7 @@ export class LessonsService {
     private readonly uqs: UserQuestionStateRepository,
     private readonly grader: GraderService,
     private readonly badges: BadgesService,
-    private readonly achievements: AchievementsService,
+    private readonly achievements: AchievementsService
   ) {}
 
   // ---- start ----
@@ -222,7 +222,7 @@ export class LessonsService {
       // Skip theory bites for mocks — they're exam-style, no primer. For
       // lessons (and post-mock review sessions), surface bites as usual.
       theory_bites:
-        session.mode === 'mock'
+        session.mode === "mock"
           ? []
           : await this.buildTheoryBites(hydratedRows, lang),
       mode: session.mode,
@@ -253,7 +253,7 @@ export class LessonsService {
     // completed_at marker; clean response so the client can show the finale.
     // Mocks ignore hearts entirely (no penalty for wrong answers in CBE-style
     // practice) so the check is gated on mode.
-    if (session.mode !== 'mock' && session.hearts_remaining <= 0) {
+    if (session.mode !== "mock" && session.hearts_remaining <= 0) {
       throw new BadRequestException("session ended: no hearts remaining");
     }
 
@@ -342,14 +342,16 @@ export class LessonsService {
       //
       // Mocks: never decrement hearts. CBE-style practice doesn't penalize wrong
       // answers mid-session; you just see the section breakdown at the end.
-      const isMock = session.mode === 'mock';
+      const isMock = session.mode === "mock";
       const sessionRows = await tx<Array<{ hearts_remaining: number }>>`
         UPDATE lesson_sessions
         SET
           correct_count    = correct_count + ${grade.was_correct ? 1 : 0},
-          hearts_remaining = ${grade.was_correct || isMock
-            ? tx`hearts_remaining`
-            : tx`GREATEST(hearts_remaining - 1, 0)`}
+          hearts_remaining = ${
+            grade.was_correct || isMock
+              ? tx`hearts_remaining`
+              : tx`GREATEST(hearts_remaining - 1, 0)`
+          }
         WHERE id = ${session_id}
         RETURNING hearts_remaining
       `;
@@ -397,7 +399,7 @@ export class LessonsService {
     // Mocks skip this entirely — they end only when the user submits the final
     // answer or hits the time limit (frontend-driven).
     let sessionEnded = false;
-    if (session.mode !== 'mock' && newState.hearts_remaining <= 0) {
+    if (session.mode !== "mock" && newState.hearts_remaining <= 0) {
       const ended = await this.sessions.markEndedOutOfHearts(session_id);
       sessionEnded = ended !== null;
     }
@@ -406,14 +408,18 @@ export class LessonsService {
     // For MCQ correct_answer is the option key (language-neutral).
     // For short_answer it's the canonical answer in the user's language.
     const correctAnswerForResponse =
-      question.type === 'mcq'
+      question.type === "mcq"
         ? question.correct_answer_en
-        : pickLocalized(question.correct_answer_en, question.correct_answer_ru, lang);
+        : pickLocalized(
+            question.correct_answer_en,
+            question.correct_answer_ru,
+            lang
+          );
 
     const explanationForResponse = pickLocalized(
       question.explanation_en,
       question.explanation_ru,
-      lang,
+      lang
     );
 
     return {
@@ -575,7 +581,8 @@ export class LessonsService {
     // ----- 2. Fill from weak LOs (NEW questions, one per LO, error-biased) -----
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
-    const preferred = user.preferred_difficulty ?? this.preferredDifficulty(user.level);
+    const preferred =
+      user.preferred_difficulty ?? this.preferredDifficulty(user.level);
 
     // Over-fetch weak LOs since some may already be covered or have no unseen
     // questions left. Cap at a reasonable upper bound.
@@ -668,10 +675,14 @@ export class LessonsService {
               why_wrong: pickLocalizedNullable(
                 opt.why_wrong_en ?? null,
                 opt.why_wrong_ru ?? null,
-                lang,
+                lang
               ),
             })),
-      concept_bite: pickLocalizedNullable(q.concept_bite_en, q.concept_bite_ru, lang),
+      concept_bite: pickLocalizedNullable(
+        q.concept_bite_en,
+        q.concept_bite_ru,
+        lang
+      ),
       acceptable_tolerance: q.acceptable_tolerance,
     };
   }
@@ -687,7 +698,7 @@ export class LessonsService {
   // Public so MocksService can call it when building the mock start response.
   async buildTheoryBites(
     queue: QuestionRow[],
-    lang: Lang,
+    lang: Lang
   ): Promise<LessonTheoryBite[]> {
     if (queue.length === 0) return [];
 

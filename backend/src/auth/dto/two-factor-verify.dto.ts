@@ -1,4 +1,4 @@
-import { IsString, MinLength, MaxLength } from 'class-validator';
+import { IsString, MinLength, MaxLength } from "class-validator";
 
 // Payload for POST /auth/2fa-verify. The pending_2fa_token comes from the
 // Google callback redirect (URL fragment); the code is what the user types

@@ -1,8 +1,8 @@
-import type { McqOption, QuestionDifficulty, QuestionType } from './content';
+import type { McqOption, QuestionDifficulty, QuestionType } from "./content";
 
 // Session mode mirrors backend's session_mode enum. 'lesson' is the default
 // for ordinary sessions; 'mock' is a CBE-style timed practice with no hearts.
-export type SessionMode = 'lesson' | 'mock';
+export type SessionMode = "lesson" | "mock";
 
 // Question shape returned in a lesson queue — no correct_answer or explanation
 // (those come back with each attempt).

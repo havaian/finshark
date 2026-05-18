@@ -6,19 +6,19 @@
 
 export interface GradeRequest {
   question_prompt: string;
-  correct_answer: string;     // canonical, from admin-authored content
-  user_answer: string;        // raw user input (un-normalized)
+  correct_answer: string; // canonical, from admin-authored content
+  user_answer: string; // raw user input (un-normalized)
 }
 
 export interface GradeVerdict {
   is_correct: boolean;
-  confidence: number;         // 0..1
-  reasoning: string;          // human-readable, surfaced in attempts.llm_grade_json
-  provider: 'openai' | 'anthropic';
+  confidence: number; // 0..1
+  reasoning: string; // human-readable, surfaced in attempts.llm_grade_json
+  provider: "openai" | "anthropic";
   model: string;
 }
 
 export interface LlmGradingProvider {
-  name: 'openai' | 'anthropic';
+  name: "openai" | "anthropic";
   grade(req: GradeRequest, opts: { timeoutMs: number }): Promise<GradeVerdict>;
 }

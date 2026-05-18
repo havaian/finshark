@@ -5,7 +5,7 @@
 // the rest, with mock-specific decorations driven by the session's `mode`
 // field returned from GET /lessons/:id/session.
 
-import type { LessonQuestion, LessonTheoryBite } from './lesson';
+import type { LessonQuestion, LessonTheoryBite } from "./lesson";
 
 export interface StartMockResult {
   session_id: string;

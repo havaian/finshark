@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BadgesRepository } from './badges.repository';
-import { BadgeContextRepository, RULES } from './badges.rules';
-import { toPublicBadge, type Lang, type PublicBadge } from './badges.types';
+import { Injectable, Logger } from "@nestjs/common";
+import { BadgesRepository } from "./badges.repository";
+import { BadgeContextRepository, RULES } from "./badges.rules";
+import { toPublicBadge, type Lang, type PublicBadge } from "./badges.types";
 
 @Injectable()
 export class BadgesService {
@@ -9,7 +9,7 @@ export class BadgesService {
 
   constructor(
     private readonly badges: BadgesRepository,
-    private readonly ctxRepo: BadgeContextRepository,
+    private readonly ctxRepo: BadgeContextRepository
   ) {}
 
   // Called after a lesson session completes (and any other moment a state
@@ -36,7 +36,9 @@ export class BadgesService {
       return newlyEarned;
     } catch (err) {
       this.logger.error(
-        `badge evaluation failed for user ${user_id}: ${err instanceof Error ? err.message : String(err)}`,
+        `badge evaluation failed for user ${user_id}: ${
+          err instanceof Error ? err.message : String(err)
+        }`
       );
       return [];
     }
@@ -50,7 +52,7 @@ export class BadgesService {
       this.badges.findEarnedByUser(user_id),
     ]);
     return catalog.map((row) =>
-      toPublicBadge(row, earnedMap.get(row.code) ?? null, lang),
+      toPublicBadge(row, earnedMap.get(row.code) ?? null, lang)
     );
   }
 }

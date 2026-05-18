@@ -1,7 +1,9 @@
 import {
+  Inject,
   Injectable,
   Logger,
   UnauthorizedException,
+  forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
@@ -9,6 +11,7 @@ import * as jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { UsersRepository } from '../users/users.repository';
 import { toPublicUser, type PublicUser, type UserRow } from '../users/user.types';
+import { WhitelistService } from '../whitelist/whitelist.service';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 // Payload baked into the access JWT.
@@ -48,6 +51,10 @@ export class AuthService {
     private readonly users: UsersRepository,
     private readonly refreshTokens: RefreshTokensRepository,
     private readonly config: ConfigService,
+    // forwardRef because WhitelistModule itself imports AuthModule for the
+    // admin-route guards.
+    @Inject(forwardRef(() => WhitelistService))
+    private readonly whitelist: WhitelistService,
   ) {}
 
   // ---- Google OAuth flow ----
@@ -134,6 +141,19 @@ export class AuthService {
     // tokens with email_verified: true. Reject anything that isn't verified.
     if (payload.email_verified !== true) {
       throw new UnauthorizedException('google email not verified');
+    }
+
+    // Whitelist gate. Sits AFTER Google's email verification so we don't waste
+    // a DB hit on forged tokens. Sits BEFORE the user lookup/creation so an
+    // un-whitelisted email never produces a user row (no surprise accounts).
+    //
+    // The frontend's /auth/callback page reads the URL fragment, so we surface
+    // a specific error code "email_not_allowed" that the page can localise
+    // into a friendlier message than the generic "auth failed".
+    const allowed = await this.whitelist.isEmailAllowed(email);
+    if (!allowed) {
+      this.log.warn(`whitelist rejected sign-in for ${email}`);
+      throw new UnauthorizedException('email_not_allowed');
     }
 
     // 4) Look up by google_sub first (the stable identifier).

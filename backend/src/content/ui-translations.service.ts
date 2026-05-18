@@ -3,28 +3,34 @@ import {
   SUPPORTED_LANGS,
   type Lang,
 } from './content.types';
-import {
-  UiTranslationsRepository,
-  type UiTranslationRow,
-} from './ui-translations.repository';
+import { UiTranslationsFileStore } from './ui-translations.file-store';
+
+// Shape returned to the admin UI. Matches the old DB-backed row shape minus
+// created_at / updated_at (files don't carry per-key timestamps). The admin
+// page already ignored those columns; removing them is a non-breaking change.
+export interface UiTranslationRow {
+  key: string;
+  lang: Lang;
+  value: string;
+}
 
 @Injectable()
 export class UiTranslationsService {
-  constructor(private readonly repo: UiTranslationsRepository) {}
+  constructor(private readonly store: UiTranslationsFileStore) {}
 
-  // Admin: full list, both languages, every key.
+  // Admin: full list, both languages, every overridden key.
   list(): Promise<UiTranslationRow[]> {
-    return this.repo.findAll();
+    return this.store.findAll();
   }
 
   // Public: { key → value } for one language. Cheap fetch on frontend boot.
   byLang(lang: Lang): Promise<Record<string, string>> {
-    return this.repo.findByLang(lang);
+    return this.store.findByLang(lang);
   }
 
   // Admin: upsert a single (key, lang, value) row.
   // Key validation: must be non-empty and look like a dotted identifier
-  // (e.g. "dashboard.start_lesson"). We allow letters, digits, underscore, dot, hyphen.
+  // (e.g. "dashboard.start_lesson"). Letters, digits, underscore, dot, hyphen.
   async upsert(input: {
     key: string;
     lang: Lang;
@@ -50,7 +56,7 @@ export class UiTranslationsService {
       throw new BadRequestException('value is too long (max 10000 chars)');
     }
 
-    return this.repo.upsert({ key, lang: input.lang, value: input.value });
+    return this.store.upsert({ key, lang: input.lang, value: input.value });
   }
 
   // Admin: delete a row (reverts to the static locale-file default on the frontend).
@@ -58,7 +64,7 @@ export class UiTranslationsService {
     if (!(SUPPORTED_LANGS as readonly string[]).includes(lang)) {
       throw new BadRequestException(`unsupported lang "${lang}"`);
     }
-    const ok = await this.repo.delete(key, lang);
+    const ok = await this.store.delete(key, lang);
     if (!ok) throw new NotFoundException('translation override not found');
   }
 }

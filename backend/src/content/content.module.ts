@@ -7,11 +7,11 @@ import { PublicUiTranslationsController } from './public-ui-translations.control
 import { AdminUiTranslationsController } from './admin-ui-translations.controller';
 import { ContentService } from './content.service';
 import { UiTranslationsService } from './ui-translations.service';
+import { UiTranslationsFileStore } from './ui-translations.file-store';
 import { QuestionGenerationService } from './question-generation.service';
 import { PapersRepository } from './papers.repository';
 import { LearningObjectivesRepository } from './learning-objectives.repository';
 import { QuestionsRepository } from './questions.repository';
-import { UiTranslationsRepository } from './ui-translations.repository';
 
 @Module({
   imports: [AuthModule, UsersModule],
@@ -24,11 +24,13 @@ import { UiTranslationsRepository } from './ui-translations.repository';
   providers: [
     ContentService,
     UiTranslationsService,
+    // File-backed override store. Replaces the previous DB-backed
+    // UiTranslationsRepository.
+    UiTranslationsFileStore,
     QuestionGenerationService,
     PapersRepository,
     LearningObjectivesRepository,
     QuestionsRepository,
-    UiTranslationsRepository,
   ],
   exports: [
     ContentService,

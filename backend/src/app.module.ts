@@ -18,6 +18,8 @@ import { OnboardingModule } from './onboarding/onboarding.module';
 import { LeaderboardsModule } from './leaderboards/leaderboards.module';
 import { BadgesModule } from './badges/badges.module';
 import { MocksModule } from './mocks/mocks.module';
+import { SeedModule } from './seed/seed.module';
+import { WhitelistModule } from './whitelist/whitelist.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { MocksModule } from './mocks/mocks.module';
     LeaderboardsModule,
     BadgesModule,
     MocksModule,
+    SeedModule,
+    WhitelistModule,
   ],
   providers: [
     // Throttle every controller by default; specific endpoints can override or skip.

@@ -21,6 +21,9 @@ export interface PublicUser {
   onboarded_at: string | null; // ISO timestamp or null (null = still needs to onboard)
   // Leaderboards (3.3). Privacy default false — user must opt in.
   leaderboard_opt_in: boolean;
+  // 2FA enrollment flag. Boolean only — never the secret. Used by Settings
+  // to render enable vs disable affordance.
+  totp_enabled: boolean;
 }
 
 // Mirrors backend/src/auth/auth.service.ts AuthTokens

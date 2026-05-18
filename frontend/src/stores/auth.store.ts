@@ -82,6 +82,22 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem(LS_USER, JSON.stringify(u));
   }
 
+  // Same idea as completeGoogleLogin but for the 2FA verify endpoint, which
+  // returns the user object inline — no second /me round-trip needed. Used
+  // by the /2fa-verify page after the user types their 6-digit code.
+  function completeTwoFactorLogin(input: {
+    access_token: string;
+    refresh_token: string;
+    user: PublicUser;
+  }) {
+    accessToken.value = input.access_token;
+    refreshToken.value = input.refresh_token;
+    user.value = input.user;
+    localStorage.setItem(TOKEN_STORAGE_KEYS.access, input.access_token);
+    localStorage.setItem(TOKEN_STORAGE_KEYS.refresh, input.refresh_token);
+    localStorage.setItem(LS_USER, JSON.stringify(input.user));
+  }
+
   // Replace the user object in the store + localStorage. Used by flows that
   // get a fresh PublicUser back without a separate /me fetch — onboarding
   // POST returns the updated user, settings updates return the user, etc.
@@ -101,6 +117,7 @@ export const useAuthStore = defineStore("auth", () => {
     refreshToken,
     isAuthenticated,
     completeGoogleLogin,
+    completeTwoFactorLogin,
     logout,
     fetchMe,
     setUser,

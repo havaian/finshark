@@ -21,6 +21,7 @@ import { AchievementsModule } from './achievements/achievements.module';
 import { MocksModule } from './mocks/mocks.module';
 import { SeedModule } from './seed/seed.module';
 import { WhitelistModule } from './whitelist/whitelist.module';
+import { TotpModule } from './totp/totp.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { WhitelistModule } from './whitelist/whitelist.module';
     MocksModule,
     SeedModule,
     WhitelistModule,
+    TotpModule,
   ],
   providers: [
     // Throttle every controller by default; specific endpoints can override or skip.

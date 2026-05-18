@@ -26,6 +26,12 @@ export interface UserRow {
   // Leaderboards (3.3). Opt-in default false — users only appear if they
   // explicitly enable this from Settings or onboarding.
   leaderboard_opt_in: boolean;
+  // 2FA TOTP (admin-only enforcement). totp_secret stores the base32 secret
+  // shared with the user's authenticator app; NULL means not enrolled.
+  // totp_enrolled_at is set on first successful setup-verify and cleared on
+  // disable, kept in lockstep with totp_secret.
+  totp_secret: string | null;
+  totp_enrolled_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -49,6 +55,11 @@ export interface PublicUser {
   preferred_paper_id: string | null;
   onboarded_at: string | null; // ISO timestamp or null
   leaderboard_opt_in: boolean;
+  // 2FA enrollment flag. We expose the boolean only — never the secret or
+  // the enrolled-at timestamp leaks beyond this property. The frontend uses
+  // this to render "2FA: on/off" in settings and to decide whether to show
+  // the enable vs disable affordance.
+  totp_enabled: boolean;
 }
 
 export function toPublicUser(row: UserRow): PublicUser {
@@ -72,5 +83,6 @@ export function toPublicUser(row: UserRow): PublicUser {
     preferred_paper_id: row.preferred_paper_id,
     onboarded_at: row.onboarded_at ? row.onboarded_at.toISOString() : null,
     leaderboard_opt_in: row.leaderboard_opt_in,
+    totp_enabled: row.totp_secret !== null,
   };
 }

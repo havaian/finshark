@@ -3109,3 +3109,81 @@ textarea { resize: vertical; min-height: 80px; }
   text-decoration: underline;
   color: var(--accent);
 }
+
+/* -----------------------------------------------------------
+   43) 2FA — recovery code list + audit log
+   -----------------------------------------------------------
+   Shared between TwoFactorSetupPage (initial enroll) and the regenerate
+   flow in SettingsPage. TwoFactorSetupPage also defines a copy of these
+   in its scoped <style> for self-containment; the global rules take over
+   on SettingsPage where the section is rendered without scoping. */
+
+.tfa-subsection {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.tfa-recovery-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tfa-recovery-list code {
+  display: block;
+  padding: 8px 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+@media (max-width: 480px) {
+  .tfa-recovery-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Audit log: each entry is a small two-line block — event title on top,
+   timestamp + ip + meta below in dim. We keep them visually quiet because
+   the section is informational, not actionable. */
+.tfa-audit-list {
+  /* Container — entries live inside. No padding here; sub-elements own it. */
+}
+.tfa-audit-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tfa-audit-entry {
+  padding: 8px 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.tfa-audit-event {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Subtle link used for "Show audit log" toggle. Mirrors the same class
+   in TwoFactorVerifyPage's scoped style; defined globally so SettingsPage
+   can reuse it without re-declaring. */
+.link-subtle {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-mute);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+}
+.link-subtle:hover {
+  color: var(--text);
+}

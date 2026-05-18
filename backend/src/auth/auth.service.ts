@@ -12,6 +12,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { UsersRepository } from '../users/users.repository';
 import { toPublicUser, type PublicUser, type UserRow } from '../users/user.types';
 import { WhitelistService } from '../whitelist/whitelist.service';
+import { TotpService } from '../totp/totp.service';
 import { RefreshTokensRepository } from './refresh-tokens.repository';
 
 // Payload baked into the access JWT.
@@ -32,10 +33,16 @@ export interface AuthResult {
 
 // Returned to the controller after a successful Google callback.
 // The controller is responsible for the final redirect to the frontend.
-export interface GoogleCallbackResult {
-  user: PublicUser;
-  tokens: AuthTokens;
-}
+//
+// Discriminated union: most users get `kind: 'authenticated'` with tokens
+// ready to go. Admins with 2FA enrolled get `kind: 'two_factor_required'`
+// with a short-lived pending token that the frontend swaps for real tokens
+// at /auth/2fa-verify. The PublicUser is intentionally NOT returned in the
+// pending case — we don't want to leak account existence/details until the
+// second factor clears.
+export type GoogleCallbackResult =
+  | { kind: 'authenticated'; user: PublicUser; tokens: AuthTokens }
+  | { kind: 'two_factor_required'; pending_2fa_token: string };
 
 // Internal state token format: "<random_nonce>.<hmac>". Signed with
 // GOOGLE_OAUTH_STATE_SECRET so we can verify it on the callback without
@@ -55,6 +62,12 @@ export class AuthService {
     // admin-route guards.
     @Inject(forwardRef(() => WhitelistService))
     private readonly whitelist: WhitelistService,
+    // forwardRef because TotpModule depends on AuthService (to mint tokens
+    // after a successful 2FA verify), and AuthService needs TotpService to
+    // gate the Google callback on admin 2FA. Two-way dependency resolved
+    // via Nest's forwardRef on both sides.
+    @Inject(forwardRef(() => TotpService))
+    private readonly totp: TotpService,
   ) {}
 
   // ---- Google OAuth flow ----
@@ -180,8 +193,17 @@ export class AuthService {
       });
     }
 
-    const ourTokens = await this.issueTokens(user);
-    return { user: toPublicUser(user), tokens: ourTokens };
+    // 2FA gate. For admins with TOTP enrolled, withhold tokens and return
+    // a pending challenge instead. The frontend swaps the pending token for
+    // real tokens at /auth/2fa-verify after the user enters a 6-digit code
+    // (or recovery code). Non-admins and admins without 2FA get tokens now.
+    if (this.totp.requiresTwoFactor(user)) {
+      const pending_2fa_token = this.totp.mintPending2faToken(user.id);
+      return { kind: 'two_factor_required', pending_2fa_token };
+    }
+
+    const tokens = await this.issueTokens(user);
+    return { kind: 'authenticated', user: toPublicUser(user), tokens };
   }
 
   // ---- Our own session tokens (unchanged from password-era) ----
@@ -313,6 +335,14 @@ export class AuthService {
     });
 
     return { access_token, refresh_token };
+  }
+
+  // Public wrapper around issueTokens for sibling modules (TotpService) that
+  // need to mint tokens after a non-Google verification step. Kept narrow:
+  // accepts a full UserRow that the caller already loaded, so we don't
+  // re-hit the DB. Matches the shape used by handleGoogleCallback.
+  async issueTokensForUser(user: UserRow): Promise<AuthTokens> {
+    return this.issueTokens(user);
   }
 
   // SHA-256 is fine here: refresh tokens are already high-entropy JWTs,

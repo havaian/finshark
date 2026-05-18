@@ -10,6 +10,7 @@ const USER_COLS = `
   reminder_hour_utc, preferred_difficulty, lesson_size,
   bg_level, time_budget_minutes, preferred_paper_id, onboarded_at,
   leaderboard_opt_in,
+  totp_secret, totp_enrolled_at,
   created_at, updated_at
 `;
 

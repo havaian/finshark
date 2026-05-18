@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Post,
   Query,
@@ -10,16 +11,19 @@ import {
   Res,
   Body,
   UseGuards,
+  forwardRef,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { AuthService, type AccessTokenPayload } from './auth.service';
 import { RefreshDto } from './dto/refresh.dto';
+import { TwoFactorVerifyDto } from './dto/two-factor-verify.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { UsersRepository } from '../users/users.repository';
 import { toPublicUser } from '../users/user.types';
+import { TotpService } from '../totp/totp.service';
 
 // The cookie name we use to round-trip the OAuth state value. The cookie
 // lives only between /auth/google and /auth/google/callback — a few seconds
@@ -32,6 +36,10 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly users: UsersRepository,
     private readonly config: ConfigService,
+    // forwardRef because TotpModule -> AuthModule -> TotpModule cycle. See
+    // notes in auth.service.ts and totp.module.ts.
+    @Inject(forwardRef(() => TotpService))
+    private readonly totp: TotpService,
   ) {}
 
   // GET /api/auth/google
@@ -96,16 +104,27 @@ export class AuthController {
     }
 
     try {
-      const { tokens } = await this.auth.handleGoogleCallback({
+      const result = await this.auth.handleGoogleCallback({
         code,
         state,
         expectedState,
       });
 
-      // Fragment, not query. The frontend's /auth/callback page reads them.
+      // Two-factor required: redirect to /2fa-verify with the pending token
+      // in the URL fragment. Same fragment-not-query approach as success —
+      // fragments stay out of server logs.
+      if (result.kind === 'two_factor_required') {
+        const fragment = new URLSearchParams({
+          pending_2fa_token: result.pending_2fa_token,
+        }).toString();
+        res.redirect(`${frontend}/2fa-verify#${fragment}`);
+        return;
+      }
+
+      // Authenticated: tokens in the fragment, same as before.
       const fragment = new URLSearchParams({
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
+        access_token: result.tokens.access_token,
+        refresh_token: result.tokens.refresh_token,
       }).toString();
       res.redirect(`${frontend}/auth/callback#${fragment}`);
     } catch (e) {
@@ -120,6 +139,27 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   refresh(@Body() dto: RefreshDto) {
     return this.auth.refresh(dto.refresh_token);
+  }
+
+  // POST /api/auth/2fa-verify
+  // Final step of the 2FA login flow for admins. Takes the pending token
+  // minted by the Google callback + a 6-digit TOTP code (or a recovery
+  // code) and returns full access/refresh tokens on success.
+  //
+  // Throttled per IP — tight, because this is the brute-force surface for
+  // the TOTP/recovery codes. 30/min per IP lets a confused user retry a
+  // few times without nagging while blocking automated probing. The
+  // per-user lockout in TotpService is the second layer for distributed
+  // attacks across many IPs.
+  @Post('2fa-verify')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60_000, limit: 30 } })
+  twoFactorVerify(@Body() dto: TwoFactorVerifyDto, @Req() req: Request) {
+    return this.totp.verifyAndIssueTokens({
+      pending_2fa_token: dto.pending_2fa_token,
+      code: dto.code,
+      ip: (req.ip ?? null) || null,
+    });
   }
 
   @Post('logout')

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
 import { useThemeStore } from '../stores/theme.store';
 import { useLocaleStore } from '../stores/locale.store';
 import { profileApi, type UpdatePreferencesPayload } from '../api/profile.api';
+import { totpApi } from '../api/totp.api';
+import { authApi } from '../api/auth.api';
 import { api } from '../api/client';
 import { applyOverrides, type Lang } from '../i18n';
 import AppNav from '../components/AppNav.vue';
@@ -14,6 +17,7 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const theme = useThemeStore();
 const locale = useLocaleStore();
+const router = useRouter();
 
 const errorMsg = ref<string | null>(null);
 // Track saving spinner per-field so toggling reminders doesn't grey out the lesson-size dropdown.
@@ -115,6 +119,182 @@ watch(savingField, (next, prev) => {
     savedTimer = window.setTimeout(() => { justSaved.value = null; }, 1200);
   }
 });
+
+// ── 2FA (admin only) ──────────────────────────────────────────────────
+// Reads totp_enabled directly from auth.user so the section flips between
+// "Enable" and "Disable" states without a separate fetch. The fresh value
+// gets pushed in by completeTwoFactorLogin or by the setup-page redirect's
+// auth.setUser call.
+const isAdmin = computed(() => auth.user?.is_admin === true);
+const twoFactorEnabled = computed(() => auth.user?.totp_enabled === true);
+
+// Disable flow: an inline form with a code input. Kept inline (rather than
+// a route) because it's small enough and keeps the user on Settings.
+const showDisable2faForm = ref(false);
+const disable2faCode = ref('');
+const disable2faSubmitting = ref(false);
+const disable2faError = ref<string | null>(null);
+
+function goEnable2fa() {
+  router.push('/settings/2fa');
+}
+
+function openDisable2faForm() {
+  showDisable2faForm.value = true;
+  disable2faCode.value = '';
+  disable2faError.value = null;
+}
+
+function cancelDisable2fa() {
+  showDisable2faForm.value = false;
+  disable2faCode.value = '';
+  disable2faError.value = null;
+}
+
+async function confirmDisable2fa() {
+  disable2faSubmitting.value = true;
+  disable2faError.value = null;
+  try {
+    await totpApi.disable(disable2faCode.value.trim());
+    // Re-fetch /me so the store reflects totp_enabled=false. Doing it
+    // explicitly (rather than mutating the local user) keeps the source
+    // of truth on the backend.
+    const me = await authApi.me();
+    auth.setUser(me);
+    showDisable2faForm.value = false;
+    disable2faCode.value = '';
+  } catch (e) {
+    if (e instanceof AxiosError && e.response?.status === 401) {
+      disable2faError.value = t('settings.tfa_disable_error_invalid');
+    } else {
+      disable2faError.value = t('settings.tfa_disable_error_generic');
+    }
+  } finally {
+    disable2faSubmitting.value = false;
+  }
+}
+
+// ── Recovery codes state ──────────────────────────────────────────────
+// Loaded when the 2FA section becomes visible (twoFactorEnabled === true).
+// Watch on twoFactorEnabled triggers the fetch; we don't bother with a
+// separate "load 2FA stuff" lifecycle hook.
+const remainingCodes = ref<number | null>(null);
+
+async function loadRemainingCodes() {
+  if (!twoFactorEnabled.value) {
+    remainingCodes.value = null;
+    return;
+  }
+  try {
+    const r = await totpApi.remainingCodes();
+    remainingCodes.value = r.remaining;
+  } catch {
+    // Non-fatal — section will just omit the counter.
+    remainingCodes.value = null;
+  }
+}
+
+watch(twoFactorEnabled, loadRemainingCodes, { immediate: true });
+
+// Regenerate flow: inline form (code input) → confirmation screen with
+// the new codes + "I saved them" checkbox → done.
+const regenStep = ref<'idle' | 'verify' | 'show'>('idle');
+const regenCode = ref('');
+const regenSubmitting = ref(false);
+const regenError = ref<string | null>(null);
+const regenNewCodes = ref<string[]>([]);
+const regenSavedConfirmed = ref(false);
+
+function openRegen() {
+  regenStep.value = 'verify';
+  regenCode.value = '';
+  regenError.value = null;
+  regenNewCodes.value = [];
+  regenSavedConfirmed.value = false;
+}
+
+function cancelRegen() {
+  regenStep.value = 'idle';
+  regenCode.value = '';
+  regenError.value = null;
+  regenNewCodes.value = [];
+  regenSavedConfirmed.value = false;
+}
+
+async function confirmRegen() {
+  regenSubmitting.value = true;
+  regenError.value = null;
+  try {
+    const result = await totpApi.regenerateCodes(regenCode.value.trim());
+    regenNewCodes.value = result.recovery_codes;
+    regenStep.value = 'show';
+    // Refresh the remaining counter — now 10 fresh codes.
+    await loadRemainingCodes();
+  } catch (e) {
+    if (e instanceof AxiosError && e.response?.status === 401) {
+      regenError.value = t('settings.tfa_disable_error_invalid');
+    } else {
+      regenError.value = t('settings.tfa_disable_error_generic');
+    }
+  } finally {
+    regenSubmitting.value = false;
+  }
+}
+
+function copyRegenCodes() {
+  if (!navigator.clipboard) return;
+  navigator.clipboard
+    .writeText(regenNewCodes.value.join('\n'))
+    .catch(() => {});
+}
+
+function finishRegen() {
+  regenStep.value = 'idle';
+  regenCode.value = '';
+  regenNewCodes.value = [];
+  regenSavedConfirmed.value = false;
+}
+
+// ── Audit log (collapsible) ───────────────────────────────────────────
+// Lazy-loaded on first open. We keep it collapsed by default to avoid
+// surprising the user with a wall of timestamps; admins who want
+// forensics can expand it.
+const auditOpen = ref(false);
+const auditLoading = ref(false);
+const auditEntries = ref<import('../types/totp').TotpAuditEntry[]>([]);
+
+async function toggleAudit() {
+  auditOpen.value = !auditOpen.value;
+  if (auditOpen.value && auditEntries.value.length === 0) {
+    auditLoading.value = true;
+    try {
+      auditEntries.value = await totpApi.audit();
+    } catch {
+      auditEntries.value = [];
+    } finally {
+      auditLoading.value = false;
+    }
+  }
+}
+
+// Localise an event code. Falls back to the raw code if no key exists —
+// keeps the UI useful even if the backend ships a new event before the
+// frontend has a translation for it.
+function localiseAuditEvent(code: string): string {
+  const key = `settings.tfa_audit_event_${code}`;
+  const translated = t(key);
+  // vue-i18n returns the key verbatim on miss; detect and fall back.
+  return translated === key ? code : translated;
+}
+
+function formatAuditMeta(meta: Record<string, unknown>): string {
+  if (!meta || Object.keys(meta).length === 0) return '';
+  // Compact key=value list. Stringify scalars only; jsonb here is always
+  // shallow so no need for recursive formatting.
+  return Object.entries(meta)
+    .map(([k, v]) => `${k}=${String(v)}`)
+    .join(' · ');
+}
 </script>
 
 <template>
@@ -261,6 +441,201 @@ watch(savingField, (next, prev) => {
         <p v-if="justSaved === 'leaderboard_opt_in'" class="dim text-xs mt-2">
           {{ t('admin.localization.saved') }} ✓
         </p>
+      </section>
+
+      <!-- Two-factor authentication — admin-only. Section hides entirely
+           for non-admins so it doesn't surface a feature they can't use. -->
+      <section v-if="isAdmin" class="card">
+        <h2>{{ t('settings.tfa_section') }}</h2>
+        <p class="dim text-sm mt-2">{{ t('settings.tfa_section_sub') }}</p>
+
+        <div class="row mt-4" style="align-items: center;">
+          <div class="grow">
+            <div style="font-weight: 500;">
+              <template v-if="twoFactorEnabled">
+                {{ t('settings.tfa_status_on') }}
+              </template>
+              <template v-else>
+                {{ t('settings.tfa_status_off') }}
+              </template>
+            </div>
+            <div class="dim text-sm" style="margin-top: 2px;">
+              <template v-if="twoFactorEnabled">
+                {{ t('settings.tfa_status_on_sub') }}
+              </template>
+              <template v-else>
+                {{ t('settings.tfa_status_off_sub') }}
+              </template>
+            </div>
+          </div>
+
+          <button
+            v-if="!twoFactorEnabled"
+            class="btn btn-primary"
+            @click="goEnable2fa"
+          >
+            {{ t('settings.tfa_enable_btn') }}
+          </button>
+          <button
+            v-else-if="!showDisable2faForm"
+            class="btn btn-ghost"
+            @click="openDisable2faForm"
+          >
+            {{ t('settings.tfa_disable_btn') }}
+          </button>
+        </div>
+
+        <!-- Inline disable form. Requires a current 6-digit code (or recovery
+             code) so a stolen session can't strip the factor. -->
+        <div v-if="twoFactorEnabled && showDisable2faForm" class="mt-4">
+          <label class="field-label">{{ t('settings.tfa_disable_code_label') }}</label>
+          <input
+            v-model="disable2faCode"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="32"
+            placeholder="123456"
+            style="margin-top: 6px; font-family: ui-monospace, monospace; letter-spacing: 0.06em;"
+            @keydown.enter="disable2faCode.length >= 6 && !disable2faSubmitting && confirmDisable2fa()"
+          />
+          <p v-if="disable2faError" class="error-text mt-2">{{ disable2faError }}</p>
+          <div class="row mt-4" style="gap: 8px;">
+            <button
+              class="btn btn-danger"
+              :disabled="disable2faSubmitting || disable2faCode.trim().length < 6"
+              @click="confirmDisable2fa"
+            >
+              {{ disable2faSubmitting ? t('common.saving') : t('settings.tfa_disable_confirm') }}
+            </button>
+            <button
+              class="btn btn-ghost"
+              :disabled="disable2faSubmitting"
+              @click="cancelDisable2fa"
+            >
+              {{ t('common.cancel') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Recovery codes panel — visible only when 2FA is enabled. Shows
+             remaining count + regenerate flow. We don't show the codes
+             themselves; only newly-generated ones are surfaced (once). -->
+        <div v-if="twoFactorEnabled && regenStep === 'idle' && !showDisable2faForm" class="tfa-subsection mt-6">
+          <div class="row" style="align-items: center;">
+            <div class="grow">
+              <div style="font-weight: 500;">
+                {{ t('settings.tfa_recovery_codes_title') }}
+              </div>
+              <div class="dim text-sm" style="margin-top: 2px;">
+                <template v-if="remainingCodes !== null">
+                  {{ t('settings.tfa_recovery_codes_remaining', { count: remainingCodes }) }}
+                </template>
+                <template v-else>
+                  {{ t('settings.tfa_recovery_codes_sub') }}
+                </template>
+              </div>
+            </div>
+            <button class="btn btn-ghost" @click="openRegen">
+              {{ t('settings.tfa_regenerate_btn') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Regenerate: step "verify" — ask for current code. -->
+        <div v-if="twoFactorEnabled && regenStep === 'verify'" class="tfa-subsection mt-6">
+          <div style="font-weight: 500;">{{ t('settings.tfa_regenerate_title') }}</div>
+          <p class="dim text-sm mt-2">{{ t('settings.tfa_regenerate_hint') }}</p>
+
+          <label class="field-label mt-4">{{ t('settings.tfa_regenerate_code_label') }}</label>
+          <input
+            v-model="regenCode"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="32"
+            placeholder="123456"
+            style="margin-top: 6px; font-family: ui-monospace, monospace; letter-spacing: 0.06em;"
+            @keydown.enter="regenCode.length >= 6 && !regenSubmitting && confirmRegen()"
+          />
+          <p v-if="regenError" class="error-text mt-2">{{ regenError }}</p>
+          <div class="row mt-4" style="gap: 8px;">
+            <button
+              class="btn btn-primary"
+              :disabled="regenSubmitting || regenCode.trim().length < 6"
+              @click="confirmRegen"
+            >
+              {{ regenSubmitting ? t('common.saving') : t('settings.tfa_regenerate_confirm') }}
+            </button>
+            <button
+              class="btn btn-ghost"
+              :disabled="regenSubmitting"
+              @click="cancelRegen"
+            >
+              {{ t('common.cancel') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Regenerate: step "show" — display new codes ONCE with save confirmation. -->
+        <div v-if="twoFactorEnabled && regenStep === 'show'" class="tfa-subsection mt-6">
+          <div style="font-weight: 500;">{{ t('settings.tfa_regenerate_show_title') }}</div>
+          <p class="error-text mt-2">{{ t('tfa_setup.recovery_warning') }}</p>
+
+          <ul class="tfa-recovery-list mt-4">
+            <li v-for="(rc, i) in regenNewCodes" :key="i">
+              <code>{{ rc }}</code>
+            </li>
+          </ul>
+
+          <button class="btn btn-ghost btn-block mt-4" @click="copyRegenCodes">
+            {{ t('tfa_setup.copy_codes') }}
+          </button>
+
+          <label class="row mt-4" style="gap: 8px; cursor: pointer;">
+            <input v-model="regenSavedConfirmed" type="checkbox" />
+            <span>{{ t('tfa_setup.saved_confirm') }}</span>
+          </label>
+
+          <button
+            class="btn btn-primary btn-block mt-4"
+            :disabled="!regenSavedConfirmed"
+            @click="finishRegen"
+          >
+            {{ t('tfa_setup.finish') }}
+          </button>
+        </div>
+
+        <!-- Audit log — collapsible. Default closed to keep the section
+             compact; expand-on-click hits the audit endpoint once. -->
+        <div v-if="twoFactorEnabled && regenStep === 'idle' && !showDisable2faForm" class="tfa-subsection mt-6">
+          <button class="link-subtle" type="button" @click="toggleAudit">
+            <template v-if="!auditOpen">
+              {{ t('settings.tfa_audit_show') }}
+            </template>
+            <template v-else>
+              {{ t('settings.tfa_audit_hide') }}
+            </template>
+          </button>
+          <div v-if="auditOpen" class="tfa-audit-list mt-4">
+            <p v-if="auditLoading" class="dim text-sm">{{ t('common.loading') }}</p>
+            <p v-else-if="auditEntries.length === 0" class="dim text-sm">
+              {{ t('settings.tfa_audit_empty') }}
+            </p>
+            <ul v-else class="tfa-audit-entries">
+              <li v-for="entry in auditEntries" :key="entry.id" class="tfa-audit-entry">
+                <div class="tfa-audit-event">{{ localiseAuditEvent(entry.event) }}</div>
+                <div class="dim text-xs">
+                  {{ new Date(entry.created_at).toLocaleString() }}
+                  <template v-if="entry.ip"> · {{ entry.ip }}</template>
+                  <template v-if="formatAuditMeta(entry.meta)">
+                    · {{ formatAuditMeta(entry.meta) }}
+                  </template>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
       </section>
 
     </div>

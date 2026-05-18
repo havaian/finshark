@@ -28,6 +28,8 @@ const AdminUsersPage      = () => import("../pages/admin/AdminUsersPage.vue");
 const AdminLocalizationPage = () => import("../pages/admin/AdminLocalizationPage.vue");
 const AdminContentPage    = () => import("../pages/admin/AdminContentPage.vue");
 const AdminWhitelistPage  = () => import("../pages/admin/AdminWhitelistPage.vue");
+const TwoFactorVerifyPage = () => import("../pages/TwoFactorVerifyPage.vue");
+const TwoFactorSetupPage  = () => import("../pages/TwoFactorSetupPage.vue");
 
 // Route meta flags:
 //   requiresAuth          — redirect to /login if not authed
@@ -47,6 +49,16 @@ const routes: RouteRecordRaw[] = [
     path: "/auth/callback",
     name: "auth-callback",
     component: AuthCallbackPage,
+    meta: { skipsOnboardingGuard: true },
+  },
+  {
+    // The admin 2FA challenge page. Reached via redirect from the Google
+    // callback when the user is an admin with totp_secret set. No auth
+    // required (the user isn't authenticated yet — that's the whole point),
+    // but skipsOnboardingGuard so the onboarding redirect doesn't fire.
+    path: "/2fa-verify",
+    name: "two-factor-verify",
+    component: TwoFactorVerifyPage,
     meta: { skipsOnboardingGuard: true },
   },
   { path: "/unsubscribe", name: "unsubscribe", component: UnsubscribePage, meta: { skipsOnboardingGuard: true } },
@@ -88,6 +100,15 @@ const routes: RouteRecordRaw[] = [
     name: "settings",
     component: SettingsPage,
     meta: { requiresAuth: true },
+  },
+  {
+    // 2FA enrollment flow. Admin-only: requiresAdmin enforces it server-
+    // side via the route guard below, on top of the AdminGuard on every
+    // /me/2fa/* endpoint. Non-admins reaching this URL get redirected.
+    path: "/settings/2fa",
+    name: "two-factor-setup",
+    component: TwoFactorSetupPage,
+    meta: { requiresAuth: true, requiresAdmin: true },
   },
   {
     path: "/leaderboards",

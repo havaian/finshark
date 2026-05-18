@@ -34,6 +34,14 @@ services:
       - ./.env
     ports:
       - "${BACKEND_PORT:-3001}:3001"
+    # Persist admin-edited locale overrides across image rebuilds. Without this
+    # volume, every `docker compose up --build` would overwrite admin edits with
+    # whatever en.json/ru.json shipped in the image. The named volume keeps the
+    # edited files on the host. On first run the entrypoint will see the volume
+    # already populated (empty objects after seed) — the app falls back to {}
+    # if a file is missing, so an empty volume is a safe initial state.
+    volumes:
+      - locales:/app/backend/locales
     restart: unless-stopped
 
   frontend:
@@ -51,3 +59,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  locales:

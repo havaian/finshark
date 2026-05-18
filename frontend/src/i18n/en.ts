@@ -273,6 +273,17 @@ export default {
     delete_account_confirm: 'Type your email to confirm deletion',
   },
 
+  public_profile: {
+    title: 'Profile',
+    not_found: 'This user does not exist.',
+    lessons: 'Lessons',
+    accuracy: 'Accuracy',
+    badges_section: 'Badges earned',
+    no_badges: 'No badges earned yet.',
+    viewing_self: 'This is your public profile — what others see when they click your name.',
+    viewing_self_link: 'Open your editable profile →',
+  },
+
   settings: {
     title: 'Settings',
     appearance: 'Appearance',
@@ -328,6 +339,19 @@ export default {
       reseed_stat_questions: 'Questions inserted: {count}.',
       reseed_stat_progress: 'Wiped {sessions} sessions, {attempts} attempts. {users} user(s) reset.',
       reseed_stat_badges: 'Wiped {count} earned-badge record(s).',
+      // Structural ops (moved here from the legacy AdminPapersPage/LosPage/QuestionsPage)
+      create_modal_title: 'New question',
+      create_question_btn: 'Create question',
+      add_question_btn: 'New question',
+      llm_generate_btn: 'Generate via LLM',
+      llm_modal_title: 'Generate questions with LLM',
+      llm_modal_desc: 'New questions land as drafts. Review and activate them from the Drafts tab before they reach learners.',
+      llm_count_label: 'How many (1-20)',
+      llm_hints_label: 'Hints (optional)',
+      llm_hints_ph: 'Constraints, themes, difficulty mix — anything to bias the model',
+      llm_running: 'Generating…',
+      edit_theory: 'Edit theory',
+      add_theory: 'Add theory',
     },
     users: {
       title: 'Users',
@@ -368,6 +392,9 @@ export default {
     },
     papers: {
       title: 'Papers',
+      add_btn: 'Add paper',
+      add_modal_title: 'New paper',
+      delete_btn: 'Delete',
       add_code_ph: 'Code (e.g. F1)',
       add_name_en_ph: 'Name (English)',
       add_name_ru_ph: 'Name (Russian, optional)',
@@ -376,6 +403,8 @@ export default {
     },
     los: {
       title: 'Learning objectives',
+      add_btn: 'Add LO',
+      add_modal_title: 'New learning objective',
       add_code_ph: 'LO code (e.g. A1)',
       add_sort_ph: 'Sort',
       add_title_en_ph: 'Title (English)',

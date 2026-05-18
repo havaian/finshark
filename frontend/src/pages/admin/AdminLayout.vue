@@ -28,11 +28,8 @@ interface NavItem {
 const navItems = computed<NavItem[]>(() => [
   { to: '/admin/users',        labelKey: 'admin.users.title',        activePrefixes: ['/admin/users'] },
   { to: '/admin/whitelist',    labelKey: 'admin.whitelist.title',    activePrefixes: ['/admin/whitelist'] },
-  // Content browser is the primary admin landing for content management.
-  // Papers and LOs as separate routes are kept around for structural ops
-  // (creating papers, reordering LOs) but the daily workflow is the browser.
-  { to: '/admin/content',      labelKey: 'admin.content.title',      activePrefixes: ['/admin/content'] },
-  { to: '/admin/papers',       labelKey: 'admin.papers.title',       activePrefixes: ['/admin/papers', '/admin/los'] },
+  // Unified content browser — the only editor for papers/LOs/questions now.
+  { to: '/admin/content',      labelKey: 'admin.content.title',      activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
   { to: '/admin/localization', labelKey: 'admin.localization.title', activePrefixes: ['/admin/localization'] },
 ]);
 

@@ -272,6 +272,17 @@ export default {
     delete_account_confirm: 'Введите свой email для подтверждения',
   },
 
+  public_profile: {
+    title: 'Профиль',
+    not_found: 'Такого пользователя не существует.',
+    lessons: 'Уроки',
+    accuracy: 'Точность',
+    badges_section: 'Полученные значки',
+    no_badges: 'Значки пока не получены.',
+    viewing_self: 'Это ваш публичный профиль — то, что видят другие, когда кликают по вашему имени.',
+    viewing_self_link: 'Открыть свой редактируемый профиль →',
+  },
+
   settings: {
     title: 'Настройки',
     appearance: 'Внешний вид',
@@ -327,6 +338,18 @@ export default {
       reseed_stat_questions: 'Вопросов вставлено: {count}.',
       reseed_stat_progress: 'Удалено {sessions} сессий, {attempts} попыток. Сброшено {users} юзер(ов).',
       reseed_stat_badges: 'Удалено {count} записей о заработанных бейджах.',
+      create_modal_title: 'Новый вопрос',
+      create_question_btn: 'Создать вопрос',
+      add_question_btn: 'Новый вопрос',
+      llm_generate_btn: 'Сгенерировать через LLM',
+      llm_modal_title: 'Генерация вопросов через LLM',
+      llm_modal_desc: 'Новые вопросы появятся как черновики. Проверь и активируй их во вкладке «Черновики», прежде чем они дойдут до учеников.',
+      llm_count_label: 'Сколько (1-20)',
+      llm_hints_label: 'Подсказки (необязательно)',
+      llm_hints_ph: 'Ограничения, темы, распределение по сложности — что угодно для уточнения',
+      llm_running: 'Генерация…',
+      edit_theory: 'Редактировать теорию',
+      add_theory: 'Добавить теорию',
     },
     users: {
       title: 'Пользователи',
@@ -361,6 +384,9 @@ export default {
     },
     papers: {
       title: 'Предметы',
+      add_btn: 'Добавить предмет',
+      add_modal_title: 'Новый предмет',
+      delete_btn: 'Удалить',
       add_code_ph: 'Код (например, F1)',
       add_name_en_ph: 'Название (английский)',
       add_name_ru_ph: 'Название (русский, необязательно)',
@@ -369,6 +395,8 @@ export default {
     },
     los: {
       title: 'Темы',
+      add_btn: 'Добавить тему',
+      add_modal_title: 'Новая тема',
       add_code_ph: 'Код темы (например, A1)',
       add_sort_ph: 'Порядок',
       add_title_en_ph: 'Название (английский)',

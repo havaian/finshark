@@ -172,7 +172,12 @@ onMounted(() => {
           >
             <td class="lb-col-rank mono">{{ e.rank }}</td>
             <td>
-              {{ e.display_name }}
+              <!-- Clickable name → public profile page. Stays a regular row
+                   (no whole-row click handler) so users can still select text
+                   in the rank/level/xp columns without accidentally navigating. -->
+              <RouterLink :to="`/users/${e.user_id}`" class="lb-name-link">
+                {{ e.display_name }}
+              </RouterLink>
               <span v-if="e.user_id === currentUserId" class="lb-you-badge">
                 {{ t('leaderboards.you_badge') }}
               </span>

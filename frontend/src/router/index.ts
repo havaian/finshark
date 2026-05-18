@@ -17,6 +17,7 @@ import { useAuthStore } from "../stores/auth.store";
 // initial dashboard load doesn't ship them. Vue Router resolves the promise
 // the first time the route is visited.
 const ProfilePage         = () => import("../pages/ProfilePage.vue");
+const PublicProfilePage   = () => import("../pages/PublicProfilePage.vue");
 const ProgressPage        = () => import("../pages/ProgressPage.vue");
 const SettingsPage        = () => import("../pages/SettingsPage.vue");
 const LeaderboardsPage    = () => import("../pages/LeaderboardsPage.vue");
@@ -24,9 +25,6 @@ const MockStartPage       = () => import("../pages/MockStartPage.vue");
 const MockBreakdownPage   = () => import("../pages/MockBreakdownPage.vue");
 const AdminLayout         = () => import("../pages/admin/AdminLayout.vue");
 const AdminUsersPage      = () => import("../pages/admin/AdminUsersPage.vue");
-const AdminPapersPage     = () => import("../pages/admin/AdminPapersPage.vue");
-const AdminLosPage        = () => import("../pages/admin/AdminLosPage.vue");
-const AdminQuestionsPage  = () => import("../pages/admin/AdminQuestionsPage.vue");
 const AdminLocalizationPage = () => import("../pages/admin/AdminLocalizationPage.vue");
 const AdminContentPage    = () => import("../pages/admin/AdminContentPage.vue");
 const AdminWhitelistPage  = () => import("../pages/admin/AdminWhitelistPage.vue");
@@ -77,6 +75,15 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    // Public profile view — clicking a user on the leaderboard lands here.
+    // Auth required: the backend endpoint requires auth, so unauthed visitors
+    // would hit a wall anyway. requiresAuth bounces them through /login first.
+    path: "/users/:id",
+    name: "public-profile",
+    component: PublicProfilePage,
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/settings",
     name: "settings",
     component: SettingsPage,
@@ -121,17 +128,6 @@ const routes: RouteRecordRaw[] = [
       { path: "", redirect: "/admin/content" },
       { path: "content", name: "admin-content", component: AdminContentPage },
       { path: "users", name: "admin-users", component: AdminUsersPage },
-      { path: "papers", name: "admin-papers", component: AdminPapersPage },
-      {
-        path: "papers/:paper_id/los",
-        name: "admin-los",
-        component: AdminLosPage,
-      },
-      {
-        path: "los/:lo_id/questions",
-        name: "admin-questions",
-        component: AdminQuestionsPage,
-      },
       {
         path: "localization",
         name: "admin-localization",
@@ -142,6 +138,12 @@ const routes: RouteRecordRaw[] = [
         name: "admin-whitelist",
         component: AdminWhitelistPage,
       },
+      // Legacy redirects: any bookmarked /admin/papers, /admin/papers/:id/los,
+      // /admin/los/:id/questions now bounce to the unified content browser.
+      // Kept for one release so external links/admin muscle memory still work.
+      { path: "papers", redirect: "/admin/content" },
+      { path: "papers/:paper_id/los", redirect: "/admin/content" },
+      { path: "los/:lo_id/questions", redirect: "/admin/content" },
     ],
   },
 ];

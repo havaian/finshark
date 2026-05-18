@@ -416,6 +416,312 @@ function extractError(e: unknown): string | null {
   return null;
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Structural ops — Add paper / Add LO / Add question / LLM generate
+// Ported from the legacy AdminPapersPage / AdminLosPage / AdminQuestionsPage
+// so the content browser is the single editor. Old pages can now be removed.
+// ─────────────────────────────────────────────────────────────────────
+
+// ---- Add paper ----
+const showAddPaper = ref(false);
+const newPaperCode = ref('');
+const newPaperNameEn = ref('');
+const newPaperNameRu = ref('');
+const addPaperBusy = ref(false);
+const addPaperError = ref<string | null>(null);
+
+function openAddPaper() {
+  newPaperCode.value = '';
+  newPaperNameEn.value = '';
+  newPaperNameRu.value = '';
+  addPaperError.value = null;
+  showAddPaper.value = true;
+}
+function closeAddPaper() {
+  if (addPaperBusy.value) return;
+  showAddPaper.value = false;
+}
+async function submitAddPaper() {
+  if (!newPaperCode.value.trim() || !newPaperNameEn.value.trim() || addPaperBusy.value) return;
+  addPaperBusy.value = true;
+  addPaperError.value = null;
+  try {
+    await adminApi.createPaper({
+      code: newPaperCode.value.trim(),
+      name_en: newPaperNameEn.value.trim(),
+      name_ru: newPaperNameRu.value.trim() || null,
+    });
+    await reloadTree();
+    showAddPaper.value = false;
+  } catch (e) {
+    addPaperError.value = extractError(e) ?? 'failed to create paper';
+  } finally {
+    addPaperBusy.value = false;
+  }
+}
+
+// ---- Delete paper ----
+async function deletePaper(paperId: string, paperCode: string) {
+  if (!confirm(t('admin.papers.delete_confirm', { code: paperCode }))) return;
+  try {
+    await adminApi.deletePaper(paperId);
+    // If a child LO of this paper was selected, drop selection.
+    if (selectedLoId.value) {
+      const stillExists = tree.value.some((p) =>
+        p.id !== paperId && p.learning_objectives.some((l) => l.id === selectedLoId.value),
+      );
+      if (!stillExists) await router.replace({ query: {} });
+    }
+    await reloadTree();
+  } catch (e) {
+    treeError.value = extractError(e) ?? 'failed to delete paper';
+  }
+}
+
+// ---- Add LO (per paper) ----
+const showAddLoForPaper = ref<string | null>(null); // paper id, or null when closed
+const newLoCode = ref('');
+const newLoTitleEn = ref('');
+const newLoTitleRu = ref('');
+const newLoDescEn = ref('');
+const newLoDescRu = ref('');
+const newLoTheoryEn = ref('');
+const newLoTheoryRu = ref('');
+const newLoSort = ref(0);
+const addLoBusy = ref(false);
+const addLoError = ref<string | null>(null);
+
+function openAddLo(paperId: string) {
+  newLoCode.value = '';
+  newLoTitleEn.value = '';
+  newLoTitleRu.value = '';
+  newLoDescEn.value = '';
+  newLoDescRu.value = '';
+  newLoTheoryEn.value = '';
+  newLoTheoryRu.value = '';
+  newLoSort.value = 0;
+  addLoError.value = null;
+  showAddLoForPaper.value = paperId;
+}
+function closeAddLo() {
+  if (addLoBusy.value) return;
+  showAddLoForPaper.value = null;
+}
+async function submitAddLo() {
+  if (!showAddLoForPaper.value) return;
+  if (!newLoCode.value.trim() || !newLoTitleEn.value.trim() || addLoBusy.value) return;
+  addLoBusy.value = true;
+  addLoError.value = null;
+  try {
+    await adminApi.createLo(showAddLoForPaper.value, {
+      code: newLoCode.value.trim(),
+      title_en: newLoTitleEn.value.trim(),
+      title_ru: newLoTitleRu.value.trim() || null,
+      description_en: newLoDescEn.value.trim() || null,
+      description_ru: newLoDescRu.value.trim() || null,
+      theory_en: newLoTheoryEn.value.trim() || null,
+      theory_ru: newLoTheoryRu.value.trim() || null,
+      sort_order: newLoSort.value,
+    });
+    await reloadTree();
+    showAddLoForPaper.value = null;
+  } catch (e) {
+    addLoError.value = extractError(e) ?? 'failed to create LO';
+  } finally {
+    addLoBusy.value = false;
+  }
+}
+
+// ---- Delete LO ----
+async function deleteLo(lo: ContentTreeLo, paperCode: string) {
+  if (!confirm(t('admin.los.delete_confirm', { code: lo.code, title: lo.title_en }))) return;
+  void paperCode; // referenced in template via tree row, used here for parity
+  try {
+    await adminApi.deleteLo(lo.id);
+    if (selectedLoId.value === lo.id) await router.replace({ query: {} });
+    await reloadTree();
+  } catch (e) {
+    treeError.value = extractError(e) ?? 'failed to delete LO';
+  }
+}
+
+// ---- Edit theory on selected LO ----
+// Inline edit panel that appears in the right-side LO header. Reuses the
+// updateLo endpoint (PATCH /admin/los/:id with theory_en/theory_ru only).
+const theoryEditOpen = ref(false);
+const theoryEditEn = ref('');
+const theoryEditRu = ref('');
+const theoryEditBusy = ref(false);
+const theoryEditError = ref<string | null>(null);
+
+async function openTheoryEdit() {
+  if (!selectedLo.value) return;
+  // Fetch the full LO to get current theory text (tree response doesn't
+  // include theory bodies — it only carries `has_theory` flag).
+  theoryEditError.value = null;
+  theoryEditBusy.value = true;
+  try {
+    const full = await adminApi.getLo(selectedLo.value.lo.id);
+    theoryEditEn.value = full.theory_en ?? '';
+    theoryEditRu.value = full.theory_ru ?? '';
+    theoryEditOpen.value = true;
+  } catch (e) {
+    theoryEditError.value = extractError(e) ?? 'failed to load theory';
+  } finally {
+    theoryEditBusy.value = false;
+  }
+}
+function closeTheoryEdit() {
+  if (theoryEditBusy.value) return;
+  theoryEditOpen.value = false;
+}
+async function saveTheoryEdit() {
+  if (!selectedLo.value) return;
+  theoryEditBusy.value = true;
+  theoryEditError.value = null;
+  try {
+    await adminApi.updateLo(selectedLo.value.lo.id, {
+      theory_en: theoryEditEn.value.trim() || null,
+      theory_ru: theoryEditRu.value.trim() || null,
+    });
+    await reloadTree(); // refreshes has_theory flag
+    theoryEditOpen.value = false;
+  } catch (e) {
+    theoryEditError.value = extractError(e) ?? 'failed to save theory';
+  } finally {
+    theoryEditBusy.value = false;
+  }
+}
+
+// ---- Add new question to selected LO ----
+// Reuses the edit-modal's form refs (editType, editPromptEn, etc.) so we
+// don't duplicate 12 reactive variables. `creatingQuestion` flag changes the
+// modal title and which endpoint we hit on save.
+const creatingQuestion = ref(false);
+
+function openCreateQuestion() {
+  if (!selectedLo.value) return;
+  editingQuestion.value = null;
+  creatingQuestion.value = true;
+  // Initial state: a blank MCQ with 4 empty options, easy difficulty.
+  editType.value = 'mcq';
+  editDifficulty.value = 'easy';
+  editPromptEn.value = '';
+  editPromptRu.value = '';
+  editOptions.value = [
+    { key: 'A', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
+    { key: 'B', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
+    { key: 'C', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
+    { key: 'D', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
+  ];
+  editCorrectEn.value = '';
+  editCorrectRu.value = '';
+  editExplanationEn.value = '';
+  editExplanationRu.value = '';
+  editConceptBiteEn.value = '';
+  editConceptBiteRu.value = '';
+  editAcceptableTolerance.value = '';
+  editLang.value = 'en';
+}
+
+function closeCreateQuestion() {
+  creatingQuestion.value = false;
+}
+
+async function submitCreateQuestion() {
+  if (!selectedLo.value || creatingQuestion.value === false) return;
+  if (!editPromptEn.value.trim() || !editCorrectEn.value.trim() || !editExplanationEn.value.trim()) return;
+  savingEdit.value = true;
+  questionsError.value = null;
+  try {
+    const correctKey = editCorrectEn.value.trim();
+    const options =
+      editType.value === 'mcq'
+        ? editOptions.value
+            .filter((o) => o.key.trim() && o.text_en.trim())
+            .map((o) => {
+              const isCorrect = o.key.trim() === correctKey;
+              return {
+                key: o.key.trim(),
+                text_en: o.text_en.trim(),
+                text_ru: blankToNull(o.text_ru ?? ''),
+                why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
+                why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
+              };
+            })
+        : null;
+    const tolRaw = editAcceptableTolerance.value.trim();
+    let tolerance: number | null = null;
+    if (editType.value === 'number_entry' && tolRaw !== '') {
+      const parsed = parseFloat(tolRaw);
+      if (Number.isFinite(parsed) && parsed >= 0) tolerance = parsed;
+    }
+
+    const created = await adminApi.createQuestion(selectedLo.value.lo.id, {
+      type: editType.value,
+      difficulty: editDifficulty.value,
+      prompt_en: editPromptEn.value.trim(),
+      prompt_ru: blankToNull(editPromptRu.value),
+      options,
+      correct_answer_en: editCorrectEn.value.trim(),
+      correct_answer_ru:
+        editType.value === 'short_answer' ? blankToNull(editCorrectRu.value) : null,
+      explanation_en: editExplanationEn.value.trim(),
+      explanation_ru: blankToNull(editExplanationRu.value),
+      concept_bite_en: blankToNull(editConceptBiteEn.value),
+      concept_bite_ru: blankToNull(editConceptBiteRu.value),
+      acceptable_tolerance: tolerance,
+    });
+    questions.value = [created, ...questions.value];
+    await reloadTree();
+    creatingQuestion.value = false;
+  } catch (e) {
+    questionsError.value = extractError(e) ?? 'failed to create question';
+  } finally {
+    savingEdit.value = false;
+  }
+}
+
+// ---- LLM generation ----
+const showLlmModal = ref(false);
+const llmCount = ref(5);
+const llmHints = ref('');
+const llmBusy = ref(false);
+const llmError = ref<string | null>(null);
+
+function openLlmModal() {
+  if (!selectedLo.value) return;
+  llmCount.value = 5;
+  llmHints.value = '';
+  llmError.value = null;
+  showLlmModal.value = true;
+}
+function closeLlmModal() {
+  if (llmBusy.value) return;
+  showLlmModal.value = false;
+}
+async function submitLlmGenerate() {
+  if (!selectedLo.value || llmBusy.value) return;
+  llmBusy.value = true;
+  llmError.value = null;
+  try {
+    const inserted = await adminApi.generateQuestions(selectedLo.value.lo.id, {
+      count: llmCount.value,
+      hints: llmHints.value.trim() || undefined,
+    });
+    // LLM-generated questions land as drafts (is_active=false). Prepend and
+    // switch the tab to 'drafts' so they're visible immediately.
+    questions.value = [...inserted, ...questions.value];
+    await router.push({ query: { ...route.query, tab: 'drafts' } });
+    await reloadTree();
+    showLlmModal.value = false;
+  } catch (e) {
+    llmError.value = extractError(e) ?? 'failed to generate questions';
+  } finally {
+    llmBusy.value = false;
+  }
+}
+
 onMounted(reloadTree);
 </script>
 
@@ -426,9 +732,16 @@ onMounted(reloadTree);
     <aside class="content-tree">
       <header class="content-tree-head">
         <h2>{{ t('admin.content.title') }}</h2>
-        <div class="row" style="gap: 8px; align-items: center;">
-          <!-- Drop & reseed: destructive — yellow/danger button. Sits next to
-               the structural-ops link because they're both "tree-level" actions. -->
+        <div class="row" style="gap: 8px; align-items: center; flex-wrap: wrap;">
+          <!-- Add paper — moved here from the legacy AdminPapersPage. -->
+          <button
+            type="button"
+            class="btn-link accent"
+            @click="openAddPaper"
+          >
+            + {{ t('admin.papers.add_btn') }}
+          </button>
+          <!-- Drop & reseed: destructive — danger styling. -->
           <button
             type="button"
             class="btn-link"
@@ -437,9 +750,6 @@ onMounted(reloadTree);
           >
             {{ t('admin.content.reseed_btn') }}
           </button>
-          <RouterLink to="/admin/papers" class="btn-link text-xs">
-            {{ t('admin.content.manage_structure') }}
-          </RouterLink>
         </div>
       </header>
       <p v-if="treeError" class="error-text">{{ treeError }}</p>
@@ -463,8 +773,23 @@ onMounted(reloadTree);
           <span class="content-tree-paper-code mono">{{ p.code }}</span>
           <span class="content-tree-paper-name">{{ p.name_en }}</span>
         </button>
+        <!-- Per-paper actions (Add LO, Delete paper). Shown only when paper
+             is expanded so collapsed view stays clean. -->
+        <div v-if="!collapsedPapers.has(p.id)" class="content-tree-paper-actions">
+          <button type="button" class="btn-link accent text-xs" @click="openAddLo(p.id)">
+            + {{ t('admin.los.add_btn') }}
+          </button>
+          <button
+            type="button"
+            class="btn-link text-xs"
+            style="color: var(--danger);"
+            @click="deletePaper(p.id, p.code)"
+          >
+            {{ t('admin.papers.delete_btn') }}
+          </button>
+        </div>
         <ul v-if="!collapsedPapers.has(p.id)" class="content-tree-los">
-          <li v-for="lo in p.learning_objectives" :key="lo.id">
+          <li v-for="lo in p.learning_objectives" :key="lo.id" class="content-tree-lo-wrap">
             <button
               type="button"
               :class="['content-tree-lo', { active: selectedLoId === lo.id }]"
@@ -481,6 +806,12 @@ onMounted(reloadTree);
                 </span>
               </span>
             </button>
+            <button
+              type="button"
+              class="content-tree-lo-del"
+              :title="t('common.delete')"
+              @click.stop="deleteLo(lo, p.code)"
+            >×</button>
           </li>
           <li v-if="p.learning_objectives.length === 0" class="dim text-xs" style="padding: 8px 12px;">
             {{ t('admin.content.no_los') }}
@@ -505,17 +836,22 @@ onMounted(reloadTree);
               <span class="mono dim" style="margin-right: 8px;">{{ selectedLo.lo.code }}</span>
               {{ selectedLo.lo.title_en }}
             </h1>
-            <p v-if="selectedLo.lo.has_theory" class="dim text-xs mt-1">
-              <span class="lo-theory-tag" style="display: inline-block;">{{ t('admin.los.theory_tag') }}</span>
-              <RouterLink :to="`/admin/papers/${selectedLo.paper.id}/los`" class="btn-link text-xs">
-                {{ t('admin.content.edit_in_los_page') }}
-              </RouterLink>
+            <p class="dim text-xs mt-1">
+              <span v-if="selectedLo.lo.has_theory" class="lo-theory-tag" style="display: inline-block;">
+                {{ t('admin.los.theory_tag') }}
+              </span>
+              <button type="button" class="btn-link text-xs" @click="openTheoryEdit">
+                {{ selectedLo.lo.has_theory ? t('admin.content.edit_theory') : t('admin.content.add_theory') }}
+              </button>
             </p>
           </div>
-          <div class="row" style="gap: 12px;">
-            <RouterLink :to="`/admin/los/${selectedLo.lo.id}/questions`" class="btn-link">
-              {{ t('admin.content.legacy_editor') }}
-            </RouterLink>
+          <div class="row" style="gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-ghost btn-sm" @click="openLlmModal">
+              ✦ {{ t('admin.content.llm_generate_btn') }}
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" @click="openCreateQuestion">
+              + {{ t('admin.content.add_question_btn') }}
+            </button>
           </div>
         </header>
 
@@ -638,16 +974,18 @@ onMounted(reloadTree);
     </section>
 
     <!-- Edit modal -->
-    <!-- Backdrop click closes only when not saving — prevents losing edits to an accidental click. -->
+    <!-- Backdrop click closes only when not saving — prevents losing edits to an accidental click.
+         The same modal is reused for both editing existing questions and
+         creating new ones; `creatingQuestion` flag determines mode. -->
     <div
-      v-if="editingQuestion"
+      v-if="editingQuestion || creatingQuestion"
       class="modal-backdrop"
-      @click="!savingEdit && closeEditModal()"
+      @click="!savingEdit && (creatingQuestion ? closeCreateQuestion() : closeEditModal())"
     >
       <div class="modal-card modal-card-wide" @click.stop>
         <header class="modal-head">
-          <h2>{{ t('admin.content.edit_modal_title') }}</h2>
-          <button type="button" class="btn-link" @click="closeEditModal">✕</button>
+          <h2>{{ creatingQuestion ? t('admin.content.create_modal_title') : t('admin.content.edit_modal_title') }}</h2>
+          <button type="button" class="btn-link" @click="creatingQuestion ? closeCreateQuestion() : closeEditModal()">✕</button>
         </header>
 
         <div class="form-grid-2">
@@ -788,10 +1126,10 @@ onMounted(reloadTree);
         </div>
 
         <div class="admin-edit-actions">
-          <button class="btn btn-primary" :disabled="savingEdit" @click="saveEdit">
-            {{ savingEdit ? t('common.saving') : t('common.save_changes') }}
+          <button class="btn btn-primary" :disabled="savingEdit" @click="creatingQuestion ? submitCreateQuestion() : saveEdit()">
+            {{ savingEdit ? t('common.saving') : (creatingQuestion ? t('admin.content.create_question_btn') : t('common.save_changes')) }}
           </button>
-          <button class="btn btn-ghost" :disabled="savingEdit" @click="closeEditModal">
+          <button class="btn btn-ghost" :disabled="savingEdit" @click="creatingQuestion ? closeCreateQuestion() : closeEditModal()">
             {{ t('common.cancel') }}
           </button>
         </div>
@@ -867,6 +1205,178 @@ onMounted(reloadTree);
             :disabled="reseedBusy"
             @click="closeReseedModal"
           >
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Add paper modal ─── -->
+    <div
+      v-if="showAddPaper"
+      class="modal-backdrop"
+      @click="closeAddPaper"
+    >
+      <div class="modal-card" @click.stop>
+        <header class="modal-head">
+          <h2>{{ t('admin.papers.add_modal_title') }}</h2>
+          <button type="button" class="btn-link" :disabled="addPaperBusy" @click="closeAddPaper">✕</button>
+        </header>
+        <div class="field">
+          <label class="field-label">{{ t('admin.papers.add_code_ph') }}</label>
+          <input v-model="newPaperCode" type="text" maxlength="16" :placeholder="t('admin.papers.add_code_ph')" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.papers.add_name_en_ph') }}</label>
+          <input v-model="newPaperNameEn" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.papers.add_name_ru_ph') }}</label>
+          <input v-model="newPaperNameRu" type="text" maxlength="200" />
+        </div>
+        <p v-if="addPaperError" class="error-text">{{ addPaperError }}</p>
+        <div class="admin-edit-actions mt-4">
+          <button
+            class="btn btn-primary"
+            :disabled="addPaperBusy || !newPaperCode.trim() || !newPaperNameEn.trim()"
+            @click="submitAddPaper"
+          >
+            {{ addPaperBusy ? t('common.adding') : t('common.add') }}
+          </button>
+          <button class="btn btn-ghost" :disabled="addPaperBusy" @click="closeAddPaper">
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Add LO modal ─── -->
+    <div
+      v-if="showAddLoForPaper"
+      class="modal-backdrop"
+      @click="closeAddLo"
+    >
+      <div class="modal-card modal-card-wide" @click.stop>
+        <header class="modal-head">
+          <h2>{{ t('admin.los.add_modal_title') }}</h2>
+          <button type="button" class="btn-link" :disabled="addLoBusy" @click="closeAddLo">✕</button>
+        </header>
+        <div class="form-grid-2">
+          <div class="field">
+            <label class="field-label">{{ t('admin.los.add_code_ph') }}</label>
+            <input v-model="newLoCode" type="text" maxlength="32" :placeholder="t('admin.los.add_code_ph')" />
+          </div>
+          <div class="field">
+            <label class="field-label">{{ t('admin.los.add_sort_ph') }}</label>
+            <input v-model.number="newLoSort" type="number" min="0" />
+          </div>
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_title_en_ph') }}</label>
+          <input v-model="newLoTitleEn" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_title_ru_ph') }}</label>
+          <input v-model="newLoTitleRu" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_description_en_ph') }}</label>
+          <textarea v-model="newLoDescEn" rows="2" maxlength="2000"></textarea>
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_description_ru_ph') }}</label>
+          <textarea v-model="newLoDescRu" rows="2" maxlength="2000"></textarea>
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_theory_en_ph') }}</label>
+          <textarea v-model="newLoTheoryEn" rows="4" maxlength="8000"></textarea>
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_theory_ru_ph') }}</label>
+          <textarea v-model="newLoTheoryRu" rows="4" maxlength="8000"></textarea>
+        </div>
+        <p v-if="addLoError" class="error-text">{{ addLoError }}</p>
+        <div class="admin-edit-actions mt-4">
+          <button
+            class="btn btn-primary"
+            :disabled="addLoBusy || !newLoCode.trim() || !newLoTitleEn.trim()"
+            @click="submitAddLo"
+          >
+            {{ addLoBusy ? t('common.adding') : t('common.add') }}
+          </button>
+          <button class="btn btn-ghost" :disabled="addLoBusy" @click="closeAddLo">
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Edit theory modal ─── -->
+    <div
+      v-if="theoryEditOpen"
+      class="modal-backdrop"
+      @click="closeTheoryEdit"
+    >
+      <div class="modal-card modal-card-wide" @click.stop>
+        <header class="modal-head">
+          <h2>{{ t('admin.content.edit_theory') }}</h2>
+          <button type="button" class="btn-link" :disabled="theoryEditBusy" @click="closeTheoryEdit">✕</button>
+        </header>
+        <div class="field">
+          <label class="field-label">{{ t('admin.los.add_theory_en_ph') }}</label>
+          <textarea v-model="theoryEditEn" rows="8" maxlength="8000"></textarea>
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_theory_ru_ph') }}</label>
+          <textarea v-model="theoryEditRu" rows="8" maxlength="8000"></textarea>
+        </div>
+        <p v-if="theoryEditError" class="error-text">{{ theoryEditError }}</p>
+        <div class="admin-edit-actions mt-4">
+          <button class="btn btn-primary" :disabled="theoryEditBusy" @click="saveTheoryEdit">
+            {{ theoryEditBusy ? t('common.saving') : t('common.save_changes') }}
+          </button>
+          <button class="btn btn-ghost" :disabled="theoryEditBusy" @click="closeTheoryEdit">
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── LLM generate modal ─── -->
+    <div
+      v-if="showLlmModal"
+      class="modal-backdrop"
+      @click="closeLlmModal"
+    >
+      <div class="modal-card" @click.stop>
+        <header class="modal-head">
+          <h2>{{ t('admin.content.llm_modal_title') }}</h2>
+          <button type="button" class="btn-link" :disabled="llmBusy" @click="closeLlmModal">✕</button>
+        </header>
+        <p class="dim text-sm">{{ t('admin.content.llm_modal_desc') }}</p>
+        <div class="field mt-4">
+          <label class="field-label">{{ t('admin.content.llm_count_label') }}</label>
+          <input v-model.number="llmCount" type="number" min="1" max="20" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.content.llm_hints_label') }}</label>
+          <textarea
+            v-model="llmHints"
+            rows="3"
+            maxlength="1000"
+            :placeholder="t('admin.content.llm_hints_ph')"
+          ></textarea>
+        </div>
+        <p v-if="llmError" class="error-text">{{ llmError }}</p>
+        <div class="admin-edit-actions mt-4">
+          <button
+            class="btn btn-primary"
+            :disabled="llmBusy || llmCount < 1 || llmCount > 20"
+            @click="submitLlmGenerate"
+          >
+            {{ llmBusy ? t('admin.content.llm_running') : t('admin.content.llm_generate_btn') }}
+          </button>
+          <button class="btn btn-ghost" :disabled="llmBusy" @click="closeLlmModal">
             {{ t('common.cancel') }}
           </button>
         </div>

@@ -2906,3 +2906,60 @@ textarea { resize: vertical; min-height: 80px; }
   .landing-steps-list { gap: 22px; }
   .landing-step-num { width: 32px; height: 32px; font-size: 14px; }
 }
+
+/* -----------------------------------------------------------
+   41) Admin content tree — per-paper / per-LO action buttons
+   ----------------------------------------------------------- */
+
+/* Per-paper action row (Add LO / Delete paper). Sits indented under the paper
+   header when expanded, so it visually belongs to that paper. */
+.content-tree-paper-actions {
+  display: flex;
+  gap: 12px;
+  padding: 4px 12px 4px 28px;
+  font-size: 12px;
+}
+
+/* LO row wrapper holds the existing button + the new delete-× button side by
+   side. Hover surfaces the × so the tree stays tidy when not actively editing. */
+.content-tree-lo-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+.content-tree-lo-wrap > .content-tree-lo {
+  flex: 1;
+  min-width: 0;
+}
+.content-tree-lo-del {
+  flex-shrink: 0;
+  width: 24px;
+  background: transparent;
+  border: none;
+  color: var(--text-mute);
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 80ms ease, color 80ms ease;
+}
+.content-tree-lo-wrap:hover .content-tree-lo-del {
+  opacity: 1;
+}
+.content-tree-lo-del:hover {
+  color: var(--danger);
+}
+
+/* -----------------------------------------------------------
+   42) Leaderboard — clickable name links
+   ----------------------------------------------------------- */
+
+/* Inline link styling: inherit colour from the row (so it doesn't stand out
+   like a regular link), but underline on hover to signal interactivity. */
+.lb-name-link {
+  color: inherit;
+  text-decoration: none;
+}
+.lb-name-link:hover {
+  text-decoration: underline;
+  color: var(--accent);
+}

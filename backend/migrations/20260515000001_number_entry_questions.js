@@ -1,57 +1,31 @@
-// Number-entry question type — for F3-style "calculate the closing balance"
-// questions where the user types a numeric answer.
+// Number-entry question type — STAGE 1 of 2.
 //
-// Three changes:
-//  1) Extend the question_type enum with 'number_entry'.
-//  2) Add acceptable_tolerance (REAL, nullable) — when set, an answer within
-//     ±tolerance of correct_answer_en (parsed as a number) grades as correct.
-//     NULL = exact match required.
-//  3) Update chk_mcq_options to allow number_entry rows (must have no options
-//     array, same as short_answer).
+// Postgres won't let you use a newly-added enum value inside the same
+// transaction that added it ("unsafe use of new value ... New enum values
+// must be committed before they can be used"). node-pg-migrate runs each
+// migration in a transaction by default, so we MUST split:
+//
+//   - This migration: only ALTER TYPE ... ADD VALUE, with disableTransaction
+//     so the new value is committed immediately.
+//   - The next migration (20260515000001b_number_entry_constraint.js):
+//     adds the column and the CHECK constraint that references the new
+//     enum value.
 //
 // Down migration:
-//  - Restoring the old constraint is straightforward, but you cannot DROP a
-//    value from a Postgres enum once added. The down path leaves 'number_entry'
-//    in the enum and just unsets the column + constraint. Anyone who was using
-//    this migration in dev should re-init their DB if they need a fully clean
-//    rollback.
+//   - You cannot DROP a value from a Postgres enum once added. The down path
+//     here is a no-op for the enum. Anyone who needs a clean rollback should
+//     re-init the DB.
 
 exports.shorthands = undefined;
 
+// Run this migration outside a transaction so the ADD VALUE commits before
+// the next migration tries to use it. This is the magic flag.
 exports.up = (pgm) => {
   pgm.addTypeValue('question_type', 'number_entry', { ifNotExists: true });
-
-  pgm.addColumns('questions', {
-    // Absolute tolerance for number_entry matching. NULL = exact match required.
-    // Example: correct_answer_en='12.5', tolerance=0.05 → accepts 12.45..12.55.
-    acceptable_tolerance: { type: 'real' },
-  });
-
-  // Replace the constraint to cover the new type. number_entry behaves like
-  // short_answer w.r.t. options (must be NULL) but stores its canonical value
-  // as a numeric string in correct_answer_en. We don't validate "is this a
-  // valid number?" at the DB layer — the app validates on insert/update.
-  pgm.dropConstraint('questions', 'chk_mcq_options');
-  pgm.addConstraint('questions', 'chk_question_type_options', {
-    check: `
-      (type = 'mcq'          AND options IS NOT NULL AND jsonb_typeof(options) = 'array')
-      OR
-      (type = 'short_answer' AND options IS NULL)
-      OR
-      (type = 'number_entry' AND options IS NULL)
-    `,
-  });
 };
+exports.up.disableTransaction = true;
 
 exports.down = (pgm) => {
-  pgm.dropConstraint('questions', 'chk_question_type_options');
-  pgm.addConstraint('questions', 'chk_mcq_options', {
-    check: `
-      (type = 'mcq'          AND options IS NOT NULL AND jsonb_typeof(options) = 'array')
-      OR
-      (type = 'short_answer' AND options IS NULL)
-    `,
-  });
-  pgm.dropColumns('questions', ['acceptable_tolerance']);
   // NOTE: 'number_entry' value remains in the enum (Postgres limitation).
+  // No-op intentionally — see header comment.
 };

@@ -17,8 +17,8 @@ import {
 // time_budget_minutes is constrained to 5..60 (matches the DB check) — outside
 // that is unrealistic for both ends.
 //
-// preferred_paper_id is a UUID; we don't validate as IsUUID() to stay consistent
-// with the rest of the codebase, which treats paper IDs as opaque strings.
+// preferred_paper_id is a bigint PK serialized as a string by postgres.js, not
+// a UUID. We accept it as a plain @IsString() — IsUUID would reject valid IDs.
 export class CompleteOnboardingDto {
   @IsOptional()
   @IsEnum(['beginner', 'intermediate', 'advanced'])

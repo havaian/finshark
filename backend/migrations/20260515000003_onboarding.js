@@ -33,7 +33,7 @@ exports.up = (pgm) => {
     bg_level: { type: 'bg_level' }, // nullable — never set = skipped or pre-onboarding user
     time_budget_minutes: { type: 'integer', notNull: true, default: 15 },
     preferred_paper_id: {
-      type: 'uuid',
+      type: 'bigint',
       references: 'papers(id)',
       onDelete: 'SET NULL', // paper deleted -> just unset, don't cascade-delete the user
     },

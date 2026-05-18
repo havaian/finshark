@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { adminApi } from '../../api/admin.api';
 import { useAuthStore } from '../../stores/auth.store';
+import { fmtDate } from '../../i18n/dates';
 import type { PublicUser } from '../../types/auth';
 
 const { t } = useI18n();
@@ -69,11 +70,6 @@ function extractError(e: unknown): string | null {
     return Array.isArray(msg) ? msg.join(', ') : msg ?? null;
   }
   return null;
-}
-
-function fmtDate(iso: string | null): string {
-  if (!iso) return '—';
-  return iso; // already YYYY-MM-DD from backend toPublicUser
 }
 
 onMounted(load);

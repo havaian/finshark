@@ -22,6 +22,7 @@ import { badgesApi } from '../api/badges.api';
 import type { PublicBadge } from '../types/badges';
 import { useAuthStore } from '../stores/auth.store';
 import { useThemeStore } from '../stores/theme.store';
+import { fmtDate } from '../i18n/dates';
 import AppNav from '../components/AppNav.vue';
 
 // Register only the chart.js modules we use — reduces bundle size.
@@ -33,7 +34,7 @@ Chart.register(
   Tooltip, Legend,
 );
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const auth = useAuthStore();
 const theme = useThemeStore();
 const router = useRouter();
@@ -76,9 +77,14 @@ const accuracyPctDisplay = computed(() => {
   return `${Math.round(p)}%`;
 });
 
+// Joined date — depends on the active locale; using a computed so it auto-
+// updates when the user toggles language at runtime.
 const joinedDate = computed(() => {
   if (!me.value) return '';
-  return me.value.created_at.slice(0, 10);
+  // Reading `locale.value` ties this computed to language changes, so the
+  // returned string refreshes when the user toggles EN/RU in settings.
+  void locale.value;
+  return fmtDate(me.value.created_at);
 });
 
 async function load() {
@@ -127,6 +133,29 @@ watch(
     if (!stats.value) return;
     await nextTick();
     renderCharts();
+  },
+);
+
+// Reload badges when the UI language changes — the backend localises
+// name/description server-side based on the X-Lang header, so re-fetching is
+// the cheapest way to get translated copy. Charts also re-render so axis
+// labels & legends update.
+watch(
+  () => locale.value,
+  async () => {
+    badgesLoading.value = true;
+    try {
+      const rows = await badgesApi.getMine();
+      badges.value = rows;
+    } catch {
+      // Keep previous list if fetch fails — better than wiping the section.
+    } finally {
+      badgesLoading.value = false;
+    }
+    if (stats.value) {
+      await nextTick();
+      renderCharts();
+    }
   },
 );
 
@@ -316,7 +345,11 @@ const monthShort = (date: Date, lang: string): string => {
 const heatmapData = computed<{ weeks: HeatCell[][]; months: MonthLabel[] }>(() => {
   if (!stats.value) return { weeks: [], months: [] };
   const byDay = new Map(stats.value.activity_heatmap.map((r) => [r.day, r.attempts_count]));
-  const lang = (typeof navigator !== 'undefined' && navigator.language) || 'en';
+  // Read the active UI language from vue-i18n's locale ref so month labels
+  // re-render when the user toggles EN/RU at runtime. We do NOT use
+  // navigator.language because that's the browser's system locale, which
+  // may not match the app's chosen language.
+  const lang = locale.value;
 
   // Build the last 365 days, starting from Sunday of (today − 52 weeks).
   const today = new Date();
@@ -395,12 +428,20 @@ const weekdayLabels = computed(() => ({
   fri: t('profile.heatmap_day_fri'),
 }));
 
-// Pretty date for the tooltip — uses the active language's locale formatting.
+// Pretty date for the tooltip — uses the active UI language (vue-i18n
+// locale, not navigator.language). The heatmap-day strings come from the
+// backend as plain YYYY-MM-DD assumed UTC, so we parse with the explicit
+// 'T00:00:00Z' suffix and format in UTC to keep the displayed date matching
+// the bucket the count was aggregated against (a user in UTC+8 hovering an
+// "April 7" cell should see "April 7", not "April 6").
 function fmtTooltipDate(iso: string): string {
+  // Touching locale.value here ties the function's output to language changes
+  // via the consumer template (which re-renders when locale flips).
+  void locale.value;
   try {
     const d = new Date(iso + 'T00:00:00Z');
-    const lang = (typeof navigator !== 'undefined' && navigator.language) || 'en';
-    return new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'en-US', {
+    const intlLang = locale.value === 'ru' ? 'ru-RU' : 'en-US';
+    return new Intl.DateTimeFormat(intlLang, {
       year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
     }).format(d);
   } catch {
@@ -461,7 +502,7 @@ onMounted(load);
 <template>
   <main class="page">
     <AppNav />
-    <div class="container-wide">
+    <div class="container">
 
       <header class="page-head">
         <h1>{{ t('profile.title') }}</h1>

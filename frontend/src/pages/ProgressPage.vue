@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { progressApi } from '../api/progress.api';
+import { fmtDateTime } from '../i18n/dates';
 import AppNav from '../components/AppNav.vue';
 import type {
   MasteryBand,
@@ -55,9 +56,9 @@ function masteryText(lo: ProgressHeatMapLo): string {
 }
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  // Localised via Intl.DateTimeFormat — output respects the active UI lang
+  // (EN: "15 May 2026, 14:32" / RU: "15 мая 2026 г., 14:32").
+  return fmtDateTime(iso);
 }
 
 onMounted(load);
@@ -66,7 +67,7 @@ onMounted(load);
 <template>
   <main class="page">
     <AppNav />
-    <div class="container-wide">
+    <div class="container">
 
       <header class="page-head">
         <h1>{{ t('progress.title') }}</h1>

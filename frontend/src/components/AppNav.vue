@@ -69,13 +69,15 @@ function onLogout() {
       <div class="app-nav-right">
         <!-- Stats pills: streak + XP. Cheap visibility into progress on every
              page so the user always sees their numbers. Hidden when no user
-             yet to avoid layout jitter during fetchMe. -->
+             yet to avoid layout jitter during fetchMe. Hovering a pill pops a
+             small CSS tooltip explaining what each icon means — useful for new
+             users who haven't seen the dashboard yet. -->
         <div v-if="auth.user" class="app-nav-stats">
-          <span class="app-nav-stat" :title="t('dashboard.streak')">
+          <span class="app-nav-stat" :data-tip="t('nav.stat_streak_tip')">
             <span class="app-nav-stat-icon">🔥</span>
             <span class="app-nav-stat-val">{{ auth.user.streak_count }}</span>
           </span>
-          <span class="app-nav-stat" :title="t('dashboard.xp')">
+          <span class="app-nav-stat" :data-tip="t('nav.stat_xp_tip')">
             <span class="app-nav-stat-icon">✦</span>
             <span class="app-nav-stat-val">{{ auth.user.xp }}</span>
           </span>

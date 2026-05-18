@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { adminApi } from '../../api/admin.api';
+import { fmtDate } from '../../i18n/dates';
 import type { WhitelistEntry } from '../../types/whitelist';
 
 // Admin: manage the email whitelist.
@@ -127,10 +128,6 @@ function extractError(e: unknown): string | null {
     return Array.isArray(msg) ? msg.join(', ') : msg ?? null;
   }
   return null;
-}
-
-function fmtDate(iso: string): string {
-  return iso.slice(0, 10);
 }
 
 onMounted(load);

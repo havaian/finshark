@@ -805,9 +805,38 @@ textarea { resize: vertical; min-height: 80px; }
   background: var(--bg-elev);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
+  position: relative;
+  cursor: default;
 }
 .app-nav-stat-icon { font-size: 11px; opacity: 0.9; }
 .app-nav-stat-val { font-weight: 500; }
+
+/* Hover tooltip on stat pills. Uses [data-tip] so we don't fight with the
+   native title attribute (which is slow and ugly). Pure CSS — no JS needed. */
+.app-nav-stat[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  /* No transform: scale (per user preference) — fade in only. */
+  transition: opacity 120ms ease;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.app-nav-stat[data-tip]:hover::after {
+  opacity: 1;
+}
 
 /* Admin entry button — vivid neon-violet accent. Stands out so admins can spot
    it from any page. Distinct from --accent (brand sage) so it can't be confused
@@ -2651,4 +2680,229 @@ textarea { resize: vertical; min-height: 80px; }
   textarea {
     font-size: 16px; /* prevents iOS auto-zoom on focus */
   }
+}
+
+/* -----------------------------------------------------------
+   40) Landing page (/) — marketing surface for signed-out visitors
+   -----------------------------------------------------------
+   Self-contained: doesn't reuse .page / .container because those impose a
+   max-width that's too narrow for hero typography. The landing has its own
+   .landing-container (1100px) and full-bleed sections. */
+
+.landing {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.landing-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.landing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+}
+.landing-nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Hero — generous vertical space, big headline. Uses a subtle radial gradient
+   behind to lift the text off the background without resorting to a hero
+   image we'd have to design. */
+.landing-hero {
+  padding: 96px 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+.landing-hero::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 600px;
+  background: radial-gradient(
+    ellipse at center,
+    var(--accent-glow) 0%,
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.landing-hero > .landing-container {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.landing-hero-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 18px;
+  padding: 4px 12px;
+  border: 1px solid var(--accent-deep);
+  border-radius: 999px;
+  background: var(--accent-soft-bg);
+}
+.landing-hero-title {
+  font-size: 56px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 0 18px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.landing-hero-sub {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  max-width: 620px;
+  margin: 0 auto 32px;
+}
+.landing-cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.landing-hero-foot {
+  margin: 8px 0 0;
+}
+
+/* Larger button variant for landing CTAs. Only used here. */
+.btn-lg {
+  padding: 14px 26px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  min-height: 48px;
+}
+
+.landing-section-title {
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0 0 40px;
+}
+
+.landing-features { padding: 80px 0; }
+.landing-features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.landing-feature {
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-card);
+}
+.landing-feature h3 {
+  font-size: 18px;
+  margin: 14px 0 8px;
+}
+.landing-feature p {
+  margin: 0;
+  line-height: 1.55;
+  font-size: 14px;
+}
+.landing-feature-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.landing-steps {
+  padding: 80px 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.landing-steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.landing-steps-list > li {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+}
+.landing-step-num {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+.landing-steps-list h3 {
+  font-size: 18px;
+  margin: 6px 0 6px;
+}
+.landing-steps-list p {
+  margin: 0;
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.landing-cta-bottom {
+  padding: 96px 0;
+}
+
+.landing-foot {
+  padding: 28px 0 40px;
+  border-top: 1px solid var(--border);
+}
+
+/* Landing mobile polish */
+@media (max-width: 720px) {
+  .landing-hero { padding: 56px 0 48px; }
+  .landing-hero-title { font-size: 36px; }
+  .landing-hero-sub { font-size: 16px; }
+  .landing-features { padding: 56px 0; }
+  .landing-steps { padding: 56px 0; }
+  .landing-cta-bottom { padding: 56px 0; }
+  .landing-section-title { font-size: 24px; margin-bottom: 28px; }
+  .landing-features-grid { grid-template-columns: 1fr; gap: 14px; }
+  .landing-feature { padding: 22px; }
+  .btn-lg { padding: 12px 22px; font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .landing-container { padding: 0 14px; }
+  .landing-nav-inner { padding: 0 14px; }
+  .landing-hero-title { font-size: 30px; }
+  .landing-cta-row { flex-direction: column; align-items: stretch; }
+  .landing-steps-list { gap: 22px; }
+  .landing-step-num { width: 32px; height: 32px; font-size: 14px; }
 }

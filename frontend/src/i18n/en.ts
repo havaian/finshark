@@ -51,12 +51,44 @@ export default {
     admin_panel: 'Admin panel',
     back_to_dashboard: '← Back to dashboard',
     back_to_app: '← Back to app',
+    stat_streak_tip: 'Daily streak — number of consecutive days with at least one lesson.',
+    stat_xp_tip: 'Experience points — earned for correct answers and completed lessons.',
   },
 
   home: {
     title: 'Finshark',
     tagline: 'Daily micro-lessons for the ACCA exams.',
     cta: 'Get started',
+  },
+
+  landing: {
+    eyebrow: 'ACCA preparation, redesigned',
+    hero_title: 'Pass your ACCA exams 10 minutes at a time.',
+    hero_sub: 'Bite-sized daily lessons with adaptive practice, instant explanations, and a streak that keeps you honest.',
+    cta_primary: 'Start learning',
+    cta_secondary: 'See how it works',
+    hero_foot: 'Free during early access. Sign in with Google — no card required.',
+
+    features_title: 'Built for the way you actually study',
+    feature_1_title: 'Fast micro-lessons',
+    feature_1_body: '5 to 10 questions a day. Fits into the gap between meetings, the train ride, the coffee break.',
+    feature_2_title: 'Adaptive difficulty',
+    feature_2_body: 'Spaced repetition surfaces what you got wrong yesterday, so you actually remember it next month.',
+    feature_3_title: 'Streaks that motivate',
+    feature_3_body: 'Daily streak, XP, and badges. Skip a day and you start over — the way it works in real life.',
+    feature_4_title: 'See your weak spots',
+    feature_4_body: 'Syllabus coverage heatmap shows exactly which topics you have nailed and which need work before exam day.',
+
+    steps_title: 'How it works',
+    step_1_title: 'Pick a paper',
+    step_1_body: 'F1, F2, F3 — pick what you are studying. Add more papers as you go.',
+    step_2_title: 'Answer 5 to 10 questions',
+    step_2_body: 'Mix of multiple-choice, short answer, and numeric. Instant feedback and an explanation after every answer.',
+    step_3_title: 'Come back tomorrow',
+    step_3_body: 'Reminders, mock exams, and a syllabus heatmap that grows greener the closer you get to exam-ready.',
+
+    bottom_cta_title: 'Ready when you are.',
+    bottom_cta_sub: 'Sign in and try a lesson. Takes about three minutes.',
   },
 
   login: {

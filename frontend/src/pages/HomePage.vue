@@ -1,40 +1,154 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
+import ThemeSwitch from '../components/ThemeSwitch.vue';
 
-// Home / root route. We don't actually render any meaningful content here in
-// Phase 2 — the proper landing is a Phase-3 deliverable. For now:
-//   - authed users go straight to /dashboard
-//   - unauthed users go to /login
-// Avoids the "logged in but staring at a marketing page" state and removes
-// the dead manual click that used to live here.
+// Landing page. Reached at '/'.
 //
-// The redirect happens in onMounted (after the auth store has hydrated from
-// localStorage in main.ts) and uses router.replace so the user can hit Back
-// to leave the app without bouncing through '/'.
+// Behaviour:
+//   - Authed users get bounced to /dashboard so they don't sit on marketing
+//     content when they're trying to study. The redirect runs in onMounted
+//     (after auth store hydrates from localStorage in main.ts) and uses
+//     router.replace so the user can hit Back to leave the app cleanly.
+//   - Unauthed users see the full landing.
+//
+// The CTA buttons link to /login (which still owns the actual Google OAuth
+// trigger). We never call /auth/google from here — keeps the landing layer
+// purely informational and means we can plug in a passwords flow later
+// without touching this page.
+//
+// Content uses i18n keys under landing.* so EN/RU swap cleanly.
+
+const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 
 onMounted(() => {
   if (auth.isAuthenticated) {
     router.replace({ name: 'dashboard' });
-  } else {
-    router.replace({ name: 'login' });
   }
 });
 </script>
 
 <template>
-  <!-- Render nothing meaningful — the onMounted hook replaces this route
-       immediately. Keeping the <main> in place gives Vue Router something to
-       mount cleanly and prevents a single frame of unstyled flash. -->
-  <main class="auth-page">
-    <div class="container-narrow" style="text-align: center;">
-      <div class="brand" style="justify-content: center;">
-        <div class="brand-mark"></div>
-        <span style="font-size: 18px;">Finshark</span>
+  <main class="landing">
+    <!-- Top bar: brand + theme switch + Sign-in. Mirrors a typical marketing
+         site nav. Sticky like AppNav for the same reason — content scrolls
+         under it. -->
+    <header class="landing-nav">
+      <div class="landing-nav-inner">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <span>Finshark</span>
+        </div>
+        <div class="row" style="gap: 10px; align-items: center;">
+          <ThemeSwitch />
+          <RouterLink to="/login" class="btn btn-ghost btn-sm">
+            {{ t('common.sign_in') }}
+          </RouterLink>
+        </div>
       </div>
-    </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="landing-hero">
+      <div class="landing-container">
+        <div class="landing-hero-eyebrow">{{ t('landing.eyebrow') }}</div>
+        <h1 class="landing-hero-title">{{ t('landing.hero_title') }}</h1>
+        <p class="landing-hero-sub">{{ t('landing.hero_sub') }}</p>
+        <div class="landing-cta-row">
+          <RouterLink to="/login" class="btn btn-primary btn-lg">
+            {{ t('landing.cta_primary') }}
+          </RouterLink>
+          <a href="#features" class="btn btn-ghost btn-lg">
+            {{ t('landing.cta_secondary') }}
+          </a>
+        </div>
+        <p class="landing-hero-foot dim text-sm">{{ t('landing.hero_foot') }}</p>
+      </div>
+    </section>
+
+    <!-- Features grid: 3 cards. Kept minimal — emoji-style icons (no asset
+         pipeline) and one-line headlines. -->
+    <section id="features" class="landing-features">
+      <div class="landing-container">
+        <h2 class="landing-section-title">{{ t('landing.features_title') }}</h2>
+        <div class="landing-features-grid">
+          <div class="landing-feature">
+            <div class="landing-feature-icon">⚡</div>
+            <h3>{{ t('landing.feature_1_title') }}</h3>
+            <p class="dim">{{ t('landing.feature_1_body') }}</p>
+          </div>
+          <div class="landing-feature">
+            <div class="landing-feature-icon">🎯</div>
+            <h3>{{ t('landing.feature_2_title') }}</h3>
+            <p class="dim">{{ t('landing.feature_2_body') }}</p>
+          </div>
+          <div class="landing-feature">
+            <div class="landing-feature-icon">🔥</div>
+            <h3>{{ t('landing.feature_3_title') }}</h3>
+            <p class="dim">{{ t('landing.feature_3_body') }}</p>
+          </div>
+          <div class="landing-feature">
+            <div class="landing-feature-icon">📊</div>
+            <h3>{{ t('landing.feature_4_title') }}</h3>
+            <p class="dim">{{ t('landing.feature_4_body') }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works — 3 steps, numbered. Minimal copy on each. -->
+    <section class="landing-steps">
+      <div class="landing-container">
+        <h2 class="landing-section-title">{{ t('landing.steps_title') }}</h2>
+        <ol class="landing-steps-list">
+          <li>
+            <span class="landing-step-num">1</span>
+            <div>
+              <h3>{{ t('landing.step_1_title') }}</h3>
+              <p class="dim">{{ t('landing.step_1_body') }}</p>
+            </div>
+          </li>
+          <li>
+            <span class="landing-step-num">2</span>
+            <div>
+              <h3>{{ t('landing.step_2_title') }}</h3>
+              <p class="dim">{{ t('landing.step_2_body') }}</p>
+            </div>
+          </li>
+          <li>
+            <span class="landing-step-num">3</span>
+            <div>
+              <h3>{{ t('landing.step_3_title') }}</h3>
+              <p class="dim">{{ t('landing.step_3_body') }}</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Bottom CTA -->
+    <section class="landing-cta-bottom">
+      <div class="landing-container" style="text-align: center;">
+        <h2 class="landing-section-title">{{ t('landing.bottom_cta_title') }}</h2>
+        <p class="dim" style="margin-bottom: 22px;">{{ t('landing.bottom_cta_sub') }}</p>
+        <RouterLink to="/login" class="btn btn-primary btn-lg">
+          {{ t('landing.cta_primary') }}
+        </RouterLink>
+      </div>
+    </section>
+
+    <footer class="landing-foot">
+      <div class="landing-container row" style="justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <span>Finshark</span>
+        </div>
+        <span class="dim text-xs">© Finshark</span>
+      </div>
+    </footer>
   </main>
 </template>

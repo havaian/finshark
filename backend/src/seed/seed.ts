@@ -15,11 +15,13 @@
 import "dotenv/config";
 import postgres from "postgres";
 import { F1_PAPER } from "./data/f1";
-import { F5_PAPER } from "./data/f5";
+import { F2_PAPER } from "./data/f2";
+import { F3_PAPER } from "./data/f3";
 import { BADGES } from "./data/badges";
 import type { SeedPaper, SeedQuestion } from "./data/types";
 
-const PAPERS: SeedPaper[] = [F1_PAPER, F5_PAPER];
+// PAPERS array
+const PAPERS: SeedPaper[] = [F1_PAPER, F2_PAPER, F3_PAPER];
 
 async function main() {
   const url = process.env.DATABASE_URL;

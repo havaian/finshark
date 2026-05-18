@@ -102,7 +102,7 @@ function extractError(e: unknown): string | null {
           </span>
         </p>
 
-        <div v-else class="row">
+        <div v-else class="row dashboard-start-row">
           <select v-model="selectedPaperId" class="grow">
             <option value="">{{ t('dashboard.any_paper') }}</option>
             <option v-for="p in papers" :key="p.id" :value="p.id">

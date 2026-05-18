@@ -662,6 +662,10 @@ textarea { resize: vertical; min-height: 80px; }
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-top: 14px;
+  /* min-width:0 prevents the grid container from forcing its track-min based on
+     intrinsic content width — long LO titles inside .tile-title would otherwise
+     blow the columns wider than the parent .card, causing horizontal overflow. */
+  min-width: 0;
 }
 @media (min-width: 640px) { .heat { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1024px) { .heat { grid-template-columns: repeat(4, 1fr); } }
@@ -676,10 +680,19 @@ textarea { resize: vertical; min-height: 80px; }
   flex-direction: column;
   justify-content: space-between;
   cursor: default;
+  /* Same reason as above on the grid track: a grid item defaults to
+     min-width:auto which means "as wide as my content". Long titles inside
+     overflow the tile rather than truncate via ellipsis. */
+  min-width: 0;
+  overflow: hidden;
 }
+/* The inner div wrapping code + title also needs min-width:0 so its child
+   .tile-title actually obeys overflow:hidden/text-overflow:ellipsis instead
+   of pushing the flex parent wide. */
+.tile > div { min-width: 0; }
 .tile-code  { font-family: "Geist Mono", monospace; font-size: 12px; font-weight: 500; }
 .tile-title { font-size: 13px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tile-meta  { font-family: "Geist Mono", monospace; font-size: 11px; opacity: 0.75; }
+.tile-meta  { font-family: "Geist Mono", monospace; font-size: 11px; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .tile-grey  .tile-code, .tile-grey .tile-title { color: var(--text-mute); }
 .tile-red   { border-color: var(--danger-border);  background: var(--danger-bg); }
@@ -2493,5 +2506,149 @@ textarea { resize: vertical; min-height: 80px; }
   .mock-option-compact {
     padding: 8px 12px;
     min-width: 64px;
+  }
+}
+
+/* -----------------------------------------------------------
+   39) Mobile polish — comprehensive ≤640px and ≤480px rules
+   ----------------------------------------------------------- */
+
+/* Compact page padding and headers on small screens — the default 48px/24px
+   eats too much vertical space when the viewport is small. */
+@media (max-width: 640px) {
+  .page          { padding: 24px 14px; }
+  .page-tight    { padding: 16px 12px; }
+  .container,
+  .container-wide,
+  .container-narrow { max-width: 100%; }
+
+  .page-head { margin-bottom: 20px; }
+  .page-head h1 { font-size: 24px; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 19px; }
+  h3 { font-size: 16px; }
+
+  .card { padding: 18px; border-radius: 12px; }
+  .card + .card { margin-top: 12px; }
+}
+
+/* AppNav: collapse stats pills and shrink admin button before the breakpoint
+   that's already in section 15b. Section 15b handles ≤720px; this layer fine-
+   tunes ≤480px further (single-row brand only + iconified actions). */
+@media (max-width: 480px) {
+  /* Already hides stats and shrinks admin via the 720px rule; here we go a step
+     further by collapsing the brand text and tightening gaps so the nav fits
+     on a phone in portrait without horizontal scroll. */
+  .app-nav { padding: 10px 12px; margin: -24px -14px 20px; }
+  .app-nav-inner { gap: 8px; }
+  .app-nav-left { gap: 8px; }
+  .app-nav-brand span { display: none; } /* brand mark only */
+  .app-nav-link { padding: 5px 7px; font-size: 12.5px; }
+  .app-nav-right { gap: 6px; }
+  .app-nav-admin-btn { padding: 4px 8px; font-size: 11px; }
+  .app-nav-icon-btn,
+  .app-nav-avatar { width: 28px; height: 28px; }
+  /* Theme switch + sign-out button: keep them but tighter. The sign-out btn
+     keeps its label because users expect a clear logout action. */
+  .app-nav-right .btn.btn-sm { padding: 4px 8px; font-size: 12px; }
+}
+
+/* Dashboard: stats grid is 3-column by default — too tight on phones.
+   Stack to a 3-column compact row keeping all metrics visible since they're
+   the dashboard's primary signal. */
+@media (max-width: 480px) {
+  .stats { gap: 8px; }
+  .stat { padding: 12px 10px; }
+  .stat-lbl { font-size: 11px; }
+  .stat-val { font-size: 22px; }
+  .stat-fire { font-size: 16px; }
+}
+
+/* Lesson-start row (select paper + button): on phones the select+button side-
+   by-side gets cramped. Stack vertically with full-width button. */
+@media (max-width: 480px) {
+  .dashboard-start-row { flex-direction: column; align-items: stretch; }
+  .dashboard-start-row > .btn { width: 100%; }
+}
+
+/* Profile: 2-column charts grid → single column. The grid is .profile-grid-2;
+   keep it 1-col below 640px so doughnut charts have room. */
+@media (max-width: 640px) {
+  .profile-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  /* Identity card: avatar + edit form should stack so the email/joined lines
+     don't squeeze into a sliver next to a big avatar. */
+  .profile-identity { flex-wrap: wrap; }
+}
+
+/* Activity heatmap on mobile: keep horizontal scroll (it's already overflow-x:
+   auto) but tighten the weekday-labels column so the grid starts earlier. */
+@media (max-width: 480px) {
+  .activity-months { margin-left: 22px; }
+  .activity-heatmap { margin-left: 22px; }
+  .activity-weekday { font-size: 10px; }
+  .activity-cell { width: 10px; height: 10px; }
+  /* With smaller cells the row-height step changes; offset weekday labels. */
+  .activity-weekday[style*="15px"] { top: 13px !important; }
+  .activity-weekday[style*="45px"] { top: 39px !important; }
+  .activity-weekday[style*="75px"] { top: 65px !important; }
+}
+
+/* Progress page heat tiles: 1 column on the smallest phones so titles + meta
+   actually fit without truncation eating the title. */
+@media (max-width: 380px) {
+  .heat { grid-template-columns: 1fr; }
+}
+
+/* Leaderboards opt-in banner: stack on phones so the button doesn't get
+   crushed. */
+@media (max-width: 480px) {
+  .leaderboard-optin-banner { flex-direction: column; align-items: stretch; }
+  .leaderboard-optin-banner > div { width: 100%; }
+}
+
+/* List rows (.list-bordered .list-row used on Whitelist, Users, etc.): stack
+   on phones so the right-side action buttons have somewhere to go. */
+@media (max-width: 480px) {
+  .list-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .list-row > .row {
+    justify-content: flex-end;
+  }
+}
+
+/* Admin shell on phones: the desktop shell is a 220px sidebar + content.
+   The existing rule at 720px stacks them; here we just tighten content
+   padding so cards aren't crammed against the edges. */
+@media (max-width: 480px) {
+  .admin-content { padding: 12px; }
+  .admin-sidebar { padding: 14px; }
+  .admin-nav-item { padding: 6px 10px; font-size: 13px; }
+}
+
+/* Modals: full-width with small margins on phones. The default modal-card
+   max-width keeps it comfortable on desktop; constrain on small screens. */
+@media (max-width: 480px) {
+  .modal-backdrop { padding: 12px; }
+  .modal-card { padding: 18px; max-width: 100% !important; }
+  .modal-card-wide { max-width: 100% !important; }
+}
+
+/* Buttons / inputs: bigger tap targets on phones. iOS guidelines suggest ≥44px;
+   we go 40px which fits in the existing visual rhythm. */
+@media (max-width: 480px) {
+  .btn { min-height: 40px; padding: 9px 14px; }
+  .btn-sm { min-height: 32px; padding: 6px 10px; }
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px; /* prevents iOS auto-zoom on focus */
   }
 }

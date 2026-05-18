@@ -313,10 +313,12 @@ export default {
       title: 'Whitelist по email',
       sub: 'Войти могут только указанные email-адреса (или адреса под указанными доменами).',
       filter_placeholder: 'Фильтр по шаблону или заметке',
-      add_pattern_ph: 'user@example.com  или  @example.com',
+      // Literal-interpolation {'...'} нужно чтобы vue-i18n не считал '@'
+      // началом linker-токена (@:common.cancel и т.п.).
+      add_pattern_ph: "{'user@example.com'}  или  {'@example.com'}",
       add_note_ph: 'Заметка (необязательно) — кто/зачем добавлен',
       add_btn: 'Добавить',
-      pattern_hint: 'Точный email (user@example.com) или паттерн домена (@example.com). Домен начинается с @ и разрешает любых юзеров с этого домена.',
+      pattern_hint: "Точный email ({'user@example.com'}) или паттерн домена ({'@example.com'}). Домен начинается с at-знака и разрешает любых юзеров с этого домена.",
       kind_email: 'email',
       kind_domain: 'домен',
       no_note: '—',

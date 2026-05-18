@@ -314,17 +314,25 @@ export default {
       title: 'Email whitelist',
       sub: 'Only emails listed here (or under listed domains) can sign in.',
       filter_placeholder: 'Filter by pattern or note',
-      add_pattern_ph: 'user@example.com  or  @example.com',
+      // The literal-interpolation syntax {'...'} prevents vue-i18n's message
+      // compiler from interpreting '@' as the start of a linked-message token
+      // (e.g. @:common.cancel). Without the wrapping, "user@example.com" makes
+      // the parser throw "SyntaxError: 10" at runtime.
+      add_pattern_ph: "{'user@example.com'}  or  {'@example.com'}",
       add_note_ph: 'Note (optional) — who/why added',
       add_btn: 'Add',
-      pattern_hint: 'Exact email (user@example.com) or domain pattern (@example.com). Domains start with @ and allow any user at that domain.',
+      pattern_hint: "Exact email ({'user@example.com'}) or domain pattern ({'@example.com'}). Domains start with the at-sign and allow any user at that domain.",
       kind_email: 'email',
       kind_domain: 'domain',
       no_note: '—',
       add_note: 'Add note',
       empty: 'Whitelist is empty. Nobody can sign in until you add an entry.',
       empty_filtered: 'No entries match the filter.',
-      delete_confirm: 'Remove "{pattern}" from the whitelist? Users who signed in via this pattern keep their session but can\'t sign in again after logging out.',
+      // No apostrophes inside delimited strings here — vue-i18n's tokenizer
+      // doesn't choke on `'` directly, but mixing it with double-quoted
+      // strings keeps the source readable. The braces in {pattern} are the
+      // normal named-interpolation placeholder.
+      delete_confirm: 'Remove "{pattern}" from the whitelist? Users who signed in via this pattern keep their session, but cannot sign in again after logging out.',
     },
     papers: {
       title: 'Papers',

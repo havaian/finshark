@@ -118,13 +118,14 @@ export interface Question {
 }
 
 // ---- UI translations (admin localization editor) ----
+// Overrides are stored as JSON files on the backend (backend/locales/{lang}.json)
+// rather than a DB table, so there are no per-key timestamps. The admin page
+// already ignored them; keeping the type lean.
 
 export interface UiTranslation {
   key: string;
   lang: 'en' | 'ru';
   value: string;
-  created_at: string;
-  updated_at: string;
 }
 
 // ---- Admin content browser ----

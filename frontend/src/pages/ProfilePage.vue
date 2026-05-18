@@ -22,6 +22,7 @@ import { badgesApi } from '../api/badges.api';
 import type { PublicBadge } from '../types/badges';
 import { useAuthStore } from '../stores/auth.store';
 import { useThemeStore } from '../stores/theme.store';
+import AppNav from '../components/AppNav.vue';
 
 // Register only the chart.js modules we use — reduces bundle size.
 Chart.register(
@@ -290,13 +291,34 @@ function renderCharts() {
 // Activity heatmap — handled as plain CSS grid rather than chart.js, because
 // chart.js doesn't have a clean Github-contributions heatmap and this is fast.
 // Build a 53-week × 7-day grid ending today (UTC). Each cell shows the count.
+//
+// Layout: month labels run along the top (positioned at the column where each
+// new month begins), weekday labels run down the left edge (Mon/Wed/Fri only
+// — matches GitHub's convention to keep the column tight), and hovering a
+// cell pops a small tooltip with the exact date and count.
 interface HeatCell { date: string; count: number; intensity: 0 | 1 | 2 | 3 | 4 }
+interface MonthLabel { col: number; key: string; short: string }
 
-const heatmapWeeks = computed<HeatCell[][]>(() => {
-  if (!stats.value) return [];
+// Locale: pull from the active i18n composer once on render and re-read on
+// language change (vue-i18n's t() rebinds reactively when locale.value
+// changes). For 'ru' we use the abbreviated names; 'en' uses 3-char month.
+const monthShort = (date: Date, lang: string): string => {
+  try {
+    return new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'en-US', {
+      month: 'short',
+    }).format(date);
+  } catch {
+    // Fallback for environments without Intl support (none in practice).
+    return String(date.getUTCMonth() + 1);
+  }
+};
+
+const heatmapData = computed<{ weeks: HeatCell[][]; months: MonthLabel[] }>(() => {
+  if (!stats.value) return { weeks: [], months: [] };
   const byDay = new Map(stats.value.activity_heatmap.map((r) => [r.day, r.attempts_count]));
+  const lang = (typeof navigator !== 'undefined' && navigator.language) || 'en';
 
-  // Build the last 365 days, starting from Sunday of (today − 53 weeks).
+  // Build the last 365 days, starting from Sunday of (today − 52 weeks).
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   const start = new Date(today);
@@ -305,9 +327,26 @@ const heatmapWeeks = computed<HeatCell[][]>(() => {
   start.setUTCDate(start.getUTCDate() - start.getUTCDay());
 
   const weeks: HeatCell[][] = [];
+  const months: MonthLabel[] = [];
+  let lastMonth = -1;
   const cursor = new Date(start);
+
   for (let w = 0; w < 53; w++) {
     const week: HeatCell[] = [];
+
+    // Record a month label if the column's first day is in a new month.
+    // We anchor labels to the first day of the column to avoid two labels
+    // landing in adjacent columns when a month boundary falls mid-week.
+    const colMonth = cursor.getUTCMonth();
+    if (colMonth !== lastMonth) {
+      months.push({
+        col: w,
+        key: `${cursor.getUTCFullYear()}-${colMonth}`,
+        short: monthShort(cursor, lang),
+      });
+      lastMonth = colMonth;
+    }
+
     for (let d = 0; d < 7; d++) {
       const iso = cursor.toISOString().slice(0, 10);
       const count = byDay.get(iso) ?? 0;
@@ -321,8 +360,53 @@ const heatmapWeeks = computed<HeatCell[][]>(() => {
     }
     weeks.push(week);
   }
-  return weeks;
+  return { weeks, months };
 });
+
+// Tooltip state. Hovering a cell sets `hoverCell` and `hoverPos`; mouseleave
+// clears. Position is relative to the heatmap wrap (computed from the
+// pointer event), so the tooltip floats above the hovered cell.
+const hoverCell = ref<HeatCell | null>(null);
+const hoverPos = ref<{ x: number; y: number } | null>(null);
+const heatmapWrap = ref<HTMLElement | null>(null);
+
+function onCellEnter(cell: HeatCell, ev: MouseEvent) {
+  hoverCell.value = cell;
+  if (!heatmapWrap.value) return;
+  const wrapRect = heatmapWrap.value.getBoundingClientRect();
+  const target = ev.currentTarget as HTMLElement;
+  const cellRect = target.getBoundingClientRect();
+  hoverPos.value = {
+    x: cellRect.left - wrapRect.left + cellRect.width / 2,
+    y: cellRect.top - wrapRect.top,
+  };
+}
+
+function onCellLeave() {
+  hoverCell.value = null;
+  hoverPos.value = null;
+}
+
+// Localised weekday labels (Mon, Wed, Fri — matches GitHub). Computed so they
+// update when the language toggles.
+const weekdayLabels = computed(() => ({
+  mon: t('profile.heatmap_day_mon'),
+  wed: t('profile.heatmap_day_wed'),
+  fri: t('profile.heatmap_day_fri'),
+}));
+
+// Pretty date for the tooltip — uses the active language's locale formatting.
+function fmtTooltipDate(iso: string): string {
+  try {
+    const d = new Date(iso + 'T00:00:00Z');
+    const lang = (typeof navigator !== 'undefined' && navigator.language) || 'en';
+    return new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
+    }).format(d);
+  } catch {
+    return iso;
+  }
+}
 
 async function saveName() {
   if (!newName.value.trim() || savingName.value) return;
@@ -376,12 +460,12 @@ onMounted(load);
 
 <template>
   <main class="page">
+    <AppNav />
     <div class="container-wide">
 
-      <div class="topbar">
+      <header class="page-head">
         <h1>{{ t('profile.title') }}</h1>
-        <RouterLink to="/dashboard" class="btn-link">{{ t('nav.back_to_dashboard') }}</RouterLink>
-      </div>
+      </header>
 
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
       <p v-if="loading" class="dim text-sm">{{ t('common.loading') }}</p>
@@ -446,14 +530,55 @@ onMounted(load);
 
         <section class="card mt-6">
           <h2>{{ t('profile.chart_activity_heatmap') }}</h2>
-          <div class="activity-heatmap">
-            <div v-for="(week, wi) in heatmapWeeks" :key="wi" class="activity-col">
-              <div
-                v-for="cell in week"
-                :key="cell.date"
-                :class="['activity-cell', `intensity-${cell.intensity}`]"
-                :title="`${cell.date}: ${cell.count}`"
-              ></div>
+          <!-- Heatmap wrap: grid with month-labels row at top, weekday-labels
+               column on the left, and the 53x7 cell grid in the main area.
+               Tooltip floats above on hover, positioned absolutely relative
+               to .activity-heatmap-wrap. -->
+          <div ref="heatmapWrap" class="activity-heatmap-wrap">
+            <!-- Month labels row: only renders for months whose column ≥ 1
+                 (avoids overlap with the weekday label column on the far left). -->
+            <div class="activity-months">
+              <span
+                v-for="m in heatmapData.months"
+                :key="m.key"
+                class="activity-month-label"
+                :style="{ left: (m.col * 15) + 'px' }"
+              >{{ m.short }}</span>
+            </div>
+
+            <div class="activity-body">
+              <!-- Weekday labels (Mon/Wed/Fri). Rows are 15px tall (12 cell + 3
+                   gap) to align with the grid columns next to them. -->
+              <div class="activity-weekdays">
+                <span class="activity-weekday" style="top: 15px;">{{ weekdayLabels.mon }}</span>
+                <span class="activity-weekday" style="top: 45px;">{{ weekdayLabels.wed }}</span>
+                <span class="activity-weekday" style="top: 75px;">{{ weekdayLabels.fri }}</span>
+              </div>
+
+              <div class="activity-heatmap">
+                <div v-for="(week, wi) in heatmapData.weeks" :key="wi" class="activity-col">
+                  <div
+                    v-for="cell in week"
+                    :key="cell.date"
+                    :class="['activity-cell', `intensity-${cell.intensity}`]"
+                    @mouseenter="onCellEnter(cell, $event)"
+                    @mouseleave="onCellLeave"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating tooltip. Positioned at hoverPos (centred above cell),
+                 anchored bottom-up via `transform`. Only renders when hovering. -->
+            <div
+              v-if="hoverCell && hoverPos"
+              class="activity-tooltip"
+              :style="{ left: hoverPos.x + 'px', top: hoverPos.y + 'px' }"
+            >
+              <div class="activity-tooltip-count">
+                {{ t('profile.heatmap_tooltip_count', { count: hoverCell.count }) }}
+              </div>
+              <div class="activity-tooltip-date">{{ fmtTooltipDate(hoverCell.date) }}</div>
             </div>
           </div>
         </section>

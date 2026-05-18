@@ -702,6 +702,167 @@ textarea { resize: vertical; min-height: 80px; }
   display: flex; align-items: center; gap: 12px;
 }
 
+/* Standard page header — used after AppNav. h1 + optional subtitle paragraph.
+   Centralised so every authed page lines up its title vertically. */
+.page-head {
+  margin-bottom: 28px;
+}
+.page-head h1 { margin: 0; }
+.page-head p { margin-top: 6px; color: var(--text-dim); }
+
+/* -----------------------------------------------------------
+   15b) App navigation bar (top of every authed user page)
+   ----------------------------------------------------------- */
+
+/* Sticky top bar. Sits inside the .page main, above the page container.
+   Backdrop-filter dims the bar when content scrolls underneath. */
+.app-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  /* Pull above .page padding so it reaches the edges. */
+  margin: -48px -24px 32px;
+  padding: 14px 24px;
+}
+.app-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.app-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+.app-nav-brand {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.app-nav-brand:hover { opacity: 0.85; }
+
+.app-nav-links {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.app-nav-link {
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.app-nav-link:hover { color: var(--text); background: var(--bg-elev); }
+.app-nav-link.active {
+  color: var(--text);
+  background: var(--bg-elev);
+}
+
+.app-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-nav-stats {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding-right: 4px;
+  border-right: 1px solid var(--border);
+  margin-right: 4px;
+}
+.app-nav-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-elev);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.app-nav-stat-icon { font-size: 11px; opacity: 0.9; }
+.app-nav-stat-val { font-weight: 500; }
+
+/* Admin entry button — vivid neon-violet accent. Stands out so admins can spot
+   it from any page. Distinct from --accent (brand sage) so it can't be confused
+   with a normal action button. */
+.app-nav-admin-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.3),
+              0 4px 12px rgba(139, 92, 246, 0.25);
+  white-space: nowrap;
+}
+.app-nav-admin-btn:hover {
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.55),
+              0 6px 16px rgba(139, 92, 246, 0.4);
+  filter: brightness(1.08);
+}
+
+.app-nav-profile {
+  text-decoration: none;
+}
+.app-nav-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+}
+.app-nav-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 16px;
+}
+.app-nav-icon-btn:hover { color: var(--text); background: var(--bg-elev); }
+
+@media (max-width: 720px) {
+  .app-nav { margin: -48px -16px 24px; padding: 10px 14px; }
+  .app-nav-inner { gap: 12px; }
+  .app-nav-left { gap: 14px; }
+  .app-nav-links { gap: 0; }
+  .app-nav-link { padding: 6px 8px; font-size: 13px; }
+  .app-nav-stats { display: none; }
+  .app-nav-admin-btn { padding: 5px 10px; font-size: 12px; }
+}
+
+/* When the admin shell renders the nav within .admin-content > .page, the
+   negative margins above would punch the nav into the sidebar. Cancel them
+   inside the admin shell. (AdminLayout uses its own sidebar, not AppNav, so
+   in practice this rule is defensive.) */
+.admin-content > .page > .app-nav {
+  margin: 0 0 24px;
+}
+
 /* -----------------------------------------------------------
    16) Auth / centered forms
    ----------------------------------------------------------- */
@@ -1084,11 +1245,51 @@ textarea { resize: vertical; min-height: 80px; }
   .profile-grid-2 { grid-template-columns: 1fr; }
 }
 
-/* Github-style activity heatmap. 53 columns × 7 rows of 12px cells. */
+/* Github-style activity heatmap. 53 columns × 7 rows of 12px cells.
+   Cell size 12 + 3px gap → row height 15px (matches month/weekday label step). */
+.activity-heatmap-wrap {
+  position: relative;
+  margin-top: 12px;
+}
+.activity-months {
+  position: relative;
+  height: 18px;
+  /* Indent past the weekday-label column so month labels line up with the
+     grid cells, not the labels. */
+  margin-left: 28px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--text-mute);
+  overflow: hidden;
+}
+.activity-month-label {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+  /* Hide month labels too close to the start (would overlap the previous one). */
+}
+.activity-body {
+  position: relative;
+}
+.activity-weekdays {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 100%;
+  pointer-events: none;
+}
+.activity-weekday {
+  position: absolute;
+  left: 0;
+  font-size: 11px;
+  color: var(--text-mute);
+  line-height: 1;
+}
 .activity-heatmap {
   display: flex;
   gap: 3px;
-  margin-top: 12px;
+  margin-left: 28px;
   overflow-x: auto;
   padding-bottom: 4px;
 }
@@ -1102,11 +1303,41 @@ textarea { resize: vertical; min-height: 80px; }
   height: 12px;
   border-radius: 2px;
   background: var(--grey-band);
+  cursor: pointer;
+  transition: outline-color 80ms ease;
+  outline: 1px solid transparent;
+}
+.activity-cell:hover {
+  outline-color: var(--text);
 }
 .activity-cell.intensity-1 { background: var(--accent-soft-bg); }
 .activity-cell.intensity-2 { background: rgba(124, 92, 255, 0.35); }
 .activity-cell.intensity-3 { background: rgba(124, 92, 255, 0.6); }
 .activity-cell.intensity-4 { background: var(--accent); }
+
+/* Tooltip: small floating box anchored above the hovered cell. Pointer
+   events disabled so the cell underneath keeps receiving mouseleave. */
+.activity-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 6px));
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.activity-tooltip-count {
+  font-size: 13px;
+  font-weight: 500;
+}
+.activity-tooltip-date {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
 
 .danger-zone {
   border-color: var(--danger-border);

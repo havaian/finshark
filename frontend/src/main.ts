@@ -12,9 +12,11 @@ app.use(router);
 app.use(i18n);
 app.mount('#app');
 
-// Fetch DB-backed UI overrides for the current language and merge over the
-// static locale. Best-effort: failures fall back silently to the bundled
-// defaults — we don't want the app to refuse to render if this fetch fails.
+// Fetch UI overrides for the current language and merge over the static
+// locale. Overrides live as JSON files on the backend (backend/locales/) and
+// are exposed at GET /api/ui-translations/:lang as a flat {key → value} map.
+// Best-effort: failures fall back silently to the bundled defaults — we don't
+// want the app to refuse to render if this fetch fails.
 //
 // Runs AFTER mount so the user sees the static-locale UI immediately rather
 // than waiting on the network. Any overridden strings update in place once

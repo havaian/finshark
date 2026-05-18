@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { lessonsApi } from '../api/lessons.api';
 import { mocksApi } from '../api/mocks.api';
 import { useAuthStore } from '../stores/auth.store';
+import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
 
 // Mock start picker — paper + question count + time limit.
@@ -92,11 +93,9 @@ onMounted(loadPapers);
 
 <template>
   <main class="page">
-    <div class="page-narrow">
+    <AppNav />
+    <div class="container">
       <header class="page-head">
-        <RouterLink to="/dashboard" class="btn-link">
-          {{ t('nav.back_to_dashboard') }}
-        </RouterLink>
         <h1>{{ t('mocks.start_title') }}</h1>
         <p class="dim">{{ t('mocks.start_subtitle') }}</p>
       </header>

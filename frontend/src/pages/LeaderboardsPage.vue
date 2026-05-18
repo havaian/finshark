@@ -6,6 +6,7 @@ import { leaderboardsApi, type LeaderboardEntry, type LeaderboardWindow } from '
 import { lessonsApi } from '../api/lessons.api';
 import { profileApi } from '../api/profile.api';
 import { useAuthStore } from '../stores/auth.store';
+import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
 
 // Leaderboards page. Three window tabs + optional paper filter.
@@ -99,6 +100,7 @@ onMounted(() => {
 
 <template>
   <main class="page">
+    <AppNav />
     <div class="container">
       <header class="page-head">
         <h1>{{ t('leaderboards.title') }}</h1>

@@ -45,7 +45,15 @@ onMounted(async () => {
     const frag = parseFragment();
 
     if (frag.error) {
-        errorMsg.value = `${t('login.error_callback')} (${frag.error})`;
+        // Surface a friendlier message for the specific whitelist rejection.
+        // Other errors (state_invalid, google_token_exchange_failed, etc.) fall
+        // through to the generic copy with the code appended in brackets so
+        // engineering can still debug from a screenshot.
+        if (frag.error === 'email_not_allowed') {
+            errorMsg.value = t('login.error_email_not_allowed');
+        } else {
+            errorMsg.value = `${t('login.error_callback')} (${frag.error})`;
+        }
         return;
     }
 

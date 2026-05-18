@@ -10,6 +10,7 @@ import type {
   UiTranslation,
 } from '../types/content';
 import type { PublicUser } from '../types/auth';
+import type { WhitelistEntry } from '../types/whitelist';
 
 // All endpoints below require an authenticated admin. Axios attaches the bearer
 // token automatically via the interceptor in client.ts.
@@ -179,4 +180,38 @@ export const adminApi = {
   deleteUiTranslation: async (key: string, lang: 'en' | 'ru'): Promise<void> => {
     await api.delete(`/admin/ui-translations/${lang}/${encodeURIComponent(key)}`);
   },
+
+  // ---- Whitelist ----
+  // Entries can be either exact emails (user@example.com) or domains
+  // (@example.com). Backend validates the shape; admin UI shows a chip per
+  // entry indicating which kind it is.
+  listWhitelist: async (): Promise<WhitelistEntry[]> =>
+    (await api.get<WhitelistEntry[]>('/admin/whitelist')).data,
+
+  addWhitelist: async (input: { pattern: string; note?: string | null }): Promise<WhitelistEntry> =>
+    (await api.post<WhitelistEntry>('/admin/whitelist', input)).data,
+
+  updateWhitelistNote: async (id: string, note: string | null): Promise<WhitelistEntry> =>
+    (await api.patch<WhitelistEntry>(`/admin/whitelist/${id}/note`, { note })).data,
+
+  deleteWhitelist: async (id: string): Promise<void> => {
+    await api.delete(`/admin/whitelist/${id}`);
+  },
+
+  // ---- System (destructive admin operations) ----
+  // Drops all content + per-user progress, then reseeds the bundled catalog.
+  // Used by the "Drop DB & reseed" button in the admin content browser.
+  // Throws 429 if hammered (backend throttles to 3/min).
+  systemReseed: async (): Promise<{
+    papers_dropped: number;
+    papers_inserted: number;
+    badges_upserted: number;
+    questions_inserted: number;
+    attempts_deleted: number;
+    sessions_deleted: number;
+    uqs_deleted: number;
+    user_badges_deleted: number;
+    mastery_snapshots_deleted: number;
+    users_progress_reset: number;
+  }> => (await api.post('/admin/system/reseed')).data,
 };

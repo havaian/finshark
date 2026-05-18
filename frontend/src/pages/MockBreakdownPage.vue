@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { mocksApi } from '../api/mocks.api';
+import AppNav from '../components/AppNav.vue';
 import type { MockBreakdown } from '../types/mocks';
 
 // Mock breakdown — shown after a mock completes. Per-LO accuracy bars + an
@@ -83,11 +84,9 @@ onMounted(load);
 
 <template>
   <main class="page">
-    <div class="page-narrow">
+    <AppNav />
+    <div class="container">
       <header class="page-head">
-        <RouterLink to="/dashboard" class="btn-link">
-          {{ t('nav.back_to_dashboard') }}
-        </RouterLink>
         <h1>{{ t('mocks.breakdown_title') }}</h1>
       </header>
 

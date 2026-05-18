@@ -8,6 +8,7 @@ import { useLocaleStore } from '../stores/locale.store';
 import { profileApi, type UpdatePreferencesPayload } from '../api/profile.api';
 import { api } from '../api/client';
 import { applyOverrides, type Lang } from '../i18n';
+import AppNav from '../components/AppNav.vue';
 
 const { t } = useI18n();
 const auth = useAuthStore();
@@ -118,12 +119,12 @@ watch(savingField, (next, prev) => {
 
 <template>
   <main class="page">
+    <AppNav />
     <div class="container">
 
-      <div class="topbar">
+      <header class="page-head">
         <h1>{{ t('settings.title') }}</h1>
-        <RouterLink to="/dashboard" class="btn-link">{{ t('nav.back_to_dashboard') }}</RouterLink>
-      </div>
+      </header>
 
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
 

@@ -29,6 +29,7 @@ const AdminLosPage        = () => import("../pages/admin/AdminLosPage.vue");
 const AdminQuestionsPage  = () => import("../pages/admin/AdminQuestionsPage.vue");
 const AdminLocalizationPage = () => import("../pages/admin/AdminLocalizationPage.vue");
 const AdminContentPage    = () => import("../pages/admin/AdminContentPage.vue");
+const AdminWhitelistPage  = () => import("../pages/admin/AdminWhitelistPage.vue");
 
 // Route meta flags:
 //   requiresAuth          — redirect to /login if not authed
@@ -135,6 +136,11 @@ const routes: RouteRecordRaw[] = [
         path: "localization",
         name: "admin-localization",
         component: AdminLocalizationPage,
+      },
+      {
+        path: "whitelist",
+        name: "admin-whitelist",
+        component: AdminWhitelistPage,
       },
     ],
   },

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { progressApi } from '../api/progress.api';
+import AppNav from '../components/AppNav.vue';
 import type {
   MasteryBand,
   ProgressHeatMapLo,
@@ -64,12 +65,12 @@ onMounted(load);
 
 <template>
   <main class="page">
+    <AppNav />
     <div class="container-wide">
 
-      <div class="topbar">
+      <header class="page-head">
         <h1>{{ t('progress.title') }}</h1>
-        <RouterLink to="/dashboard" class="btn-link">{{ t('nav.back_to_dashboard') }}</RouterLink>
-      </div>
+      </header>
 
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
       <p v-if="loading" class="dim text-sm">{{ t('progress.loading') }}</p>

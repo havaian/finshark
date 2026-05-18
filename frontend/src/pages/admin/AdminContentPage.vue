@@ -348,6 +348,66 @@ function typeLabel(t_: QuestionType): string {
       : t('admin.questions.type_short');
 }
 
+// ---- Drop DB + reseed ----
+// Destructive action, gated by a confirmation modal. The confirm input must
+// match a known string (localised) to avoid muscle-memory misclicks.
+//
+// The button is in the tree sidebar header so it's always visible while the
+// admin is in the content browser. After success we reload the tree to show
+// the fresh paper/LO/question counts; the right pane clears if the previously
+// selected LO no longer exists.
+type ReseedResult = Awaited<ReturnType<typeof adminApi.systemReseed>>;
+const reseedModalOpen = ref(false);
+const reseedConfirmText = ref('');
+const reseedBusy = ref(false);
+const reseedError = ref<string | null>(null);
+const reseedResult = ref<ReseedResult | null>(null);
+
+// The literal an admin has to type into the confirm box. Kept here (not in
+// the locale) on purpose — admins should type the same word regardless of
+// their UI language, so the safety net works even if a locale override breaks
+// the prompt copy.
+const RESEED_CONFIRM_LITERAL = 'RESEED';
+
+const reseedConfirmReady = computed(
+  () => reseedConfirmText.value.trim().toUpperCase() === RESEED_CONFIRM_LITERAL,
+);
+
+function openReseedModal() {
+  reseedConfirmText.value = '';
+  reseedError.value = null;
+  // Keep reseedResult.value so admins can re-read the last summary after
+  // closing & reopening — only cleared on successful new run.
+  reseedModalOpen.value = true;
+}
+
+function closeReseedModal() {
+  if (reseedBusy.value) return;
+  reseedModalOpen.value = false;
+}
+
+async function runReseed() {
+  if (!reseedConfirmReady.value || reseedBusy.value) return;
+  reseedBusy.value = true;
+  reseedError.value = null;
+  try {
+    const result = await adminApi.systemReseed();
+    reseedResult.value = result;
+    // The previously-selected LO id is likely gone now — drop it from the URL
+    // and reload the tree so the right pane shows the empty state again.
+    if (selectedLoId.value) {
+      await router.replace({ query: {} });
+    }
+    await reloadTree();
+    // Reset the confirm box so a follow-up run requires re-typing.
+    reseedConfirmText.value = '';
+  } catch (e) {
+    reseedError.value = extractError(e) ?? 'failed to reseed';
+  } finally {
+    reseedBusy.value = false;
+  }
+}
+
 function extractError(e: unknown): string | null {
   if (e instanceof AxiosError) {
     const msg = (e.response?.data as { message?: string | string[] })?.message;
@@ -366,9 +426,21 @@ onMounted(reloadTree);
     <aside class="content-tree">
       <header class="content-tree-head">
         <h2>{{ t('admin.content.title') }}</h2>
-        <RouterLink to="/admin/papers" class="btn-link text-xs">
-          {{ t('admin.content.manage_structure') }}
-        </RouterLink>
+        <div class="row" style="gap: 8px; align-items: center;">
+          <!-- Drop & reseed: destructive — yellow/danger button. Sits next to
+               the structural-ops link because they're both "tree-level" actions. -->
+          <button
+            type="button"
+            class="btn-link"
+            style="color: var(--danger);"
+            @click="openReseedModal"
+          >
+            {{ t('admin.content.reseed_btn') }}
+          </button>
+          <RouterLink to="/admin/papers" class="btn-link text-xs">
+            {{ t('admin.content.manage_structure') }}
+          </RouterLink>
+        </div>
       </header>
       <p v-if="treeError" class="error-text">{{ treeError }}</p>
       <p v-if="treeLoading && tree.length === 0" class="dim text-sm">
@@ -720,6 +792,81 @@ onMounted(reloadTree);
             {{ savingEdit ? t('common.saving') : t('common.save_changes') }}
           </button>
           <button class="btn btn-ghost" :disabled="savingEdit" @click="closeEditModal">
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drop & reseed modal -->
+    <!-- Confirmation gate: the admin has to type the literal RESEED before the
+         run button enables. Backdrop click is allowed only when not busy so an
+         in-flight wipe can't be cancelled mid-flight (the request still
+         completes server-side, but we don't want the UI lying about state). -->
+    <div
+      v-if="reseedModalOpen"
+      class="modal-backdrop"
+      @click="closeReseedModal"
+    >
+      <div class="modal-card" @click.stop>
+        <header class="modal-head">
+          <h2 style="color: var(--danger);">{{ t('admin.content.reseed_modal_title') }}</h2>
+          <button
+            type="button"
+            class="btn-link"
+            :disabled="reseedBusy"
+            @click="closeReseedModal"
+          >✕</button>
+        </header>
+
+        <p class="dim text-sm">{{ t('admin.content.reseed_warn_1') }}</p>
+        <ul class="dim text-sm mt-2" style="padding-left: 20px;">
+          <li>{{ t('admin.content.reseed_warn_drop_content') }}</li>
+          <li>{{ t('admin.content.reseed_warn_drop_progress') }}</li>
+          <li>{{ t('admin.content.reseed_warn_keep_users') }}</li>
+        </ul>
+        <p class="dim text-sm mt-4">
+          {{ t('admin.content.reseed_confirm_prompt', { word: RESEED_CONFIRM_LITERAL }) }}
+        </p>
+        <input
+          v-model="reseedConfirmText"
+          type="text"
+          :placeholder="RESEED_CONFIRM_LITERAL"
+          :disabled="reseedBusy"
+          class="mt-2"
+          style="font-family: var(--font-mono, monospace);"
+        />
+
+        <p v-if="reseedError" class="error-text mt-4">{{ reseedError }}</p>
+
+        <!-- Result summary — survives modal close so admins can re-open to re-read. -->
+        <div v-if="reseedResult && !reseedBusy" class="card mt-4" style="background: var(--bg-elev);">
+          <div class="text-sm" style="font-weight: 500;">
+            {{ t('admin.content.reseed_done') }}
+          </div>
+          <ul class="dim text-xs mt-2" style="padding-left: 20px; line-height: 1.7;">
+            <li>{{ t('admin.content.reseed_stat_papers', { dropped: reseedResult.papers_dropped, inserted: reseedResult.papers_inserted }) }}</li>
+            <li>{{ t('admin.content.reseed_stat_questions', { count: reseedResult.questions_inserted }) }}</li>
+            <li>{{ t('admin.content.reseed_stat_progress', { sessions: reseedResult.sessions_deleted, attempts: reseedResult.attempts_deleted, users: reseedResult.users_progress_reset }) }}</li>
+            <li>{{ t('admin.content.reseed_stat_badges', { count: reseedResult.user_badges_deleted }) }}</li>
+          </ul>
+        </div>
+
+        <div class="admin-edit-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-danger"
+            :disabled="!reseedConfirmReady || reseedBusy"
+            @click="runReseed"
+          >
+            {{ reseedBusy ? t('admin.content.reseed_running') : t('admin.content.reseed_run_btn') }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            :disabled="reseedBusy"
+            @click="closeReseedModal"
+          >
             {{ t('common.cancel') }}
           </button>
         </div>

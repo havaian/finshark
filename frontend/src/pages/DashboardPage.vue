@@ -5,7 +5,7 @@ import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
 import { lessonsApi } from '../api/lessons.api';
-import ThemeSwitch from '../components/ThemeSwitch.vue';
+import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
 
 const { t } = useI18n();
@@ -56,11 +56,6 @@ async function onStartLesson() {
   }
 }
 
-function onLogout() {
-  auth.logout();
-  router.push({ name: 'login' });
-}
-
 function extractError(e: unknown): string | null {
   if (e instanceof AxiosError) {
     const msg = (e.response?.data as { message?: string | string[] })?.message;
@@ -72,21 +67,8 @@ function extractError(e: unknown): string | null {
 
 <template>
   <main class="page">
+    <AppNav />
     <div class="container">
-
-      <div class="topbar">
-        <div class="brand">
-          <div class="brand-mark"></div>
-          <span>Finshark</span>
-        </div>
-        <div class="topbar-right">
-          <ThemeSwitch />
-          <RouterLink to="/leaderboards" class="btn btn-ghost">{{ t('nav.leaderboards') }}</RouterLink>
-          <RouterLink to="/settings" class="btn btn-ghost">{{ t('nav.settings') }}</RouterLink>
-          <RouterLink to="/profile" class="btn btn-ghost">{{ t('nav.profile') }}</RouterLink>
-          <button class="btn btn-ghost" @click="onLogout">{{ t('common.sign_out') }}</button>
-        </div>
-      </div>
 
       <h3>{{ t('dashboard.welcome_back') }}<span v-if="auth.user">, {{ auth.user.display_name }}</span></h3>
       <h1 style="margin-top: 8px;">{{ t('dashboard.keep_streak') }}</h1>
@@ -142,10 +124,6 @@ function extractError(e: unknown): string | null {
 
         <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
       </section>
-
-      <div v-if="auth.user?.is_admin" class="mt-8">
-        <RouterLink to="/admin" class="btn btn-ghost">{{ t('nav.admin_panel') }}</RouterLink>
-      </div>
 
     </div>
   </main>

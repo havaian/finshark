@@ -27,6 +27,7 @@ interface NavItem {
 
 const navItems = computed<NavItem[]>(() => [
   { to: '/admin/users',        labelKey: 'admin.users.title',        activePrefixes: ['/admin/users'] },
+  { to: '/admin/whitelist',    labelKey: 'admin.whitelist.title',    activePrefixes: ['/admin/whitelist'] },
   // Content browser is the primary admin landing for content management.
   // Papers and LOs as separate routes are kept around for structural ops
   // (creating papers, reordering LOs) but the daily workflow is the browser.

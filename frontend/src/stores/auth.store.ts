@@ -82,6 +82,14 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem(LS_USER, JSON.stringify(u));
   }
 
+  // Replace the user object in the store + localStorage. Used by flows that
+  // get a fresh PublicUser back without a separate /me fetch — onboarding
+  // POST returns the updated user, settings updates return the user, etc.
+  function setUser(u: PublicUser) {
+    user.value = u;
+    localStorage.setItem(LS_USER, JSON.stringify(u));
+  }
+
   // Wire forced logout from axios interceptor (called when refresh fails).
   onForcedLogout(() => {
     clear();
@@ -95,5 +103,6 @@ export const useAuthStore = defineStore("auth", () => {
     completeGoogleLogin,
     logout,
     fetchMe,
+    setUser,
   };
 });

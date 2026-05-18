@@ -35,17 +35,28 @@ const DEFAULT_TIMEOUT_MS = 90_000;
 // Validation lives in validateLlmQuestion below — we don't trust the model to
 // produce exact JSON without checking.
 interface LlmGeneratedQuestion {
-  type: 'mcq' | 'short_answer';
+  type: 'mcq' | 'short_answer' | 'number_entry';
   difficulty: 'easy' | 'medium' | 'hard';
   prompt_en: string;
   prompt_ru: string;
-  options?: Array<{ key: string; text_en: string; text_ru: string }>;
+  options?: Array<{
+    key: string;
+    text_en: string;
+    text_ru: string;
+    // Per-option "why this is wrong" — required by the prompt for wrong
+    // options on MCQ. Null/absent on the correct option. We allow either
+    // absent or null at parse time and normalise downstream.
+    why_wrong_en?: string | null;
+    why_wrong_ru?: string | null;
+  }>;
   correct_answer_en: string;
   correct_answer_ru?: string | null;
   explanation_en: string;
   explanation_ru: string;
   concept_bite_en?: string;
   concept_bite_ru?: string;
+  // number_entry only: absolute tolerance for matching. Omitted = exact match.
+  acceptable_tolerance?: number | null;
 }
 
 interface RateBucketEntry {
@@ -224,15 +235,17 @@ export class QuestionGenerationService {
       existingBlock,
       `Generate exactly ${ctx.count} ORIGINAL practice questions for this LO. Requirements:`,
       ``,
-      `1. Mix question types: roughly 70% "mcq" and 30% "short_answer".`,
+      `1. Mix question types: roughly 60% "mcq", 25% "short_answer", 15% "number_entry". Use "number_entry" for questions whose correct answer is a single numeric value (calculations, variances, balances).`,
       `2. Mix difficulties: roughly 40% "easy", 40% "medium", 20% "hard".`,
       `3. For MCQ: exactly 4 options keyed A, B, C, D. Distractors must be plausible (common student mistakes), not silly. The correct option must be unambiguous.`,
-      `4. For short_answer: the answer should fit in 1–2 sentences; for both EN and RU provide the canonical reference answer.`,
-      `5. Every question MUST have both English (prompt_en, options[].text_en, etc.) AND Russian (prompt_ru, options[].text_ru, etc.) versions. Russian must read NATURALLY in Russian, not a literal translation of English — write it independently using correct ACCA terminology in Russian (e.g. "маржинальный доход" for contribution, "отклонение по цене материалов" for material price variance).`,
-      `6. Every question MUST have an explanation in both languages, 1–3 sentences, that teaches the underlying concept.`,
-      `7. Optionally include "concept_bite_en" and "concept_bite_ru" — a one-sentence concept reminder that would appear BEFORE the question to prime the student.`,
-      `8. Do NOT reproduce copyrighted past-paper content. Write originals inspired by exam style.`,
-      `9. Do NOT generate questions that duplicate any in the existing question list above.`,
+      `4. For MCQ: EACH WRONG OPTION must include "why_wrong_en" and "why_wrong_ru" — one sentence each explaining the specific misconception the student would have if they picked that option. The CORRECT option must NOT have why_wrong fields (omit them or set to null). These are baked into the content so the student sees them on the feedback screen without an extra AI call.`,
+      `5. For short_answer: the answer should fit in 1–2 sentences; for both EN and RU provide the canonical reference answer.`,
+      `6. For number_entry: "correct_answer_en" must be a string containing the numeric value (e.g. "12500" or "0.85"). DO NOT include units, currency symbols, or commas in correct_answer_en. Omit "options". Omit "correct_answer_ru" (numbers are language-neutral). If the answer is a calculation where small rounding differences should be accepted, include "acceptable_tolerance" as a non-negative number (e.g. 0.5 to accept ±0.5).`,
+      `7. Every question MUST have both English (prompt_en, options[].text_en, etc.) AND Russian (prompt_ru, options[].text_ru, etc.) versions. Russian must read NATURALLY in Russian, not a literal translation of English — write it independently using correct ACCA terminology in Russian (e.g. "маржинальный доход" for contribution, "отклонение по цене материалов" for material price variance).`,
+      `8. Every question MUST have an explanation in both languages, 1–3 sentences, that teaches the underlying concept.`,
+      `9. Optionally include "concept_bite_en" and "concept_bite_ru" — a one-sentence concept reminder that would appear BEFORE the question to prime the student.`,
+      `10. Do NOT reproduce copyrighted past-paper content. Write originals inspired by exam style.`,
+      `11. Do NOT generate questions that duplicate any in the existing question list above.`,
       ``,
       `Output: a single JSON array of exactly ${ctx.count} question objects. No prose, no markdown, no preamble. Shape:`,
       ``,
@@ -243,10 +256,10 @@ export class QuestionGenerationService {
       `    "prompt_en": "...",`,
       `    "prompt_ru": "...",`,
       `    "options": [`,
-      `      {"key": "A", "text_en": "...", "text_ru": "..."},`,
-      `      {"key": "B", "text_en": "...", "text_ru": "..."},`,
-      `      {"key": "C", "text_en": "...", "text_ru": "..."},`,
-      `      {"key": "D", "text_en": "...", "text_ru": "..."}`,
+      `      {"key": "A", "text_en": "...", "text_ru": "..."},  // correct — no why_wrong`,
+      `      {"key": "B", "text_en": "...", "text_ru": "...", "why_wrong_en": "...", "why_wrong_ru": "..."},`,
+      `      {"key": "C", "text_en": "...", "text_ru": "...", "why_wrong_en": "...", "why_wrong_ru": "..."},`,
+      `      {"key": "D", "text_en": "...", "text_ru": "...", "why_wrong_en": "...", "why_wrong_ru": "..."}`,
       `    ],`,
       `    "correct_answer_en": "A",`,
       `    "explanation_en": "...",`,
@@ -261,6 +274,16 @@ export class QuestionGenerationService {
       `    "prompt_ru": "...",`,
       `    "correct_answer_en": "canonical English answer",`,
       `    "correct_answer_ru": "канонический русский ответ",`,
+      `    "explanation_en": "...",`,
+      `    "explanation_ru": "..."`,
+      `  },`,
+      `  {`,
+      `    "type": "number_entry",`,
+      `    "difficulty": "medium",`,
+      `    "prompt_en": "Calculate the closing inventory balance...",`,
+      `    "prompt_ru": "Рассчитайте остаток запасов...",`,
+      `    "correct_answer_en": "12500",`,
+      `    "acceptable_tolerance": 0,    // optional; omit or set 0 for exact match`,
       `    "explanation_en": "...",`,
       `    "explanation_ru": "..."`,
       `  }`,
@@ -387,7 +410,9 @@ export class QuestionGenerationService {
     if (typeof obj !== 'object' || obj === null) return 'not an object';
     const q = obj as Record<string, unknown>;
 
-    if (q.type !== 'mcq' && q.type !== 'short_answer') return `bad type: ${String(q.type)}`;
+    if (q.type !== 'mcq' && q.type !== 'short_answer' && q.type !== 'number_entry') {
+      return `bad type: ${String(q.type)}`;
+    }
     if (q.difficulty !== 'easy' && q.difficulty !== 'medium' && q.difficulty !== 'hard') {
       return `bad difficulty: ${String(q.difficulty)}`;
     }
@@ -412,10 +437,41 @@ export class QuestionGenerationService {
         if (typeof o.text_ru !== 'string' || o.text_ru.length === 0) return 'option.text_ru missing';
         if (keys.has(o.key)) return `duplicate option key ${o.key}`;
         keys.add(o.key);
+
+        // why_wrong validation: correct option must not have it; wrong options
+        // should have both EN+RU. We're lenient: missing why_wrong on a wrong
+        // option is logged-discarded (the prompt asked for them), but tolerated
+        // — admin can fill them in later. Only fail when types are wrong.
+        if (o.why_wrong_en !== undefined && o.why_wrong_en !== null && typeof o.why_wrong_en !== 'string') {
+          return `option ${o.key} why_wrong_en wrong type`;
+        }
+        if (o.why_wrong_ru !== undefined && o.why_wrong_ru !== null && typeof o.why_wrong_ru !== 'string') {
+          return `option ${o.key} why_wrong_ru wrong type`;
+        }
       }
       // correct_answer_en must point to one of the option keys.
       if (!keys.has(q.correct_answer_en)) {
         return `correct_answer_en "${q.correct_answer_en}" does not match any option key`;
+      }
+    } else if (q.type === 'number_entry') {
+      // Must parse as a finite number. Same lenient parsing as the grader for
+      // the strict-error case (commas stripped).
+      const n = parseFloat(q.correct_answer_en.replace(/,/g, ''));
+      if (!Number.isFinite(n)) {
+        return `number_entry correct_answer_en "${q.correct_answer_en}" not numeric`;
+      }
+      // Tolerance, if present, must be a non-negative finite number.
+      if (q.acceptable_tolerance !== undefined && q.acceptable_tolerance !== null) {
+        if (typeof q.acceptable_tolerance !== 'number' || !Number.isFinite(q.acceptable_tolerance) || q.acceptable_tolerance < 0) {
+          return `bad acceptable_tolerance: ${String(q.acceptable_tolerance)}`;
+        }
+      }
+      // number_entry must not have options.
+      if (q.options !== undefined && q.options !== null) {
+        const o = q.options as unknown[];
+        if (Array.isArray(o) && o.length > 0) {
+          return 'number_entry must not have options';
+        }
       }
     } else {
       // short_answer: correct_answer_ru must be present (separate from EN, not a key).
@@ -431,22 +487,49 @@ export class QuestionGenerationService {
   // Convert a validated LLM question into the repo's create() input shape.
   // Differences are minor — mostly renaming keys + nulling out RU fields where
   // appropriate for MCQ (correct_answer_ru is unused for MCQ since the option
-  // key is language-neutral).
+  // key is language-neutral). For number_entry, options are null and tolerance
+  // (if any) flows through.
+  //
+  // Defensive normalisation:
+  //   - On MCQ, the correct option's why_wrong is forced to null even if the
+  //     LLM emitted text there — UI assumption is "why_wrong present ⇒ wrong".
+  //   - Wrong options keep whatever why_wrong the LLM produced (may be null/
+  //     undefined if it dropped them; admin fills in via edit later).
   private toCreateInput(lo_id: string, q: LlmGeneratedQuestion) {
     const isMcq = q.type === 'mcq';
+    const isNumber = q.type === 'number_entry';
+
+    let normalizedOptions: McqOption[] | null = null;
+    if (isMcq && q.options) {
+      normalizedOptions = q.options.map((opt) => {
+        const isCorrect = opt.key === q.correct_answer_en;
+        return {
+          key: opt.key,
+          text_en: opt.text_en,
+          text_ru: opt.text_ru,
+          why_wrong_en: isCorrect ? null : (opt.why_wrong_en ?? null),
+          why_wrong_ru: isCorrect ? null : (opt.why_wrong_ru ?? null),
+        };
+      });
+    }
+
     return {
       lo_id,
       type: q.type,
       difficulty: q.difficulty,
       prompt_en: q.prompt_en.trim(),
       prompt_ru: q.prompt_ru.trim(),
-      options: isMcq ? (q.options as McqOption[]) : null,
+      options: normalizedOptions,
       correct_answer_en: q.correct_answer_en.trim(),
-      correct_answer_ru: isMcq ? null : (q.correct_answer_ru ?? '').trim(),
+      // MCQ stores option key in _en and leaves _ru null; number_entry uses _en
+      // for the numeric value (also language-neutral); only short_answer uses _ru.
+      correct_answer_ru:
+        isMcq || isNumber ? null : (q.correct_answer_ru ?? '').trim(),
       explanation_en: q.explanation_en.trim(),
       explanation_ru: q.explanation_ru.trim(),
       concept_bite_en: q.concept_bite_en?.trim() || null,
       concept_bite_ru: q.concept_bite_ru?.trim() || null,
+      acceptable_tolerance: isNumber ? (q.acceptable_tolerance ?? null) : null,
       is_active: false,                         // <-- the key bit: drafts, not live
     };
   }

@@ -20,6 +20,7 @@ import { CreatePaperDto, UpdatePaperDto } from './dto/paper.dto';
 import { CreateLoDto, UpdateLoDto } from './dto/learning-objective.dto';
 import { CreateQuestionDto, UpdateQuestionDto } from './dto/question.dto';
 import { GenerateQuestionsDto } from './dto/generate-questions.dto';
+import { BatchQuestionIdsDto, BatchSetActiveDto } from './dto/batch-questions.dto';
 
 // All routes under /api/admin require an authenticated admin user.
 @Controller('admin')
@@ -35,6 +36,14 @@ export class AdminContentController {
   @Get('papers')
   listPapers() {
     return this.content.listPapers();
+  }
+
+  // Admin content tree — papers with their LOs and per-LO question counts.
+  // Used by the unified content browser (/admin/content) to render the sidebar
+  // in one network round-trip.
+  @Get('content/tree')
+  getContentTree() {
+    return this.content.getContentTree();
   }
 
   @Post('papers')
@@ -134,5 +143,24 @@ export class AdminContentController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteQuestion(@Param('id') id: string) {
     await this.content.deleteQuestion(id);
+  }
+
+  // ---- batch operations (admin content browser) ----
+
+  // Bulk set is_active for many question IDs. Returns the updated rows so the
+  // UI can refresh without a follow-up GET.
+  @Post('questions/batch/active')
+  @HttpCode(HttpStatus.OK)
+  setQuestionsActive(@Body() dto: BatchSetActiveDto) {
+    return this.content.setQuestionsActive(dto.ids, dto.is_active);
+  }
+
+  // Bulk hard delete. Rolls back the whole batch if ANY id has dependent
+  // attempts (FK RESTRICT). Returns count actually deleted.
+  @Post('questions/batch/delete')
+  @HttpCode(HttpStatus.OK)
+  async deleteQuestionsMany(@Body() dto: BatchQuestionIdsDto) {
+    const deleted = await this.content.deleteQuestionsMany(dto.ids);
+    return { deleted };
   }
 }

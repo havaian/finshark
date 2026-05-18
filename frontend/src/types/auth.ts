@@ -1,4 +1,6 @@
 // Mirrors backend/src/users/user.types.ts PublicUser
+export type BgLevel = 'beginner' | 'intermediate' | 'advanced';
+
 export interface PublicUser {
   id: string;
   email: string;
@@ -12,6 +14,13 @@ export interface PublicUser {
   reminder_hour_utc: number;
   preferred_difficulty: 'easy' | 'medium' | 'hard' | null;
   lesson_size: number;
+  // Onboarding (3.1)
+  bg_level: BgLevel | null;
+  time_budget_minutes: number;
+  preferred_paper_id: string | null;
+  onboarded_at: string | null; // ISO timestamp or null (null = still needs to onboard)
+  // Leaderboards (3.3). Privacy default false — user must opt in.
+  leaderboard_opt_in: boolean;
 }
 
 // Mirrors backend/src/auth/auth.service.ts AuthTokens

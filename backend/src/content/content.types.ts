@@ -1,7 +1,7 @@
 // Mirrors db/migrations/20260511000003_content_and_srs.js
 //                  + db/migrations/20260513000001_i18n.js
 
-export type QuestionType = 'mcq' | 'short_answer';
+export type QuestionType = 'mcq' | 'short_answer' | 'number_entry';
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
 
 // Supported UI/content languages. Add to this tuple to add a language;
@@ -31,6 +31,10 @@ export interface LearningObjectiveRow {
   title_ru: string | null;
   description_en: string | null;
   description_ru: string | null;
+  // Long-form theory (150-300 words, Kaplan-style). Optional; surfaces as a
+  // pre-lesson primer. _en is canonical; _ru optional and falls back to _en.
+  theory_en: string | null;
+  theory_ru: string | null;
   sort_order: number;
   created_at: Date;
   updated_at: Date;
@@ -41,6 +45,11 @@ export interface McqOption {
   key: string;             // "A" | "B" | ... — admin-defined but app validates
   text_en: string;
   text_ru: string | null;  // optional; falls back to text_en in clients
+  // Per-option "why this is wrong" explanations, shown to the user after
+  // submitting a wrong answer on MCQ. Always null for the correct option.
+  // Optional during content authoring; admin UI shows a hint when missing.
+  why_wrong_en?: string | null;
+  why_wrong_ru?: string | null;
 }
 
 export interface QuestionRow {
@@ -67,6 +76,10 @@ export interface QuestionRow {
   concept_bite_en: string | null;
   concept_bite_ru: string | null;
 
+  // number_entry questions: absolute tolerance for matching. NULL for mcq /
+  // short_answer (and for number_entry questions that require exact match).
+  acceptable_tolerance: number | null;
+
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -80,6 +93,9 @@ export interface QuestionRow {
 export interface LocalizedMcqOption {
   key: string;
   text: string;
+  // Per-option "why this is wrong" — language-resolved. Null for the correct
+  // option, or for options where the admin didn't provide an explanation.
+  why_wrong: string | null;
 }
 
 export interface LocalizedPaper {
@@ -96,6 +112,7 @@ export interface LocalizedLearningObjective {
   code: string;
   title: string;
   description: string | null;
+  theory: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -111,6 +128,7 @@ export interface LocalizedQuestion {
   correct_answer: string;
   explanation: string;
   concept_bite: string | null;
+  acceptable_tolerance: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -154,6 +172,7 @@ export function toLocalizedLo(
     code: row.code,
     title: pickLocalized(row.title_en, row.title_ru, lang),
     description: pickLocalizedNullable(row.description_en, row.description_ru, lang),
+    theory: pickLocalizedNullable(row.theory_en, row.theory_ru, lang),
     sort_order: row.sort_order,
     created_at: row.created_at.toISOString(),
     updated_at: row.updated_at.toISOString(),
@@ -176,6 +195,11 @@ export function toLocalizedQuestion(
         : row.options.map((opt) => ({
             key: opt.key,
             text: pickLocalized(opt.text_en, opt.text_ru, lang),
+            why_wrong: pickLocalizedNullable(
+              opt.why_wrong_en ?? null,
+              opt.why_wrong_ru ?? null,
+              lang,
+            ),
           })),
     correct_answer:
       row.type === 'mcq'
@@ -183,6 +207,7 @@ export function toLocalizedQuestion(
         : pickLocalized(row.correct_answer_en, row.correct_answer_ru, lang),
     explanation: pickLocalized(row.explanation_en, row.explanation_ru, lang),
     concept_bite: pickLocalizedNullable(row.concept_bite_en, row.concept_bite_ru, lang),
+    acceptable_tolerance: row.acceptable_tolerance,
     is_active: row.is_active,
     created_at: row.created_at.toISOString(),
     updated_at: row.updated_at.toISOString(),

@@ -33,4 +33,10 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsBoolean()
   email_reminders_enabled?: boolean;
+
+  // Show on leaderboards. Default false (privacy). Users opt in via Settings
+  // or, in a later iteration, onboarding.
+  @IsOptional()
+  @IsBoolean()
+  leaderboard_opt_in?: boolean;
 }

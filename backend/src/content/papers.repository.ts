@@ -73,4 +73,70 @@ export class PapersRepository {
     const rows = await this.sql`DELETE FROM papers WHERE id = ${id} RETURNING id`;
     return rows.length > 0;
   }
+
+  // Full admin content tree: papers → LOs → question counts (by status).
+  // One query with two left joins so the sidebar has everything it needs to
+  // render counts without N+1 follow-up requests. Returns flat rows; the
+  // service layer assembles them into the nested shape.
+  //
+  // Counts use FILTER (WHERE …) on a single COUNT(*) per status; questions.id
+  // can be NULL when the LO has no questions yet, so we wrap in COALESCE 0.
+  async findContentTreeFlat(): Promise<
+    Array<{
+      paper_id: string;
+      paper_code: string;
+      paper_name_en: string;
+      paper_name_ru: string | null;
+      lo_id: string | null;
+      lo_code: string | null;
+      lo_title_en: string | null;
+      lo_title_ru: string | null;
+      lo_sort_order: number | null;
+      // theory_en non-null = LO has a primer. We send only the flag, not the
+      // full text, to keep this payload tiny.
+      lo_has_theory: boolean;
+      active_count: number;
+      draft_count: number;
+      // "Retired" = used to be active and then turned off. There's no formal
+      // distinction between "draft" and "retired" at the schema level — both
+      // are is_active=false. We currently group all is_active=false as drafts.
+      // If we add a review_status column later this can split.
+    }>
+  > {
+    return this.sql<
+      Array<{
+        paper_id: string;
+        paper_code: string;
+        paper_name_en: string;
+        paper_name_ru: string | null;
+        lo_id: string | null;
+        lo_code: string | null;
+        lo_title_en: string | null;
+        lo_title_ru: string | null;
+        lo_sort_order: number | null;
+        lo_has_theory: boolean;
+        active_count: number;
+        draft_count: number;
+      }>
+    >`
+      SELECT
+        p.id::text                              AS paper_id,
+        p.code                                  AS paper_code,
+        p.name_en                               AS paper_name_en,
+        p.name_ru                               AS paper_name_ru,
+        lo.id::text                             AS lo_id,
+        lo.code                                 AS lo_code,
+        lo.title_en                             AS lo_title_en,
+        lo.title_ru                             AS lo_title_ru,
+        lo.sort_order                           AS lo_sort_order,
+        (lo.theory_en IS NOT NULL)              AS lo_has_theory,
+        COALESCE(SUM(CASE WHEN q.is_active = TRUE  THEN 1 ELSE 0 END), 0)::int AS active_count,
+        COALESCE(SUM(CASE WHEN q.is_active = FALSE THEN 1 ELSE 0 END), 0)::int AS draft_count
+      FROM papers p
+      LEFT JOIN learning_objectives lo ON lo.paper_id = p.id
+      LEFT JOIN questions q            ON q.lo_id = lo.id
+      GROUP BY p.id, lo.id
+      ORDER BY p.code ASC, lo.sort_order ASC NULLS LAST, lo.code ASC NULLS LAST
+    `;
+  }
 }

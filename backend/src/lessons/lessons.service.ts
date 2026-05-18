@@ -8,12 +8,15 @@ import {
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
 import { QuestionsRepository } from "../content/questions.repository";
+import { LearningObjectivesRepository } from "../content/learning-objectives.repository";
 import { UsersRepository } from "../users/users.repository";
 import { LessonSessionsRepository } from "./lesson-sessions.repository";
 import { LessonSessionQuestionsRepository } from "./lesson-session-questions.repository";
 import { AttemptsRepository } from "./attempts.repository";
 import { UserQuestionStateRepository } from "./user-question-state.repository";
 import { GraderService } from "./grader.service";
+import { BadgesService } from "../badges/badges.service";
+import type { SessionMode } from "./lesson.types";
 import {
   applyMastery,
   applySm2,
@@ -37,17 +40,33 @@ import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
 // Fields are LANGUAGE-RESOLVED — frontend receives a single string per field.
 export interface LessonQuestion {
   id: string;
-  type: "mcq" | "short_answer";
+  type: "mcq" | "short_answer" | "number_entry";
   difficulty: QuestionDifficulty;
   prompt: string;
   options: LocalizedMcqOption[] | null; // for MCQ
   concept_bite: string | null;
+  // Sent to the frontend so it can hint "±X" near the number_entry input.
+  // null for non-number_entry questions, and for number_entry questions that
+  // require an exact match.
+  acceptable_tolerance: number | null;
+}
+
+// Per-LO theory primer shown at the top of a lesson. One entry per distinct
+// LO in the queue (deduped), in the order the LOs first appear. Frontend can
+// show them as a stack of cards before the question flow starts. Optional —
+// only LOs with theory_en populated appear here.
+export interface LessonTheoryBite {
+  lo_id: string;
+  lo_code: string;
+  lo_title: string;
+  theory: string;
 }
 
 export interface StartLessonResult {
   session_id: string;
   questions: LessonQuestion[];
   hearts_remaining: number;
+  theory_bites: LessonTheoryBite[];
 }
 
 export interface AttemptResult {
@@ -72,6 +91,9 @@ export interface CompleteLessonResult {
   new_level: number;
   new_streak: number;
   ended_out_of_hearts: boolean;
+  // Badge codes earned by this session-completion. Empty array if none.
+  // Frontend uses these to render a one-time toast on the completion screen.
+  newly_earned_badges: string[];
 }
 
 // Returned by GET /lessons/:id — used to resume in-progress sessions after reload.
@@ -85,6 +107,16 @@ export interface SessionDetail {
   ended_out_of_hearts: boolean;
   questions: LessonQuestion[];
   answered_question_ids: string[];
+  theory_bites: LessonTheoryBite[];
+  // Session metadata (mocks). For regular lessons, mode='lesson',
+  // time_limit_seconds is null, paper_id is null. For mocks, all three are
+  // set and the frontend uses them to render the timer + skip the hearts UI.
+  mode: SessionMode;
+  time_limit_seconds: number | null;
+  paper_id: string | null;
+  // ISO timestamp of when the session was created. Used by the frontend to
+  // compute remaining time on resume: started_at + time_limit_seconds - now.
+  started_at: string;
 }
 
 const DEFAULT_LESSON_SIZE = 5;
@@ -95,11 +127,13 @@ export class LessonsService {
     @Inject(PG) private readonly sql: Sql,
     private readonly users: UsersRepository,
     private readonly questions: QuestionsRepository,
+    private readonly los: LearningObjectivesRepository,
     private readonly sessions: LessonSessionsRepository,
     private readonly sessionQuestions: LessonSessionQuestionsRepository,
     private readonly attempts: AttemptsRepository,
     private readonly uqs: UserQuestionStateRepository,
-    private readonly grader: GraderService
+    private readonly grader: GraderService,
+    private readonly badges: BadgesService,
   ) {}
 
   // ---- start ----
@@ -141,6 +175,7 @@ export class LessonsService {
       session_id: session.id,
       questions: queue.map((q) => this.toLessonQuestion(q, lang)),
       hearts_remaining: session.hearts_remaining,
+      theory_bites: await this.buildTheoryBites(queue, lang),
     };
   }
 
@@ -157,11 +192,15 @@ export class LessonsService {
       throw new ForbiddenException("session belongs to another user");
 
     const queueIds = await this.sessionQuestions.findBySession(session_id);
-    // Re-hydrate to QuestionRow → LessonQuestion, preserving order.
+    // Re-hydrate to QuestionRow → LessonQuestion, preserving order. Keep the
+    // raw rows around so we can derive theory bites from their lo_id fields
+    // (theory is per-LO, not per-question).
     const hydrated: LessonQuestion[] = [];
+    const hydratedRows: QuestionRow[] = [];
     for (const qid of queueIds) {
       const q = await this.questions.findById(qid);
       if (!q) continue; // a question was hard-deleted; skip (rare)
+      hydratedRows.push(q);
       hydrated.push(this.toLessonQuestion(q, lang));
     }
 
@@ -178,6 +217,16 @@ export class LessonsService {
       ended_out_of_hearts: session.ended_out_of_hearts,
       questions: hydrated,
       answered_question_ids: answered,
+      // Skip theory bites for mocks — they're exam-style, no primer. For
+      // lessons (and post-mock review sessions), surface bites as usual.
+      theory_bites:
+        session.mode === 'mock'
+          ? []
+          : await this.buildTheoryBites(hydratedRows, lang),
+      mode: session.mode,
+      time_limit_seconds: session.time_limit_seconds,
+      paper_id: session.paper_id,
+      started_at: session.started_at.toISOString(),
     };
   }
 
@@ -200,7 +249,9 @@ export class LessonsService {
     // Defense in depth: if hearts hit 0 we already auto-completed on the previous
     // attempt. This branch only fires if the client raced before getting the
     // completed_at marker; clean response so the client can show the finale.
-    if (session.hearts_remaining <= 0) {
+    // Mocks ignore hearts entirely (no penalty for wrong answers in CBE-style
+    // practice) so the check is gated on mode.
+    if (session.mode !== 'mock' && session.hearts_remaining <= 0) {
       throw new BadRequestException("session ended: no hearts remaining");
     }
 
@@ -255,6 +306,13 @@ export class LessonsService {
     // postgres.js: sql.begin gives a transaction-scoped Sql; we use raw SQL here rather
     // than refactoring every repo to accept an optional tx handle, which would be churn
     // for one critical path.
+    //
+    // xp_earned mirrors what we return in the response and what gets summed onto
+    // users.xp at session-complete. Persisting it per-attempt lets the leaderboards
+    // module compute "XP earned in last N days" without us needing to reconstruct
+    // it from correct_count after the fact (which wouldn't survive a future change
+    // to scoring rules).
+    const xpForThisAttempt = grade.was_correct ? XP_PER_CORRECT : 0;
     const newState = await this.sql.begin(async (tx) => {
       // 1) Record the attempt.
       // `as any`: postgres.js's JSONValue is overly strict; runtime accepts any JSON-serializable value.
@@ -263,14 +321,15 @@ export class LessonsService {
           ? null
           : tx.json(grade.llm_grade_json as any);
       await tx`
-        INSERT INTO attempts (session_id, user_id, question_id, user_answer, was_correct, llm_grade_json)
+        INSERT INTO attempts (session_id, user_id, question_id, user_answer, was_correct, llm_grade_json, xp_earned)
         VALUES (
           ${session_id},
           ${user_id},
           ${question_id},
           ${user_answer},
           ${grade.was_correct},
-          ${llmParam}
+          ${llmParam},
+          ${xpForThisAttempt}
         )
       `;
 
@@ -278,11 +337,15 @@ export class LessonsService {
       // on a wrong answer. Either way we read back hearts_remaining for the response.
       // GREATEST(hearts_remaining - 1, 0) prevents underflow against the CHECK constraint
       // even if something else has already zeroed it; we treat zero as terminal regardless.
+      //
+      // Mocks: never decrement hearts. CBE-style practice doesn't penalize wrong
+      // answers mid-session; you just see the section breakdown at the end.
+      const isMock = session.mode === 'mock';
       const sessionRows = await tx<Array<{ hearts_remaining: number }>>`
         UPDATE lesson_sessions
         SET
           correct_count    = correct_count + ${grade.was_correct ? 1 : 0},
-          hearts_remaining = ${grade.was_correct
+          hearts_remaining = ${grade.was_correct || isMock
             ? tx`hearts_remaining`
             : tx`GREATEST(hearts_remaining - 1, 0)`}
         WHERE id = ${session_id}
@@ -328,8 +391,11 @@ export class LessonsService {
     // persisted even if the end-session write hits a transient error — we'd
     // rather have an attempt recorded with stale completed_at than lose both.
     // markEndedOutOfHearts is idempotent (returns null if already completed).
+    //
+    // Mocks skip this entirely — they end only when the user submits the final
+    // answer or hits the time limit (frontend-driven).
     let sessionEnded = false;
-    if (newState.hearts_remaining <= 0) {
+    if (session.mode !== 'mock' && newState.hearts_remaining <= 0) {
       const ended = await this.sessions.markEndedOutOfHearts(session_id);
       sessionEnded = ended !== null;
     }
@@ -384,6 +450,10 @@ export class LessonsService {
         new_level: user.level,
         new_streak: user.streak_count,
         ended_out_of_hearts: session.ended_out_of_hearts,
+        // Idempotent re-call: we don't re-evaluate badges. Any badges earned
+        // by the original completion were toasted at that time; surfacing them
+        // again would re-toast on every page reload.
+        newly_earned_badges: [],
       };
     }
 
@@ -418,6 +488,12 @@ export class LessonsService {
       last_active_date: today,
     });
 
+    // Evaluate badges AFTER the user row is updated — the rules read from
+    // users.xp / users.streak_count, so they need the post-completion values.
+    // Failure here is swallowed by BadgesService and returns []; a badge bug
+    // never blocks a lesson completion.
+    const newlyEarnedBadges = await this.badges.evaluateAfterSession(user_id);
+
     return {
       session_id: completed.id,
       question_count: completed.question_count,
@@ -427,6 +503,7 @@ export class LessonsService {
       new_level: updated.level,
       new_streak: updated.streak_count,
       ended_out_of_hearts: completed.ended_out_of_hearts,
+      newly_earned_badges: newlyEarnedBadges,
     };
   }
 
@@ -434,71 +511,115 @@ export class LessonsService {
   // Queue construction
   // ============================================================
   //
-  // Algorithm:
-  //  1. Fill with overdue items (due_date <= today) — pure SRS reviews.
-  //  2. If short, fill with new questions from weak LOs (lowest avg mastery first,
-  //     LOs the user has never touched go first since avg_mastery is NULL).
-  //  3. Difficulty preference is derived from how the user is doing globally:
-  //     - level 1-2  → prefer easy
-  //     - level 3-5  → prefer medium
-  //     - level 6+   → prefer hard
-  //     (Crude but enough for MVP. Better heuristic later.)
+  // Algorithm (current — revised May 2026):
+  //  1. Diversified due fetch — at most ONE question per LO, oldest-due first.
+  //     This is the key change over textbook SRS: even if 4 questions in the
+  //     same LO are all due today, we only pull one of them now. Stops the
+  //     "got PESTEL question yesterday, got another PESTEL question today"
+  //     pattern that came from packing multiple same-LO items into one lesson.
+  //
+  //  2. Fill remaining slots with NEW questions from weak LOs (lowest avg
+  //     mastery first). One question per LO here too. Within each LO,
+  //     prefer questions matching the user's difficulty preference AND with
+  //     a high global error rate ("often-wrong weighting" — high error rate
+  //     = users get this wrong a lot = worth more exposure).
+  //
+  //  3. If we STILL don't have `size` questions (i.e. the user has fewer
+  //     candidate LOs than the requested lesson size), fall back to "extras"
+  //     — additional due questions from LOs already covered. This is the
+  //     starvation path; without it, a user with content in only 2 LOs would
+  //     get a 2-question lesson even when they asked for 5.
+  //
+  // Difficulty preference: derived from user's saved preference, or, if NULL
+  // ("auto"), the level-based heuristic (level 1-2 easy, 3-5 medium, 6+ hard).
   private async buildQueue(
     user_id: string,
     paper_id: string | null,
     size: number
   ): Promise<QuestionRow[]> {
-    const due = await this.uqs.findDueQuestions({
+    // ----- 1. Diversified due fetch -----
+    const dueDiversified = await this.uqs.findDueQuestionsDiversified({
       user_id,
       paper_id,
       limit: size,
     });
 
-    // Hydrate due IDs into full questions.
     const dueQuestions = await Promise.all(
-      due.map((d) => this.questions.findById(d.question_id))
+      dueDiversified.map((d) => this.questions.findById(d.question_id))
     );
     const queue: QuestionRow[] = dueQuestions.filter(
       (q): q is QuestionRow => !!q && q.is_active
     );
 
+    // Track LOs covered AND question IDs already picked, so subsequent passes
+    // can deduplicate. Both are needed because LO-tracking handles "no two from
+    // the same LO" and ID-tracking handles "never the same question twice."
+    const coveredLos = new Set<string>(queue.map((q) => q.lo_id));
+    const pickedIds = new Set<string>(queue.map((q) => q.id));
+
     if (queue.length >= size) return queue.slice(0, size);
 
-    // Need more — pull from weak LOs.
+    // ----- 2. Fill from weak LOs (NEW questions, one per LO, error-biased) -----
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
-    // User-set preference overrides the level-based heuristic. NULL = "auto".
     const preferred = user.preferred_difficulty ?? this.preferredDifficulty(user.level);
-    const remaining = size - queue.length;
 
-    // Pick weak LOs to pull from. We over-fetch a bit so we have alternatives if
-    // a given LO has no unseen questions left.
+    // Over-fetch weak LOs since some may already be covered or have no unseen
+    // questions left. Cap at a reasonable upper bound.
+    const remaining = size - queue.length;
     const weakLos = await this.uqs.findWeakLos({
       user_id,
       paper_id,
-      limit: Math.max(remaining * 2, 5),
+      limit: Math.max(remaining * 3, 8),
     });
-
-    // Question IDs we already have queued (don't dup).
-    const seen = new Set(queue.map((q) => q.id));
 
     for (const lo of weakLos) {
       if (queue.length >= size) break;
-      const need = size - queue.length;
+      // Topical diversification: skip LOs that already have a question in the
+      // queue. We come back to them only via the extras fallback below.
+      if (coveredLos.has(lo.lo_id)) continue;
+
       const unseen = await this.uqs.findUnseenInLo({
         user_id,
         lo_id: lo.lo_id,
-        limit: need,
+        // Fetch a small candidate set so the bias can pick a good one; we only
+        // take the top one from this LO regardless.
+        limit: 3,
         preferred_difficulty: preferred,
+        error_rate_bias: true,
       });
+
       for (const u of unseen) {
-        if (queue.length >= size) break;
-        if (seen.has(u.id)) continue;
+        if (pickedIds.has(u.id)) continue;
         const q = await this.questions.findById(u.id);
         if (!q || !q.is_active) continue;
         queue.push(q);
-        seen.add(q.id);
+        coveredLos.add(q.lo_id);
+        pickedIds.add(q.id);
+        break; // ← one question per LO; on to the next weak LO.
       }
+    }
+
+    if (queue.length >= size) return queue.slice(0, size);
+
+    // ----- 3. Extras fallback (starvation path) -----
+    // We exhausted distinct LOs but still need more questions. Pull additional
+    // overdue items, allowing the same LO to appear twice (last resort).
+    const extras = await this.uqs.findDueQuestionsExtras({
+      user_id,
+      paper_id,
+      exclude_ids: Array.from(pickedIds),
+      limit: size - queue.length,
+    });
+    const extraQuestions = await Promise.all(
+      extras.map((e) => this.questions.findById(e.question_id))
+    );
+    for (const q of extraQuestions) {
+      if (queue.length >= size) break;
+      if (!q || !q.is_active) continue;
+      if (pickedIds.has(q.id)) continue;
+      queue.push(q);
+      pickedIds.add(q.id);
     }
 
     return queue;
@@ -513,7 +634,13 @@ export class LessonsService {
   }
 
   // Project a raw QuestionRow to the language-resolved client shape.
-  private toLessonQuestion(q: QuestionRow, lang: Lang): LessonQuestion {
+  // why_wrong on each option is shipped along with the option text so the
+  // frontend can render per-option explanations on the feedback screen after
+  // a wrong answer — no extra API call needed.
+  //
+  // Public so MocksService can reuse the localization projection for mock
+  // sessions without duplicating it.
+  toLessonQuestion(q: QuestionRow, lang: Lang): LessonQuestion {
     return {
       id: q.id,
       type: q.type,
@@ -525,12 +652,57 @@ export class LessonsService {
           : q.options.map((opt) => ({
               key: opt.key,
               text: pickLocalized(opt.text_en, opt.text_ru, lang),
+              why_wrong: pickLocalizedNullable(
+                opt.why_wrong_en ?? null,
+                opt.why_wrong_ru ?? null,
+                lang,
+              ),
             })),
       concept_bite: pickLocalizedNullable(q.concept_bite_en, q.concept_bite_ru, lang),
+      acceptable_tolerance: q.acceptable_tolerance,
     };
   }
 
   private toDateString(d: Date): string {
     return d.toISOString().slice(0, 10);
+  }
+
+  // Derive per-LO theory bites from a question queue. One entry per distinct
+  // LO in the order they first appear, only for LOs whose theory_en is non-null.
+  // The LO repo is hit ONCE (batch fetch) regardless of queue size.
+  //
+  // Public so MocksService can call it when building the mock start response.
+  async buildTheoryBites(
+    queue: QuestionRow[],
+    lang: Lang,
+  ): Promise<LessonTheoryBite[]> {
+    if (queue.length === 0) return [];
+
+    // Distinct LO ids, in first-appearance order.
+    const seen = new Set<string>();
+    const ordered: string[] = [];
+    for (const q of queue) {
+      if (seen.has(q.lo_id)) continue;
+      seen.add(q.lo_id);
+      ordered.push(q.lo_id);
+    }
+
+    const rows = await this.los.findManyByIds(ordered);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+
+    const bites: LessonTheoryBite[] = [];
+    for (const loId of ordered) {
+      const lo = byId.get(loId);
+      if (!lo) continue;
+      const theory = pickLocalizedNullable(lo.theory_en, lo.theory_ru, lang);
+      if (!theory) continue; // skip LOs with no theory yet — opt-in per LO
+      bites.push({
+        lo_id: lo.id,
+        lo_code: lo.code,
+        lo_title: pickLocalized(lo.title_en, lo.title_ru, lang),
+        theory,
+      });
+    }
+    return bites;
   }
 }

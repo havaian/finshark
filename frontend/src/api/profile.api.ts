@@ -21,7 +21,7 @@ export interface DifficultyBreakdownRow {
 }
 
 export interface TypeBreakdownRow {
-  type: 'mcq' | 'short_answer';
+  type: 'mcq' | 'short_answer' | 'number_entry';
   attempts: number;
   correct: number;
 }
@@ -55,6 +55,9 @@ export interface UpdatePreferencesPayload {
   preferred_difficulty?: 'easy' | 'medium' | 'hard' | null;
   lesson_size?: number;
   email_reminders_enabled?: boolean;
+  // Leaderboards opt-in (3.3). Settings toggle + leaderboard page banner
+  // both flip this through the same PATCH endpoint.
+  leaderboard_opt_in?: boolean;
 }
 
 export const profileApi = {

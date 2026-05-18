@@ -14,6 +14,10 @@ import { ProgressModule } from './progress/progress.module';
 import { ProfileModule } from './profile/profile.module';
 import { EmailModule } from './email/email.module';
 import { RemindersModule } from './reminders/reminders.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
+import { LeaderboardsModule } from './leaderboards/leaderboards.module';
+import { BadgesModule } from './badges/badges.module';
+import { MocksModule } from './mocks/mocks.module';
 
 @Module({
   imports: [
@@ -36,6 +40,10 @@ import { RemindersModule } from './reminders/reminders.module';
     ProfileModule,
     EmailModule,
     RemindersModule,
+    OnboardingModule,
+    LeaderboardsModule,
+    BadgesModule,
+    MocksModule,
   ],
   providers: [
     // Throttle every controller by default; specific endpoints can override or skip.

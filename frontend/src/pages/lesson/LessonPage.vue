@@ -4,12 +4,15 @@ import { useRoute, useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { lessonsApi } from '../../api/lessons.api';
+import { badgesApi } from '../../api/badges.api';
 import { useAuthStore } from '../../stores/auth.store';
 import type {
   AttemptResult,
   CompleteLessonResult,
   LessonQuestion,
+  LessonTheoryBite,
 } from '../../types/lesson';
+import type { PublicBadge } from '../../types/badges';
 
 // Hearts are 3 per session — must match backend lesson_sessions.hearts_remaining default.
 const MAX_HEARTS = 3;
@@ -29,14 +32,83 @@ const currentIndex = ref(0);
 
 const selectedOption = ref<string | null>(null);
 const shortAnswer = ref('');
+// number_entry answer kept as a string (not number) so we don't lose mid-typing
+// state like trailing decimals ("12." while user is mid-type). The grader on
+// the server parses it.
+const numberAnswer = ref('');
 const submitting = ref(false);
 const feedback = ref<AttemptResult | null>(null);
 
+// Toggle for the "why are the other options wrong?" expander on MCQ feedback.
+// Reset on every Next so each wrong question shows it collapsed by default.
+const showWhyWrong = ref(false);
+
 const completing = ref(false);
 const summary = ref<CompleteLessonResult | null>(null);
+// Hydrated PublicBadge details for the codes in summary.newly_earned_badges.
+// We fetch /me/badges only when there ARE newly earned badges so the common
+// case (no earns) has zero extra cost.
+const newlyEarnedDetails = ref<PublicBadge[]>([]);
+
+// Theory primers shown on a dedicated intro screen before the question flow.
+// Skipped entirely (theoryDismissed = true from the start) when no LO in the
+// queue has theory populated.
+const theoryBites = ref<LessonTheoryBite[]>([]);
+const theoryDismissed = ref(false);
 
 // Live hearts count — drives the UI between attempts.
 const hearts = ref<number>(MAX_HEARTS);
+
+// ─── Mock mode state ────────────────────────────────────────────────────
+// `mode` mirrors session.mode from the backend. Lessons render the hearts
+// row and theory primer; mocks render a countdown timer and skip the primer.
+const sessionMode = ref<'lesson' | 'mock'>('lesson');
+// Total seconds for this session (mocks only). Null for ordinary lessons.
+const timeLimitSeconds = ref<number | null>(null);
+// Seconds remaining, ticked down once per second by a setInterval. Initialized
+// from started_at + time_limit - now so resumes show the correct value.
+const timeRemainingSeconds = ref<number>(0);
+let timerInterval: number | null = null;
+
+const isMock = computed(() => sessionMode.value === 'mock');
+
+// MM:SS display. We clamp to 0 so the UI never shows negative values.
+const timerDisplay = computed(() => {
+  const s = Math.max(0, timeRemainingSeconds.value);
+  const mm = Math.floor(s / 60).toString().padStart(2, '0');
+  const ss = (s % 60).toString().padStart(2, '0');
+  return `${mm}:${ss}`;
+});
+
+// Visually warn when under 5 minutes — turns the timer pill red.
+const timerWarning = computed(
+  () => isMock.value && timeRemainingSeconds.value <= 300 && timeRemainingSeconds.value > 0,
+);
+
+function startMockTimer(startedAt: string, limitSeconds: number) {
+  // Resume-friendly: compute remaining from the original started_at, not from
+  // "now + limit". If a user reloads halfway through, the timer keeps falling.
+  const startMs = Date.parse(startedAt);
+  const tick = () => {
+    const elapsed = Math.floor((Date.now() - startMs) / 1000);
+    timeRemainingSeconds.value = Math.max(0, limitSeconds - elapsed);
+    if (timeRemainingSeconds.value === 0 && !summary.value) {
+      // Time's up — auto-complete. Backend doesn't enforce the limit, so we
+      // simply finish the session and let the user see the breakdown.
+      stopMockTimer();
+      void onComplete();
+    }
+  };
+  tick();
+  timerInterval = window.setInterval(tick, 1000);
+}
+
+function stopMockTimer() {
+  if (timerInterval !== null) {
+    window.clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
 
 const current = computed<LessonQuestion | null>(() => queue.value[currentIndex.value] ?? null);
 const isLast = computed(() => currentIndex.value >= queue.value.length - 1);
@@ -54,7 +126,19 @@ const heartSlots = computed(() =>
   Array.from({ length: MAX_HEARTS }, (_, i) => i < hearts.value),
 );
 
+// Wrong options for the CURRENT MCQ feedback panel — only those with non-null
+// why_wrong text and that the user didn't select (we show the user's wrong
+// pick more prominently elsewhere). Empty array short-circuits the expander.
+const wrongOptionsForFeedback = computed(() => {
+  if (!feedback.value || !current.value || current.value.type !== 'mcq') return [];
+  const correctKey = feedback.value.correct_answer;
+  return (current.value.options ?? []).filter(
+    (o) => o.key !== correctKey && o.why_wrong,
+  );
+});
+
 const shortAnswerInput = ref<HTMLTextAreaElement | null>(null);
+const numberAnswerInput = ref<HTMLInputElement | null>(null);
 
 async function load() {
   loading.value = true;
@@ -62,7 +146,21 @@ async function load() {
   try {
     const detail = await lessonsApi.getSession(sessionId);
 
+    // Pick up session-mode metadata FIRST so completed-on-load branch also
+    // knows which finale to render (mock breakdown vs regular summary).
+    sessionMode.value = detail.mode;
+    timeLimitSeconds.value = detail.time_limit_seconds;
+
     if (detail.completed_at) {
+      // If the session was a mock, jump straight to the breakdown page —
+      // no point re-rendering the regular completion summary.
+      if (detail.mode === 'mock') {
+        await router.replace({
+          name: 'mock-breakdown',
+          params: { session_id: sessionId },
+        });
+        return;
+      }
       const s = await lessonsApi.complete(sessionId);
       summary.value = s;
       queue.value = detail.questions;
@@ -73,16 +171,28 @@ async function load() {
 
     queue.value = detail.questions;
     hearts.value = detail.hearts_remaining;
+    // Mocks never show the theory primer — even on resume. Backend already
+    // returns theory_bites=[] for mocks, but we belt-and-brace it here.
+    theoryBites.value = detail.mode === 'mock' ? [] : (detail.theory_bites ?? []);
+    theoryDismissed.value = theoryBites.value.length === 0;
 
     const answered = new Set(detail.answered_question_ids);
     let idx = 0;
     while (idx < queue.value.length && answered.has(queue.value[idx].id)) idx++;
     currentIndex.value = idx;
+    if (idx > 0) theoryDismissed.value = true;
+
+    // Mock timer: start it whenever we successfully loaded a mock session
+    // that has a time limit. Re-resume is fine because the tick computes
+    // elapsed from started_at.
+    if (detail.mode === 'mock' && detail.time_limit_seconds !== null) {
+      startMockTimer(detail.started_at, detail.time_limit_seconds);
+    }
 
     if (currentIndex.value >= queue.value.length) {
       await onComplete();
     } else {
-      await focusInputIfShortAnswer();
+      await focusInputForType();
     }
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to load lesson';
@@ -99,7 +209,11 @@ async function onSubmit() {
   if (q.type === 'mcq') {
     if (!selectedOption.value) return;
     answer = selectedOption.value;
+  } else if (q.type === 'number_entry') {
+    answer = numberAnswer.value.trim();
+    if (!answer) return;
   } else {
+    // short_answer
     answer = shortAnswer.value.trim();
     if (!answer) return;
   }
@@ -130,6 +244,8 @@ async function onNext() {
   feedback.value = null;
   selectedOption.value = null;
   shortAnswer.value = '';
+  numberAnswer.value = '';
+  showWhyWrong.value = false;
 
   if (endedOnThisAttempt) {
     // Session is server-side completed. Skip remaining questions and show the finale.
@@ -142,7 +258,7 @@ async function onNext() {
     return;
   }
   currentIndex.value += 1;
-  await focusInputIfShortAnswer();
+  await focusInputForType();
 }
 
 async function onComplete() {
@@ -154,6 +270,32 @@ async function onComplete() {
       auth.user.xp = summary.value.new_xp;
       auth.user.level = summary.value.new_level;
       auth.user.streak_count = summary.value.new_streak;
+    }
+    // Stop the countdown ASAP on completion so the user doesn't see it tick
+    // during the navigation transition.
+    stopMockTimer();
+    // For mocks, skip the regular finale screen — the breakdown page is more
+    // informative (per-LO accuracy + review-wrongs button). We still hit
+    // the lessons-complete endpoint above so XP/streak/badges flow through
+    // the same machinery as lessons.
+    if (sessionMode.value === 'mock') {
+      await router.replace({
+        name: 'mock-breakdown',
+        params: { session_id: sessionId },
+      });
+      return;
+    }
+    // Hydrate the newly-earned badge codes into display objects. Only call
+    // /me/badges when at least one was earned — the common case is zero.
+    // Network failure here is non-fatal: badges just don't toast this run.
+    if (summary.value.newly_earned_badges.length > 0) {
+      try {
+        const all = await badgesApi.getMine();
+        const earnedCodeSet = new Set(summary.value.newly_earned_badges);
+        newlyEarnedDetails.value = all.filter((b) => earnedCodeSet.has(b.code));
+      } catch {
+        newlyEarnedDetails.value = [];
+      }
     }
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to complete lesson';
@@ -168,18 +310,25 @@ function onQuit() {
   }
 }
 
-async function focusInputIfShortAnswer() {
+async function focusInputForType() {
   await nextTick();
   if (current.value?.type === 'short_answer' && shortAnswerInput.value) {
     shortAnswerInput.value.focus();
+  } else if (current.value?.type === 'number_entry' && numberAnswerInput.value) {
+    numberAnswerInput.value.focus();
   }
 }
 
 function onKeydown(e: KeyboardEvent) {
   if (summary.value) return;
+  // If the theory primer screen is still shown, ignore lesson-flow keys; the
+  // user clicks "Start" to dismiss. Letting Enter pass through here would
+  // skip the primer the moment they pressed a key on an empty session.
+  if (!theoryDismissed.value) return;
   if (!current.value) return;
 
   if (e.key === 'Enter') {
+    // textarea on short_answer accepts Shift+Enter for newlines.
     if (current.value.type === 'short_answer' && e.shiftKey) return;
     e.preventDefault();
     if (feedback.value) onNext();
@@ -187,6 +336,8 @@ function onKeydown(e: KeyboardEvent) {
     return;
   }
 
+  // Number 1-4 = pick MCQ option. Only on MCQ before feedback; never on
+  // number_entry (the digits are part of the answer).
   if (current.value.type === 'mcq' && !feedback.value) {
     const n = parseInt(e.key, 10);
     if (!isNaN(n) && current.value.options && n >= 1 && n <= current.value.options.length) {
@@ -194,6 +345,11 @@ function onKeydown(e: KeyboardEvent) {
       selectedOption.value = current.value.options[n - 1].key;
     }
   }
+}
+
+function onStartFromTheory() {
+  theoryDismissed.value = true;
+  focusInputForType();
 }
 
 // Compute MCQ option class — selected/correct/wrong/locked.
@@ -220,6 +376,9 @@ onMounted(() => {
 });
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown);
+  // Make sure no orphaned interval keeps ticking if the user navigates away
+  // mid-mock (e.g. via the browser back button or by clicking another link).
+  stopMockTimer();
 });
 </script>
 
@@ -252,6 +411,25 @@ onUnmounted(() => {
             <div class="stat-val">{{ summary.new_streak }} <span class="stat-fire">🔥</span></div>
           </div>
         </div>
+
+        <!-- Newly earned badges — single ribbon, one tile per earn. Only
+             renders when at least one was earned this session, so the common
+             case is invisible. -->
+        <div v-if="newlyEarnedDetails.length > 0" class="badge-earned-ribbon">
+          <div class="badge-earned-title">{{ t('lesson.badges_earned_title') }}</div>
+          <div class="badge-earned-row">
+            <div
+              v-for="b in newlyEarnedDetails"
+              :key="b.code"
+              class="badge-earned-tile"
+              :title="b.description"
+            >
+              <span class="badge-earned-icon">{{ b.icon }}</span>
+              <span class="badge-earned-name">{{ b.name }}</span>
+            </div>
+          </div>
+        </div>
+
         <div class="mt-6">
           <button class="btn btn-primary" @click="router.push({ name: 'dashboard' })">
             {{ t('lesson.complete_back') }}
@@ -259,15 +437,47 @@ onUnmounted(() => {
         </div>
       </section>
 
+      <!-- Theory primer — shown before the question flow when at least one LO
+           in the queue has theory_en populated. User clicks Start to proceed. -->
+      <section v-else-if="!theoryDismissed && theoryBites.length > 0" class="card theory-intro">
+        <h1>{{ t('lesson.theory_title') }}</h1>
+        <p class="dim mt-2">{{ t('lesson.theory_subtitle') }}</p>
+        <div class="theory-list mt-6">
+          <article v-for="b in theoryBites" :key="b.lo_id" class="theory-card">
+            <header class="theory-card-head">
+              <span class="theory-lo-code mono">{{ b.lo_code }}</span>
+              <span class="theory-lo-title">{{ b.lo_title }}</span>
+            </header>
+            <div class="theory-body">{{ b.theory }}</div>
+          </article>
+        </div>
+        <div class="mt-6">
+          <button class="btn btn-primary" @click="onStartFromTheory">
+            {{ t('lesson.theory_start') }}
+          </button>
+        </div>
+      </section>
+
       <!-- Active question -->
-      <section v-else-if="current">
+      <section v-else-if="current && theoryDismissed">
 
         <div class="lesson-top">
           <button class="btn-link" @click="onQuit">{{ t('lesson.quit') }}</button>
           <div class="progress-track">
             <div class="progress-bar" :style="{ width: progressPct + '%' }"></div>
           </div>
+          <!-- Mock: countdown timer instead of hearts. Hearts are decorative
+               for mocks (the column still exists in the DB) so we replace the
+               whole slot rather than mix them. -->
           <div
+            v-if="isMock"
+            :class="['mock-timer mono', { warning: timerWarning }]"
+            :aria-label="t('lesson.mock_timer_label') + ': ' + timerDisplay"
+          >
+            {{ timerDisplay }}
+          </div>
+          <div
+            v-else
             class="hearts-row"
             :aria-label="t('lesson.hearts_label') + ': ' + hearts + ' / ' + MAX_HEARTS"
           >
@@ -319,6 +529,33 @@ onUnmounted(() => {
           <p class="input-help">{{ t('lesson.short_answer_help') }}</p>
         </div>
 
+        <!-- Number entry — for calculation questions where the answer is a
+             single numeric value. inputmode=decimal triggers numeric keyboards
+             on mobile while still allowing typed characters on desktop. -->
+        <div v-else-if="current.type === 'number_entry'" class="mt-4 number-entry">
+          <input
+            ref="numberAnswerInput"
+            v-model="numberAnswer"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            spellcheck="false"
+            :disabled="!!feedback"
+            maxlength="40"
+            :placeholder="t('lesson.number_entry_placeholder')"
+            class="number-input"
+          />
+          <p class="input-help">
+            <span>{{ t('lesson.number_entry_help') }}</span>
+            <span
+              v-if="current.acceptable_tolerance !== null && current.acceptable_tolerance > 0"
+              class="tolerance-hint"
+            >
+              {{ t('lesson.number_entry_tolerance', { tol: current.acceptable_tolerance }) }}
+            </span>
+          </p>
+        </div>
+
         <!-- Feedback -->
         <div v-if="feedback" :class="['feedback', { wrong: !feedback.was_correct }]">
           <template v-if="feedback.was_correct">
@@ -334,6 +571,29 @@ onUnmounted(() => {
             <span style="font-weight: 500;">{{ t('lesson.correct_answer_label') }}</span> {{ feedback.correct_answer }}
           </div>
           <div class="feedback-body">{{ feedback.explanation }}</div>
+
+          <!-- "Why are the others wrong?" — only on wrong MCQ when at least one
+               wrong option has a baked-in explanation. Per-option text comes
+               from the lesson queue payload; no additional API call. -->
+          <div
+            v-if="!feedback.was_correct && wrongOptionsForFeedback.length > 0"
+            class="why-wrong-section"
+          >
+            <button
+              type="button"
+              class="btn-link why-wrong-toggle"
+              @click="showWhyWrong = !showWhyWrong"
+            >
+              {{ showWhyWrong ? t('lesson.why_wrong_hide') : t('lesson.why_wrong_show') }}
+            </button>
+            <ul v-if="showWhyWrong" class="why-wrong-list">
+              <li v-for="o in wrongOptionsForFeedback" :key="o.key" class="why-wrong-item">
+                <span class="why-wrong-key mono">{{ o.key }}</span>
+                <span class="why-wrong-text">{{ o.why_wrong }}</span>
+              </li>
+            </ul>
+          </div>
+
           <div class="feedback-meta">
             <span>{{ t('lesson.mastery_label', { pct: feedback.mastery_score }) }}</span>
             <span>{{ t('lesson.next_review_label', { date: feedback.next_due_date }) }}</span>
@@ -341,11 +601,22 @@ onUnmounted(() => {
         </div>
 
         <div class="lesson-foot">
-          <div class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> {{ t('lesson.keys_help') }} · <kbd>↵</kbd></div>
+          <div class="keys">
+            <template v-if="current.type === 'mcq'">
+              <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> {{ t('lesson.keys_help') }} · <kbd>↵</kbd>
+            </template>
+            <template v-else>
+              <kbd>↵</kbd> {{ t('lesson.keys_help_text') }}
+            </template>
+          </div>
           <button
             v-if="!feedback"
             class="btn btn-primary"
-            :disabled="submitting || (current.type === 'mcq' ? !selectedOption : !shortAnswer.trim())"
+            :disabled="submitting || (
+              current.type === 'mcq' ? !selectedOption :
+              current.type === 'number_entry' ? !numberAnswer.trim() :
+              !shortAnswer.trim()
+            )"
             @click="onSubmit"
           >
             {{ submitting ? t('lesson.checking') : t('lesson.submit') }}

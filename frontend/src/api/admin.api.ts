@@ -1,5 +1,6 @@
 import { api } from './client';
 import type {
+  ContentTreePaper,
   LearningObjectiveRaw,
   McqOptionRaw,
   PaperRaw,
@@ -62,6 +63,8 @@ export const adminApi = {
       title_ru?: string | null;
       description_en?: string | null;
       description_ru?: string | null;
+      theory_en?: string | null;
+      theory_ru?: string | null;
       sort_order?: number;
     },
   ): Promise<LearningObjectiveRaw> =>
@@ -76,6 +79,8 @@ export const adminApi = {
       title_ru: string | null;
       description_en: string | null;
       description_ru: string | null;
+      theory_en: string | null;
+      theory_ru: string | null;
       sort_order: number;
     }>,
   ): Promise<LearningObjectiveRaw> =>
@@ -103,6 +108,7 @@ export const adminApi = {
       explanation_ru?: string | null;
       concept_bite_en?: string | null;
       concept_bite_ru?: string | null;
+      acceptable_tolerance?: number | null;
     },
   ): Promise<QuestionRaw> =>
     (await api.post<QuestionRaw>(`/admin/los/${lo_id}/questions`, input)).data,
@@ -121,6 +127,7 @@ export const adminApi = {
       explanation_ru: string | null;
       concept_bite_en: string | null;
       concept_bite_ru: string | null;
+      acceptable_tolerance: number | null;
       is_active: boolean;
     }>,
   ): Promise<QuestionRaw> =>
@@ -139,6 +146,24 @@ export const adminApi = {
     input: { count: number; hints?: string },
   ): Promise<QuestionRaw[]> =>
     (await api.post<QuestionRaw[]>(`/admin/los/${lo_id}/questions/generate`, input)).data,
+
+  // ---- Content tree (admin browser) ----
+  // Returns papers nested with their LOs and per-LO question counts. One
+  // network call powers the sidebar tree on the content browser page.
+  getContentTree: async (): Promise<ContentTreePaper[]> =>
+    (await api.get<ContentTreePaper[]>('/admin/content/tree')).data,
+
+  // Bulk-set is_active on multiple questions. Returns the updated rows.
+  setQuestionsActive: async (
+    ids: string[],
+    is_active: boolean,
+  ): Promise<QuestionRaw[]> =>
+    (await api.post<QuestionRaw[]>('/admin/questions/batch/active', { ids, is_active })).data,
+
+  // Bulk hard-delete. Throws 400 if any selected question has dependent
+  // attempts (entire batch rolls back in that case).
+  deleteQuestionsMany: async (ids: string[]): Promise<{ deleted: number }> =>
+    (await api.post<{ deleted: number }>('/admin/questions/batch/delete', { ids })).data,
 
   // ---- UI translations (DB overrides for static locale strings) ----
   listUiTranslations: async (): Promise<UiTranslation[]> =>

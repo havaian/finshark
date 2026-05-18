@@ -81,6 +81,7 @@ function extractError(e: unknown): string | null {
         </div>
         <div class="topbar-right">
           <ThemeSwitch />
+          <RouterLink to="/leaderboards" class="btn btn-ghost">{{ t('nav.leaderboards') }}</RouterLink>
           <RouterLink to="/settings" class="btn btn-ghost">{{ t('nav.settings') }}</RouterLink>
           <RouterLink to="/profile" class="btn btn-ghost">{{ t('nav.profile') }}</RouterLink>
           <button class="btn btn-ghost" @click="onLogout">{{ t('common.sign_out') }}</button>
@@ -129,6 +130,14 @@ function extractError(e: unknown): string | null {
           <button class="btn btn-primary" :disabled="starting" @click="onStartLesson">
             {{ starting ? t('dashboard.starting') : t('dashboard.start_lesson_btn') }}
           </button>
+        </div>
+
+        <!-- Mock CTA — secondary action below the lesson row. Always offered
+             when papers exist; the mock page handles paper selection itself. -->
+        <div v-if="papers.length > 0" class="row mt-4" style="justify-content: flex-end;">
+          <RouterLink to="/mocks/start" class="btn btn-ghost">
+            {{ t('nav.mocks') }} →
+          </RouterLink>
         </div>
 
         <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>

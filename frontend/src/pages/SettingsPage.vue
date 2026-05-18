@@ -49,14 +49,21 @@ const remindersEnabled = computed({
   set: (v: boolean) => persistPreference({ email_reminders_enabled: v }, 'email_reminders'),
 });
 
+const leaderboardOptIn = computed({
+  get: () => auth.user?.leaderboard_opt_in ?? false,
+  set: (v: boolean) => persistPreference({ leaderboard_opt_in: v }, 'leaderboard_opt_in'),
+});
+
 async function persistPreference(payload: UpdatePreferencesPayload, field: string) {
   if (savingField.value || !auth.user) return;
   savingField.value = field;
   errorMsg.value = null;
   try {
     const updated = await profileApi.updatePreferences(payload);
-    auth.user = updated;
-    localStorage.setItem('finshark.user', JSON.stringify(updated));
+    // Use the store helper so localStorage stays in sync via one path. The
+    // previous direct assignment didn't actually mutate the store ref under
+    // Pinia setup syntax, so updates only "looked" applied until next reload.
+    auth.setUser(updated);
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to update settings';
   } finally {
@@ -228,6 +235,31 @@ watch(savingField, (next, prev) => {
           </select>
           <span v-if="justSaved === 'reminder_hour'" class="dim text-xs">{{ t('admin.localization.saved') }} ✓</span>
         </div>
+      </section>
+
+      <!-- Privacy -->
+      <section class="card">
+        <h2>{{ t('settings.privacy_section') }}</h2>
+        <div class="row mt-4">
+          <div class="grow">
+            <div style="font-weight: 500;">{{ t('settings.leaderboard_optin_title') }}</div>
+            <div class="dim text-sm" style="margin-top: 2px;">
+              {{ t('settings.leaderboard_optin_sub') }}
+            </div>
+          </div>
+          <button
+            class="toggle"
+            :class="{ on: leaderboardOptIn }"
+            :disabled="savingField === 'leaderboard_opt_in'"
+            :aria-label="leaderboardOptIn ? t('settings.leaderboard_on') : t('settings.leaderboard_off')"
+            @click="leaderboardOptIn = !leaderboardOptIn"
+          >
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+        <p v-if="justSaved === 'leaderboard_opt_in'" class="dim text-xs mt-2">
+          {{ t('admin.localization.saved') }} ✓
+        </p>
       </section>
 
     </div>

@@ -28,12 +28,13 @@ const newType = ref<QuestionType>('mcq');
 const newDifficulty = ref<QuestionDifficulty>('easy');
 const newPromptEn = ref('');
 const newPromptRu = ref('');
-// Initial 4 MCQ option rows. Each row has its own _en/_ru.
+// Initial 4 MCQ option rows. Each row has its own _en/_ru text and per-option
+// "why this is wrong" explanation (shown to the user on a wrong MCQ answer).
 const newOptions = ref<McqOptionRaw[]>([
-  { key: 'A', text_en: '', text_ru: '' },
-  { key: 'B', text_en: '', text_ru: '' },
-  { key: 'C', text_en: '', text_ru: '' },
-  { key: 'D', text_en: '', text_ru: '' },
+  { key: 'A', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
+  { key: 'B', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
+  { key: 'C', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
+  { key: 'D', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
 ]);
 const newCorrectEn = ref('');
 const newCorrectRu = ref('');
@@ -41,6 +42,8 @@ const newExplanationEn = ref('');
 const newExplanationRu = ref('');
 const newConceptBiteEn = ref('');
 const newConceptBiteRu = ref('');
+// number_entry only: optional ±tolerance. Empty string = use exact match.
+const newAcceptableTolerance = ref('');
 const newLang = ref<EditLang>('en'); // which language tab is active for the create form
 const creating = ref(false);
 
@@ -57,6 +60,7 @@ const editExplanationEn = ref('');
 const editExplanationRu = ref('');
 const editConceptBiteEn = ref('');
 const editConceptBiteRu = ref('');
+const editAcceptableTolerance = ref('');
 const editLang = ref<EditLang>('en');
 
 // --- Generation state ---
@@ -99,23 +103,41 @@ function blankToNull(s: string): string | null {
 
 async function onCreate() {
   // EN fields are required. RU optional. correct_answer_en required (option key for MCQ,
-  // canonical answer for short_answer). For MCQ correct_answer_ru is irrelevant (option key).
+  // canonical answer for short_answer, numeric value as string for number_entry).
   if (!newPromptEn.value.trim() || !newCorrectEn.value.trim() || !newExplanationEn.value.trim())
     return;
   creating.value = true;
   errorMsg.value = null;
   try {
+    const correctKey = newCorrectEn.value.trim();
     const options =
       newType.value === 'mcq'
         ? newOptions.value
             // Keep only rows that have BOTH a key and at least an English text.
             .filter((o) => o.key.trim() && o.text_en.trim())
-            .map((o) => ({
-              key: o.key.trim(),
-              text_en: o.text_en.trim(),
-              text_ru: blankToNull(o.text_ru ?? ''),
-            }))
+            .map((o) => {
+              const isCorrect = o.key.trim() === correctKey;
+              return {
+                key: o.key.trim(),
+                text_en: o.text_en.trim(),
+                text_ru: blankToNull(o.text_ru ?? ''),
+                // Backend scrubs why_wrong on correct option as well, but we
+                // also do it client-side so the payload matches storage.
+                why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
+                why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
+              };
+            })
         : null;
+
+    // Parse optional tolerance for number_entry. Treat empty/whitespace as null
+    // (exact match). Invalid input is silently dropped — server-side validation
+    // will catch malformed numbers anyway, but UX is cleaner if we filter here.
+    const tolRaw = newAcceptableTolerance.value.trim();
+    let tolerance: number | null = null;
+    if (newType.value === 'number_entry' && tolRaw !== '') {
+      const parsed = parseFloat(tolRaw);
+      if (Number.isFinite(parsed) && parsed >= 0) tolerance = parsed;
+    }
 
     const created = await adminApi.createQuestion(loId, {
       type: newType.value,
@@ -124,13 +146,15 @@ async function onCreate() {
       prompt_ru: blankToNull(newPromptRu.value),
       options,
       correct_answer_en: newCorrectEn.value.trim(),
-      // For MCQ the backend forces correct_answer_ru to null anyway. We still send
-      // the field for short_answer cases where it carries the RU canonical answer.
-      correct_answer_ru: newType.value === 'mcq' ? null : blankToNull(newCorrectRu.value),
+      // For MCQ + number_entry the backend forces correct_answer_ru to null.
+      // We still send the field for short_answer where it carries the RU canonical answer.
+      correct_answer_ru:
+        newType.value === 'short_answer' ? blankToNull(newCorrectRu.value) : null,
       explanation_en: newExplanationEn.value.trim(),
       explanation_ru: blankToNull(newExplanationRu.value),
       concept_bite_en: blankToNull(newConceptBiteEn.value),
       concept_bite_ru: blankToNull(newConceptBiteRu.value),
+      acceptable_tolerance: tolerance,
     });
     questions.value = [created, ...questions.value];
     // Reset form (keep type/difficulty for fast multi-add).
@@ -142,11 +166,12 @@ async function onCreate() {
     newExplanationRu.value = '';
     newConceptBiteEn.value = '';
     newConceptBiteRu.value = '';
+    newAcceptableTolerance.value = '';
     newOptions.value = [
-      { key: 'A', text_en: '', text_ru: '' },
-      { key: 'B', text_en: '', text_ru: '' },
-      { key: 'C', text_en: '', text_ru: '' },
-      { key: 'D', text_en: '', text_ru: '' },
+      { key: 'A', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
+      { key: 'B', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
+      { key: 'C', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
+      { key: 'D', text_en: '', text_ru: '', why_wrong_en: null, why_wrong_ru: null },
     ];
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to create question';
@@ -162,7 +187,13 @@ function startEdit(q: QuestionRaw) {
   editPromptEn.value = q.prompt_en;
   editPromptRu.value = q.prompt_ru ?? '';
   editOptions.value = q.options
-    ? q.options.map((o) => ({ key: o.key, text_en: o.text_en, text_ru: o.text_ru ?? '' }))
+    ? q.options.map((o) => ({
+        key: o.key,
+        text_en: o.text_en,
+        text_ru: o.text_ru ?? '',
+        why_wrong_en: o.why_wrong_en ?? '',
+        why_wrong_ru: o.why_wrong_ru ?? '',
+      } as McqOptionRaw))
     : [];
   editCorrectEn.value = q.correct_answer_en;
   editCorrectRu.value = q.correct_answer_ru ?? '';
@@ -170,6 +201,10 @@ function startEdit(q: QuestionRaw) {
   editExplanationRu.value = q.explanation_ru ?? '';
   editConceptBiteEn.value = q.concept_bite_en ?? '';
   editConceptBiteRu.value = q.concept_bite_ru ?? '';
+  editAcceptableTolerance.value =
+    q.acceptable_tolerance !== null && q.acceptable_tolerance !== undefined
+      ? String(q.acceptable_tolerance)
+      : '';
   editLang.value = 'en';
 }
 
@@ -184,16 +219,29 @@ async function saveEdit() {
   savingEdit.value = true;
   errorMsg.value = null;
   try {
+    const correctKey = editCorrectEn.value.trim();
     const options =
       editType.value === 'mcq'
         ? editOptions.value
             .filter((o) => o.key.trim() && o.text_en.trim())
-            .map((o) => ({
-              key: o.key.trim(),
-              text_en: o.text_en.trim(),
-              text_ru: blankToNull(o.text_ru ?? ''),
-            }))
+            .map((o) => {
+              const isCorrect = o.key.trim() === correctKey;
+              return {
+                key: o.key.trim(),
+                text_en: o.text_en.trim(),
+                text_ru: blankToNull(o.text_ru ?? ''),
+                why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
+                why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
+              };
+            })
         : null;
+
+    const tolRaw = editAcceptableTolerance.value.trim();
+    let tolerance: number | null = null;
+    if (editType.value === 'number_entry' && tolRaw !== '') {
+      const parsed = parseFloat(tolRaw);
+      if (Number.isFinite(parsed) && parsed >= 0) tolerance = parsed;
+    }
 
     const updated = await adminApi.updateQuestion(editingId.value, {
       type: editType.value,
@@ -203,11 +251,12 @@ async function saveEdit() {
       options,
       correct_answer_en: editCorrectEn.value.trim(),
       correct_answer_ru:
-        editType.value === 'mcq' ? null : blankToNull(editCorrectRu.value),
+        editType.value === 'short_answer' ? blankToNull(editCorrectRu.value) : null,
       explanation_en: editExplanationEn.value.trim(),
       explanation_ru: blankToNull(editExplanationRu.value),
       concept_bite_en: blankToNull(editConceptBiteEn.value),
       concept_bite_ru: blankToNull(editConceptBiteRu.value),
+      acceptable_tolerance: tolerance,
     });
     questions.value = questions.value.map((q) => (q.id === updated.id ? updated : q));
     editingId.value = null;
@@ -301,6 +350,7 @@ onMounted(load);
           <select v-model="newType">
             <option value="mcq">{{ t('admin.questions.type_mcq') }}</option>
             <option value="short_answer">{{ t('admin.questions.type_short') }}</option>
+            <option value="number_entry">{{ t('admin.questions.type_number') }}</option>
           </select>
         </div>
         <div class="field">
@@ -311,6 +361,20 @@ onMounted(load);
             <option value="hard">{{ t('admin.questions.difficulty_hard') }}</option>
           </select>
         </div>
+      </div>
+
+      <!-- number_entry tolerance — applies regardless of language pane, so it sits
+           outside the lang-tab content. Empty = exact match. -->
+      <div v-if="newType === 'number_entry'" class="field">
+        <label class="field-label">{{ t('admin.questions.tolerance_label') }}</label>
+        <input
+          v-model="newAcceptableTolerance"
+          type="text"
+          inputmode="decimal"
+          maxlength="20"
+          :placeholder="t('admin.questions.tolerance_ph')"
+        />
+        <p class="input-help">{{ t('admin.questions.tolerance_help') }}</p>
       </div>
 
       <!-- Language tabs for this question's localized fields -->
@@ -341,16 +405,29 @@ onMounted(load);
         </div>
         <div v-if="newType === 'mcq'" class="field">
           <label class="field-label">{{ t('admin.questions.options') }}</label>
-          <div class="col" style="gap: 8px;">
-            <div v-for="(opt, i) in newOptions" :key="i" class="option-editor-row">
-              <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" placeholder="A" />
-              <input
-                v-model="opt.text_en"
-                type="text"
-                class="grow"
-                maxlength="500"
-                :placeholder="t('admin.questions.option_text_en_ph')"
-              />
+          <div class="col" style="gap: 12px;">
+            <div v-for="(opt, i) in newOptions" :key="i" class="option-editor-block">
+              <div class="option-editor-row">
+                <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" placeholder="A" />
+                <input
+                  v-model="opt.text_en"
+                  type="text"
+                  class="grow"
+                  maxlength="500"
+                  :placeholder="t('admin.questions.option_text_en_ph')"
+                />
+              </div>
+              <!-- "Why this is wrong" — hidden for the correct option (will be
+                   scrubbed server-side anyway). Useful hint when admins write
+                   distractors: 1 short sentence per wrong option. -->
+              <div v-if="opt.key.trim() !== newCorrectEn.trim()" class="option-why-wrong">
+                <input
+                  v-model="opt.why_wrong_en"
+                  type="text"
+                  maxlength="2000"
+                  :placeholder="t('admin.questions.why_wrong_en_ph')"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -358,10 +435,18 @@ onMounted(load);
           <label class="field-label">
             {{ newType === 'mcq'
               ? t('admin.questions.correct_label_mcq')
-              : t('admin.questions.correct_label_short_en')
+              : newType === 'number_entry'
+                ? t('admin.questions.correct_label_number')
+                : t('admin.questions.correct_label_short_en')
             }}
           </label>
-          <input v-model="newCorrectEn" type="text" maxlength="500" required />
+          <input
+            v-model="newCorrectEn"
+            :type="newType === 'number_entry' ? 'text' : 'text'"
+            :inputmode="newType === 'number_entry' ? 'decimal' : undefined"
+            maxlength="500"
+            required
+          />
         </div>
         <div class="field">
           <label class="field-label">{{ t('admin.questions.explanation_en') }}</label>
@@ -381,20 +466,30 @@ onMounted(load);
         </div>
         <div v-if="newType === 'mcq'" class="field">
           <label class="field-label">{{ t('admin.questions.options') }}</label>
-          <div class="col" style="gap: 8px;">
-            <div v-for="(opt, i) in newOptions" :key="i" class="option-editor-row">
-              <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" disabled />
-              <input
-                v-model="opt.text_ru"
-                type="text"
-                class="grow"
-                maxlength="500"
-                :placeholder="t('admin.questions.option_text_ru_ph')"
-              />
+          <div class="col" style="gap: 12px;">
+            <div v-for="(opt, i) in newOptions" :key="i" class="option-editor-block">
+              <div class="option-editor-row">
+                <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" disabled />
+                <input
+                  v-model="opt.text_ru"
+                  type="text"
+                  class="grow"
+                  maxlength="500"
+                  :placeholder="t('admin.questions.option_text_ru_ph')"
+                />
+              </div>
+              <div v-if="opt.key.trim() !== newCorrectEn.trim()" class="option-why-wrong">
+                <input
+                  v-model="opt.why_wrong_ru"
+                  type="text"
+                  maxlength="2000"
+                  :placeholder="t('admin.questions.why_wrong_ru_ph')"
+                />
+              </div>
             </div>
           </div>
         </div>
-        <!-- MCQ correct_answer is language-neutral (option key) so hide the RU input for MCQ. -->
+        <!-- MCQ + number_entry correct_answer is language-neutral, so hide the RU input for them. -->
         <div v-if="newType === 'short_answer'" class="field">
           <label class="field-label">{{ t('admin.questions.correct_label_short_ru') }}</label>
           <input v-model="newCorrectRu" type="text" maxlength="500" />
@@ -423,7 +518,13 @@ onMounted(load);
 
       <div v-for="q in questions" :key="q.id" :class="['admin-question', { retired: !q.is_active }]">
         <div class="q-head">
-          <span>{{ q.type === 'mcq' ? t('admin.questions.type_mcq') : t('admin.questions.type_short') }}</span>
+          <span>
+            {{
+              q.type === 'mcq' ? t('admin.questions.type_mcq')
+              : q.type === 'number_entry' ? t('admin.questions.type_number')
+              : t('admin.questions.type_short')
+            }}
+          </span>
           <span>·</span>
           <span>{{ q.difficulty }}</span>
           <span v-if="!q.is_active" class="badge badge-retired">{{ t('admin.questions.retired_badge') }}</span>
@@ -436,10 +537,20 @@ onMounted(load);
 
         <ul v-if="q.type === 'mcq' && q.options" class="q-opts">
           <li v-for="opt in q.options" :key="opt.key">
-            <span class="mono">{{ opt.key }}.</span> {{ opt.text_en }}
-            <span v-if="opt.text_ru" class="dim">
-              · <span class="mono text-xs muted">RU</span> {{ opt.text_ru }}
-            </span>
+            <div>
+              <span class="mono">{{ opt.key }}.</span> {{ opt.text_en }}
+              <span v-if="opt.text_ru" class="dim">
+                · <span class="mono text-xs muted">RU</span> {{ opt.text_ru }}
+              </span>
+            </div>
+            <!-- Per-option "why this is wrong" — surfaces in lessons after a wrong pick. -->
+            <div v-if="opt.why_wrong_en" class="dim text-xs mt-1">
+              <span class="muted">{{ t('admin.questions.why_wrong_field') }}:</span>
+              {{ opt.why_wrong_en }}
+              <span v-if="opt.why_wrong_ru" class="dim">
+                · <span class="mono text-xs muted">RU</span> {{ opt.why_wrong_ru }}
+              </span>
+            </div>
           </li>
         </ul>
 
@@ -447,6 +558,12 @@ onMounted(load);
           {{ t('admin.questions.correct_field') }}: <b>{{ q.correct_answer_en }}</b>
           <span v-if="q.type === 'short_answer' && q.correct_answer_ru" class="dim">
             · <span class="mono text-xs muted">RU</span> {{ q.correct_answer_ru }}
+          </span>
+          <span
+            v-if="q.type === 'number_entry' && q.acceptable_tolerance !== null"
+            class="dim"
+          >
+            · {{ t('admin.questions.tolerance_field') }}: ±{{ q.acceptable_tolerance }}
           </span>
         </div>
 
@@ -483,6 +600,7 @@ onMounted(load);
               <select v-model="editType">
                 <option value="mcq">{{ t('admin.questions.type_mcq') }}</option>
                 <option value="short_answer">{{ t('admin.questions.type_short') }}</option>
+                <option value="number_entry">{{ t('admin.questions.type_number') }}</option>
               </select>
             </div>
             <div class="field">
@@ -493,6 +611,18 @@ onMounted(load);
                 <option value="hard">{{ t('admin.questions.difficulty_hard') }}</option>
               </select>
             </div>
+          </div>
+
+          <div v-if="editType === 'number_entry'" class="field mt-2">
+            <label class="field-label">{{ t('admin.questions.tolerance_label') }}</label>
+            <input
+              v-model="editAcceptableTolerance"
+              type="text"
+              inputmode="decimal"
+              maxlength="20"
+              :placeholder="t('admin.questions.tolerance_ph')"
+            />
+            <p class="input-help">{{ t('admin.questions.tolerance_help') }}</p>
           </div>
 
           <div class="lang-tabs" role="tablist">
@@ -522,10 +652,20 @@ onMounted(load);
             </div>
             <div v-if="isEditingMcq" class="field mt-2">
               <label class="field-label">{{ t('admin.questions.options') }}</label>
-              <div class="col" style="gap: 8px;">
-                <div v-for="(opt, i) in editOptions" :key="i" class="option-editor-row">
-                  <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" />
-                  <input v-model="opt.text_en" type="text" class="grow" maxlength="500" />
+              <div class="col" style="gap: 12px;">
+                <div v-for="(opt, i) in editOptions" :key="i" class="option-editor-block">
+                  <div class="option-editor-row">
+                    <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" />
+                    <input v-model="opt.text_en" type="text" class="grow" maxlength="500" />
+                  </div>
+                  <div v-if="opt.key.trim() !== editCorrectEn.trim()" class="option-why-wrong">
+                    <input
+                      v-model="opt.why_wrong_en"
+                      type="text"
+                      maxlength="2000"
+                      :placeholder="t('admin.questions.why_wrong_en_ph')"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -533,10 +673,18 @@ onMounted(load);
               <label class="field-label">
                 {{ editType === 'mcq'
                   ? t('admin.questions.correct_label_mcq')
-                  : t('admin.questions.correct_label_short_en')
+                  : editType === 'number_entry'
+                    ? t('admin.questions.correct_label_number')
+                    : t('admin.questions.correct_label_short_en')
                 }}
               </label>
-              <input v-model="editCorrectEn" type="text" maxlength="500" required />
+              <input
+                v-model="editCorrectEn"
+                type="text"
+                :inputmode="editType === 'number_entry' ? 'decimal' : undefined"
+                maxlength="500"
+                required
+              />
             </div>
             <div class="field mt-2">
               <label class="field-label">{{ t('admin.questions.explanation_en') }}</label>
@@ -556,10 +704,20 @@ onMounted(load);
             </div>
             <div v-if="isEditingMcq" class="field mt-2">
               <label class="field-label">{{ t('admin.questions.options') }}</label>
-              <div class="col" style="gap: 8px;">
-                <div v-for="(opt, i) in editOptions" :key="i" class="option-editor-row">
-                  <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" disabled />
-                  <input v-model="opt.text_ru" type="text" class="grow" maxlength="500" />
+              <div class="col" style="gap: 12px;">
+                <div v-for="(opt, i) in editOptions" :key="i" class="option-editor-block">
+                  <div class="option-editor-row">
+                    <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" disabled />
+                    <input v-model="opt.text_ru" type="text" class="grow" maxlength="500" />
+                  </div>
+                  <div v-if="opt.key.trim() !== editCorrectEn.trim()" class="option-why-wrong">
+                    <input
+                      v-model="opt.why_wrong_ru"
+                      type="text"
+                      maxlength="2000"
+                      :placeholder="t('admin.questions.why_wrong_ru_ph')"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

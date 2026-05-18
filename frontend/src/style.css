@@ -24,12 +24,16 @@
   --text-dim:       #a0a0a8;
   --text-mute:      #6a6a73;
 
-  /* primary purple */
-  --accent:         #7c5cff;
-  --accent-hot:     #9c82ff;
-  --accent-deep:    #5a3eef;
-  --accent-glow:    rgba(124, 92, 255, 0.18);
-  --accent-soft-bg: rgba(124, 92, 255, 0.10);
+  /* primary — sage (matches logo). Anchored on #5d9985 (the lighter logo stop)
+     so the accent reads as a confident brand color on the near-black surfaces,
+     with --accent-hot for hover and --accent-deep for active. Re-uses the
+     existing --sage tokens conceptually (same hue family), but kept under the
+     --accent name so the hundreds of existing usages don't need to change. */
+  --accent:         #5d9985;
+  --accent-hot:     #7ab5a0;
+  --accent-deep:    #3f6b5b;
+  --accent-glow:    rgba(93, 153, 133, 0.22);
+  --accent-soft-bg: rgba(93, 153, 133, 0.12);
 
   /* secondary identity (logo only) */
   --sage:           #4a7d6a;
@@ -81,11 +85,11 @@
   --text-dim:       #5a5852;
   --text-mute:      #8a877f;
 
-  --accent:         #6840ff;     /* slightly deeper purple — needs more contrast on light */
-  --accent-hot:     #4f2af0;
-  --accent-deep:    #4017d4;
-  --accent-glow:    rgba(104, 64, 255, 0.16);
-  --accent-soft-bg: rgba(104, 64, 255, 0.08);
+  --accent:         #2d5e4d;     /* deep sage — holds contrast on cream */
+  --accent-hot:     #1f4c3c;
+  --accent-deep:    #15392c;
+  --accent-glow:    rgba(45, 94, 77, 0.16);
+  --accent-soft-bg: rgba(45, 94, 77, 0.08);
 
   --sage:           #3d6a59;     /* deeper sage holds on cream */
   --sage-hot:       #4d8270;
@@ -1160,4 +1164,1103 @@ textarea { resize: vertical; min-height: 80px; }
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
+}
+
+/* -----------------------------------------------------------
+   27) Theory primer (pre-lesson Kaplan-style bites)
+   ----------------------------------------------------------- */
+
+.theory-intro {
+  /* The card class already provides surface + padding; this just tunes copy. */
+}
+.theory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.theory-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.theory-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.theory-lo-code {
+  font-size: 12px;
+  color: var(--text-mute);
+  background: var(--grey-band);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+.theory-lo-title {
+  font-weight: 500;
+  color: var(--text);
+}
+.theory-body {
+  color: var(--text-dim);
+  line-height: 1.65;
+  font-size: 15px;
+  white-space: pre-wrap;
+}
+
+/* -----------------------------------------------------------
+   28) Number entry input
+   ----------------------------------------------------------- */
+
+.number-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.number-input {
+  /* Match the textarea/input look elsewhere but a touch larger so calculation
+     answers feel weighty. tabular-nums keeps the digits aligned visually. */
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  letter-spacing: 0.01em;
+  max-width: 280px;
+}
+.tolerance-hint {
+  color: var(--text-mute);
+  margin-left: 8px;
+}
+
+/* -----------------------------------------------------------
+   29) "Why are the others wrong?" expander
+   ----------------------------------------------------------- */
+
+.why-wrong-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.why-wrong-toggle {
+  /* Inherits .btn-link styling. No padding override; this is a tight inline action. */
+  font-size: 13px;
+}
+.why-wrong-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.why-wrong-item {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 10px 12px;
+  background: var(--grey-band);
+  border-radius: 8px;
+}
+.why-wrong-key {
+  flex: 0 0 auto;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-size: 13px;
+  min-width: 18px;
+}
+.why-wrong-text {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* -----------------------------------------------------------
+   30) Admin: per-option why_wrong editor row
+   ----------------------------------------------------------- */
+
+.option-editor-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--grey-band);
+}
+.option-why-wrong {
+  display: flex;
+  padding-left: 68px; /* aligns with .opt-key-input width (60) + gap (8) */
+}
+.option-why-wrong input {
+  width: 100%;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* -----------------------------------------------------------
+   31) Admin: LO theory preview + editor
+   ----------------------------------------------------------- */
+
+.lo-theory-preview {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--grey-band);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-soft-bg);
+}
+.lo-theory-tag {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-bottom: 4px;
+}
+.lo-theory-editor {
+  padding: 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* -----------------------------------------------------------
+   32) Mobile tightenings for the new components
+   ----------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .number-input {
+    max-width: none;
+    width: 100%;
+  }
+  .option-why-wrong {
+    /* On narrow screens, just drop the indent — option keys wrap above anyway. */
+    padding-left: 0;
+  }
+  .theory-card {
+    padding: 14px 14px;
+  }
+  .theory-body {
+    font-size: 14px;
+  }
+}
+
+/* -----------------------------------------------------------
+   33) Admin content browser (unified tree + question list)
+   ----------------------------------------------------------- */
+
+.content-browser {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  height: calc(100vh - 48px);
+  /* Sit just inside the admin shell's padding; the content-tree scrolls
+     independently of the right pane. */
+}
+
+.content-tree {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-y: auto;
+  min-height: 0; /* allow flex/grid child to shrink for scroll */
+}
+.content-tree-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.content-tree-head h2 {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.content-tree-paper {
+  margin-bottom: 4px;
+}
+.content-tree-paper-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px 6px;
+  border-radius: 6px;
+  text-align: left;
+  font: inherit;
+}
+.content-tree-paper-head:hover {
+  background: var(--bg-elev);
+}
+.content-tree-arrow {
+  color: var(--text-mute);
+  width: 14px;
+  font-size: 11px;
+  flex: 0 0 auto;
+}
+.content-tree-paper-code {
+  font-size: 12px;
+  color: var(--text-mute);
+  background: var(--grey-band);
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.content-tree-paper-name {
+  font-weight: 500;
+  font-size: 14px;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content-tree-los {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.content-tree-lo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 6px 8px 6px 12px;
+  border-radius: 6px;
+  text-align: left;
+  font: inherit;
+}
+.content-tree-lo:hover {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+.content-tree-lo.active {
+  background: var(--accent-soft-bg);
+  color: var(--text);
+}
+.content-tree-lo-code {
+  font-size: 11px;
+  color: var(--text-mute);
+  flex: 0 0 auto;
+  min-width: 18px;
+}
+.content-tree-lo.active .content-tree-lo-code {
+  color: var(--accent-hot);
+}
+.content-tree-lo-title {
+  flex: 1 1 auto;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.content-tree-lo-counts {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.content-tree-count {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--grey-band);
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+.content-tree-count.draft {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
+  padding: 0 5px;
+}
+
+.content-main {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.content-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 40px;
+}
+.content-main-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.content-main-head h1 {
+  margin: 4px 0 0;
+}
+.content-main-breadcrumb {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.content-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.content-tabs {
+  display: flex;
+  gap: 4px;
+}
+.content-tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.content-tab:hover {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+.content-tab.active {
+  background: var(--accent-soft-bg);
+  border-color: var(--accent);
+  color: var(--accent-hot);
+}
+.content-tab-count {
+  font-size: 11px;
+  background: var(--grey-band);
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.content-tab.active .content-tab-count {
+  background: var(--accent-soft-bg);
+  color: var(--accent-hot);
+}
+
+.content-search {
+  flex: 1 1 240px;
+  max-width: 320px;
+}
+
+.content-batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.content-question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.content-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.content-question {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.content-question.draft {
+  border-left: 3px solid var(--amber);
+}
+.content-question-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-mute);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.content-question-check {
+  display: inline-flex;
+  margin-right: 4px;
+  cursor: pointer;
+}
+.content-question-type {
+  font-weight: 500;
+  color: var(--text-dim);
+}
+.content-question-prompt {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.content-question-prompt-ru {
+  margin-top: 4px;
+}
+.content-question-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.badge-draft {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.modal-card-wide {
+  max-width: 720px;
+}
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.modal-head h2 {
+  margin: 0;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* Mobile: stack tree above main, give tree a max-height so it doesn't dominate. */
+@media (max-width: 900px) {
+  .content-browser {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .content-tree {
+    max-height: 320px;
+  }
+  .content-main {
+    min-height: 50vh;
+  }
+}
+
+/* -----------------------------------------------------------
+   34) Onboarding wizard
+   ----------------------------------------------------------- */
+
+.onboarding-page {
+  /* The .page utility class gives padding; we just center the inner frame. */
+  display: flex;
+  justify-content: center;
+}
+.onboarding-frame {
+  width: 100%;
+  max-width: 680px;
+  padding: 24px 0 48px;
+}
+
+.onboarding-head {
+  position: relative;
+  margin-bottom: 32px;
+}
+.onboarding-head h1 {
+  margin: 0;
+}
+.onboarding-head p {
+  margin-top: 8px;
+  font-size: 15px;
+}
+.onboarding-skip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 13px;
+}
+
+.onboarding-section {
+  margin-bottom: 32px;
+}
+.onboarding-section h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
+/* Three big stacked cards for bg-level — each shows title + description. */
+.onboarding-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.onboarding-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  /* No transform: scale per user preferences. Border + bg shift only. */
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.onboarding-card:hover {
+  border-color: var(--border-strong);
+}
+.onboarding-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft-bg);
+}
+.onboarding-card-title {
+  font-weight: 500;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.onboarding-card-desc {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Compact chip row for time budget + paper picks. */
+.onboarding-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.onboarding-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.onboarding-chip:hover {
+  border-color: var(--border-strong);
+}
+.onboarding-chip.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft-bg);
+  color: var(--accent-hot);
+}
+.onboarding-chip-paper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.onboarding-chip-paper .mono {
+  color: var(--text-mute);
+  font-size: 12px;
+}
+.onboarding-chip-paper.selected .mono {
+  color: var(--accent-hot);
+}
+
+/* Toggle row for reminders — checkbox + labelled body. */
+.onboarding-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.onboarding-toggle input {
+  margin-top: 3px;
+}
+.onboarding-toggle-title {
+  display: block;
+  font-weight: 500;
+  font-size: 15px;
+}
+.onboarding-toggle-desc {
+  display: block;
+  margin-top: 4px;
+}
+
+.onboarding-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .onboarding-skip {
+    /* Tap targets — keep skip available but stop overlapping the title text. */
+    position: static;
+    margin-top: 8px;
+  }
+  .onboarding-head {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* -----------------------------------------------------------
+   36) Leaderboards
+   ----------------------------------------------------------- */
+
+.leaderboard-optin-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.leaderboard-optin-title {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.leaderboard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.leaderboard-paper-select {
+  max-width: 280px;
+  /* Inherits base select styling. */
+}
+
+.leaderboard-empty {
+  padding: 40px;
+  text-align: center;
+  background: var(--bg-elev);
+  border-radius: 10px;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.leaderboard-table thead th {
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
+.leaderboard-table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.leaderboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.leaderboard-table tbody tr:hover {
+  background: var(--bg-elev);
+}
+
+.lb-col-rank {
+  width: 50px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.lb-col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  width: 90px;
+}
+
+/* Highlight the current user's row with a soft accent wash. */
+.lb-row-self td {
+  background: var(--accent-soft-bg);
+}
+.lb-row-self td:first-child {
+  border-left: 3px solid var(--accent);
+  /* Shift content by border width so cell text doesn't jump. */
+  padding-left: 9px;
+}
+
+.lb-you-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+:root[data-theme="light"] .lb-you-badge {
+  color: #fff;
+}
+
+.lb-streak-fire {
+  margin-left: 4px;
+}
+
+@media (max-width: 640px) {
+  .leaderboard-table {
+    font-size: 13px;
+  }
+  .leaderboard-table thead th,
+  .leaderboard-table tbody td {
+    padding: 8px 6px;
+  }
+  .lb-col-num {
+    width: auto;
+  }
+  .lb-col-rank {
+    width: 32px;
+  }
+}
+
+/* -----------------------------------------------------------
+   37) Badges — profile grid + lesson-finale ribbon
+   ----------------------------------------------------------- */
+
+/* --- Profile grid --- */
+
+.badges-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.badges-section-head h2 {
+  margin: 0;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.badge-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  /* Tooltip cursor on hover signals there's more (the description). */
+  cursor: help;
+}
+.badge-tile-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+.badge-tile-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  /* Two-line clamp so long names don't blow out tile heights. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.badge-tile-locked-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Locked tiles: greyscaled icon + reduced opacity so the eye skips past them
+   but they remain readable. Greyscale on the WHOLE tile is too heavy; we just
+   desaturate the icon and dim the text. */
+.badge-tile.locked {
+  background: transparent;
+}
+.badge-tile.locked .badge-tile-icon {
+  filter: grayscale(1);
+  opacity: 0.35;
+}
+.badge-tile.locked .badge-tile-name {
+  color: var(--text-mute);
+}
+
+/* --- Lesson-finale ribbon --- */
+
+.badge-earned-ribbon {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+}
+.badge-earned-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-hot);
+  margin-bottom: 10px;
+}
+.badge-earned-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.badge-earned-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 90px;
+}
+.badge-earned-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.badge-earned-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .badges-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+  .badge-tile {
+    padding: 12px 8px;
+  }
+  .badge-tile-icon {
+    font-size: 26px;
+  }
+}
+
+/* -----------------------------------------------------------
+   38) Mocks — timer pill, start picker, breakdown bars
+   ----------------------------------------------------------- */
+
+/* Timer pill replaces the hearts-row in the lesson topbar when a mock is
+   loaded. Same vertical footprint so the bar doesn't jump on layout. */
+.mock-timer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 64px;
+  /* tabular-nums keeps the digits from shifting horizontally each tick. */
+  font-variant-numeric: tabular-nums;
+}
+.mock-timer.warning {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* --- Mock start picker --- */
+
+.mock-start-card {
+  /* Inherits .card base; just a holder for the field stack. */
+}
+.mock-paper-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mock-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mock-option {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+}
+.mock-option:hover {
+  background: var(--grey-band);
+}
+.mock-option.selected {
+  background: var(--accent-soft-bg);
+  border-color: var(--accent);
+  color: var(--accent-hot);
+}
+.mock-option-compact {
+  padding: 8px 16px;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* --- Mock breakdown --- */
+
+.mock-overall-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 32px 24px;
+}
+.mock-overall-card.passed {
+  background: rgba(74, 222, 128, 0.08);
+  border-color: var(--success);
+}
+.mock-overall-card.failed {
+  background: rgba(248, 113, 113, 0.06);
+  border-color: var(--danger);
+}
+.mock-overall-pct {
+  font-size: 64px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+}
+.mock-overall-card.passed .mock-overall-pct {
+  color: var(--success);
+}
+.mock-overall-card.failed .mock-overall-pct {
+  color: var(--danger);
+}
+.mock-overall-fraction {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.mock-overall-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-top: 8px;
+}
+
+.mock-lo-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mock-lo-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "head head"
+    "bar  pct";
+  gap: 4px 12px;
+  align-items: center;
+}
+.mock-lo-head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+}
+.mock-lo-head .mock-lo-title {
+  flex: 1 1 auto;
+  color: var(--text);
+}
+.mock-lo-bar-track {
+  grid-area: bar;
+  height: 6px;
+  background: var(--grey-band);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mock-lo-bar-fill {
+  height: 100%;
+  transition: width 280ms ease-out;
+  /* No transform: scale here per project preference. The width transition
+     gives a clean grow animation without the blurry pixel artifacts of scale. */
+}
+.mock-lo-pct {
+  grid-area: pct;
+  text-align: right;
+  min-width: 38px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+  .mock-overall-pct {
+    font-size: 48px;
+  }
+  .mock-option {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  .mock-option-compact {
+    padding: 8px 12px;
+    min-width: 64px;
+  }
 }

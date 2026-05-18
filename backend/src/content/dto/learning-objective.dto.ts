@@ -7,6 +7,10 @@ import {
   ValidateIf,
 } from 'class-validator';
 
+// Cap theory at ~5000 chars (~750 words) — well above the 150-300 word target
+// but a safety guard against pathological pastes.
+const THEORY_MAX = 5000;
+
 export class CreateLoDto {
   @IsString()
   @Length(1, 32)
@@ -31,6 +35,18 @@ export class CreateLoDto {
   @ValidateIf((_o, v) => v !== null)
   @IsString()
   description_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, THEORY_MAX)
+  theory_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, THEORY_MAX)
+  theory_ru?: string | null;
 
   @IsOptional()
   @IsInt()
@@ -64,6 +80,18 @@ export class UpdateLoDto {
   @ValidateIf((_o, v) => v !== null)
   @IsString()
   description_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, THEORY_MAX)
+  theory_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, THEORY_MAX)
+  theory_ru?: string | null;
 
   @IsOptional()
   @IsInt()

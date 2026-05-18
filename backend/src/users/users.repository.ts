@@ -8,6 +8,8 @@ const USER_COLS = `
   id, email, google_sub, display_name, streak_count, xp, level,
   last_active_date, is_admin, email_reminders_enabled,
   reminder_hour_utc, preferred_difficulty, lesson_size,
+  bg_level, time_budget_minutes, preferred_paper_id, onboarded_at,
+  leaderboard_opt_in,
   created_at, updated_at
 `;
 
@@ -128,8 +130,8 @@ export class UsersRepository {
   }
 
   // Update preference fields (lesson size, preferred difficulty, reminder hour,
-  // email reminders enabled). Pass undefined to skip a field; pass null to set
-  // preferred_difficulty back to "auto".
+  // email reminders enabled, leaderboard opt-in). Pass undefined to skip a
+  // field; pass null to set preferred_difficulty back to "auto".
   async updatePreferences(
     id: string,
     input: {
@@ -137,6 +139,7 @@ export class UsersRepository {
       preferred_difficulty?: 'easy' | 'medium' | 'hard' | null;
       lesson_size?: number;
       email_reminders_enabled?: boolean;
+      leaderboard_opt_in?: boolean;
     },
   ): Promise<UserRow | null> {
     const sets: Record<string, unknown> = {};
@@ -145,8 +148,48 @@ export class UsersRepository {
     if (input.lesson_size !== undefined) sets.lesson_size = input.lesson_size;
     if (input.email_reminders_enabled !== undefined)
       sets.email_reminders_enabled = input.email_reminders_enabled;
+    if (input.leaderboard_opt_in !== undefined)
+      sets.leaderboard_opt_in = input.leaderboard_opt_in;
 
     if (Object.keys(sets).length === 0) return this.findById(id);
+
+    const rows = await this.sql<UserRow[]>`
+      UPDATE users SET ${this.sql(sets)}
+      WHERE id = ${id}
+      RETURNING ${this.sql.unsafe(USER_COLS)}
+    `;
+    return rows[0] ?? null;
+  }
+
+  // Apply an onboarding submission. Always sets onboarded_at = NOW(), so the
+  // user passes the dashboard guard afterwards regardless of how many fields
+  // they filled in.
+  //
+  // Skip flow: pass all four optional fields as undefined → only onboarded_at
+  // is written; user keeps the column defaults (bg_level=NULL, time_budget=15,
+  // preferred_paper_id=NULL). lesson_size/preferred_difficulty stay at their
+  // existing values too.
+  //
+  // Full flow: pass bg_level + time_budget + preferred_paper_id, AND derived
+  // lesson_size / preferred_difficulty from the service. We don't compute
+  // them here so the repo stays a thin SQL wrapper.
+  async applyOnboarding(
+    id: string,
+    input: {
+      bg_level?: 'beginner' | 'intermediate' | 'advanced' | null;
+      time_budget_minutes?: number;
+      preferred_paper_id?: string | null;
+      // Derived from bg_level + time_budget by the service. Pass undefined to leave alone.
+      preferred_difficulty?: 'easy' | 'medium' | 'hard' | null;
+      lesson_size?: number;
+    },
+  ): Promise<UserRow | null> {
+    const sets: Record<string, unknown> = { onboarded_at: new Date() };
+    if (input.bg_level !== undefined) sets.bg_level = input.bg_level;
+    if (input.time_budget_minutes !== undefined) sets.time_budget_minutes = input.time_budget_minutes;
+    if (input.preferred_paper_id !== undefined) sets.preferred_paper_id = input.preferred_paper_id;
+    if (input.preferred_difficulty !== undefined) sets.preferred_difficulty = input.preferred_difficulty;
+    if (input.lesson_size !== undefined) sets.lesson_size = input.lesson_size;
 
     const rows = await this.sql<UserRow[]>`
       UPDATE users SET ${this.sql(sets)}
@@ -183,6 +226,17 @@ export class UsersRepository {
   async setEmailReminders(id: string, enabled: boolean): Promise<UserRow | null> {
     const rows = await this.sql<UserRow[]>`
       UPDATE users SET email_reminders_enabled = ${enabled}
+      WHERE id = ${id}
+      RETURNING ${this.sql.unsafe(USER_COLS)}
+    `;
+    return rows[0] ?? null;
+  }
+
+  // Toggle whether the user appears on leaderboards. Privacy default is OFF;
+  // the user must explicitly opt in either from Settings or onboarding.
+  async setLeaderboardOptIn(id: string, opted_in: boolean): Promise<UserRow | null> {
+    const rows = await this.sql<UserRow[]>`
+      UPDATE users SET leaderboard_opt_in = ${opted_in}
       WHERE id = ${id}
       RETURNING ${this.sql.unsafe(USER_COLS)}
     `;

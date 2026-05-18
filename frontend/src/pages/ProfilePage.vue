@@ -18,6 +18,8 @@ import {
   Legend,
 } from 'chart.js';
 import { profileApi, type ProfileMe, type ProfileStats } from '../api/profile.api';
+import { badgesApi } from '../api/badges.api';
+import type { PublicBadge } from '../types/badges';
 import { useAuthStore } from '../stores/auth.store';
 import { useThemeStore } from '../stores/theme.store';
 
@@ -39,6 +41,16 @@ const me = ref<ProfileMe | null>(null);
 const stats = ref<ProfileStats | null>(null);
 const loading = ref(true);
 const errorMsg = ref<string | null>(null);
+
+// Badges (3.4). Fetched in parallel with profile/stats; failure is non-fatal —
+// the page still renders fine without badges (we just hide the section).
+const badges = ref<PublicBadge[]>([]);
+const badgesLoading = ref(true);
+
+const badgesEarnedCount = computed(() =>
+  badges.value.filter((b) => b.earned).length,
+);
+const badgesTotalCount = computed(() => badges.value.length);
 
 // Display name edit state
 const editName = ref(false);
@@ -72,6 +84,21 @@ async function load() {
   loading.value = true;
   errorMsg.value = null;
   try {
+    // Fetch profile + stats together. Badges run in parallel via separate
+    // promise so a badge endpoint failure doesn't kill the rest of the page.
+    const badgesPromise = badgesApi
+      .getMine()
+      .then((rows) => {
+        badges.value = rows;
+      })
+      .catch(() => {
+        // Swallow — badge grid will just be empty and hidden.
+        badges.value = [];
+      })
+      .finally(() => {
+        badgesLoading.value = false;
+      });
+
     const [meData, statsData] = await Promise.all([
       profileApi.getMe(),
       profileApi.getStats(),
@@ -82,6 +109,8 @@ async function load() {
     // Charts need the DOM to be there first.
     await nextTick();
     renderCharts();
+    // Don't block the page on badges — they show up as soon as they arrive.
+    void badgesPromise;
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to load profile';
   } finally {
@@ -454,6 +483,39 @@ onMounted(load);
             <p v-else class="dim text-sm mt-4">{{ t('progress.no_weak_topics') }}</p>
           </section>
         </div>
+
+        <!-- Badges (3.4). Renders the full catalog so users see what's available
+             alongside what they've earned. Unearned tiles get .locked styling
+             (greyscale + opacity). Section hides entirely on fetch failure
+             (badges.length === 0 AND not loading) — graceful degradation. -->
+        <section
+          v-if="badgesLoading || badges.length > 0"
+          class="card badges-section mt-6"
+        >
+          <header class="badges-section-head">
+            <h2>{{ t('profile.badges_section') }}</h2>
+            <span v-if="!badgesLoading" class="dim text-sm">
+              {{ t('profile.badges_earned_count', { earned: badgesEarnedCount, total: badgesTotalCount }) }}
+            </span>
+          </header>
+          <p v-if="badgesLoading" class="dim text-sm">
+            {{ t('profile.badges_loading') }}
+          </p>
+          <div v-else class="badges-grid">
+            <div
+              v-for="b in badges"
+              :key="b.code"
+              :class="['badge-tile', { locked: !b.earned }]"
+              :title="b.description"
+            >
+              <span class="badge-tile-icon">{{ b.icon }}</span>
+              <span class="badge-tile-name">{{ b.name }}</span>
+              <span v-if="!b.earned" class="badge-tile-locked-label dim text-xs">
+                {{ t('profile.badges_unearned_label') }}
+              </span>
+            </div>
+          </div>
+        </section>
 
         <!-- Danger zone -->
         <section class="card danger-zone mt-6">

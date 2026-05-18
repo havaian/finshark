@@ -3,7 +3,7 @@
 //  - "Raw" (admin) — both _en and _ru fields. Used in admin editor pages.
 //  - Localized   (public) — single resolved string per field. Used in dashboard, lesson, progress.
 
-export type QuestionType = 'mcq' | 'short_answer';
+export type QuestionType = 'mcq' | 'short_answer' | 'number_entry';
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
 
 // ---- Raw (admin) shapes ----
@@ -25,6 +25,9 @@ export interface LearningObjectiveRaw {
   title_ru: string | null;
   description_en: string | null;
   description_ru: string | null;
+  // Long-form theory (150-300 words, Kaplan-style). Optional per LO.
+  theory_en: string | null;
+  theory_ru: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -34,6 +37,10 @@ export interface McqOptionRaw {
   key: string;
   text_en: string;
   text_ru: string | null;
+  // Per-option "why this is wrong" explanations, shown after a wrong MCQ answer.
+  // Always null on the correct option (storage invariant).
+  why_wrong_en: string | null;
+  why_wrong_ru: string | null;
 }
 
 export interface QuestionRaw {
@@ -56,6 +63,9 @@ export interface QuestionRaw {
   concept_bite_en: string | null;
   concept_bite_ru: string | null;
 
+  // number_entry only: absolute ±tolerance; null = exact match.
+  acceptable_tolerance: number | null;
+
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -77,6 +87,7 @@ export interface LearningObjective {
   code: string;
   title: string;
   description: string | null;
+  theory: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -85,6 +96,9 @@ export interface LearningObjective {
 export interface McqOption {
   key: string;
   text: string;
+  // Resolved per-option "why this is wrong" — null on the correct option, or
+  // when the admin hasn't written one yet.
+  why_wrong: string | null;
 }
 
 export interface Question {
@@ -97,6 +111,7 @@ export interface Question {
   correct_answer: string;
   explanation: string;
   concept_bite: string | null;
+  acceptable_tolerance: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -110,4 +125,29 @@ export interface UiTranslation {
   value: string;
   created_at: string;
   updated_at: string;
+}
+
+// ---- Admin content browser ----
+
+// Shape returned by GET /admin/content/tree — papers with nested LO summaries.
+// Powers the sidebar tree on the unified admin content browser. Includes
+// per-LO question counts so the UI can badge each LO without follow-up calls.
+export interface ContentTreeLo {
+  id: string;
+  code: string;
+  title_en: string;
+  title_ru: string | null;
+  sort_order: number;
+  // True when the LO has a non-null theory_en (a primer is available).
+  has_theory: boolean;
+  active_count: number;
+  draft_count: number;
+}
+
+export interface ContentTreePaper {
+  id: string;
+  code: string;
+  name_en: string;
+  name_ru: string | null;
+  learning_objectives: ContentTreeLo[];
 }

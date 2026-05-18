@@ -16,6 +16,7 @@ import "dotenv/config";
 import postgres from "postgres";
 import { F1_PAPER } from "./data/f1";
 import { F5_PAPER } from "./data/f5";
+import { BADGES } from "./data/badges";
 import type { SeedPaper, SeedQuestion } from "./data/types";
 
 const PAPERS: SeedPaper[] = [F1_PAPER, F5_PAPER];
@@ -30,6 +31,24 @@ async function main() {
   const sql = postgres(url, { max: 1 });
 
   try {
+    // ── Badges catalog ─────────────────────────────────────────────────
+    // Upsert by code: changes to copy/icon/sort_order are picked up on every
+    // run. Never rename a code — it's the FK target in user_badges.
+    for (const b of BADGES) {
+      await sql`
+        INSERT INTO badges (code, name_en, name_ru, description_en, description_ru, icon, sort_order)
+        VALUES (${b.code}, ${b.name_en}, ${b.name_ru}, ${b.description_en}, ${b.description_ru}, ${b.icon}, ${b.sort_order})
+        ON CONFLICT (code) DO UPDATE
+          SET name_en = EXCLUDED.name_en,
+              name_ru = EXCLUDED.name_ru,
+              description_en = EXCLUDED.description_en,
+              description_ru = EXCLUDED.description_ru,
+              icon = EXCLUDED.icon,
+              sort_order = EXCLUDED.sort_order
+      `;
+    }
+    console.log(`[upsert] ${BADGES.length} badge catalog entries`);
+
     for (const paper of PAPERS) {
       // Check if this paper code already exists. If so, skip the whole paper.
       const existing = await sql<Array<{ id: string }>>`
@@ -55,11 +74,18 @@ async function main() {
         for (const lo of paper.learning_objectives) {
           const loRows = await tx<Array<{ id: string }>>`
             INSERT INTO learning_objectives (
-              paper_id, code, title_en, title_ru, description_en, description_ru, sort_order
+              paper_id, code,
+              title_en, title_ru,
+              description_en, description_ru,
+              theory_en, theory_ru,
+              sort_order
             )
             VALUES (
-              ${paperId}, ${lo.code}, ${lo.title_en}, ${lo.title_ru},
-              ${lo.description_en}, ${lo.description_ru}, ${lo.sort_order}
+              ${paperId}, ${lo.code},
+              ${lo.title_en}, ${lo.title_ru},
+              ${lo.description_en}, ${lo.description_ru},
+              ${lo.theory_en ?? null}, ${lo.theory_ru ?? null},
+              ${lo.sort_order}
             )
             RETURNING id
           `;
@@ -82,18 +108,32 @@ async function main() {
 }
 
 // Insert a single question into the given LO using the active tx handle.
-// Discriminates on q.type to populate MCQ-specific (options + correct option key)
-// vs short_answer-specific (canonical text per language) fields.
+// Discriminates on q.type to populate the right shape per type:
+//   - mcq: options JSONB + correct option key in correct_answer_en
+//   - short_answer: canonical text per language
+//   - number_entry: numeric value (string) in correct_answer_en, optional tolerance
 async function insertQuestion(
   tx: postgres.TransactionSql,
   lo_id: string,
   q: SeedQuestion
 ): Promise<void> {
   if (q.type === "mcq") {
-    // MCQ options must be persisted as a JSONB array. correct_answer_en is
-    // the option key (e.g. 'A'); correct_answer_ru is unused for MCQ so we
-    // store NULL — the lang resolver falls back to the EN value (the key).
-    const optionsJson = tx.json(q.options as unknown as postgres.JSONValue);
+    // Belt-and-braces: scrub why_wrong from the correct option so storage
+    // invariant holds even if the seed author forgot.
+    const cleanedOptions = q.options.map((o) => {
+      if (o.key === q.correct_answer_en) {
+        // Strip why_wrong on correct option.
+        const { why_wrong_en, why_wrong_ru, ...rest } = o;
+        void why_wrong_en; void why_wrong_ru;
+        return { ...rest, why_wrong_en: null, why_wrong_ru: null };
+      }
+      return {
+        ...o,
+        why_wrong_en: o.why_wrong_en ?? null,
+        why_wrong_ru: o.why_wrong_ru ?? null,
+      };
+    });
+    const optionsJson = tx.json(cleanedOptions as unknown as postgres.JSONValue);
     await tx`
       INSERT INTO questions (
         lo_id, type, difficulty,
@@ -102,6 +142,7 @@ async function insertQuestion(
         correct_answer_en, correct_answer_ru,
         explanation_en, explanation_ru,
         concept_bite_en, concept_bite_ru,
+        acceptable_tolerance,
         is_active
       ) VALUES (
         ${lo_id}, ${q.type}, ${q.difficulty},
@@ -110,10 +151,13 @@ async function insertQuestion(
         ${q.correct_answer_en}, ${null},
         ${q.explanation_en}, ${q.explanation_ru},
         ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
+        ${null},
         TRUE
       )
     `;
-  } else {
+  } else if (q.type === "number_entry") {
+    // No options; correct_answer_ru is null (numbers are language-neutral);
+    // tolerance flows through if provided.
     await tx`
       INSERT INTO questions (
         lo_id, type, difficulty,
@@ -122,6 +166,30 @@ async function insertQuestion(
         correct_answer_en, correct_answer_ru,
         explanation_en, explanation_ru,
         concept_bite_en, concept_bite_ru,
+        acceptable_tolerance,
+        is_active
+      ) VALUES (
+        ${lo_id}, ${q.type}, ${q.difficulty},
+        ${q.prompt_en}, ${q.prompt_ru},
+        ${null},
+        ${q.correct_answer_en}, ${null},
+        ${q.explanation_en}, ${q.explanation_ru},
+        ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
+        ${q.acceptable_tolerance ?? null},
+        TRUE
+      )
+    `;
+  } else {
+    // short_answer
+    await tx`
+      INSERT INTO questions (
+        lo_id, type, difficulty,
+        prompt_en, prompt_ru,
+        options,
+        correct_answer_en, correct_answer_ru,
+        explanation_en, explanation_ru,
+        concept_bite_en, concept_bite_ru,
+        acceptable_tolerance,
         is_active
       ) VALUES (
         ${lo_id}, ${q.type}, ${q.difficulty},
@@ -130,6 +198,7 @@ async function insertQuestion(
         ${q.correct_answer_en}, ${q.correct_answer_ru},
         ${q.explanation_en}, ${q.explanation_ru},
         ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
+        ${null},
         TRUE
       )
     `;

@@ -30,8 +30,14 @@ export function applySm2(prev: SrsState, quality: number, today: Date): SrsState
     repetitions = 0;
     interval_days = 1;
   } else {
+    // First-correct interval bumped from textbook SM-2's 1 day to 3 days.
+    // Rationale: stock SM-2 puts a just-answered-correctly card back the very
+    // next day, which felt repetitive for users — getting an easy question
+    // right and seeing it again 24h later is more annoying than useful.
+    // 3 days is still inside the typical "consolidation window" so we don't
+    // lose retention benefits. Second-correct stays at 6 days (textbook).
     if (repetitions === 0) {
-      interval_days = 1;
+      interval_days = 3;
     } else if (repetitions === 1) {
       interval_days = 6;
     } else {

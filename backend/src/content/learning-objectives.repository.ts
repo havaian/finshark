@@ -6,6 +6,7 @@ import type { LearningObjectiveRow } from './content.types';
 const COLS = `
   id, paper_id, code,
   title_en, title_ru, description_en, description_ru,
+  theory_en, theory_ru,
   sort_order, created_at, updated_at
 `;
 
@@ -29,6 +30,18 @@ export class LearningObjectivesRepository {
     return rows[0] ?? null;
   }
 
+  // Batch fetch by id, used by the lesson service to assemble per-LO theory
+  // bites for a queue without N+1 single-row reads. Order of returned rows
+  // is NOT guaranteed to match the input — caller must re-index by id.
+  async findManyByIds(ids: string[]): Promise<LearningObjectiveRow[]> {
+    if (ids.length === 0) return [];
+    return this.sql<LearningObjectiveRow[]>`
+      SELECT ${this.sql.unsafe(COLS)}
+      FROM learning_objectives
+      WHERE id IN ${this.sql(ids)}
+    `;
+  }
+
   async create(input: {
     paper_id: string;
     code: string;
@@ -36,12 +49,15 @@ export class LearningObjectivesRepository {
     title_ru: string | null;
     description_en: string | null;
     description_ru: string | null;
+    theory_en?: string | null;
+    theory_ru?: string | null;
     sort_order: number;
   }): Promise<LearningObjectiveRow> {
     const rows = await this.sql<LearningObjectiveRow[]>`
       INSERT INTO learning_objectives (
         paper_id, code,
         title_en, title_ru, description_en, description_ru,
+        theory_en, theory_ru,
         sort_order
       )
       VALUES (
@@ -51,6 +67,8 @@ export class LearningObjectivesRepository {
         ${input.title_ru},
         ${input.description_en},
         ${input.description_ru},
+        ${input.theory_en ?? null},
+        ${input.theory_ru ?? null},
         ${input.sort_order}
       )
       RETURNING ${this.sql.unsafe(COLS)}
@@ -66,6 +84,8 @@ export class LearningObjectivesRepository {
       title_ru?: string | null;
       description_en?: string | null;
       description_ru?: string | null;
+      theory_en?: string | null;
+      theory_ru?: string | null;
       sort_order?: number;
     },
   ): Promise<LearningObjectiveRow | null> {
@@ -75,6 +95,8 @@ export class LearningObjectivesRepository {
     if (input.title_ru !== undefined) sets.title_ru = input.title_ru;
     if (input.description_en !== undefined) sets.description_en = input.description_en;
     if (input.description_ru !== undefined) sets.description_ru = input.description_ru;
+    if (input.theory_en !== undefined) sets.theory_en = input.theory_en;
+    if (input.theory_ru !== undefined) sets.theory_ru = input.theory_ru;
     if (input.sort_order !== undefined) sets.sort_order = input.sort_order;
 
     if (Object.keys(sets).length === 0) return this.findById(id);

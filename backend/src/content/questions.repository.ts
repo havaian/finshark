@@ -15,6 +15,7 @@ const COLS = `
   correct_answer_en, correct_answer_ru,
   explanation_en, explanation_ru,
   concept_bite_en, concept_bite_ru,
+  acceptable_tolerance,
   is_active,
   created_at, updated_at
 `;
@@ -57,6 +58,7 @@ export class QuestionsRepository {
     explanation_ru: string | null;
     concept_bite_en: string | null;
     concept_bite_ru: string | null;
+    acceptable_tolerance?: number | null; // number_entry only
     is_active?: boolean;       // default true — new in question-generator
   }): Promise<QuestionRow> {
     // postgres.js: passing a JS array as a JSONB param via sql.json.
@@ -67,6 +69,7 @@ export class QuestionsRepository {
     // is_active default mirrors the schema default of TRUE. The generator uses
     // FALSE so admin-generated drafts don't appear in lessons until reviewed.
     const isActive = input.is_active ?? true;
+    const tolerance = input.acceptable_tolerance ?? null;
 
     const rows = await this.sql<QuestionRow[]>`
       INSERT INTO questions (
@@ -76,6 +79,7 @@ export class QuestionsRepository {
         correct_answer_en, correct_answer_ru,
         explanation_en, explanation_ru,
         concept_bite_en, concept_bite_ru,
+        acceptable_tolerance,
         is_active
       )
       VALUES (
@@ -91,6 +95,7 @@ export class QuestionsRepository {
         ${input.explanation_ru},
         ${input.concept_bite_en},
         ${input.concept_bite_ru},
+        ${tolerance},
         ${isActive}
       )
       RETURNING ${this.sql.unsafe(COLS)}
@@ -112,6 +117,7 @@ export class QuestionsRepository {
       explanation_ru?: string | null;
       concept_bite_en?: string | null;
       concept_bite_ru?: string | null;
+      acceptable_tolerance?: number | null;
       is_active?: boolean;
     }
   ): Promise<QuestionRow | null> {
@@ -134,6 +140,8 @@ export class QuestionsRepository {
       sets.concept_bite_en = input.concept_bite_en;
     if (input.concept_bite_ru !== undefined)
       sets.concept_bite_ru = input.concept_bite_ru;
+    if (input.acceptable_tolerance !== undefined)
+      sets.acceptable_tolerance = input.acceptable_tolerance;
     if (input.is_active !== undefined) sets.is_active = input.is_active;
 
     if (Object.keys(sets).length === 0) return this.findById(id);
@@ -153,5 +161,93 @@ export class QuestionsRepository {
     const rows = await this
       .sql`DELETE FROM questions WHERE id = ${id} RETURNING id`;
     return rows.length > 0;
+  }
+
+  // Batch set is_active for a set of question IDs. Returns the updated rows.
+  // No transaction needed — single UPDATE is atomic in Postgres.
+  // Empty input → returns []. No error on missing IDs (just returns the ones
+  // that existed and matched).
+  async setActiveMany(ids: string[], is_active: boolean): Promise<QuestionRow[]> {
+    if (ids.length === 0) return [];
+    return this.sql<QuestionRow[]>`
+      UPDATE questions
+      SET is_active = ${is_active}
+      WHERE id IN ${this.sql(ids)}
+      RETURNING ${this.sql.unsafe(COLS)}
+    `;
+  }
+
+  // Batch hard delete. Wrapped in a transaction so if ANY id has dependent
+  // attempts (RESTRICT FK), the whole batch rolls back — leaving the admin
+  // with a clean error rather than a partial delete. Returns the count of
+  // rows that actually deleted. The caller is responsible for handling the
+  // RESTRICT error (Postgres code 23503) and mapping it to a useful message.
+  async deleteMany(ids: string[]): Promise<number> {
+    if (ids.length === 0) return 0;
+    const rows = await this.sql<Array<{ id: string }>>`
+      DELETE FROM questions
+      WHERE id IN ${this.sql(ids)}
+      RETURNING id
+    `;
+    return rows.length;
+  }
+
+  // Mock question sampler. Returns N active questions from the given paper,
+  // distributed across LOs as evenly as possible.
+  //
+  // Strategy: window-rank by random per LO so each LO contributes proportionally,
+  // then take the top N globally. Postgres `random()` is fine for this scale —
+  // ~hundreds of questions per paper, not millions. Repeated calls return
+  // different selections.
+  //
+  // If the paper has fewer than N active questions, returns whatever exists.
+  async findRandomForMock(paper_id: string, count: number): Promise<QuestionRow[]> {
+    const safeCount = Math.max(1, Math.min(200, count));
+    // We embed ${this.sql.unsafe(COLS)} inside the SELECT after q.* expansion
+    // would be ambiguous. Instead we use a two-step SELECT: outer pulls fully-
+    // qualified column list from the CTE.
+    return this.sql<QuestionRow[]>`
+      WITH ranked AS (
+        SELECT
+          q.id, q.lo_id, q.type, q.difficulty,
+          q.prompt_en, q.prompt_ru,
+          q.options,
+          q.correct_answer_en, q.correct_answer_ru,
+          q.explanation_en, q.explanation_ru,
+          q.concept_bite_en, q.concept_bite_ru,
+          q.acceptable_tolerance,
+          q.is_active,
+          q.created_at, q.updated_at,
+          ROW_NUMBER() OVER (PARTITION BY q.lo_id ORDER BY random()) AS lo_rank,
+          random() AS rnd
+        FROM questions q
+        JOIN learning_objectives lo ON lo.id = q.lo_id
+        WHERE lo.paper_id = ${paper_id}
+          AND q.is_active = TRUE
+      )
+      SELECT ${this.sql.unsafe(COLS)}
+      FROM ranked
+      ORDER BY lo_rank ASC, rnd ASC
+      LIMIT ${safeCount}
+    `;
+  }
+
+  // Used by the post-mock review-session flow: fetch the full question rows
+  // for the IDs the user got wrong. Filters to active only so we don't preload
+  // a retired question into a review session. Empty input → empty output.
+  async findManyByIds(ids: string[], opts?: { activeOnly?: boolean }): Promise<QuestionRow[]> {
+    if (ids.length === 0) return [];
+    if (opts?.activeOnly) {
+      return this.sql<QuestionRow[]>`
+        SELECT ${this.sql.unsafe(COLS)}
+        FROM questions
+        WHERE id IN ${this.sql(ids)} AND is_active = TRUE
+      `;
+    }
+    return this.sql<QuestionRow[]>`
+      SELECT ${this.sql.unsafe(COLS)}
+      FROM questions
+      WHERE id IN ${this.sql(ids)}
+    `;
   }
 }

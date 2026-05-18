@@ -6,6 +6,7 @@ import { F1_PAPER } from './data/f1';
 import { F2_PAPER } from './data/f2';
 import { F3_PAPER } from './data/f3';
 import { BADGES } from './data/badges';
+import { ACHIEVEMENTS } from './data/achievements';
 import type { SeedPaper, SeedQuestion } from './data/types';
 
 // Source-of-truth for which papers ship in the seed. Kept here so both the
@@ -18,6 +19,7 @@ export interface ReseedResult {
   papers_dropped: number;
   papers_inserted: number;
   badges_upserted: number;
+  achievements_upserted: number;
   questions_inserted: number;
   // Auxiliary content rows wiped alongside papers (the cascade does most of
   // the work; we count things explicitly so the admin UI can show what
@@ -26,6 +28,7 @@ export interface ReseedResult {
   sessions_deleted: number;
   uqs_deleted: number;
   user_badges_deleted: number;
+  user_achievement_progress_deleted: number;
   mastery_snapshots_deleted: number;
   users_progress_reset: number;
 }
@@ -50,6 +53,7 @@ export class SeedService {
   // would risk duplicating questions.
   async seedIdempotent(): Promise<void> {
     await this.upsertBadges(this.sql);
+    await this.upsertAchievements(this.sql);
 
     for (const paper of SEED_PAPERS) {
       const existing = await this.sql<Array<{ id: string }>>`
@@ -90,6 +94,7 @@ export class SeedService {
       const beforeUqs                 = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM user_question_state`;
       const beforePapers              = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM papers`;
       const beforeUserBadges          = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM user_badges`;
+      const beforeUserAchProgress     = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM user_achievement_progress`;
       const beforeMasterySnapshots    = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM mastery_snapshots`;
       const usersCount                = await tx<Array<{ c: string }>>`SELECT COUNT(*)::text AS c FROM users`;
 
@@ -114,6 +119,10 @@ export class SeedService {
       // 6) user_badges: earned events are progress — wipe. (badges catalog
       //    stays.)
       await tx`DELETE FROM user_badges`;
+      // 6b) user_achievement_progress: per-user progress — wipe. (achievements
+      //     catalog stays. user_id is CASCADE from users; we delete explicitly
+      //     anyway so the count is correct and decoupled from user deletion.)
+      await tx`DELETE FROM user_achievement_progress`;
       // 7) llm_grade_cache: per-question cache; useless without the questions.
       await tx`DELETE FROM llm_grade_cache`;
       // 8) reminder_emails_sent: per-user history of reminders. Not strictly
@@ -135,8 +144,9 @@ export class SeedService {
             last_active_date = NULL
       `;
 
-      // ── Reseed papers + badges ───────────────────────────────────
+      // ── Reseed papers + badges + achievements ────────────────────
       const badgesCount = await this.upsertBadges(tx);
+      const achievementsCount = await this.upsertAchievements(tx);
       let papersInserted = 0;
       let questionsInserted = 0;
       for (const paper of SEED_PAPERS) {
@@ -150,11 +160,13 @@ export class SeedService {
         papers_dropped:             parseInt(beforePapers[0]?.c ?? '0', 10),
         papers_inserted:            papersInserted,
         badges_upserted:            badgesCount,
+        achievements_upserted:      achievementsCount,
         questions_inserted:         questionsInserted,
         attempts_deleted:           parseInt(beforeAttempts[0]?.c ?? '0', 10),
         sessions_deleted:           parseInt(beforeSessions[0]?.c ?? '0', 10),
         uqs_deleted:                parseInt(beforeUqs[0]?.c ?? '0', 10),
         user_badges_deleted:        parseInt(beforeUserBadges[0]?.c ?? '0', 10),
+        user_achievement_progress_deleted: parseInt(beforeUserAchProgress[0]?.c ?? '0', 10),
         mastery_snapshots_deleted:  parseInt(beforeMasterySnapshots[0]?.c ?? '0', 10),
         users_progress_reset:       parseInt(usersCount[0]?.c ?? '0', 10),
       };
@@ -182,6 +194,35 @@ export class SeedService {
       `;
     }
     return BADGES.length;
+  }
+
+  // Upsert the static achievements catalog. Same pattern as upsertBadges but
+  // also handles the `levels` jsonb column. Never rename a code — it's the
+  // FK target in user_achievement_progress and the key in METRICS_BY_CODE.
+  private async upsertAchievements(handle: Sql | postgres.TransactionSql): Promise<number> {
+    for (const a of ACHIEVEMENTS) {
+      const levelsJson = handle.json(a.levels as unknown as postgres.JSONValue);
+      await handle`
+        INSERT INTO achievements (
+          code, name_en, name_ru, description_en, description_ru, icon, sort_order, levels
+        )
+        VALUES (
+          ${a.code}, ${a.name_en}, ${a.name_ru},
+          ${a.description_en}, ${a.description_ru},
+          ${a.icon}, ${a.sort_order},
+          ${levelsJson}
+        )
+        ON CONFLICT (code) DO UPDATE
+          SET name_en = EXCLUDED.name_en,
+              name_ru = EXCLUDED.name_ru,
+              description_en = EXCLUDED.description_en,
+              description_ru = EXCLUDED.description_ru,
+              icon = EXCLUDED.icon,
+              sort_order = EXCLUDED.sort_order,
+              levels = EXCLUDED.levels
+      `;
+    }
+    return ACHIEVEMENTS.length;
   }
 
   // Insert a paper + its LOs + its questions. Must be called inside a tx.

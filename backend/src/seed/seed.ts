@@ -18,6 +18,7 @@ import { F1_PAPER } from "./data/f1";
 import { F2_PAPER } from "./data/f2";
 import { F3_PAPER } from "./data/f3";
 import { BADGES } from "./data/badges";
+import { ACHIEVEMENTS } from "./data/achievements";
 import type { SeedPaper, SeedQuestion } from "./data/types";
 
 // PAPERS array
@@ -50,6 +51,34 @@ async function main() {
       `;
     }
     console.log(`[upsert] ${BADGES.length} badge catalog entries`);
+
+    // ── Achievements catalog ───────────────────────────────────────────
+    // Same upsert-by-code pattern as badges, plus the `levels` jsonb column.
+    // Never rename a code — it's the FK target in user_achievement_progress
+    // and the key in METRICS_BY_CODE in src/achievements/achievements.rules.ts.
+    for (const a of ACHIEVEMENTS) {
+      const levelsJson = sql.json(a.levels as unknown as postgres.JSONValue);
+      await sql`
+        INSERT INTO achievements (
+          code, name_en, name_ru, description_en, description_ru, icon, sort_order, levels
+        )
+        VALUES (
+          ${a.code}, ${a.name_en}, ${a.name_ru},
+          ${a.description_en}, ${a.description_ru},
+          ${a.icon}, ${a.sort_order},
+          ${levelsJson}
+        )
+        ON CONFLICT (code) DO UPDATE
+          SET name_en = EXCLUDED.name_en,
+              name_ru = EXCLUDED.name_ru,
+              description_en = EXCLUDED.description_en,
+              description_ru = EXCLUDED.description_ru,
+              icon = EXCLUDED.icon,
+              sort_order = EXCLUDED.sort_order,
+              levels = EXCLUDED.levels
+      `;
+    }
+    console.log(`[upsert] ${ACHIEVEMENTS.length} achievement catalog entries`);
 
     for (const paper of PAPERS) {
       // Check if this paper code already exists. If so, skip the whole paper.

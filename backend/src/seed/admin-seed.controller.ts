@@ -21,10 +21,12 @@ export class AdminSeedController {
 
   // POST /api/admin/system/reseed
   // Drops all content + per-user progress (papers, LOs, questions, attempts,
-  // sessions, user_question_state, mastery_snapshots, user_badges, llm cache,
-  // reminder history) and zeros progress columns on users. Then inserts the
-  // bundled seed catalog from scratch. Users themselves, refresh_tokens, the
-  // badges catalog, and ui_translations are NOT touched.
+  // sessions, user_question_state, mastery_snapshots, user_badges,
+  // user_achievement_progress, llm cache, reminder history) and zeros
+  // progress columns on users. Then inserts the bundled seed catalog from
+  // scratch (papers + badges + achievements). Users themselves, refresh_tokens,
+  // the badges catalog, the achievements catalog, and the locale JSON files
+  // are NOT touched.
   //
   // Throttling: 3 calls per minute per IP. Reseed is a heavy operation; this
   // is a safety net on top of the disable-on-click in the UI.

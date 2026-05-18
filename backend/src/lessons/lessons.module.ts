@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { ContentModule } from '../content/content.module';
 import { BadgesModule } from '../badges/badges.module';
+import { AchievementsModule } from '../achievements/achievements.module';
 import { LessonsController } from './lessons.controller';
 import { LessonsService } from './lessons.service';
 import { LessonSessionsRepository } from './lesson-sessions.repository';
@@ -12,7 +13,7 @@ import { UserQuestionStateRepository } from './user-question-state.repository';
 import { GraderService } from './grader.service';
 
 @Module({
-  imports: [AuthModule, UsersModule, ContentModule, BadgesModule],
+  imports: [AuthModule, UsersModule, ContentModule, BadgesModule, AchievementsModule],
   controllers: [LessonsController],
   providers: [
     LessonsService,

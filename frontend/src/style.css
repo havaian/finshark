@@ -2367,6 +2367,152 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* -----------------------------------------------------------
+   37b) Achievements — multi-level progression cards
+   -----------------------------------------------------------
+   Separate from badges: each card carries its own progress bar and level
+   label (Trainee / Affiliate / Member). Two visual contexts:
+     - .achievements-section (own /profile): full payload, locked tiles
+       included with greyed-out icon.
+     - .achievements-public-grid (someone else's /users/:id): earned-only,
+       compact tile shape similar to .badge-tile. */
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.achievement-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.achievement-card.locked {
+  background: transparent;
+}
+.achievement-card.locked .achievement-icon {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+.achievement-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.achievement-icon {
+  font-size: 30px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.achievement-titleblock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.achievement-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.achievement-level {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.achievement-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* Progress bar: track + fill. Width animates via CSS transition (NOT scale,
+   per project rule — width transitions are fine). */
+.achievement-progress-bar {
+  height: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.achievement-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px 0 0 3px;
+  transition: width 240ms ease-out;
+}
+.achievement-card.locked .achievement-progress-fill {
+  background: var(--text-mute);
+  opacity: 0.5;
+}
+.achievement-progress-label {
+  font-size: 11px;
+}
+.achievement-desc {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Compact tiles for someone else's public profile. Single column of info:
+   big icon, name, level pill, date. */
+.achievements-public-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.achievement-public-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  cursor: help;
+}
+.achievement-public-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+.achievement-public-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.achievement-public-level {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .achievements-grid {
+    grid-template-columns: 1fr;
+  }
+  .achievement-icon {
+    font-size: 26px;
+  }
+  .achievements-public-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+  }
+  .achievement-public-tile {
+    padding: 12px 8px;
+  }
+}
+
+/* -----------------------------------------------------------
    38) Mocks — timer pill, start picker, breakdown bars
    ----------------------------------------------------------- */
 

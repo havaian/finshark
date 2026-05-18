@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { publicProfileApi, type PublicProfileResponse } from '../api/public-profile.api';
+import { achievementsApi } from '../api/achievements.api';
+import type { PublicEarnedAchievement } from '../types/achievements';
 import { useAuthStore } from '../stores/auth.store';
 import { fmtDate } from '../i18n/dates';
 import AppNav from '../components/AppNav.vue';
@@ -28,13 +30,29 @@ const loading = ref(true);
 const errorMsg = ref<string | null>(null);
 const notFound = ref(false);
 
+// Earned achievements for the viewed user. Fetched in parallel with the
+// main profile; failure is non-fatal (the section just hides). Same locale-
+// reload behaviour as the rest of the page.
+const achievements = ref<PublicEarnedAchievement[]>([]);
+
 async function load() {
   const id = route.params.id as string;
   loading.value = true;
   errorMsg.value = null;
   notFound.value = false;
+  achievements.value = [];
   try {
-    profile.value = await publicProfileApi.getById(id);
+    // Run both in parallel; if the main profile 404s we want to stop, but
+    // achievements failing is non-fatal so we wrap it independently.
+    const [p, a] = await Promise.allSettled([
+      publicProfileApi.getById(id),
+      achievementsApi.getForUser(id),
+    ]);
+    if (p.status === 'rejected') {
+      throw p.reason;
+    }
+    profile.value = p.value;
+    achievements.value = a.status === 'fulfilled' ? a.value : [];
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 404) {
       notFound.value = true;
@@ -153,6 +171,39 @@ onMounted(load);
               <div class="badge-tile-name">{{ b.name }}</div>
               <div v-if="b.earned_at" class="dim text-xs mt-1">
                 {{ fmtDate(b.earned_at) }}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Earned achievements — parallel system. Only shows items at
+             level >= 1 (locked ones are owner-only and would be noise on
+             someone else's profile). Each tile shows icon, name, current
+             level name (Trainee/Affiliate/Member), and when reached. -->
+        <section class="card mt-6">
+          <h2>{{ t('public_profile.achievements_section') }}</h2>
+          <p v-if="achievements.length === 0" class="dim text-sm mt-4">
+            {{ t('public_profile.no_achievements') }}
+          </p>
+          <div v-else class="achievements-public-grid mt-4">
+            <div
+              v-for="a in achievements"
+              :key="a.code"
+              class="achievement-public-tile"
+              :title="a.description"
+            >
+              <div class="achievement-public-icon">{{ a.icon }}</div>
+              <div class="achievement-public-name">{{ a.name }}</div>
+              <div class="achievement-public-level">
+                {{ a.current_level_name }}
+                <span class="dim text-xs">
+                  ({{ t('public_profile.achievements_level_short', {
+                    level: a.current_level,
+                  }) }})
+                </span>
+              </div>
+              <div v-if="a.unlocked_at" class="dim text-xs mt-1">
+                {{ fmtDate(a.unlocked_at) }}
               </div>
             </div>
           </div>

@@ -16,6 +16,7 @@ import { AttemptsRepository } from "./attempts.repository";
 import { UserQuestionStateRepository } from "./user-question-state.repository";
 import { GraderService } from "./grader.service";
 import { BadgesService } from "../badges/badges.service";
+import { AchievementsService } from "../achievements/achievements.service";
 import type { SessionMode } from "./lesson.types";
 import {
   applyMastery,
@@ -134,6 +135,7 @@ export class LessonsService {
     private readonly uqs: UserQuestionStateRepository,
     private readonly grader: GraderService,
     private readonly badges: BadgesService,
+    private readonly achievements: AchievementsService,
   ) {}
 
   // ---- start ----
@@ -493,6 +495,17 @@ export class LessonsService {
     // Failure here is swallowed by BadgesService and returns []; a badge bug
     // never blocks a lesson completion.
     const newlyEarnedBadges = await this.badges.evaluateAfterSession(user_id);
+
+    // Achievements run on the same hook for the same reason — they read
+    // xp / streak / completed-session counts from the post-update state.
+    // Failure is swallowed inside AchievementsService and returns []; a
+    // bad achievement rule never breaks lesson completion. The unlocks
+    // payload is not yet surfaced to the frontend (no toast wiring); we
+    // return it so a future UI iteration can show "Level 2 reached!" on
+    // the lesson-finale screen.
+    const newlyUnlockedAchievements =
+      await this.achievements.evaluateAfterSession(user_id);
+    void newlyUnlockedAchievements;
 
     return {
       session_id: completed.id,

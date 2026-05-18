@@ -20,6 +20,8 @@ import {
 import { profileApi, type ProfileMe, type ProfileStats } from '../api/profile.api';
 import { badgesApi } from '../api/badges.api';
 import type { PublicBadge } from '../types/badges';
+import { achievementsApi } from '../api/achievements.api';
+import type { PublicAchievement } from '../types/achievements';
 import { useAuthStore } from '../stores/auth.store';
 import { useThemeStore } from '../stores/theme.store';
 import { fmtDate } from '../i18n/dates';
@@ -53,6 +55,17 @@ const badgesEarnedCount = computed(() =>
   badges.value.filter((b) => b.earned).length,
 );
 const badgesTotalCount = computed(() => badges.value.length);
+
+// Achievements — parallel system to badges (multi-level progress vs binary
+// earned/not). Fetched alongside; failure non-fatal (section hides). Same
+// loading pattern as badges so they appear in sync.
+const achievements = ref<PublicAchievement[]>([]);
+const achievementsLoading = ref(true);
+
+const achievementsUnlockedCount = computed(() =>
+  achievements.value.filter((a) => a.current_level > 0).length,
+);
+const achievementsTotalCount = computed(() => achievements.value.length);
 
 // Display name edit state
 const editName = ref(false);
@@ -106,6 +119,20 @@ async function load() {
         badgesLoading.value = false;
       });
 
+    // Achievements — same parallel pattern. A failure here only hides the
+    // achievements section; the rest of the profile still renders.
+    const achievementsPromise = achievementsApi
+      .getMine()
+      .then((rows) => {
+        achievements.value = rows;
+      })
+      .catch(() => {
+        achievements.value = [];
+      })
+      .finally(() => {
+        achievementsLoading.value = false;
+      });
+
     const [meData, statsData] = await Promise.all([
       profileApi.getMe(),
       profileApi.getStats(),
@@ -118,6 +145,7 @@ async function load() {
     renderCharts();
     // Don't block the page on badges — they show up as soon as they arrive.
     void badgesPromise;
+    void achievementsPromise;
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to load profile';
   } finally {
@@ -139,11 +167,13 @@ watch(
 // Reload badges when the UI language changes — the backend localises
 // name/description server-side based on the X-Lang header, so re-fetching is
 // the cheapest way to get translated copy. Charts also re-render so axis
-// labels & legends update.
+// labels & legends update. Achievements share the same reload pattern since
+// they're localised the same way (level names + descriptions per X-Lang).
 watch(
   () => locale.value,
   async () => {
     badgesLoading.value = true;
+    achievementsLoading.value = true;
     try {
       const rows = await badgesApi.getMine();
       badges.value = rows;
@@ -151,6 +181,14 @@ watch(
       // Keep previous list if fetch fails — better than wiping the section.
     } finally {
       badgesLoading.value = false;
+    }
+    try {
+      const rows = await achievementsApi.getMine();
+      achievements.value = rows;
+    } catch {
+      // Keep previous list on failure.
+    } finally {
+      achievementsLoading.value = false;
     }
     if (stats.value) {
       await nextTick();
@@ -679,6 +717,77 @@ onMounted(load);
               <span v-if="!b.earned" class="badge-tile-locked-label dim text-xs">
                 {{ t('profile.badges_unearned_label') }}
               </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Achievements — parallel multi-level progression system. Lives
+             UNDER badges (binary earned/not) so the eye reads badges first
+             as the simpler signal, then drills into the progress bars. Each
+             card shows: icon, name, current level name + number, progress
+             bar to next threshold, raw current_value / next_threshold. -->
+        <section
+          v-if="achievementsLoading || achievements.length > 0"
+          class="card achievements-section mt-6"
+        >
+          <header class="badges-section-head">
+            <h2>{{ t('profile.achievements_section') }}</h2>
+            <span v-if="!achievementsLoading" class="dim text-sm">
+              {{ t('profile.achievements_unlocked_count', {
+                unlocked: achievementsUnlockedCount,
+                total: achievementsTotalCount,
+              }) }}
+            </span>
+          </header>
+          <p v-if="achievementsLoading" class="dim text-sm">
+            {{ t('profile.achievements_loading') }}
+          </p>
+          <div v-else class="achievements-grid">
+            <div
+              v-for="a in achievements"
+              :key="a.code"
+              :class="['achievement-card', { locked: a.current_level === 0 }]"
+            >
+              <div class="achievement-card-head">
+                <span class="achievement-icon">{{ a.icon }}</span>
+                <div class="achievement-titleblock">
+                  <div class="achievement-name">{{ a.name }}</div>
+                  <div class="achievement-level dim text-xs">
+                    <template v-if="a.current_level_name">
+                      {{ t('profile.achievements_level_label', {
+                        level: a.current_level,
+                        max: a.max_level,
+                        name: a.current_level_name,
+                      }) }}
+                    </template>
+                    <template v-else>
+                      {{ t('profile.achievements_locked') }}
+                    </template>
+                  </div>
+                </div>
+              </div>
+              <div class="achievement-progress">
+                <div class="achievement-progress-bar">
+                  <div
+                    class="achievement-progress-fill"
+                    :style="{ width: a.next_threshold === null
+                      ? '100%'
+                      : Math.min(100, Math.round((a.current_value / a.next_threshold) * 100)) + '%' }"
+                  />
+                </div>
+                <div class="achievement-progress-label dim text-xs">
+                  <template v-if="a.next_threshold === null">
+                    {{ t('profile.achievements_max_reached') }}
+                  </template>
+                  <template v-else>
+                    {{ a.current_value }} / {{ a.next_threshold }}
+                    <span v-if="a.next_level_name">
+                      → {{ a.next_level_name }}
+                    </span>
+                  </template>
+                </div>
+              </div>
+              <div class="achievement-desc dim text-xs">{{ a.description }}</div>
             </div>
           </div>
         </section>

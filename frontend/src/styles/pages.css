@@ -1,0 +1,2908 @@
+/* -----------------------------------------------------------
+   21) Language tabs (used in admin question editor)
+   ----------------------------------------------------------- */
+
+.lang-tabs {
+    display: inline-flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin: 10px 0 14px;
+}
+
+.lang-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: "Geist Mono", monospace;
+    letter-spacing: 0.04em;
+    margin-bottom: -1px;
+}
+
+.lang-tab:hover {
+    color: var(--text);
+}
+
+.lang-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* Russian prompt line shown under the English prompt in question list rows */
+.admin-question .q-prompt-ru {
+    margin-top: 4px;
+}
+
+/* -----------------------------------------------------------
+   22) UI translations admin grid
+   ----------------------------------------------------------- */
+
+.btn.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.ui-trans-list {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-card);
+}
+
+.ui-trans-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 1fr;
+    gap: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+}
+
+.ui-trans-row:last-child {
+    border-bottom: none;
+}
+
+.ui-trans-key {
+    word-break: break-all;
+    padding-top: 4px;
+}
+
+.ui-trans-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ui-trans-default {
+    font-style: italic;
+}
+
+.ui-trans-current {
+    font-size: 14px;
+    color: var(--text);
+    min-height: 22px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.ui-trans-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+@media (max-width: 800px) {
+    .ui-trans-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* -----------------------------------------------------------
+   23) Hearts indicator in the lesson topbar
+   ----------------------------------------------------------- */
+
+.hearts-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 16px;
+    line-height: 1;
+    margin: 0 10px;
+}
+
+.heart {
+    display: inline-block;
+    width: 18px;
+    text-align: center;
+}
+
+.heart.filled {
+    color: var(--coral);
+}
+
+.heart.empty {
+    color: var(--text-mute);
+}
+
+/* -----------------------------------------------------------
+   24) Profile page
+   ----------------------------------------------------------- */
+
+.profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--accent-soft-bg);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.profile-name-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.chart-wrap {
+    position: relative;
+    margin-top: 12px;
+    height: 280px;
+}
+
+.profile-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.profile-grid-2>.card {
+    margin-top: 0;
+}
+
+@media (max-width: 720px) {
+    .profile-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Github-style activity heatmap. 53 columns × 7 rows of 12px cells.
+   Cell size 12 + 3px gap → row height 15px (matches month/weekday label step). */
+.activity-heatmap-wrap {
+    position: relative;
+    margin-top: 12px;
+}
+
+.activity-months {
+    position: relative;
+    height: 18px;
+    /* Indent past the weekday-label column so month labels line up with the
+     grid cells, not the labels. */
+    margin-left: 28px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    color: var(--text-mute);
+    overflow: hidden;
+}
+
+.activity-month-label {
+    position: absolute;
+    top: 0;
+    white-space: nowrap;
+    /* Hide month labels too close to the start (would overlap the previous one). */
+}
+
+.activity-body {
+    position: relative;
+}
+
+.activity-weekdays {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 24px;
+    height: 100%;
+    pointer-events: none;
+}
+
+.activity-weekday {
+    position: absolute;
+    left: 0;
+    font-size: 11px;
+    color: var(--text-mute);
+    line-height: 1;
+}
+
+.activity-heatmap {
+    display: flex;
+    gap: 3px;
+    margin-left: 28px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.activity-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.activity-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--grey-band);
+    cursor: pointer;
+    transition: outline-color 80ms ease;
+    outline: 1px solid transparent;
+}
+
+.activity-cell:hover {
+    outline-color: var(--text);
+}
+
+.activity-cell.intensity-1 {
+    background: var(--accent-soft-bg);
+}
+
+.activity-cell.intensity-2 {
+    background: rgba(124, 92, 255, 0.35);
+}
+
+.activity-cell.intensity-3 {
+    background: rgba(124, 92, 255, 0.6);
+}
+
+.activity-cell.intensity-4 {
+    background: var(--accent);
+}
+
+/* Tooltip: small floating box anchored above the hovered cell. Pointer
+   events disabled so the cell underneath keeps receiving mouseleave. */
+.activity-tooltip {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 6px));
+    background: var(--bg-elev);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 6px 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.activity-tooltip-count {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.activity-tooltip-date {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+.danger-zone {
+    border-color: var(--danger-border);
+}
+
+/* -----------------------------------------------------------
+   25) Segmented control (theme/lang toggle in settings)
+   ----------------------------------------------------------- */
+
+.segmented {
+    display: inline-flex;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.segmented button {
+    background: transparent;
+    border: none;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--text-dim);
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.segmented button:hover {
+    color: var(--text);
+}
+
+.segmented button.active {
+    background: var(--bg-card);
+    color: var(--text);
+}
+
+/* -----------------------------------------------------------
+   26) Modal (used by question generator)
+   ----------------------------------------------------------- */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+}
+
+.modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+}
+
+/* -----------------------------------------------------------
+   27) Theory primer (pre-lesson Kaplan-style bites)
+   ----------------------------------------------------------- */
+
+.theory-intro {
+    /* The card class already provides surface + padding; this just tunes copy. */
+}
+
+.theory-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.theory-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+}
+
+.theory-card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.theory-lo-code {
+    font-size: 12px;
+    color: var(--text-mute);
+    background: var(--grey-band);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+}
+
+.theory-lo-title {
+    font-weight: 500;
+    color: var(--text);
+}
+
+.theory-body {
+    color: var(--text-dim);
+    line-height: 1.65;
+    font-size: 15px;
+    white-space: pre-wrap;
+}
+
+/* -----------------------------------------------------------
+   28) Number entry input
+   ----------------------------------------------------------- */
+
+.number-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.number-input {
+    /* Match the textarea/input look elsewhere but a touch larger so calculation
+     answers feel weighty. tabular-nums keeps the digits aligned visually. */
+    font-variant-numeric: tabular-nums;
+    font-size: 18px;
+    letter-spacing: 0.01em;
+    max-width: 280px;
+}
+
+.tolerance-hint {
+    color: var(--text-mute);
+    margin-left: 8px;
+}
+
+/* -----------------------------------------------------------
+   29) "Why are the others wrong?" expander
+   ----------------------------------------------------------- */
+
+.why-wrong-section {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.why-wrong-toggle {
+    /* Inherits .btn-link styling. No padding override; this is a tight inline action. */
+    font-size: 13px;
+}
+
+.why-wrong-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.why-wrong-item {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 10px 12px;
+    background: var(--grey-band);
+    border-radius: 8px;
+}
+
+.why-wrong-key {
+    flex: 0 0 auto;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: 13px;
+    min-width: 18px;
+}
+
+.why-wrong-text {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* -----------------------------------------------------------
+   30) Admin: per-option why_wrong editor row
+   ----------------------------------------------------------- */
+
+.option-editor-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--grey-band);
+}
+
+.option-why-wrong {
+    display: flex;
+    padding-left: 68px;
+    /* aligns with .opt-key-input width (60) + gap (8) */
+}
+
+.option-why-wrong input {
+    width: 100%;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+/* -----------------------------------------------------------
+   31) Admin: LO theory preview + editor
+   ----------------------------------------------------------- */
+
+.lo-theory-preview {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--grey-band);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-soft-bg);
+}
+
+.lo-theory-tag {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 4px;
+}
+
+.lo-theory-editor {
+    padding: 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+/* -----------------------------------------------------------
+   32) Mobile tightenings for the new components
+   ----------------------------------------------------------- */
+
+@media (max-width: 640px) {
+    .number-input {
+        max-width: none;
+        width: 100%;
+    }
+
+    .option-why-wrong {
+        /* On narrow screens, just drop the indent — option keys wrap above anyway. */
+        padding-left: 0;
+    }
+
+    .theory-card {
+        padding: 14px 14px;
+    }
+
+    .theory-body {
+        font-size: 14px;
+    }
+}
+
+/* -----------------------------------------------------------
+   33) Admin content browser (unified tree + question list)
+   ----------------------------------------------------------- */
+
+.content-browser {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    height: calc(100vh - 48px);
+    /* Sit just inside the admin shell's padding; the content-tree scrolls
+     independently of the right pane. */
+}
+
+.content-tree {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    overflow-y: auto;
+    min-height: 0;
+    /* allow flex/grid child to shrink for scroll */
+}
+
+.content-tree-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.content-tree-head h2 {
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0;
+}
+
+.content-tree-paper {
+    margin-bottom: 4px;
+}
+
+.content-tree-paper-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    padding: 8px 6px;
+    border-radius: 6px;
+    text-align: left;
+    font: inherit;
+}
+
+.content-tree-paper-head:hover {
+    background: var(--bg-elev);
+}
+
+.content-tree-arrow {
+    color: var(--text-mute);
+    width: 14px;
+    font-size: 11px;
+    flex: 0 0 auto;
+}
+
+.content-tree-paper-code {
+    font-size: 12px;
+    color: var(--text-mute);
+    background: var(--grey-band);
+    padding: 1px 6px;
+    border-radius: 4px;
+    flex: 0 0 auto;
+}
+
+.content-tree-paper-name {
+    font-weight: 500;
+    font-size: 14px;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.content-tree-los {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.content-tree-lo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 6px 8px 6px 12px;
+    border-radius: 6px;
+    text-align: left;
+    font: inherit;
+}
+
+.content-tree-lo:hover {
+    background: var(--bg-elev);
+    color: var(--text);
+}
+
+.content-tree-lo.active {
+    background: var(--accent-soft-bg);
+    color: var(--text);
+}
+
+.content-tree-lo-code {
+    font-size: 11px;
+    color: var(--text-mute);
+    flex: 0 0 auto;
+    min-width: 18px;
+}
+
+.content-tree-lo.active .content-tree-lo-code {
+    color: var(--accent-hot);
+}
+
+.content-tree-lo-title {
+    flex: 1 1 auto;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.content-tree-lo-counts {
+    display: flex;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.content-tree-count {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: var(--grey-band);
+    color: var(--text-mute);
+    font-variant-numeric: tabular-nums;
+}
+
+.content-tree-count.draft {
+    background: var(--amber-bg);
+    color: var(--amber);
+    border: 1px solid var(--amber-border);
+    padding: 0 5px;
+}
+
+/* Mobile picker pill — hidden on desktop, shown on phones via the ≤720px
+   block further down. Sits above the tree/main grid and acts as both
+   "open tree" trigger and current-LO breadcrumb. */
+.content-mobile-picker {
+    display: none;
+    /* Spans both columns of the grid since .content-browser is a 2-col grid;
+     making the picker itself a grid item that takes the full width. */
+    grid-column: 1 / -1;
+}
+
+.content-mobile-picker-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    /* Border instead of accent fill — keeps the LO title (the important
+     thing) as the visual centre. */
+}
+
+.content-mobile-picker-btn:hover,
+.content-mobile-picker-btn:focus-visible {
+    background: var(--bg-elev);
+}
+
+.content-mobile-picker-btn-empty {
+    /* When no LO is picked, lean on dim text so the pill itself reads as a
+     prompt rather than a populated value. */
+    color: var(--text-dim);
+}
+
+.content-mobile-picker-crumb {
+    flex: 0 0 auto;
+    padding: 1px 6px;
+    background: var(--grey-band);
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+.content-mobile-picker-label {
+    flex: 1 1 auto;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.content-mobile-picker-chev {
+    flex: 0 0 auto;
+    color: var(--text-mute);
+    font-size: 12px;
+}
+
+/* Mobile sheet header — hidden on desktop, shown at ≤720px. Provides a
+   close affordance for the tree-as-sheet. */
+.content-tree-mobile-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px 12px;
+    margin: -4px -4px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.content-tree-mobile-title {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+
+.content-tree-mobile-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 18px;
+    font-family: inherit;
+}
+
+.content-tree-mobile-close:hover {
+    background: var(--bg-elev);
+    color: var(--text);
+}
+
+.content-main {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.content-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 40px;
+}
+
+.content-main-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.content-main-head h1 {
+    margin: 4px 0 0;
+}
+
+.content-main-breadcrumb {
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.content-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.content-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.content-tab {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.content-tab:hover {
+    background: var(--bg-elev);
+    color: var(--text);
+}
+
+.content-tab.active {
+    background: var(--accent-soft-bg);
+    border-color: var(--accent);
+    color: var(--accent-hot);
+}
+
+.content-tab-count {
+    font-size: 11px;
+    background: var(--grey-band);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.content-tab.active .content-tab-count {
+    background: var(--accent-soft-bg);
+    color: var(--accent-hot);
+}
+
+.content-search {
+    flex: 1 1 240px;
+    max-width: 320px;
+}
+
+.content-batch-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--accent-soft-bg);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+}
+
+.content-question-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.content-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.content-question {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.content-question.draft {
+    border-left: 3px solid var(--amber);
+}
+
+.content-question-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.content-question-check {
+    display: inline-flex;
+    margin-right: 4px;
+    cursor: pointer;
+}
+
+.content-question-type {
+    font-weight: 500;
+    color: var(--text-dim);
+}
+
+.content-question-prompt {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.content-question-prompt-ru {
+    margin-top: 4px;
+}
+
+.content-question-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.badge-draft {
+    background: var(--amber-bg);
+    color: var(--amber);
+    border: 1px solid var(--amber-border);
+    font-size: 10px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.modal-card-wide {
+    max-width: 720px;
+}
+
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+}
+
+.modal-head h2 {
+    margin: 0;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* Tablet (≤900px, but still >720px): tree column is narrower than desktop,
+   but keeps the side-by-side layout. The tree still scrolls independently. */
+@media (max-width: 900px) and (min-width: 721px) {
+    .content-browser {
+        grid-template-columns: 260px 1fr;
+        gap: 16px;
+    }
+}
+
+/* Mobile (≤720px): the tree becomes an off-canvas sheet that slides up from
+   the bottom. The main column gets the whole grid row. A "Pick LO" pill at
+   the top opens the sheet. This keeps the questions list immediately
+   visible — the most common reason an admin lands on this page is to find
+   or edit a question, not to browse the tree. */
+@media (max-width: 720px) {
+    .content-browser {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        /* Drop the fixed viewport-relative height — the page can scroll
+       naturally now that we're single-column. */
+        height: auto;
+    }
+
+    /* Show the picker pill (hidden on desktop). */
+    .content-mobile-picker {
+        display: flex;
+    }
+
+    /* Tree becomes a fixed-position sheet. It's still in the same DOM
+     position but visually pulled out to the bottom of the viewport.
+     Slides up via translateY when .mobile-open is added. */
+    .content-tree {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        z-index: 210;
+        /* Above .modal-backdrop (z=100) and the AppNav drawer (z=200). The tree
+       is opened from inside the admin shell which doesn't show the AppNav
+       drawer anyway, but the higher z-index keeps it predictable. */
+        width: 100%;
+        max-height: 80vh;
+        border-radius: 16px 16px 0 0;
+        border: 1px solid var(--border);
+        border-bottom: none;
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
+        transform: translateY(100%);
+        transition: transform 220ms ease;
+        /* Hidden by default, even when .mobile-open is not present, so it
+       can't be tab-focused while off-screen. */
+        visibility: hidden;
+    }
+
+    .content-tree.mobile-open {
+        transform: translateY(0);
+        visibility: visible;
+    }
+
+    /* Show the mobile bar inside the sheet — hidden on desktop. */
+    .content-tree-mobile-bar {
+        display: flex;
+    }
+
+    /* Backdrop only renders when open (Vue v-if), so it just needs styles. */
+    .content-tree-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 205;
+        /* Sits between the page and the sheet. */
+    }
+
+    /* Tighten the tree head row inside the sheet so the duplicate title
+     doesn't look heavy alongside the mobile bar's title. */
+    .content-tree-head h2 {
+        display: none;
+    }
+
+    .content-tree-head {
+        margin-bottom: 8px;
+    }
+
+    /* Tap targets in the tree need to be roomier on a phone. */
+    .content-tree-lo {
+        padding: 10px 8px 10px 12px;
+    }
+
+    .content-tree-paper-head {
+        padding: 10px 6px;
+    }
+
+    /* Main panel: drop the card chrome on mobile since we're already
+     inside the admin shell padding — saves horizontal space. */
+    .content-main {
+        background: transparent;
+        border: none;
+        padding: 0;
+        border-radius: 0;
+        min-height: auto;
+    }
+
+    /* Main head stacks vertically and gives the action buttons more room. */
+    .content-main-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .content-main-head h1 {
+        font-size: 20px;
+        line-height: 1.3;
+    }
+
+    .content-main-head .row {
+        justify-content: stretch;
+    }
+
+    .content-main-head .row .btn {
+        flex: 1 1 auto;
+        /* Generate / Add buttons stretch on mobile so they have real tap area. */
+    }
+
+    /* Toolbar: search drops below tabs on small screens. */
+    .content-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .content-tabs {
+        /* Equal-width tabs across the row so neither dominates. */
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .content-tab {
+        justify-content: center;
+        padding: 10px 12px;
+        /* Bigger tap target than the desktop 6px padding. */
+    }
+
+    .content-search {
+        width: 100%;
+        max-width: 100%;
+        /* Override the desktop max-width: 320px so the search bar uses the
+       full row on mobile. */
+    }
+
+    /* Batch bar: stack message + actions vertically on phones. */
+    .content-batch-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    /* Question card: tighter padding and a stacked action row so the three
+     edit/retire/delete links each get a comfortable tap target. */
+    .content-question {
+        padding: 12px 14px;
+    }
+
+    .content-question-actions {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .content-question-actions .btn-link {
+        padding: 6px 4px;
+        /* Slightly inflated hit area for thumb taps without changing visuals
+       much. */
+    }
+}
+
+/* -----------------------------------------------------------
+   34) Onboarding wizard
+   ----------------------------------------------------------- */
+
+.onboarding-page {
+    /* The .page utility class gives padding; we just center the inner frame. */
+    display: flex;
+    justify-content: center;
+}
+
+.onboarding-frame {
+    width: 100%;
+    max-width: 680px;
+    padding: 24px 0 48px;
+}
+
+.onboarding-head {
+    position: relative;
+    margin-bottom: 32px;
+}
+
+.onboarding-head h1 {
+    margin: 0;
+}
+
+.onboarding-head p {
+    margin-top: 8px;
+    font-size: 15px;
+}
+
+.onboarding-skip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 13px;
+}
+
+.onboarding-section {
+    margin-bottom: 32px;
+}
+
+.onboarding-section h2 {
+    font-size: 18px;
+    margin: 0 0 12px;
+}
+
+/* Three big stacked cards for bg-level — each shows title + description. */
+.onboarding-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.onboarding-card {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    color: var(--text);
+    font: inherit;
+    /* No transform: scale per user preferences. Border + bg shift only. */
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.onboarding-card:hover {
+    border-color: var(--border-strong);
+}
+
+.onboarding-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft-bg);
+}
+
+.onboarding-card-title {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.onboarding-card-desc {
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* Compact chip row for time budget + paper picks. */
+.onboarding-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.onboarding-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.onboarding-chip:hover {
+    border-color: var(--border-strong);
+}
+
+.onboarding-chip.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft-bg);
+    color: var(--accent-hot);
+}
+
+.onboarding-chip-paper {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.onboarding-chip-paper .mono {
+    color: var(--text-mute);
+    font-size: 12px;
+}
+
+.onboarding-chip-paper.selected .mono {
+    color: var(--accent-hot);
+}
+
+/* Toggle row for reminders — checkbox + labelled body. */
+.onboarding-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.onboarding-toggle input {
+    margin-top: 3px;
+}
+
+.onboarding-toggle-title {
+    display: block;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.onboarding-toggle-desc {
+    display: block;
+    margin-top: 4px;
+}
+
+.onboarding-foot {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+    .onboarding-skip {
+        /* Tap targets — keep skip available but stop overlapping the title text. */
+        position: static;
+        margin-top: 8px;
+    }
+
+    .onboarding-head {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+/* -----------------------------------------------------------
+   36) Leaderboards
+   ----------------------------------------------------------- */
+
+.leaderboard-optin-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    background: var(--accent-soft-bg);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.leaderboard-optin-title {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.leaderboard-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.leaderboard-paper-select {
+    max-width: 280px;
+    /* Inherits base select styling. */
+}
+
+.leaderboard-empty {
+    padding: 40px;
+    text-align: center;
+    background: var(--bg-elev);
+    border-radius: 10px;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.leaderboard-table thead th {
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+}
+
+.leaderboard-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+
+.leaderboard-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.leaderboard-table tbody tr:hover {
+    background: var(--bg-elev);
+}
+
+.lb-col-rank {
+    width: 50px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-dim);
+}
+
+.lb-col-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    width: 90px;
+}
+
+/* Highlight the current user's row with a soft accent wash. */
+.lb-row-self td {
+    background: var(--accent-soft-bg);
+}
+
+.lb-row-self td:first-child {
+    border-left: 3px solid var(--accent);
+    /* Shift content by border width so cell text doesn't jump. */
+    padding-left: 9px;
+}
+
+.lb-you-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 10px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+:root[data-theme="light"] .lb-you-badge {
+    color: #fff;
+}
+
+.lb-streak-fire {
+    margin-left: 4px;
+}
+
+@media (max-width: 640px) {
+    .leaderboard-table {
+        font-size: 13px;
+    }
+
+    .leaderboard-table thead th,
+    .leaderboard-table tbody td {
+        padding: 8px 6px;
+    }
+
+    .lb-col-num {
+        width: auto;
+    }
+
+    .lb-col-rank {
+        width: 32px;
+    }
+}
+
+/* -----------------------------------------------------------
+   37) Badges — profile grid + lesson-finale ribbon
+   ----------------------------------------------------------- */
+
+/* --- Profile grid --- */
+
+.badges-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.badges-section-head h2 {
+    margin: 0;
+}
+
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.badge-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    /* Tooltip cursor on hover signals there's more (the description). */
+    cursor: help;
+}
+
+.badge-tile-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.badge-tile-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    /* Two-line clamp so long names don't blow out tile heights. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.badge-tile-locked-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* Locked tiles: greyscaled icon + reduced opacity so the eye skips past them
+   but they remain readable. Greyscale on the WHOLE tile is too heavy; we just
+   desaturate the icon and dim the text. */
+.badge-tile.locked {
+    background: transparent;
+}
+
+.badge-tile.locked .badge-tile-icon {
+    filter: grayscale(1);
+    opacity: 0.35;
+}
+
+.badge-tile.locked .badge-tile-name {
+    color: var(--text-mute);
+}
+
+/* --- Lesson-finale ribbon --- */
+
+.badge-earned-ribbon {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--accent-soft-bg);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+}
+
+.badge-earned-title {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-hot);
+    margin-bottom: 10px;
+}
+
+.badge-earned-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.badge-earned-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-width: 90px;
+}
+
+.badge-earned-icon {
+    font-size: 26px;
+    line-height: 1;
+}
+
+.badge-earned-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+}
+
+@media (max-width: 480px) {
+    .badges-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+    }
+
+    .badge-tile {
+        padding: 12px 8px;
+    }
+
+    .badge-tile-icon {
+        font-size: 26px;
+    }
+}
+
+/* -----------------------------------------------------------
+   37b) Achievements — multi-level progression cards
+   -----------------------------------------------------------
+   Separate from badges: each card carries its own progress bar and level
+   label (Trainee / Affiliate / Member). Two visual contexts:
+     - .achievements-section (own /profile): full payload, locked tiles
+       included with greyed-out icon.
+     - .achievements-public-grid (someone else's /users/:id): earned-only,
+       compact tile shape similar to .badge-tile. */
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.achievement-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.achievement-card.locked {
+    background: transparent;
+}
+
+.achievement-card.locked .achievement-icon {
+    filter: grayscale(1);
+    opacity: 0.4;
+}
+
+.achievement-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.achievement-icon {
+    font-size: 30px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.achievement-titleblock {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.achievement-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.achievement-level {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+}
+
+.achievement-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Progress bar: track + fill. Width animates via CSS transition (NOT scale,
+   per project rule — width transitions are fine). */
+.achievement-progress-bar {
+    height: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.achievement-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+    transition: width 240ms ease-out;
+}
+
+.achievement-card.locked .achievement-progress-fill {
+    background: var(--text-mute);
+    opacity: 0.5;
+}
+
+.achievement-progress-label {
+    font-size: 11px;
+}
+
+.achievement-desc {
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* Compact tiles for someone else's public profile. Single column of info:
+   big icon, name, level pill, date. */
+.achievements-public-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.achievement-public-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    cursor: help;
+}
+
+.achievement-public-icon {
+    font-size: 30px;
+    line-height: 1;
+}
+
+.achievement-public-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.achievement-public-level {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+    .achievements-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .achievement-icon {
+        font-size: 26px;
+    }
+
+    .achievements-public-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 8px;
+    }
+
+    .achievement-public-tile {
+        padding: 12px 8px;
+    }
+}
+
+/* -----------------------------------------------------------
+   38) Mocks — timer pill, start picker, breakdown bars
+   ----------------------------------------------------------- */
+
+/* Timer pill replaces the hearts-row in the lesson topbar when a mock is
+   loaded. Same vertical footprint so the bar doesn't jump on layout. */
+.mock-timer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 64px;
+    /* tabular-nums keeps the digits from shifting horizontally each tick. */
+    font-variant-numeric: tabular-nums;
+}
+
+.mock-timer.warning {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+/* --- Mock start picker --- */
+
+.mock-start-card {
+    /* Inherits .card base; just a holder for the field stack. */
+}
+
+.mock-paper-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mock-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mock-option {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+}
+
+.mock-option:hover {
+    background: var(--grey-band);
+}
+
+.mock-option.selected {
+    background: var(--accent-soft-bg);
+    border-color: var(--accent);
+    color: var(--accent-hot);
+}
+
+.mock-option-compact {
+    padding: 8px 16px;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* --- Mock breakdown --- */
+
+.mock-overall-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 32px 24px;
+}
+
+.mock-overall-card.passed {
+    background: rgba(74, 222, 128, 0.08);
+    border-color: var(--success);
+}
+
+.mock-overall-card.failed {
+    background: rgba(248, 113, 113, 0.06);
+    border-color: var(--danger);
+}
+
+.mock-overall-pct {
+    font-size: 64px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--text);
+}
+
+.mock-overall-card.passed .mock-overall-pct {
+    color: var(--success);
+}
+
+.mock-overall-card.failed .mock-overall-pct {
+    color: var(--danger);
+}
+
+.mock-overall-fraction {
+    font-size: 14px;
+    color: var(--text-dim);
+}
+
+.mock-overall-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-top: 8px;
+}
+
+.mock-lo-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.mock-lo-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "head head"
+        "bar  pct";
+    gap: 4px 12px;
+    align-items: center;
+}
+
+.mock-lo-head {
+    grid-area: head;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.mock-lo-head .mock-lo-title {
+    flex: 1 1 auto;
+    color: var(--text);
+}
+
+.mock-lo-bar-track {
+    grid-area: bar;
+    height: 6px;
+    background: var(--grey-band);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mock-lo-bar-fill {
+    height: 100%;
+    transition: width 280ms ease-out;
+    /* No transform: scale here per project preference. The width transition
+     gives a clean grow animation without the blurry pixel artifacts of scale. */
+}
+
+.mock-lo-pct {
+    grid-area: pct;
+    text-align: right;
+    min-width: 38px;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+    .mock-overall-pct {
+        font-size: 48px;
+    }
+
+    .mock-option {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .mock-option-compact {
+        padding: 8px 12px;
+        min-width: 64px;
+    }
+}
+
+/* -----------------------------------------------------------
+   39) Mobile polish — comprehensive ≤640px and ≤480px rules
+   ----------------------------------------------------------- */
+
+/* Compact page padding and headers on small screens — the default 48px/24px
+   eats too much vertical space when the viewport is small. */
+@media (max-width: 640px) {
+    .page {
+        padding: 24px 14px;
+    }
+
+    .page-tight {
+        padding: 16px 12px;
+    }
+
+    .container,
+    .container-wide,
+    .container-narrow {
+        max-width: 100%;
+    }
+
+    .page-head {
+        margin-bottom: 20px;
+    }
+
+    .page-head h1 {
+        font-size: 24px;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
+
+    h2 {
+        font-size: 19px;
+    }
+
+    h3 {
+        font-size: 16px;
+    }
+
+    .card {
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .card+.card {
+        margin-top: 12px;
+    }
+}
+
+/* AppNav: collapse stats pills and shrink admin button before the breakpoint
+   that's already in section 15b. Section 15b handles ≤720px; this layer fine-
+   tunes ≤480px further (single-row brand only + iconified actions). */
+@media (max-width: 480px) {
+
+    /* NOTE: the rules in this block target .app-nav-inner/.app-nav-left/-right —
+     which are now `display: none` at ≤720px (section 15b's mobile bar takes
+     over). They're kept as a safety net in case the mobile-bar swap is ever
+     reverted, but in practice they don't fire on a phone-sized viewport.
+     Active ≤480px tuning for the *mobile* bar/drawer lives in the block
+     immediately below. */
+    .app-nav {
+        padding: 10px 12px;
+        margin: -24px -14px 20px;
+    }
+
+    .app-nav-inner {
+        gap: 8px;
+    }
+
+    .app-nav-left {
+        gap: 8px;
+    }
+
+    .app-nav-brand span {
+        display: none;
+    }
+
+    /* brand mark only */
+    .app-nav-link {
+        padding: 5px 7px;
+        font-size: 12.5px;
+    }
+
+    .app-nav-right {
+        gap: 6px;
+    }
+
+    .app-nav-admin-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .app-nav-icon-btn,
+    .app-nav-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    /* Theme switch + sign-out button: keep them but tighter. The sign-out btn
+     keeps its label because users expect a clear logout action. */
+    .app-nav-right .btn.btn-sm {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+}
+
+/* Mobile bar tuning for very narrow viewports (≤380px). Hide brand text so
+   the stats + burger always fit; the brand mark alone is enough identity. */
+@media (max-width: 380px) {
+    .app-nav-mobile-brand span {
+        display: none;
+    }
+
+    .app-nav-mobile-stats {
+        gap: 4px;
+    }
+
+    .app-nav-mobile-stats .app-nav-stat {
+        padding: 3px 6px;
+    }
+}
+
+/* Dashboard: stats grid is 3-column by default — too tight on phones.
+   Stack to a 3-column compact row keeping all metrics visible since they're
+   the dashboard's primary signal. */
+@media (max-width: 480px) {
+    .stats {
+        gap: 8px;
+    }
+
+    .stat {
+        padding: 12px 10px;
+    }
+
+    .stat-lbl {
+        font-size: 11px;
+    }
+
+    .stat-val {
+        font-size: 22px;
+    }
+
+    .stat-fire {
+        font-size: 16px;
+    }
+}
+
+/* Lesson-start row (select paper + button): on phones the select+button side-
+   by-side gets cramped. Stack vertically with full-width button. */
+@media (max-width: 480px) {
+    .dashboard-start-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-start-row>.btn {
+        width: 100%;
+    }
+}
+
+/* Profile: 2-column charts grid → single column. The grid is .profile-grid-2;
+   keep it 1-col below 640px so doughnut charts have room. */
+@media (max-width: 640px) {
+    .profile-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Identity card: avatar + edit form should stack so the email/joined lines
+     don't squeeze into a sliver next to a big avatar. */
+    .profile-identity {
+        flex-wrap: wrap;
+    }
+}
+
+/* Activity heatmap on mobile: keep horizontal scroll (it's already overflow-x:
+   auto) but tighten the weekday-labels column so the grid starts earlier. */
+@media (max-width: 480px) {
+    .activity-months {
+        margin-left: 22px;
+    }
+
+    .activity-heatmap {
+        margin-left: 22px;
+    }
+
+    .activity-weekday {
+        font-size: 10px;
+    }
+
+    .activity-cell {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* With smaller cells the row-height step changes; offset weekday labels. */
+    .activity-weekday[style*="15px"] {
+        top: 13px !important;
+    }
+
+    .activity-weekday[style*="45px"] {
+        top: 39px !important;
+    }
+
+    .activity-weekday[style*="75px"] {
+        top: 65px !important;
+    }
+}
+
+/* Progress page heat tiles: 1 column on the smallest phones so titles + meta
+   actually fit without truncation eating the title. */
+@media (max-width: 380px) {
+    .heat {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Leaderboards opt-in banner: stack on phones so the button doesn't get
+   crushed. */
+@media (max-width: 480px) {
+    .leaderboard-optin-banner {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .leaderboard-optin-banner>div {
+        width: 100%;
+    }
+}
+
+/* List rows (.list-bordered .list-row used on Whitelist, Users, etc.): stack
+   on phones so the right-side action buttons have somewhere to go. */
+@media (max-width: 480px) {
+    .list-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .list-row>.row {
+        justify-content: flex-end;
+    }
+}
+
+/* Admin shell on phones: the desktop shell is a 220px sidebar + content.
+   The existing rule at 720px stacks them; here we just tighten content
+   padding so cards aren't crammed against the edges. */
+@media (max-width: 480px) {
+    .admin-content {
+        padding: 12px;
+    }
+
+    /* NOTE: .admin-sidebar / .admin-nav-item rules below are dormant at
+     ≤480px because section 20b's ≤720px block sets .admin-sidebar to
+     display:none and shows the mobile bar + drawer instead. Kept as a
+     safety net for the dual stacking layout — see corresponding note on
+     the .app-nav-inner ≤480px block. */
+    .admin-sidebar {
+        padding: 14px;
+    }
+
+    .admin-nav-item {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+}
+
+/* Modals: full-width with small margins on phones. The default modal-card
+   max-width keeps it comfortable on desktop; constrain on small screens. */
+@media (max-width: 480px) {
+    .modal-backdrop {
+        padding: 12px;
+    }
+
+    .modal-card {
+        padding: 18px;
+        max-width: 100% !important;
+    }
+
+    .modal-card-wide {
+        max-width: 100% !important;
+    }
+}
+
+/* Buttons / inputs: bigger tap targets on phones. iOS guidelines suggest ≥44px;
+   we go 40px which fits in the existing visual rhythm. */
+@media (max-width: 480px) {
+    .btn {
+        min-height: 40px;
+        padding: 9px 14px;
+    }
+
+    .btn-sm {
+        min-height: 32px;
+        padding: 6px 10px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="search"],
+    select,
+    textarea {
+        font-size: 16px;
+        /* prevents iOS auto-zoom on focus */
+    }
+}
+
+/* -----------------------------------------------------------
+   40) Landing page (/) — marketing surface for signed-out visitors
+   -----------------------------------------------------------
+   Self-contained: doesn't reuse .page / .container because those impose a
+   max-width that's too narrow for hero typography. The landing has its own
+   .landing-container (1100px) and full-bleed sections. */
+
+.landing {
+    min-height: 100vh;
+    background: var(--bg);
+}
+
+.landing-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.landing-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+}
+
+.landing-nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Hero — generous vertical space, big headline. Uses a subtle radial gradient
+   behind to lift the text off the background without resorting to a hero
+   image we'd have to design. */
+.landing-hero {
+    padding: 96px 0 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.landing-hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 600px;
+    background: radial-gradient(ellipse at center,
+            var(--accent-glow) 0%,
+            transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.landing-hero>.landing-container {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.landing-hero-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+    padding: 4px 12px;
+    border: 1px solid var(--accent-deep);
+    border-radius: 999px;
+    background: var(--accent-soft-bg);
+}
+
+.landing-hero-title {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin: 0 0 18px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.landing-hero-sub {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--text-dim);
+    max-width: 620px;
+    margin: 0 auto 32px;
+}
+
+.landing-cta-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.landing-hero-foot {
+    margin: 8px 0 0;
+}
+
+/* Larger button variant for landing CTAs. Only used here. */
+.btn-lg {
+    padding: 14px 26px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 10px;
+    min-height: 48px;
+}
+
+.landing-section-title {
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    text-align: center;
+    margin: 0 0 40px;
+}
+
+.landing-features {
+    padding: 80px 0;
+}
+
+.landing-features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.landing-feature {
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-card);
+}
+
+.landing-feature h3 {
+    font-size: 18px;
+    margin: 14px 0 8px;
+}
+
+.landing-feature p {
+    margin: 0;
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+.landing-feature-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.landing-steps {
+    padding: 80px 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.landing-steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.landing-steps-list>li {
+    display: flex;
+    gap: 22px;
+    align-items: flex-start;
+}
+
+.landing-step-num {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.landing-steps-list h3 {
+    font-size: 18px;
+    margin: 6px 0 6px;
+}
+
+.landing-steps-list p {
+    margin: 0;
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+/* "Why Finshark" — manifesto block between hero and features. Background
+   transparent (sits on default --bg), so reads as continuous with hero.
+   Three short cards in a row; collapses to a column on narrow screens. */
+.landing-why {
+    padding: 80px 0 40px;
+}
+
+.landing-why-lede {
+    text-align: center;
+    font-size: 17px;
+    line-height: 1.6;
+    max-width: 680px;
+    margin: -16px auto 40px;
+}
+
+.landing-why-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.landing-why-card {
+    padding: 26px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-card);
+    /* Subtle left accent strip — keeps the brand colour present without being
+     loud. Same colour as .landing-step-num so the page feels unified. */
+    border-left: 3px solid var(--accent);
+}
+
+.landing-why-card h3 {
+    font-size: 17px;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+}
+
+.landing-why-card p {
+    margin: 0;
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+/* FAQ — native <details>/<summary> accordion. Padding tuned so closed items
+   read as list rows; open items expand below the chevron without shifting
+   the question. */
+.landing-faq {
+    padding: 60px 0 80px;
+}
+
+.landing-faq-inner {
+    max-width: 760px;
+}
+
+.landing-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.landing-faq-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
+    padding: 0;
+    overflow: hidden;
+}
+
+.landing-faq-item>summary {
+    cursor: pointer;
+    padding: 18px 22px;
+    font-size: 15px;
+    font-weight: 500;
+    list-style: none;
+    position: relative;
+    /* Reserve space on the right for the chevron */
+    padding-right: 48px;
+}
+
+/* Suppress default disclosure triangle in Safari/Firefox */
+.landing-faq-item>summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Custom chevron — rotates when open. Using rotation here is fine (it's a
+   small indicator, not a content scale). */
+.landing-faq-item>summary::after {
+    content: '';
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-dim);
+    border-bottom: 2px solid var(--text-dim);
+    transform: translateY(-70%) rotate(45deg);
+    transition: transform 0.18s ease;
+}
+
+.landing-faq-item[open]>summary::after {
+    transform: translateY(-30%) rotate(225deg);
+}
+
+.landing-faq-item>p {
+    margin: 0;
+    padding: 0 22px 20px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.landing-cta-bottom {
+    padding: 96px 0;
+}
+
+.landing-foot {
+    padding: 28px 0 40px;
+    border-top: 1px solid var(--border);
+}
+
+/* Landing mobile polish */
+@media (max-width: 720px) {
+    .landing-hero {
+        padding: 56px 0 48px;
+    }
+
+    .landing-hero-title {
+        font-size: 36px;
+    }
+
+    .landing-hero-sub {
+        font-size: 16px;
+    }
+
+    .landing-features {
+        padding: 56px 0;
+    }
+
+    .landing-steps {
+        padding: 56px 0;
+    }
+
+    .landing-cta-bottom {
+        padding: 56px 0;
+    }
+
+    .landing-why {
+        padding: 56px 0 28px;
+    }
+
+    .landing-faq {
+        padding: 40px 0 56px;
+    }
+
+    .landing-section-title {
+        font-size: 24px;
+        margin-bottom: 28px;
+    }
+
+    .landing-features-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .landing-feature {
+        padding: 22px;
+    }
+
+    .landing-why-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .landing-why-card {
+        padding: 22px;
+    }
+
+    .landing-why-lede {
+        font-size: 15px;
+        margin-bottom: 28px;
+    }
+
+    .btn-lg {
+        padding: 12px 22px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .landing-container {
+        padding: 0 14px;
+    }
+
+    .landing-nav-inner {
+        padding: 0 14px;
+    }
+
+    .landing-hero-title {
+        font-size: 30px;
+    }
+
+    .landing-cta-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .landing-steps-list {
+        gap: 22px;
+    }
+
+    .landing-step-num {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+}
+
+/* -----------------------------------------------------------
+   41) Admin content tree — per-paper / per-LO action buttons
+   ----------------------------------------------------------- */
+
+/* Per-paper action row (Add LO / Delete paper). Sits indented under the paper
+   header when expanded, so it visually belongs to that paper. */
+.content-tree-paper-actions {
+    display: flex;
+    gap: 12px;
+    padding: 4px 12px 4px 28px;
+    font-size: 12px;
+}
+
+/* LO row wrapper holds the existing button + the new delete-× button side by
+   side. Hover surfaces the × so the tree stays tidy when not actively editing. */
+.content-tree-lo-wrap {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+}
+
+.content-tree-lo-wrap>.content-tree-lo {
+    flex: 1;
+    min-width: 0;
+}
+
+.content-tree-lo-del {
+    flex-shrink: 0;
+    width: 24px;
+    background: transparent;
+    border: none;
+    color: var(--text-mute);
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 80ms ease, color 80ms ease;
+}
+
+.content-tree-lo-wrap:hover .content-tree-lo-del {
+    opacity: 1;
+}
+
+.content-tree-lo-del:hover {
+    color: var(--danger);
+}
+
+/* -----------------------------------------------------------
+   42) Leaderboard — clickable name links
+   ----------------------------------------------------------- */
+
+/* Inline link styling: inherit colour from the row (so it doesn't stand out
+   like a regular link), but underline on hover to signal interactivity. */
+.lb-name-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.lb-name-link:hover {
+    text-decoration: underline;
+    color: var(--accent);
+}
+
+/* -----------------------------------------------------------
+   43) 2FA — recovery code list + audit log
+   -----------------------------------------------------------
+   Shared between TwoFactorSetupPage (initial enroll) and the regenerate
+   flow in SettingsPage. TwoFactorSetupPage also defines a copy of these
+   in its scoped <style> for self-containment; the global rules take over
+   on SettingsPage where the section is rendered without scoping. */
+
+.tfa-subsection {
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.tfa-recovery-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tfa-recovery-list code {
+    display: block;
+    padding: 8px 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+    .tfa-recovery-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Audit log: each entry is a small two-line block — event title on top,
+   timestamp + ip + meta below in dim. We keep them visually quiet because
+   the section is informational, not actionable. */
+.tfa-audit-list {
+    /* Container — entries live inside. No padding here; sub-elements own it. */
+}
+
+.tfa-audit-entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tfa-audit-entry {
+    padding: 8px 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.tfa-audit-event {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Subtle link used for "Show audit log" toggle. Mirrors the same class
+   in TwoFactorVerifyPage's scoped style; defined globally so SettingsPage
+   can reuse it without re-declaring. */
+.link-subtle {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text-mute);
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.link-subtle:hover {
+    color: var(--text);
+}

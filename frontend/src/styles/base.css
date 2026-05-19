@@ -1,0 +1,284 @@
+/* ============================================================
+   Finshark — global styles
+   Theme: data-theme="dark" (default) and data-theme="light"
+   ============================================================ */
+
+/* -----------------------------------------------------------
+   1) Theme tokens
+   ----------------------------------------------------------- */
+
+:root,
+:root[data-theme="dark"] {
+    /* surfaces */
+    --bg: #0a0a0a;
+    --bg-card: #131316;
+    --bg-elev: #1c1c20;
+    --bg-elev-hover: #232328;
+
+    /* borders */
+    --border: #2a2a30;
+    --border-strong: #3a3a42;
+
+    /* text */
+    --text: #f5f5f7;
+    --text-dim: #a0a0a8;
+    --text-mute: #6a6a73;
+
+    /* primary — sage (matches logo). Anchored on #5d9985 (the lighter logo stop)
+     so the accent reads as a confident brand color on the near-black surfaces,
+     with --accent-hot for hover and --accent-deep for active. Re-uses the
+     existing --sage tokens conceptually (same hue family), but kept under the
+     --accent name so the hundreds of existing usages don't need to change. */
+    --accent: #5d9985;
+    --accent-hot: #7ab5a0;
+    --accent-deep: #3f6b5b;
+    --accent-glow: rgba(93, 153, 133, 0.22);
+    --accent-soft-bg: rgba(93, 153, 133, 0.12);
+
+    /* secondary identity (logo only) */
+    --sage: #4a7d6a;
+    --sage-hot: #5d9985;
+    --sage-glow: rgba(74, 125, 106, 0.25);
+
+    /* warm streak accent (numeral + faint wash) */
+    --coral: #f08a63;
+    --coral-wash-1: rgba(217, 119, 87, 0.14);
+    --coral-wash-2: rgba(217, 119, 87, 0.08);
+
+    /* status */
+    --success: #4ade80;
+    --success-bg: rgba(74, 222, 128, 0.08);
+    --success-border: rgba(74, 222, 128, 0.4);
+    --success-glow: rgba(74, 222, 128, 0.22);
+
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.08);
+    --danger-border: rgba(248, 113, 113, 0.4);
+
+    --amber: #f5b955;
+    --amber-bg: rgba(245, 185, 85, 0.10);
+    --amber-border: rgba(245, 185, 85, 0.4);
+
+    --grey-band: rgba(255, 255, 255, 0.04);
+
+    /* shadows */
+    --shadow-glow-accent: 0 0 18px var(--accent-glow);
+    --shadow-glow-sage: 0 0 18px var(--sage-glow);
+
+    color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+    /* Light theme — same palette philosophy reworked for paper.
+     The streak still reads warm; the logo still reads sage; primary still purple.
+     Backgrounds are warm-tinted off-white, not pure #fff, to soften the screen. */
+
+    --bg: #f7f5f1;
+    --bg-card: #ffffff;
+    --bg-elev: #f1ede5;
+    --bg-elev-hover: #ebe6dc;
+
+    --border: #e2ddd1;
+    --border-strong: #c9c2b1;
+
+    --text: #1a1a1d;
+    --text-dim: #5a5852;
+    --text-mute: #8a877f;
+
+    --accent: #2d5e4d;
+    /* deep sage — holds contrast on cream */
+    --accent-hot: #1f4c3c;
+    --accent-deep: #15392c;
+    --accent-glow: rgba(45, 94, 77, 0.16);
+    --accent-soft-bg: rgba(45, 94, 77, 0.08);
+
+    --sage: #3d6a59;
+    /* deeper sage holds on cream */
+    --sage-hot: #4d8270;
+    --sage-glow: rgba(61, 106, 89, 0.2);
+
+    --coral: #c25e36;
+    /* deeper coral for AA contrast on cream */
+    --coral-wash-1: rgba(217, 119, 87, 0.18);
+    --coral-wash-2: rgba(217, 119, 87, 0.10);
+
+    --success: #1e8e3e;
+    --success-bg: rgba(30, 142, 62, 0.08);
+    --success-border: rgba(30, 142, 62, 0.35);
+    --success-glow: rgba(30, 142, 62, 0.18);
+
+    --danger: #c1351c;
+    --danger-bg: rgba(193, 53, 28, 0.08);
+    --danger-border: rgba(193, 53, 28, 0.35);
+
+    --amber: #b27e16;
+    --amber-bg: rgba(178, 126, 22, 0.10);
+    --amber-border: rgba(178, 126, 22, 0.35);
+
+    --grey-band: rgba(0, 0, 0, 0.04);
+
+    --shadow-glow-accent: 0 0 18px var(--accent-glow);
+    --shadow-glow-sage: 0 0 18px var(--sage-glow);
+
+    color-scheme: light;
+}
+
+/* -----------------------------------------------------------
+   2) Reset + base
+   ----------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.mono,
+.font-mono {
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+}
+
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4 {
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+p {
+    margin: 0;
+}
+
+/* -----------------------------------------------------------
+   3) Layout
+   ----------------------------------------------------------- */
+
+.page {
+    min-height: 100vh;
+    padding: 48px 24px;
+}
+
+.page-tight {
+    padding: 24px 16px;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.container-wide {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.container-narrow {
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.row-end {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.grow {
+    flex: 1;
+}
+
+.spacer {
+    flex: 1;
+}
+
+.mt-2 {
+    margin-top: 8px;
+}
+
+.mt-4 {
+    margin-top: 16px;
+}
+
+.mt-6 {
+    margin-top: 24px;
+}
+
+.mt-8 {
+    margin-top: 32px;
+}
+
+.mt-12 {
+    margin-top: 48px;
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+}

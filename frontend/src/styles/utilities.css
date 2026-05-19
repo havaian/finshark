@@ -1,0 +1,4 @@
+/* Utilities — small helper classes that don't fit cleanly into base /
+   components / pages. Currently empty; reserved for future additions so the
+   import order in style.css stays stable. Anything added here lands LAST in
+   the cascade, so it can safely override component-level defaults. */

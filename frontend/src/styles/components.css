@@ -1120,9 +1120,11 @@ textarea {
 .app-nav-drawer-root {
     position: fixed;
     inset: 0;
-    z-index: 200;
-    /* Above .modal-backdrop (z=100) so the drawer can't be hidden behind a
-     modal opened from a page; below toasts if we ever add them. */
+    z-index: 9999;
+    /* Highest reasonable layer — sits above any modal (z=100), sticky bars,
+     and the content sheet (z=210) used on the admin content page. The
+     drawer is a primary navigation surface; once open, nothing on the
+     page should obscure it. */
     pointer-events: none;
     /* Lets clicks pass through while closed so the page underneath is fully
      usable — only .open re-enables pointer events on the backdrop/panel. */
@@ -1688,6 +1690,14 @@ textarea {
     .admin-sidebar {
         display: none;
     }
+
+    /* Tighten the page padding on phones — the desktop `36px 32px` ate ~64px
+     of horizontal room which combined with content-tree + content-main was
+     enough to push wide questions/inputs past the viewport. The ≤480px
+     rule further shrinks this to 12px for very narrow phones. */
+    .admin-content {
+        padding: 16px;
+    }
 }
 
 /* -----------------------------------------------------------
@@ -1696,20 +1706,27 @@ textarea {
 
 /* Compact top bar shown only on phones. Default state is visible; the
    min-width: 721px media query below hides it on desktop. Sticky so admins
-   always see where they are while scrolling long content pages. */
+   always see where they are while scrolling long content pages.
+
+   width: 100% is defensive: .admin-mobile-bar is a grid item inside
+   .admin-shell (display:grid; grid-template-columns:1fr on mobile), and
+   without an explicit width some layouts shrink it to fit content, leaving
+   the burger button stranded near the brand at ~40% of viewport width. */
 .admin-mobile-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     padding: 10px 14px;
+    width: 100%;
+    box-sizing: border-box;
     background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 10;
-    /* Below the drawer (z=200) but above page content. */
+    /* Below the drawer (z=9999) but above page content. */
 }
 
 /* Hide the admin mobile bar on desktop (>720px). */

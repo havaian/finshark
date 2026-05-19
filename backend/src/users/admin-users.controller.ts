@@ -11,7 +11,7 @@ import {
 } from "@nestjs/common";
 import { IsBoolean } from "class-validator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { AdminGuard } from "../auth/guards/admin.guard";
+import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
 import { UsersRepository } from "./users.repository";
@@ -25,7 +25,7 @@ class SetAdminDto {
 // Admin-only: list all users + promote/demote admin.
 // Mounted under /api/admin/users to sit alongside /api/admin/papers etc.
 @Controller("admin/users")
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminUsersController {
   constructor(private readonly users: UsersRepository) {}
 

@@ -445,6 +445,9 @@ export default {
     error_invalid_code:
       "Code did not match. Make sure your phone's clock is correct and try again.",
     error_generic: "Something went wrong. Please try again.",
+    forced_title: "Two-factor authentication is required for admins",
+    forced_text:
+      "You need to enable 2FA before you can access the admin panel. Complete the setup below — it takes about a minute.",
   },
 
   admin: {

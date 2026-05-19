@@ -7,6 +7,7 @@ import { AuthService } from "./auth.service";
 import { RefreshTokensRepository } from "./refresh-tokens.repository";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { AdminGuard } from "./guards/admin.guard";
+import { AdminWith2faGuard } from "./guards/admin-with-2fa.guard";
 
 @Module({
   // forwardRef on WhitelistModule because WhitelistModule also imports
@@ -19,7 +20,13 @@ import { AdminGuard } from "./guards/admin.guard";
     forwardRef(() => TotpModule),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokensRepository, JwtAuthGuard, AdminGuard],
-  exports: [AuthService, JwtAuthGuard, AdminGuard],
+  providers: [
+    AuthService,
+    RefreshTokensRepository,
+    JwtAuthGuard,
+    AdminGuard,
+    AdminWith2faGuard,
+  ],
+  exports: [AuthService, JwtAuthGuard, AdminGuard, AdminWith2faGuard],
 })
 export class AuthModule {}

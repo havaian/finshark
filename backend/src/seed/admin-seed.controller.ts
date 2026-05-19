@@ -1,19 +1,19 @@
 import { Controller, Logger, Post, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { AdminGuard } from "../auth/guards/admin.guard";
+import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { SeedService, type ReseedResult } from "./seed.service";
 
 // Admin-only endpoint that wipes content + progress and reseeds the catalog
 // from the bundled seed data. Destructive — guarded by both JwtAuthGuard and
-// AdminGuard so only admins can hit it, and throttled tighter than the global
-// default to mitigate accidental double-clicks (the frontend also disables
-// the button during the request).
+// AdminWith2faGuard so only 2FA-enrolled admins can hit it, and throttled
+// tighter than the global default to mitigate accidental double-clicks (the
+// frontend also disables the button during the request).
 //
 // Mounted under /api/admin/system to leave room for future system-level
 // operations (e.g. /admin/system/health).
 @Controller("admin/system")
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminSeedController {
   private readonly log = new Logger(AdminSeedController.name);
 

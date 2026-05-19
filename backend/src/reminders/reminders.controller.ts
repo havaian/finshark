@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { AdminGuard } from "../auth/guards/admin.guard";
+import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
 import { UsersRepository } from "../users/users.repository";
@@ -62,7 +62,7 @@ export class RemindersController {
   // filter so a manual click actually sends to everyone eligible right now.
   // POST /api/admin/reminders/run
   @Post("admin/reminders/run")
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminWith2faGuard)
   @HttpCode(HttpStatus.OK)
   async runNow() {
     return this.reminders.runOnce({ allHours: true });

@@ -10,13 +10,13 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { AdminGuard } from "../auth/guards/admin.guard";
+import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { UiTranslationsService } from "./ui-translations.service";
 import { UpsertUiTranslationDto } from "./dto/ui-translation.dto";
 import type { Lang } from "./content.types";
 
 @Controller("admin/ui-translations")
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminUiTranslationsController {
   constructor(private readonly service: UiTranslationsService) {}
 

@@ -196,6 +196,25 @@ router.beforeEach((to) => {
     return { name: "dashboard" };
   }
 
+  // Force 2FA enrollment for admins accessing any admin route. The backend
+  // also enforces this (AdminWith2faGuard returns 403 { error: "2FA_SETUP_REQUIRED" }),
+  // but the client gate makes the redirect feel intentional instead of
+  // surfacing a generic API error. We DON'T block /settings/2fa itself
+  // (where the user enrolls) — admins need to be able to reach the
+  // enrollment wizard. The query flag `force=1` lets the wizard show
+  // a slightly different banner explaining the redirect.
+  if (
+    to.meta.requiresAdmin &&
+    auth.user?.is_admin &&
+    !auth.user?.totp_enabled &&
+    to.name !== "two-factor-setup"
+  ) {
+    return {
+      name: "two-factor-setup",
+      query: { force: "1", next: to.fullPath },
+    };
+  }
+
   if (to.meta.guestOnly && auth.isAuthenticated) {
     return { name: "dashboard" };
   }

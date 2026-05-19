@@ -12,7 +12,7 @@ import {
 } from "@nestjs/common";
 import { IsOptional, IsString, MaxLength } from "class-validator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { AdminGuard } from "../auth/guards/admin.guard";
+import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
 import { WhitelistService } from "./whitelist.service";
@@ -38,7 +38,7 @@ class UpdateNoteDto {
 // Admin-only CRUD over the email whitelist.
 // Mounted under /api/admin/whitelist alongside other admin endpoints.
 @Controller("admin/whitelist")
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminWhitelistController {
   constructor(private readonly whitelist: WhitelistService) {}
 

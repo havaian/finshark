@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { totpApi } from '../api/totp.api';
@@ -19,15 +19,24 @@ import type { TotpSetupBeginResult } from '../types/totp';
 //   3) recovery  — show all 10 recovery codes, require the user to tick
 //                  the "I saved them" checkbox before we let them leave.
 //                  After they confirm we re-fetch /me so the store picks
-//                  up totp_enabled=true and bounce to /settings.
+//                  up totp_enabled=true and bounce to /settings (or the
+//                  forced redirect target — see `forced` / `nextPath`).
 //
 // Aborting mid-flow (closing the tab on step 1 or 2) leaves nothing
 // persisted — the secret only gets written on a successful setup-verify.
+//
+// Force-enroll flow:
+//   When an admin without 2FA hits any /admin/* route, the router redirects
+//   here with ?force=1&next=<original-path>. We render a prominent banner
+//   explaining the redirect AND change the cancel button to "Back to
+//   dashboard" so the user can't quietly bail back into /settings. After
+//   enrollment we send them to `next` instead of /settings.
 
 type Step = 'scan' | 'verify' | 'recovery';
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
 
 const step = ref<Step>('scan');
@@ -44,6 +53,18 @@ const savedConfirmed = ref(false);
 // Admin-only — non-admins shouldn't even reach this route, but if they
 // somehow do (e.g. via direct URL), the API will 403 and we redirect.
 const isAdmin = computed(() => auth.user?.is_admin === true);
+
+// Forced flow: ?force=1 came from the admin route guard. `next` is the URL
+// the admin originally wanted to visit — we send them there after enrollment.
+// Defensive: only honor `next` if it's a safe relative path (starts with /
+// and doesn't contain protocol). Otherwise drop back to /admin.
+const forced = computed(() => route.query.force === '1');
+const nextPath = computed<string>(() => {
+  const raw = route.query.next;
+  if (typeof raw !== 'string') return '/admin';
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/admin';
+  return raw;
+});
 
 async function beginSetup() {
   loading.value = true;
@@ -87,14 +108,18 @@ async function verify() {
 }
 
 async function finishAndExit() {
-  // Re-fetch /me so the store has totp_enabled=true for the Settings page.
+  // Re-fetch /me so the store has totp_enabled=true for the Settings page
+  // (and for the admin route guard, which checks auth.user.totp_enabled
+  // — without this fetch the guard would bounce the admin right back here).
   try {
     const me = await authApi.me();
     auth.setUser(me);
   } catch {
     // Non-fatal — Settings will re-fetch on its own.
   }
-  router.replace('/settings');
+  // Forced flow lands the admin on the page they were trying to reach.
+  // Normal flow returns to /settings where they came from.
+  router.replace(forced.value ? nextPath.value : '/settings');
 }
 
 function copyRecoveryCodes() {
@@ -128,6 +153,14 @@ onMounted(() => {
         <h1>{{ t('tfa_setup.title') }}</h1>
       </header>
 
+      <!-- Forced-enroll banner: appears when an admin without 2FA tried to
+           access an admin route and got redirected here. Loud styling so
+           it doesn't look like a generic settings page. -->
+      <div v-if="forced && isAdmin" class="tfa-forced-banner">
+        <strong>{{ t('tfa_setup.forced_title') }}</strong>
+        <p class="text-sm mt-2" style="margin-bottom: 0;">{{ t('tfa_setup.forced_text') }}</p>
+      </div>
+
       <p v-if="loading" class="dim text-sm">{{ t('common.loading') }}</p>
 
       <p v-else-if="errorMsg && !setupData" class="error-text">{{ errorMsg }}</p>
@@ -150,7 +183,11 @@ onMounted(() => {
           <button class="btn btn-primary" @click="step = 'verify'">
             {{ t('tfa_setup.continue') }}
           </button>
-          <RouterLink to="/settings" class="btn btn-ghost">
+          <!-- Cancel target depends on flow: a normal admin came from
+               /settings and goes back there; a forced admin (?force=1)
+               came from /admin/* but can't go there yet — send them home
+               instead so they don't ping-pong against the route guard. -->
+          <RouterLink :to="forced ? '/dashboard' : '/settings'" class="btn btn-ghost">
             {{ t('common.cancel') }}
           </RouterLink>
         </div>
@@ -270,5 +307,23 @@ onMounted(() => {
   .tfa-recovery-list {
     grid-template-columns: 1fr;
   }
+}
+
+/* Forced-enroll banner — shown when an admin without 2FA was redirected
+   here by the route guard. Amber styling (matches our existing pre-warning
+   color tokens) signals "you have to do this now" without being as alarming
+   as red. */
+.tfa-forced-banner {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  border-left: 4px solid var(--amber);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 0 0 20px;
+  color: var(--text);
+}
+
+.tfa-forced-banner strong {
+  color: var(--amber);
 }
 </style>

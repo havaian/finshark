@@ -1130,6 +1130,13 @@ textarea {
     /* Defensive: even though the panel is offscreen via translateX, hiding
      visibility prevents any focus/scrollbar surprises from the offscreen
      panel. Re-enabled on .open. */
+    overflow: hidden;
+    /* CRITICAL: clip the offscreen drawer panel. Without this, the panel —
+     positioned at right:0 then pushed by translateX(100%) — extends the
+     document's scrollable rectangle by ~320px to the right, producing a
+     spurious horizontal scrollbar on every page. position:fixed on the
+     root doesn't shield the body from a transformed descendant's overflow;
+     overflow:hidden does. */
 }
 
 .app-nav-drawer-root.open {

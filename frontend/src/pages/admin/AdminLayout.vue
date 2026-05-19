@@ -124,10 +124,10 @@ function onExitMobile() {
           <span class="admin-mobile-brand-sub dim text-xs">{{ t('admin.panel') }}</span>
         </span>
       </div>
-      <button type="button" class="admin-mobile-burger" :aria-label="t('nav.open_menu')" :aria-expanded="drawerOpen"
-        @click="openDrawer">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" aria-hidden="true">
+      <button type="button" class="admin-mobile-burger" :aria-label="t('nav.open_menu')"
+        :aria-expanded="drawerOpen" @click="openDrawer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <path d="M3 6h18" />
           <path d="M3 12h18" />
           <path d="M3 18h18" />
@@ -139,47 +139,50 @@ function onExitMobile() {
       <RouterView />
     </main>
 
-    <!-- Drawer. Reuses the .app-nav-drawer-* class family from AppNav so the
-         drawer chrome (backdrop fade, slide-in animation, head/foot layout)
-         has ONE source of truth. Admin-specific bits get their own classes
-         (admin-drawer-*). -->
-    <div :class="['app-nav-drawer-root', { open: drawerOpen }]" aria-hidden="true">
-      <div class="app-nav-drawer-backdrop" @click="closeDrawer"></div>
-      <aside class="app-nav-drawer" role="dialog" :aria-modal="drawerOpen" :aria-label="t('nav.menu')" @click.stop>
-        <header class="app-nav-drawer-head">
-          <div class="brand admin-drawer-brand">
-            <div class="brand-mark"></div>
-            <span class="app-nav-drawer-me-text">
-              <span class="app-nav-drawer-me-name">Finshark</span>
-              <span class="app-nav-drawer-me-sub dim text-xs">{{ t('admin.panel') }}</span>
-            </span>
+    <!-- Drawer. Teleported to <body> so it escapes any containing block
+         created by parents (admin shell, mobile bar's backdrop-filter, etc.)
+         and behaves as a true viewport-fixed overlay. Reuses .app-nav-drawer-*
+         classes for chrome consistency. -->
+    <Teleport to="body">
+      <div :class="['app-nav-drawer-root', { open: drawerOpen }]" aria-hidden="true">
+        <div class="app-nav-drawer-backdrop" @click="closeDrawer"></div>
+        <aside class="app-nav-drawer" role="dialog" :aria-modal="drawerOpen" :aria-label="t('nav.menu')"
+          @click.stop>
+          <header class="app-nav-drawer-head">
+            <div class="brand admin-drawer-brand">
+              <div class="brand-mark"></div>
+              <span class="app-nav-drawer-me-text">
+                <span class="app-nav-drawer-me-name">Finshark</span>
+                <span class="app-nav-drawer-me-sub dim text-xs">{{ t('admin.panel') }}</span>
+              </span>
+            </div>
+            <button type="button" class="app-nav-drawer-close" :aria-label="t('common.close')"
+              @click="closeDrawer">✕</button>
+          </header>
+
+          <!-- Admin section nav. Full-width rows for comfortable tap targets. -->
+          <nav class="app-nav-drawer-links">
+            <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
+              :class="['app-nav-drawer-link', { active: isActive(item) }]" @click="closeDrawer">
+              {{ t(item.labelKey) }}
+            </RouterLink>
+          </nav>
+
+          <!-- User identity, mirrors the desktop sidebar foot. -->
+          <div v-if="auth.user" class="admin-drawer-me">
+            <div class="admin-sidebar-me-name">{{ auth.user.display_name }}</div>
+            <div class="admin-sidebar-me-email dim text-xs">{{ auth.user.email }}</div>
           </div>
-          <button type="button" class="app-nav-drawer-close" :aria-label="t('common.close')"
-            @click="closeDrawer">✕</button>
-        </header>
 
-        <!-- Admin section nav. Full-width rows for comfortable tap targets. -->
-        <nav class="app-nav-drawer-links">
-          <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
-            :class="['app-nav-drawer-link', { active: isActive(item) }]" @click="closeDrawer">
-            {{ t(item.labelKey) }}
-          </RouterLink>
-        </nav>
-
-        <!-- User identity, mirrors the desktop sidebar foot. -->
-        <div v-if="auth.user" class="admin-drawer-me">
-          <div class="admin-sidebar-me-name">{{ auth.user.display_name }}</div>
-          <div class="admin-sidebar-me-email dim text-xs">{{ auth.user.email }}</div>
-        </div>
-
-        <!-- "Back to app" pinned to the bottom — equivalent to the desktop
-             sidebar's foot button. -->
-        <div class="app-nav-drawer-foot">
-          <button class="btn btn-ghost btn-block" @click="onExitMobile">
-            {{ t('nav.back_to_app') }}
-          </button>
-        </div>
-      </aside>
-    </div>
+          <!-- "Back to app" pinned to the bottom — equivalent to the desktop
+               sidebar's foot button. -->
+          <div class="app-nav-drawer-foot">
+            <button class="btn btn-ghost btn-block" @click="onExitMobile">
+              {{ t('nav.back_to_app') }}
+            </button>
+          </div>
+        </aside>
+      </div>
+    </Teleport>
   </div>
 </template>

@@ -167,11 +167,11 @@ function onLogoutMobile() {
         </span>
       </div>
 
-      <button type="button" class="app-nav-burger" :aria-label="t('nav.open_menu')"
-        :aria-expanded="drawerOpen" @click="openDrawer">
+      <button type="button" class="app-nav-burger" :aria-label="t('nav.open_menu')" :aria-expanded="drawerOpen"
+        @click="openDrawer">
         <!-- Three-line burger. SVG so the lines stay crisp at any DPI. -->
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" aria-hidden="true">
           <path d="M3 6h18" />
           <path d="M3 12h18" />
           <path d="M3 18h18" />
@@ -184,8 +184,7 @@ function onLogoutMobile() {
          it don't dismiss. -->
     <div :class="['app-nav-drawer-root', { open: drawerOpen }]" aria-hidden="true">
       <div class="app-nav-drawer-backdrop" @click="closeDrawer"></div>
-      <aside class="app-nav-drawer" role="dialog" :aria-modal="drawerOpen" :aria-label="t('nav.menu')"
-        @click.stop>
+      <aside class="app-nav-drawer" role="dialog" :aria-modal="drawerOpen" :aria-label="t('nav.menu')" @click.stop>
         <header class="app-nav-drawer-head">
           <RouterLink to="/profile" class="app-nav-drawer-me" @click="closeDrawer">
             <span class="app-nav-avatar" aria-hidden="true">
@@ -226,8 +225,8 @@ function onLogoutMobile() {
           </RouterLink>
 
           <!-- Admin entry: same vivid styling as desktop, full-width here. -->
-          <RouterLink v-if="auth.user?.is_admin" to="/admin"
-            class="app-nav-drawer-link app-nav-drawer-link-admin" @click="closeDrawer">
+          <RouterLink v-if="auth.user?.is_admin" to="/admin" class="app-nav-drawer-link app-nav-drawer-link-admin"
+            @click="closeDrawer">
             {{ t('nav.admin_panel') }}
           </RouterLink>
         </nav>

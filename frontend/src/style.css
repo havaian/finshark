@@ -1411,10 +1411,15 @@ textarea {
   pointer-events: none;
   /* Lets clicks pass through while closed so the page underneath is fully
      usable — only .open re-enables pointer events on the backdrop/panel. */
+  visibility: hidden;
+  /* Defensive: even though the panel is offscreen via translateX, hiding
+     visibility prevents any focus/scrollbar surprises from the offscreen
+     panel. Re-enabled on .open. */
 }
 
 .app-nav-drawer-root.open {
   pointer-events: auto;
+  visibility: visible;
 }
 
 .app-nav-drawer-backdrop {

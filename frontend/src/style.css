@@ -1315,14 +1315,12 @@ textarea {
     padding: 10px 14px;
   }
 
-  /* Hide the desktop row entirely on phones — the mobile bar replaces it. */
+  /* Hide the desktop row entirely on phones — the mobile bar replaces it.
+     The mobile bar is shown by default (see .app-nav-mobile base rule) and
+     hidden on desktop via a separate min-width media query, so we don't
+     need to flip its display here. */
   .app-nav-inner {
     display: none;
-  }
-
-  /* Show the mobile bar instead. */
-  .app-nav-mobile {
-    display: flex;
   }
 }
 
@@ -1331,16 +1329,30 @@ textarea {
    ----------------------------------------------------------- */
 
 /* Compact top bar shown only on phones. Lives in the same .app-nav wrapper
-   so it inherits the sticky/backdrop chrome. Hidden on desktop via the
-   default rule below; shown via the 720px breakpoint above. */
+   so it inherits the sticky/backdrop chrome.
+
+   Default state (desktop): hidden. The ≤720px media query further down in
+   the file flips display back to flex. Order matters: this base rule sets
+   display:flex with all the flex props, then a desktop-only media query
+   below hides it. We can't rely on a ≤720px media-query override turning
+   display:flex back on after a base display:none, because that override
+   has to live LATER in the file to win source-order; restructuring it as
+   "default visible + hide on desktop" keeps the cascade simple. */
 .app-nav-mobile {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 10px;
   max-width: 1200px;
   margin: 0 auto;
   /* Span the full row so the burger sits flush against the right edge. */
   width: 100%;
+}
+
+/* Hide the mobile bar on desktop (>720px). */
+@media (min-width: 721px) {
+  .app-nav-mobile {
+    display: none;
+  }
 }
 
 .app-nav-mobile-brand {
@@ -1939,7 +1951,9 @@ textarea {
 
   /* Single-column grid: just the main content. The desktop sidebar is hidden
      and replaced by the .admin-mobile-bar at the top of the shell. Drawer
-     holds the section nav + user info + "back to app". */
+     holds the section nav + user info + "back to app". The mobile bar is
+     shown by default (see its base rule below) and hidden on desktop via a
+     separate min-width media query — keeps the cascade order-independent. */
   .admin-shell {
     grid-template-columns: 1fr;
   }
@@ -1947,21 +1961,17 @@ textarea {
   .admin-sidebar {
     display: none;
   }
-
-  .admin-mobile-bar {
-    display: flex;
-  }
 }
 
 /* -----------------------------------------------------------
    20b) Admin mobile top bar (paired with the drawer in component template)
    ----------------------------------------------------------- */
 
-/* Compact top bar shown only on phones. Hidden by default (display:none) and
-   flipped to flex inside the ≤720px block above. Sticky so admins always see
-   where they are while scrolling long content pages. */
+/* Compact top bar shown only on phones. Default state is visible; the
+   min-width: 721px media query below hides it on desktop. Sticky so admins
+   always see where they are while scrolling long content pages. */
 .admin-mobile-bar {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -1973,6 +1983,13 @@ textarea {
   top: 0;
   z-index: 10;
   /* Below the drawer (z=200) but above page content. */
+}
+
+/* Hide the admin mobile bar on desktop (>720px). */
+@media (min-width: 721px) {
+  .admin-mobile-bar {
+    display: none;
+  }
 }
 
 .admin-mobile-brand {

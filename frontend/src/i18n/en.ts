@@ -24,6 +24,7 @@ export default {
     finish: "Finish",
     optional: "optional",
     none: "—",
+    close: "Close",
     error_generic: "Something went wrong",
   },
 
@@ -55,6 +56,9 @@ export default {
       "Daily streak — number of consecutive days with at least one lesson.",
     stat_xp_tip:
       "Experience points — earned for correct answers and completed lessons.",
+    open_menu: "Open menu",
+    menu: "Menu",
+    theme: "Theme",
   },
 
   home: {

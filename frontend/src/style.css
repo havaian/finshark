@@ -1315,31 +1315,296 @@ textarea {
     padding: 10px 14px;
   }
 
+  /* Hide the desktop row entirely on phones — the mobile bar replaces it. */
   .app-nav-inner {
-    gap: 12px;
-  }
-
-  .app-nav-left {
-    gap: 14px;
-  }
-
-  .app-nav-links {
-    gap: 0;
-  }
-
-  .app-nav-link {
-    padding: 6px 8px;
-    font-size: 13px;
-  }
-
-  .app-nav-stats {
     display: none;
   }
 
-  .app-nav-admin-btn {
-    padding: 5px 10px;
-    font-size: 12px;
+  /* Show the mobile bar instead. */
+  .app-nav-mobile {
+    display: flex;
   }
+}
+
+/* -----------------------------------------------------------
+   15b) Mobile nav bar + slide-in drawer
+   ----------------------------------------------------------- */
+
+/* Compact top bar shown only on phones. Lives in the same .app-nav wrapper
+   so it inherits the sticky/backdrop chrome. Hidden on desktop via the
+   default rule below; shown via the 720px breakpoint above. */
+.app-nav-mobile {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Span the full row so the burger sits flush against the right edge. */
+  width: 100%;
+}
+
+.app-nav-mobile-brand {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  /* Brand text reads in this bar — only the smallest phones hide it (rule
+     further down). */
+}
+
+.app-nav-mobile-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  /* Sits between brand and burger so streak/XP are always visible. */
+}
+
+/* Compact stat pill inside the mobile bar — slightly tighter than the
+   desktop pill since space is at a premium. */
+.app-nav-mobile-stats .app-nav-stat {
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+.app-nav-burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  /* Distinct visual weight from the brand so users see it as an action. */
+}
+
+.app-nav-burger:hover {
+  background: var(--bg-card);
+}
+
+/* Drawer root — fixed-position layer with backdrop. Always in DOM so we can
+   transition; .open toggles visibility. */
+.app-nav-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  /* Above .modal-backdrop (z=100) so the drawer can't be hidden behind a
+     modal opened from a page; below toasts if we ever add them. */
+  pointer-events: none;
+  /* Lets clicks pass through while closed so the page underneath is fully
+     usable — only .open re-enables pointer events on the backdrop/panel. */
+}
+
+.app-nav-drawer-root.open {
+  pointer-events: auto;
+}
+
+.app-nav-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.app-nav-drawer-root.open .app-nav-drawer-backdrop {
+  opacity: 1;
+}
+
+/* The panel itself. Slides in from the right via translateX (no scale —
+   per project convention). 320px is a comfortable width on most phones;
+   capped at 88vw so it never covers the whole screen (user can see they
+   can tap to dismiss). */
+.app-nav-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(320px, 88vw);
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 220ms ease;
+  /* Allow internal scroll for tall content (e.g. small landscape phones). */
+  overflow-y: auto;
+}
+
+.app-nav-drawer-root.open .app-nav-drawer {
+  transform: translateX(0);
+}
+
+.app-nav-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.app-nav-drawer-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  /* Allow text inside to ellipsise rather than push the close button off. */
+}
+
+.app-nav-drawer-me-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-nav-drawer-me-name {
+  font-weight: 600;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-nav-drawer-me-sub {
+  margin-top: 1px;
+}
+
+.app-nav-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 18px;
+  font-family: inherit;
+  flex: 0 0 auto;
+}
+
+.app-nav-drawer-close:hover {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+
+.app-nav-drawer-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-nav-drawer-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-elev);
+}
+
+.app-nav-drawer-stat-val {
+  font-weight: 600;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-nav-drawer-stat-lbl {
+  line-height: 1.3;
+  /* Wrap to two lines on narrow phones rather than truncate — the
+     description is the whole point of the label. */
+}
+
+.app-nav-drawer-links {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 2px;
+}
+
+.app-nav-drawer-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  /* Comfortable tap target — minimum 44px tall with this padding. */
+}
+
+.app-nav-drawer-link:hover,
+.app-nav-drawer-link:focus-visible {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+
+.app-nav-drawer-link.active {
+  background: var(--accent-soft-bg);
+  color: var(--text);
+}
+
+/* Admin row in the drawer — same accent gradient as the desktop button so
+   it's instantly recognisable. */
+.app-nav-drawer-link-admin {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: #fff;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.app-nav-drawer-link-admin:hover,
+.app-nav-drawer-link-admin:focus-visible {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: #fff;
+  filter: brightness(1.08);
+}
+
+.app-nav-drawer-section {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 2px;
+  border-top: 1px solid var(--border);
+}
+
+.app-nav-drawer-themerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+}
+
+.app-nav-drawer-foot {
+  margin-top: auto;
+  padding: 12px 16px 18px;
+  border-top: 1px solid var(--border);
+}
+
+/* Body scroll lock — used by the drawer (and reusable elsewhere). Prevents
+   the page underneath from scrolling while the drawer is open. We pin the
+   body so iOS doesn't rubber-band the background. */
+.body-scroll-lock {
+  overflow: hidden;
+  /* position: fixed would jump to top on close; sticking with overflow
+     hidden which is enough for our drawer use-case and doesn't lose scroll
+     position. */
 }
 
 /* When the admin shell renders the nav within .admin-content > .page, the
@@ -1671,25 +1936,115 @@ textarea {
 }
 
 @media (max-width: 720px) {
+
+  /* Single-column grid: just the main content. The desktop sidebar is hidden
+     and replaced by the .admin-mobile-bar at the top of the shell. Drawer
+     holds the section nav + user info + "back to app". */
   .admin-shell {
     grid-template-columns: 1fr;
   }
 
   .admin-sidebar {
-    position: static;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
+    display: none;
   }
 
-  .admin-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .admin-mobile-bar {
+    display: flex;
   }
+}
 
-  .admin-sidebar-foot {
-    padding-top: 10px;
-  }
+/* -----------------------------------------------------------
+   20b) Admin mobile top bar (paired with the drawer in component template)
+   ----------------------------------------------------------- */
+
+/* Compact top bar shown only on phones. Hidden by default (display:none) and
+   flipped to flex inside the ≤720px block above. Sticky so admins always see
+   where they are while scrolling long content pages. */
+.admin-mobile-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* Below the drawer (z=200) but above page content. */
+}
+
+.admin-mobile-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  /* Allow long display names / labels to ellipsise rather than push the
+     burger off-screen. */
+}
+
+.admin-mobile-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.admin-mobile-brand-sub {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.admin-mobile-burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.admin-mobile-burger:hover {
+  background: var(--bg-card);
+}
+
+/* Admin drawer brand block — sits in the drawer head where AppNav puts the
+   profile link. Uses the existing .app-nav-drawer-me-text + ...-me-name +
+   ...-me-sub classes so typography matches AppNav's drawer head exactly. */
+.admin-drawer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* User identity row inside the drawer — same typography as the desktop
+   sidebar foot's .admin-sidebar-me block. Sits directly above the foot's
+   "back to app" button. We use margin-top:auto here so the identity +
+   foot stick to the bottom of the drawer; the foot's own margin-top:auto
+   becomes a no-op once this row consumes it (browsers honour the first
+   auto-margin sibling). */
+.admin-drawer-me {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* When admin-drawer-me is present, the foot loses its push — it sits flush
+   below the identity row. Without this rule both elements would compete for
+   the auto-margin gap and the foot would drift. */
+.admin-drawer-me+.app-nav-drawer-foot {
+  margin-top: 0;
+  border-top: none;
 }
 
 /* -----------------------------------------------------------
@@ -2423,6 +2778,106 @@ textarea {
   padding: 0 5px;
 }
 
+/* Mobile picker pill — hidden on desktop, shown on phones via the ≤720px
+   block further down. Sits above the tree/main grid and acts as both
+   "open tree" trigger and current-LO breadcrumb. */
+.content-mobile-picker {
+  display: none;
+  /* Spans both columns of the grid since .content-browser is a 2-col grid;
+     making the picker itself a grid item that takes the full width. */
+  grid-column: 1 / -1;
+}
+
+.content-mobile-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  /* Border instead of accent fill — keeps the LO title (the important
+     thing) as the visual centre. */
+}
+
+.content-mobile-picker-btn:hover,
+.content-mobile-picker-btn:focus-visible {
+  background: var(--bg-elev);
+}
+
+.content-mobile-picker-btn-empty {
+  /* When no LO is picked, lean on dim text so the pill itself reads as a
+     prompt rather than a populated value. */
+  color: var(--text-dim);
+}
+
+.content-mobile-picker-crumb {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  background: var(--grey-band);
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.content-mobile-picker-label {
+  flex: 1 1 auto;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content-mobile-picker-chev {
+  flex: 0 0 auto;
+  color: var(--text-mute);
+  font-size: 12px;
+}
+
+/* Mobile sheet header — hidden on desktop, shown at ≤720px. Provides a
+   close affordance for the tree-as-sheet. */
+.content-tree-mobile-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 12px;
+  margin: -4px -4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.content-tree-mobile-title {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.content-tree-mobile-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 18px;
+  font-family: inherit;
+}
+
+.content-tree-mobile-close:hover {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+
 .content-main {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -2624,19 +3079,179 @@ textarea {
   font-size: 13px;
 }
 
-/* Mobile: stack tree above main, give tree a max-height so it doesn't dominate. */
-@media (max-width: 900px) {
+/* Tablet (≤900px, but still >720px): tree column is narrower than desktop,
+   but keeps the side-by-side layout. The tree still scrolls independently. */
+@media (max-width: 900px) and (min-width: 721px) {
+  .content-browser {
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+  }
+}
+
+/* Mobile (≤720px): the tree becomes an off-canvas sheet that slides up from
+   the bottom. The main column gets the whole grid row. A "Pick LO" pill at
+   the top opens the sheet. This keeps the questions list immediately
+   visible — the most common reason an admin lands on this page is to find
+   or edit a question, not to browse the tree. */
+@media (max-width: 720px) {
   .content-browser {
     grid-template-columns: 1fr;
+    gap: 12px;
+    /* Drop the fixed viewport-relative height — the page can scroll
+       naturally now that we're single-column. */
     height: auto;
   }
 
-  .content-tree {
-    max-height: 320px;
+  /* Show the picker pill (hidden on desktop). */
+  .content-mobile-picker {
+    display: flex;
   }
 
+  /* Tree becomes a fixed-position sheet. It's still in the same DOM
+     position but visually pulled out to the bottom of the viewport.
+     Slides up via translateY when .mobile-open is added. */
+  .content-tree {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 210;
+    /* Above .modal-backdrop (z=100) and the AppNav drawer (z=200). The tree
+       is opened from inside the admin shell which doesn't show the AppNav
+       drawer anyway, but the higher z-index keeps it predictable. */
+    width: 100%;
+    max-height: 80vh;
+    border-radius: 16px 16px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
+    transform: translateY(100%);
+    transition: transform 220ms ease;
+    /* Hidden by default, even when .mobile-open is not present, so it
+       can't be tab-focused while off-screen. */
+    visibility: hidden;
+  }
+
+  .content-tree.mobile-open {
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  /* Show the mobile bar inside the sheet — hidden on desktop. */
+  .content-tree-mobile-bar {
+    display: flex;
+  }
+
+  /* Backdrop only renders when open (Vue v-if), so it just needs styles. */
+  .content-tree-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 205;
+    /* Sits between the page and the sheet. */
+  }
+
+  /* Tighten the tree head row inside the sheet so the duplicate title
+     doesn't look heavy alongside the mobile bar's title. */
+  .content-tree-head h2 {
+    display: none;
+  }
+
+  .content-tree-head {
+    margin-bottom: 8px;
+  }
+
+  /* Tap targets in the tree need to be roomier on a phone. */
+  .content-tree-lo {
+    padding: 10px 8px 10px 12px;
+  }
+
+  .content-tree-paper-head {
+    padding: 10px 6px;
+  }
+
+  /* Main panel: drop the card chrome on mobile since we're already
+     inside the admin shell padding — saves horizontal space. */
   .content-main {
-    min-height: 50vh;
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    min-height: auto;
+  }
+
+  /* Main head stacks vertically and gives the action buttons more room. */
+  .content-main-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .content-main-head h1 {
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  .content-main-head .row {
+    justify-content: stretch;
+  }
+
+  .content-main-head .row .btn {
+    flex: 1 1 auto;
+    /* Generate / Add buttons stretch on mobile so they have real tap area. */
+  }
+
+  /* Toolbar: search drops below tabs on small screens. */
+  .content-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .content-tabs {
+    /* Equal-width tabs across the row so neither dominates. */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .content-tab {
+    justify-content: center;
+    padding: 10px 12px;
+    /* Bigger tap target than the desktop 6px padding. */
+  }
+
+  .content-search {
+    width: 100%;
+    max-width: 100%;
+    /* Override the desktop max-width: 320px so the search bar uses the
+       full row on mobile. */
+  }
+
+  /* Batch bar: stack message + actions vertically on phones. */
+  .content-batch-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  /* Question card: tighter padding and a stacked action row so the three
+     edit/retire/delete links each get a comfortable tap target. */
+  .content-question {
+    padding: 12px 14px;
+  }
+
+  .content-question-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .content-question-actions .btn-link {
+    padding: 6px 4px;
+    /* Slightly inflated hit area for thumb taps without changing visuals
+       much. */
   }
 }
 
@@ -3515,9 +4130,12 @@ textarea {
    tunes ≤480px further (single-row brand only + iconified actions). */
 @media (max-width: 480px) {
 
-  /* Already hides stats and shrinks admin via the 720px rule; here we go a step
-     further by collapsing the brand text and tightening gaps so the nav fits
-     on a phone in portrait without horizontal scroll. */
+  /* NOTE: the rules in this block target .app-nav-inner/.app-nav-left/-right —
+     which are now `display: none` at ≤720px (section 15b's mobile bar takes
+     over). They're kept as a safety net in case the mobile-bar swap is ever
+     reverted, but in practice they don't fire on a phone-sized viewport.
+     Active ≤480px tuning for the *mobile* bar/drawer lives in the block
+     immediately below. */
   .app-nav {
     padding: 10px 12px;
     margin: -24px -14px 20px;
@@ -3561,6 +4179,22 @@ textarea {
   .app-nav-right .btn.btn-sm {
     padding: 4px 8px;
     font-size: 12px;
+  }
+}
+
+/* Mobile bar tuning for very narrow viewports (≤380px). Hide brand text so
+   the stats + burger always fit; the brand mark alone is enough identity. */
+@media (max-width: 380px) {
+  .app-nav-mobile-brand span {
+    display: none;
+  }
+
+  .app-nav-mobile-stats {
+    gap: 4px;
+  }
+
+  .app-nav-mobile-stats .app-nav-stat {
+    padding: 3px 6px;
   }
 }
 
@@ -3693,6 +4327,11 @@ textarea {
     padding: 12px;
   }
 
+  /* NOTE: .admin-sidebar / .admin-nav-item rules below are dormant at
+     ≤480px because section 20b's ≤720px block sets .admin-sidebar to
+     display:none and shows the mobile bar + drawer instead. Kept as a
+     safety net for the dual stacking layout — see corresponding note on
+     the .app-nav-inner ≤480px block. */
   .admin-sidebar {
     padding: 14px;
   }

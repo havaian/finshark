@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
@@ -722,14 +722,98 @@ async function submitLlmGenerate() {
   }
 }
 
+// ---- Mobile tree sheet ----
+// On phones the tree is hidden by default — we render a compact "Pick LO"
+// trigger / breadcrumb pill, and the tree slides up as a sheet when tapped.
+// `mobileTreeOpen` is purely a UI flag; selection still flows through URL
+// query like on desktop, so refreshing keeps you on the same LO.
+//
+// Auto-close behaviour: when the user picks an LO on mobile, we close the
+// sheet so the question list is immediately visible. Watching `selectedLoId`
+// (vs. wrapping selectLo) means non-tree pathways that change the LO (e.g.
+// a future deep link or programmatic nav) get the same auto-close.
+const mobileTreeOpen = ref(false);
+
+function openMobileTree() { mobileTreeOpen.value = true; }
+function closeMobileTree() { mobileTreeOpen.value = false; }
+
+watch(selectedLoId, (id, prev) => {
+  // Only close when the change came while the sheet was open AND a real LO
+  // was picked — avoids snapping shut on initial load when prev is null but
+  // id is also null (or vice versa during route hydration).
+  if (mobileTreeOpen.value && id && id !== prev) {
+    mobileTreeOpen.value = false;
+  }
+});
+
+// Body scroll lock while the sheet is open — reuses the .body-scroll-lock
+// class introduced by AppNav's drawer (so the two never fight).
+watch(mobileTreeOpen, (open) => {
+  if (typeof document === 'undefined') return;
+  document.body.classList.toggle('body-scroll-lock', open);
+});
+
+// ESC closes the sheet — same UX as the AppNav drawer.
+function onMobileTreeKey(e: KeyboardEvent) {
+  if (e.key === 'Escape' && mobileTreeOpen.value) mobileTreeOpen.value = false;
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', onMobileTreeKey);
+  onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onMobileTreeKey);
+    // Defensive cleanup: if the user navigates away while the sheet is open,
+    // don't leave the body locked.
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('body-scroll-lock');
+    }
+  });
+}
+
 onMounted(reloadTree);
 </script>
 
 <template>
   <div class="content-browser">
 
-    <!-- Sidebar: paper tree -->
-    <aside class="content-tree">
+    <!-- Mobile picker pill — only visible on phones (≤720px). Tapping it
+         opens the tree sheet. When an LO is selected, the pill shows the
+         breadcrumb so the user knows where they are; when nothing is
+         selected, it shows a "Pick learning objective" prompt. The tree
+         on desktop stays in its usual sidebar position. -->
+    <div class="content-mobile-picker">
+      <button v-if="selectedLo" type="button" class="content-mobile-picker-btn" @click="openMobileTree">
+        <span class="content-mobile-picker-crumb dim text-xs">
+          {{ selectedLo.paper.code }}
+        </span>
+        <span class="content-mobile-picker-label">
+          <span class="mono dim" style="margin-right: 6px;">{{ selectedLo.lo.code }}</span>
+          {{ selectedLo.lo.title_en }}
+        </span>
+        <span class="content-mobile-picker-chev" aria-hidden="true">▾</span>
+      </button>
+      <button v-else type="button" class="content-mobile-picker-btn content-mobile-picker-btn-empty"
+        @click="openMobileTree">
+        <span class="content-mobile-picker-label">{{ t('admin.content.pick_lo') }}</span>
+        <span class="content-mobile-picker-chev" aria-hidden="true">▾</span>
+      </button>
+    </div>
+
+    <!-- Mobile backdrop — only renders/clickable when the sheet is open.
+         Pulled out of the aside so backdrop click doesn't bubble through
+         the sheet itself. -->
+    <div v-if="mobileTreeOpen" class="content-tree-backdrop" @click="closeMobileTree"></div>
+
+    <!-- Sidebar: paper tree.
+         On desktop this is a static aside in the grid (unchanged).
+         On mobile (≤720px) it becomes a slide-in sheet; .open toggles it. -->
+    <aside :class="['content-tree', { 'mobile-open': mobileTreeOpen }]">
+      <!-- Mobile-only close bar inside the sheet. Hidden on desktop. -->
+      <div class="content-tree-mobile-bar">
+        <span class="content-tree-mobile-title">{{ t('admin.content.title') }}</span>
+        <button type="button" class="content-tree-mobile-close" :aria-label="t('common.close')"
+          @click="closeMobileTree">✕</button>
+      </div>
+
       <header class="content-tree-head">
         <h2>{{ t('admin.content.title') }}</h2>
         <div class="row" style="gap: 8px; align-items: center; flex-wrap: wrap;">
@@ -1091,11 +1175,13 @@ onMounted(reloadTree);
           <ul class="dim text-xs mt-2" style="padding-left: 20px; line-height: 1.7;">
             <li>{{ t('admin.content.reseed_stat_papers', {
               dropped: reseedResult.papers_dropped, inserted:
-                reseedResult.papers_inserted }) }}</li>
+                reseedResult.papers_inserted
+            }) }}</li>
             <li>{{ t('admin.content.reseed_stat_questions', { count: reseedResult.questions_inserted }) }}</li>
             <li>{{ t('admin.content.reseed_stat_progress', {
               sessions: reseedResult.sessions_deleted, attempts:
-                reseedResult.attempts_deleted, users: reseedResult.users_progress_reset }) }}</li>
+                reseedResult.attempts_deleted, users: reseedResult.users_progress_reset
+            }) }}</li>
             <li>{{ t('admin.content.reseed_stat_badges', { count: reseedResult.user_badges_deleted }) }}</li>
           </ul>
         </div>

@@ -39,10 +39,16 @@ const RECOVERY_CODE_GROUPS = 5;
 const RECOVERY_CODE_GROUP_LEN = 5;
 const RECOVERY_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
 
-// scrypt cost. N=2^14 is the Node default for `crypto.scryptSync`; bumping
-// to 2^15 puts each verify around 100ms — acceptable for a code path that
-// only fires during 2FA verify, not on every request.
-const SCRYPT_N = 1 << 15;
+// scrypt cost. N=2^14 is the Node default for `crypto.scryptSync`.
+// We tried bumping to 2^15 for stronger hashing, but that crosses Node's
+// default `maxmem` ceiling of 32 MiB (scrypt at N=2^15 needs ~33.5 MiB,
+// just over) and throws `ERR_CRYPTO_INVALID_SCRYPT_PARAMS` at runtime.
+// Holding at the Node default keeps memory at ~16 MiB and lets scrypt run
+// without us having to pass an explicit maxmem. ~50ms per hash; the codepath
+// only fires during 2FA enrollment / verification, never on hot paths,
+// so the lower cost is fine. Recovery codes themselves carry ~50 bits of
+// entropy (25 chars × 5 bits) which dominates the security margin anyway.
+const SCRYPT_N = 1 << 14;
 const SCRYPT_KEYLEN = 32;
 const SCRYPT_SALT_BYTES = 16;
 

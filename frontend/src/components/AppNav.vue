@@ -181,74 +181,82 @@ function onLogoutMobile() {
 
     <!-- Drawer. Always in DOM; visibility toggled via class. The wrapper
          catches backdrop clicks; the panel stops propagation so clicks inside
-         it don't dismiss. -->
-    <div :class="['app-nav-drawer-root', { open: drawerOpen }]" aria-hidden="true">
-      <div class="app-nav-drawer-backdrop" @click="closeDrawer"></div>
-      <aside class="app-nav-drawer" role="dialog" :aria-modal="drawerOpen" :aria-label="t('nav.menu')" @click.stop>
-        <header class="app-nav-drawer-head">
-          <RouterLink to="/profile" class="app-nav-drawer-me" @click="closeDrawer">
-            <span class="app-nav-avatar" aria-hidden="true">
-              {{ auth.user?.display_name?.slice(0, 1).toUpperCase() ?? '?' }}
-            </span>
-            <span class="app-nav-drawer-me-text">
-              <span class="app-nav-drawer-me-name">{{ auth.user?.display_name ?? '' }}</span>
-              <span class="app-nav-drawer-me-sub dim text-xs">{{ t('nav.profile') }}</span>
-            </span>
-          </RouterLink>
-          <button type="button" class="app-nav-drawer-close" :aria-label="t('common.close')"
-            @click="closeDrawer">✕</button>
-        </header>
+         it don't dismiss.
+         Teleported to <body> so the drawer escapes the .app-nav stacking
+         context (.app-nav has position:sticky + z-index:10 + backdrop-filter,
+         each of which creates a stacking context that traps any descendant's
+         z-index — so the drawer's z-index:9999 was being clipped under page
+         content like stat tiles and the welcome banner). Mounted at the body
+         level the z-index actually competes at the document root. -->
+    <Teleport to="body">
+      <div :class="['app-nav-drawer-root', { open: drawerOpen }]" aria-hidden="true">
+        <div class="app-nav-drawer-backdrop" @click="closeDrawer"></div>
+        <aside class="app-nav-drawer" role="dialog" :aria-modal="drawerOpen" :aria-label="t('nav.menu')" @click.stop>
+          <header class="app-nav-drawer-head">
+            <RouterLink to="/profile" class="app-nav-drawer-me" @click="closeDrawer">
+              <span class="app-nav-avatar" aria-hidden="true">
+                {{ auth.user?.display_name?.slice(0, 1).toUpperCase() ?? '?' }}
+              </span>
+              <span class="app-nav-drawer-me-text">
+                <span class="app-nav-drawer-me-name">{{ auth.user?.display_name ?? '' }}</span>
+                <span class="app-nav-drawer-me-sub dim text-xs">{{ t('nav.profile') }}</span>
+              </span>
+            </RouterLink>
+            <button type="button" class="app-nav-drawer-close" :aria-label="t('common.close')"
+              @click="closeDrawer">✕</button>
+          </header>
 
-        <!-- Stats: visible inside the drawer so the user can read them when
+          <!-- Stats: visible inside the drawer so the user can read them when
              the compact bar shows them too (redundant on small phones where
              the compact bar shows the same numbers, but useful when stats
              would overflow). -->
-        <div v-if="auth.user" class="app-nav-drawer-stats">
-          <div class="app-nav-drawer-stat">
-            <span class="app-nav-stat-icon">🔥</span>
-            <span class="app-nav-drawer-stat-val">{{ auth.user.streak_count }}</span>
-            <span class="app-nav-drawer-stat-lbl dim text-xs">{{ t('nav.stat_streak_tip') }}</span>
+          <div v-if="auth.user" class="app-nav-drawer-stats">
+            <div class="app-nav-drawer-stat">
+              <span class="app-nav-stat-icon">🔥</span>
+              <span class="app-nav-drawer-stat-val">{{ auth.user.streak_count }}</span>
+              <span class="app-nav-drawer-stat-lbl dim text-xs">{{ t('nav.stat_streak_tip') }}</span>
+            </div>
+            <div class="app-nav-drawer-stat">
+              <span class="app-nav-stat-icon">✦</span>
+              <span class="app-nav-drawer-stat-val">{{ auth.user.xp }}</span>
+              <span class="app-nav-drawer-stat-lbl dim text-xs">{{ t('nav.stat_xp_tip') }}</span>
+            </div>
           </div>
-          <div class="app-nav-drawer-stat">
-            <span class="app-nav-stat-icon">✦</span>
-            <span class="app-nav-drawer-stat-val">{{ auth.user.xp }}</span>
-            <span class="app-nav-drawer-stat-lbl dim text-xs">{{ t('nav.stat_xp_tip') }}</span>
-          </div>
-        </div>
 
-        <!-- Primary nav links — same items as desktop, full-width rows so they
+          <!-- Primary nav links — same items as desktop, full-width rows so they
              have a comfortable tap target on phones. -->
-        <nav class="app-nav-drawer-links">
-          <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
-            :class="['app-nav-drawer-link', { active: isActive(item) }]" @click="closeDrawer">
-            {{ t(item.labelKey) }}
-          </RouterLink>
+          <nav class="app-nav-drawer-links">
+            <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
+              :class="['app-nav-drawer-link', { active: isActive(item) }]" @click="closeDrawer">
+              {{ t(item.labelKey) }}
+            </RouterLink>
 
-          <!-- Admin entry: same vivid styling as desktop, full-width here. -->
-          <RouterLink v-if="auth.user?.is_admin" to="/admin" class="app-nav-drawer-link app-nav-drawer-link-admin"
-            @click="closeDrawer">
-            {{ t('nav.admin_panel') }}
-          </RouterLink>
-        </nav>
+            <!-- Admin entry: same vivid styling as desktop, full-width here. -->
+            <RouterLink v-if="auth.user?.is_admin" to="/admin" class="app-nav-drawer-link app-nav-drawer-link-admin"
+              @click="closeDrawer">
+              {{ t('nav.admin_panel') }}
+            </RouterLink>
+          </nav>
 
-        <!-- Secondary actions: settings + theme. -->
-        <div class="app-nav-drawer-section">
-          <RouterLink to="/settings" class="app-nav-drawer-link" @click="closeDrawer">
-            <span aria-hidden="true" style="margin-right: 10px;">⚙</span>{{ t('nav.settings') }}
-          </RouterLink>
-          <div class="app-nav-drawer-themerow">
-            <span class="dim text-sm">{{ t('nav.theme') }}</span>
-            <ThemeSwitch />
+          <!-- Secondary actions: settings + theme. -->
+          <div class="app-nav-drawer-section">
+            <RouterLink to="/settings" class="app-nav-drawer-link" @click="closeDrawer">
+              <span aria-hidden="true" style="margin-right: 10px;">⚙</span>{{ t('nav.settings') }}
+            </RouterLink>
+            <div class="app-nav-drawer-themerow">
+              <span class="dim text-sm">{{ t('nav.theme') }}</span>
+              <ThemeSwitch />
+            </div>
           </div>
-        </div>
 
-        <!-- Sign out pinned to the bottom for "destructive" actions. -->
-        <div class="app-nav-drawer-foot">
-          <button class="btn btn-ghost btn-block" @click="onLogoutMobile">
-            {{ t('common.sign_out') }}
-          </button>
-        </div>
-      </aside>
-    </div>
+          <!-- Sign out pinned to the bottom for "destructive" actions. -->
+          <div class="app-nav-drawer-foot">
+            <button class="btn btn-ghost btn-block" @click="onLogoutMobile">
+              {{ t('common.sign_out') }}
+            </button>
+          </div>
+        </aside>
+      </div>
+    </Teleport>
   </nav>
 </template>

@@ -89,16 +89,46 @@ function setLang(next: Lang) {
 
 interface NavItem { to: string; labelKey: string; exact?: boolean }
 
-const navItems = computed<NavItem[]>(() => [
-  { to: '/dashboard', labelKey: 'nav.dashboard', exact: true },
-  { to: '/progress', labelKey: 'nav.progress' },
-  { to: '/leaderboards', labelKey: 'nav.leaderboards' },
-  { to: '/mocks/start', labelKey: 'nav.mocks' },
-]);
+// Nav items expose their target path WITHOUT the lang prefix; the prefix is
+// added at render time via lp(). Keeping them unprefixed here means the
+// `exact`/`startsWith` matching logic in isActive() stays language-agnostic
+// (we strip the lang from route.path before comparing).
+interface NavItemSrc { path: string; labelKey: string; exact?: boolean }
+
+const navItemsSrc: NavItemSrc[] = [
+  { path: '/dashboard', labelKey: 'nav.dashboard', exact: true },
+  { path: '/progress', labelKey: 'nav.progress' },
+  { path: '/leaderboards', labelKey: 'nav.leaderboards' },
+  { path: '/mocks/start', labelKey: 'nav.mocks' },
+];
+
+const navItems = computed<NavItem[]>(() =>
+  navItemsSrc.map((it) => ({
+    to: lp(it.path),
+    labelKey: it.labelKey,
+    exact: it.exact,
+  })),
+);
+
+// Strip a leading /<lang> from the path so isActive() can compare against
+// unprefixed nav targets like '/dashboard'. Mirrors the helper in
+// AdminLayout. If the path has no recognised lang prefix it's returned as-is.
+function stripLang(path: string): string {
+  for (const l of SUPPORTED_LANGS) {
+    if (path === `/${l}`) return '/';
+    if (path.startsWith(`/${l}/`)) return path.slice(`/${l}`.length);
+  }
+  return path;
+}
 
 function isActive(item: NavItem): boolean {
-  if (item.exact) return route.path === item.to;
-  return route.path === item.to || route.path.startsWith(item.to + '/');
+  const bare = stripLang(route.path);
+  // We compare against the SOURCE path (unprefixed) by re-deriving it from
+  // the item's `to`. Same source-of-truth as navItemsSrc but kept inline
+  // so we don't have to thread a second array through the template.
+  const itemBare = stripLang(item.to);
+  if (item.exact) return bare === itemBare;
+  return bare === itemBare || bare.startsWith(itemBare + '/');
 }
 
 function onLogout() {

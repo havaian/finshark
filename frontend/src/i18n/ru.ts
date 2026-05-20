@@ -60,6 +60,32 @@ export default {
     theme: "Тема",
   },
 
+  // Заголовки документа, устанавливаются роутером в afterEach.
+  // Формат: "{страница} · Finshark", кроме лендинга ('home'), где это
+  // просто "Finshark" — лендинг и есть бренд, префикс лишний.
+  page_titles: {
+    home: "Finshark",
+    login: "Вход",
+    auth_callback: "Вход…",
+    two_factor_verify: "Двухфакторная аутентификация",
+    unsubscribe: "Отписка",
+    onboarding: "Добро пожаловать",
+    dashboard: "Главная",
+    progress: "Прогресс",
+    profile: "Профиль",
+    public_profile: "Профиль игрока",
+    settings: "Настройки",
+    two_factor_setup: "Настройка 2FA",
+    leaderboards: "Рейтинг",
+    mock_start: "Пробный экзамен",
+    mock_breakdown: "Результаты пробного",
+    lesson: "Урок",
+    admin_content: "Админ · Контент",
+    admin_users: "Админ · Пользователи",
+    admin_localization: "Админ · Локализация",
+    admin_whitelist: "Админ · Доступ",
+  },
+
   home: {
     title: "Finshark",
     tagline: "Ежедневные мини-уроки для подготовки к экзаменам ACCA.",

@@ -6,6 +6,7 @@ import { leaderboardsApi, type LeaderboardEntry, type LeaderboardWindow } from '
 import { lessonsApi } from '../api/lessons.api';
 import { profileApi } from '../api/profile.api';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocalePath } from '../router/useLocalePath';
 import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
 
@@ -19,6 +20,7 @@ import type { Paper } from '../types/content';
 
 const { t } = useI18n();
 const auth = useAuthStore();
+const lp = useLocalePath();
 
 const window_ = ref<LeaderboardWindow>('week');
 const paperId = ref<string | null>(null);
@@ -162,7 +164,7 @@ onMounted(() => {
               <!-- Clickable name → public profile page. Stays a regular row
                    (no whole-row click handler) so users can still select text
                    in the rank/level/xp columns without accidentally navigating. -->
-              <RouterLink :to="`/users/${e.user_id}`" class="lb-name-link">
+              <RouterLink :to="lp(`/users/${e.user_id}`)" class="lb-name-link">
                 {{ e.display_name }}
               </RouterLink>
               <span v-if="e.user_id === currentUserId" class="lb-you-badge">

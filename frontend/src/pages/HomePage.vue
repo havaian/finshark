@@ -3,6 +3,8 @@ import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocaleStore } from '../stores/locale.store';
+import { useLocalePath } from '../router/useLocalePath';
 import ThemeSwitch from '../components/ThemeSwitch.vue';
 
 // Landing page. Reached at '/'.
@@ -24,10 +26,12 @@ import ThemeSwitch from '../components/ThemeSwitch.vue';
 const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
+const locale = useLocaleStore();
+const lp = useLocalePath();
 
 onMounted(() => {
   if (auth.isAuthenticated) {
-    router.replace({ name: 'dashboard' });
+    router.replace({ name: 'dashboard', params: { lang: locale.lang } });
   }
 });
 </script>
@@ -45,7 +49,7 @@ onMounted(() => {
         </div>
         <div class="row" style="gap: 10px; align-items: center;">
           <ThemeSwitch />
-          <RouterLink to="/login" class="btn btn-ghost btn-sm">
+          <RouterLink :to="lp(`/login`)" class="btn btn-ghost btn-sm">
             {{ t('common.sign_in') }}
           </RouterLink>
         </div>
@@ -59,7 +63,7 @@ onMounted(() => {
         <h1 class="landing-hero-title">{{ t('landing.hero_title') }}</h1>
         <p class="landing-hero-sub">{{ t('landing.hero_sub') }}</p>
         <div class="landing-cta-row">
-          <RouterLink to="/login" class="btn btn-primary btn-lg">
+          <RouterLink :to="lp(`/login`)" class="btn btn-primary btn-lg">
             {{ t('landing.cta_primary') }}
           </RouterLink>
           <a href="#features" class="btn btn-ghost btn-lg">
@@ -190,7 +194,7 @@ onMounted(() => {
       <div class="landing-container" style="text-align: center;">
         <h2 class="landing-section-title">{{ t('landing.bottom_cta_title') }}</h2>
         <p class="dim" style="margin-bottom: 22px;">{{ t('landing.bottom_cta_sub') }}</p>
-        <RouterLink to="/login" class="btn btn-primary btn-lg">
+        <RouterLink :to="lp(`/login`)" class="btn btn-primary btn-lg">
           {{ t('landing.cta_primary') }}
         </RouterLink>
       </div>

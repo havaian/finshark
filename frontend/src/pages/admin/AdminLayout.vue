@@ -2,6 +2,9 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../../stores/auth.store';
+import { useLocaleStore } from '../../stores/locale.store';
+import { useLocalePath } from '../../router/useLocalePath';
+import { SUPPORTED_LANGS } from '../../i18n';
 import { useRoute, useRouter } from 'vue-router';
 
 // Admin shell — sidebar nav + topbar with a "back to dashboard" exit.
@@ -22,6 +25,8 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
+const locale = useLocaleStore();
+const lp = useLocalePath();
 
 interface NavItem {
   to: string;
@@ -31,20 +36,33 @@ interface NavItem {
   activePrefixes: string[];
 }
 
+// Helper for isActive(): strip the leading /<lang> from a path so the
+// activePrefixes comparisons (which use bare paths like /admin/users) keep
+// matching after the routes were nested under /:lang. Returns the path
+// unchanged if it doesn't start with a known lang segment.
+function stripLang(path: string): string {
+  for (const l of SUPPORTED_LANGS) {
+    if (path === `/${l}`) return '/';
+    if (path.startsWith(`/${l}/`)) return path.slice(`/${l}`.length);
+  }
+  return path;
+}
+
 const navItems = computed<NavItem[]>(() => [
-  { to: '/admin/users', labelKey: 'admin.users.title', activePrefixes: ['/admin/users'] },
-  { to: '/admin/whitelist', labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] },
+  { to: lp('/admin/users'), labelKey: 'admin.users.title', activePrefixes: ['/admin/users'] },
+  { to: lp('/admin/whitelist'), labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] },
   // Unified content browser — the only editor for papers/LOs/questions now.
-  { to: '/admin/content', labelKey: 'admin.content.title', activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
-  { to: '/admin/localization', labelKey: 'admin.localization.title', activePrefixes: ['/admin/localization'] },
+  { to: lp('/admin/content'), labelKey: 'admin.content.title', activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
+  { to: lp('/admin/localization'), labelKey: 'admin.localization.title', activePrefixes: ['/admin/localization'] },
 ]);
 
 function isActive(item: NavItem): boolean {
-  return item.activePrefixes.some((p) => route.path === p || route.path.startsWith(p + '/'));
+  const bare = stripLang(route.path);
+  return item.activePrefixes.some((p) => bare === p || bare.startsWith(p + '/'));
 }
 
 function onExit() {
-  router.push({ name: 'dashboard' });
+  router.push({ name: 'dashboard', params: { lang: locale.lang } });
 }
 
 // ---- Mobile drawer ----

@@ -23,6 +23,7 @@ import type { PublicBadge } from '../types/badges';
 import { achievementsApi } from '../api/achievements.api';
 import type { PublicAchievement } from '../types/achievements';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocaleStore } from '../stores/locale.store';
 import { useThemeStore } from '../stores/theme.store';
 import { fmtDate } from '../i18n/dates';
 import AppNav from '../components/AppNav.vue';
@@ -38,6 +39,7 @@ Chart.register(
 
 const { t, locale } = useI18n();
 const auth = useAuthStore();
+const localeStore = useLocaleStore();
 const theme = useThemeStore();
 const router = useRouter();
 
@@ -518,7 +520,7 @@ async function deleteAccount() {
     await profileApi.deleteAccount(deleteConfirm.value);
     // Clear auth + go home. The token is now invalid server-side.
     auth.logout();
-    router.replace({ name: 'home' });
+    router.replace({ name: 'home', params: { lang: localeStore.lang } });
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to delete account';
   } finally {

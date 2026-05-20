@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { lessonsApi } from '../api/lessons.api';
 import { mocksApi } from '../api/mocks.api';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocaleStore } from '../stores/locale.store';
 import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
 
@@ -22,6 +23,7 @@ const MINUTE_PRESETS: number[] = [15, 30, 60, 120];
 const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
+const locale = useLocaleStore();
 
 const papers = ref<Paper[]>([]);
 const papersLoading = ref(true);
@@ -72,7 +74,7 @@ async function onStart() {
     });
     // LessonPage handles both lesson and mock sessions — it inspects
     // session.mode from getSession() and switches UI accordingly.
-    router.push({ name: 'lesson', params: { session_id: result.session_id } });
+    router.push({ name: 'lesson', params: { lang: locale.lang, session_id: result.session_id } });
   } catch (e) {
     submitError.value = extractError(e) ?? 'failed to start mock';
   } finally {

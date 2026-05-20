@@ -3,10 +3,12 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocalePath } from '../router/useLocalePath';
 
 const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
+const lp = useLocalePath();
 
 const errorMsg = ref<string | null>(null);
 
@@ -38,7 +40,10 @@ function consumeNext(): string {
     if (next && next.startsWith('/') && !next.startsWith('//')) {
         return next;
     }
-    return '/dashboard';
+    // No saved next: send the user to the dashboard in their preferred lang.
+    // lp() resolves the lang from the locale store (which mirrors localStorage)
+    // since this page itself lives outside the /:lang tree.
+    return lp('/dashboard');
 }
 
 onMounted(async () => {
@@ -82,7 +87,7 @@ onMounted(async () => {
             <template v-if="errorMsg">
                 <h1>{{ t('login.error_callback') }}</h1>
                 <p class="error-text" style="margin-top: 12px;">{{ errorMsg }}</p>
-                <RouterLink to="/login" class="btn btn-primary btn-block" style="margin-top: 22px;">
+                <RouterLink :to="lp(`/login`)" class="btn btn-primary btn-block" style="margin-top: 22px;">
                     {{ t('login.google_btn') }}
                 </RouterLink>
             </template>

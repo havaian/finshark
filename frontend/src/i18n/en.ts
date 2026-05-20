@@ -61,6 +61,33 @@ export default {
     theme: "Theme",
   },
 
+  // Document titles, set on every navigation by the router's afterEach hook.
+  // Format: "{page} · Finshark" — except the bare brand for the landing page
+  // ('home') where the title is just "Finshark" since the landing IS the
+  // brand and prefixing would feel tautological.
+  page_titles: {
+    home: "Finshark",
+    login: "Sign in",
+    auth_callback: "Signing in…",
+    two_factor_verify: "Two-factor verification",
+    unsubscribe: "Unsubscribe",
+    onboarding: "Welcome",
+    dashboard: "Dashboard",
+    progress: "Progress",
+    profile: "Profile",
+    public_profile: "Player profile",
+    settings: "Settings",
+    two_factor_setup: "Set up 2FA",
+    leaderboards: "Leaderboards",
+    mock_start: "Mock exam",
+    mock_breakdown: "Mock results",
+    lesson: "Lesson",
+    admin_content: "Admin · Content",
+    admin_users: "Admin · Users",
+    admin_localization: "Admin · Localization",
+    admin_whitelist: "Admin · Whitelist",
+  },
+
   home: {
     title: "Finshark",
     tagline: "Daily micro-lessons for the ACCA exams.",

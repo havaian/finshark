@@ -9,8 +9,8 @@ import { useLocaleStore } from '../stores/locale.store';
 import { profileApi, type UpdatePreferencesPayload } from '../api/profile.api';
 import { totpApi } from '../api/totp.api';
 import { authApi } from '../api/auth.api';
-import { api } from '../api/client';
-import { applyOverrides, type Lang } from '../i18n';
+import { SUPPORTED_LANGS, type Lang } from '../i18n';
+import { useLocalePath } from '../router/useLocalePath';
 import AppNav from '../components/AppNav.vue';
 
 const { t } = useI18n();
@@ -18,6 +18,7 @@ const auth = useAuthStore();
 const theme = useThemeStore();
 const locale = useLocaleStore();
 const router = useRouter();
+const lp = useLocalePath();
 
 const errorMsg = ref<string | null>(null);
 // Track saving spinner per-field so toggling reminders doesn't grey out the lesson-size dropdown.
@@ -77,15 +78,27 @@ async function persistPreference(payload: UpdatePreferencesPayload, field: strin
 }
 
 function onLangChange(next: Lang) {
+  // Per the locale-in-routes design: language changes swap the :lang segment
+  // in the URL and trigger a full page reload, which is the cleanest way to
+  // drop any rendered strings from the previous lang's i18n bundle. The
+  // locale store is updated first so anything that reads localStorage on
+  // boot sees the new value. We DON'T call applyOverrides() here — that
+  // happens on boot in main.ts after the reload.
+  if (next === locale.lang) return;
   locale.setLang(next);
-  // Re-fetch overrides for the new language so they apply immediately. Failures
-  // fall back silently to the static bundled locale, same as on initial boot.
-  api
-    .get<Record<string, string>>(`/ui-translations/${next}`)
-    .then((res) => applyOverrides(next, res.data))
-    .catch(() => {
-      /* ignore */
-    });
+
+  const url = new URL(window.location.href);
+  const segments = url.pathname.split('/');
+  // segments[0] is '' (leading slash); segments[1] is the current lang.
+  if (segments.length >= 2 && (SUPPORTED_LANGS as readonly string[]).includes(segments[1])) {
+    segments[1] = next;
+    url.pathname = segments.join('/');
+  } else {
+    // Defensive: prepend if no lang prefix found (shouldn't happen inside
+    // the localized tree, but safe fallback).
+    url.pathname = `/${next}${url.pathname}`;
+  }
+  window.location.assign(url.toString());
 }
 
 function onThemeChange(next: 'light' | 'dark') {
@@ -136,7 +149,7 @@ const disable2faSubmitting = ref(false);
 const disable2faError = ref<string | null>(null);
 
 function goEnable2fa() {
-  router.push('/settings/2fa');
+  router.push(lp('/settings/2fa'));
 }
 
 function openDisable2faForm() {

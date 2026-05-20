@@ -3,9 +3,11 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { api } from '../api/client';
+import { useLocalePath } from '../router/useLocalePath';
 
 const { t } = useI18n();
 const route = useRoute();
+const lp = useLocalePath();
 const status = ref<'pending' | 'ok' | 'error'>('pending');
 const message = ref<string>('');
 
@@ -46,7 +48,7 @@ onMounted(async () => {
       <p v-if="status === 'error'" class="error-text mt-4">{{ message }}</p>
 
       <div class="mt-6">
-        <RouterLink to="/" class="btn btn-ghost">{{ t('unsubscribe.back') }}</RouterLink>
+        <RouterLink :to="lp('/')" class="btn btn-ghost">{{ t('unsubscribe.back') }}</RouterLink>
       </div>
     </div>
   </main>

@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { onboardingApi, type CompleteOnboardingInput } from '../api/onboarding.api';
 import { lessonsApi } from '../api/lessons.api';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocaleStore } from '../stores/locale.store';
 import type { BgLevel } from '../types/auth';
 import type { Paper } from '../types/content';
 
@@ -19,6 +20,7 @@ import type { Paper } from '../types/content';
 const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
+const locale = useLocaleStore();
 
 const papers = ref<Paper[]>([]);
 const papersLoading = ref(true);
@@ -76,7 +78,7 @@ async function onComplete() {
     const updated = await onboardingApi.complete(buildPayload());
     auth.setUser(updated);
     // After onboarding, deep-link straight to the user's chosen paper if any.
-    router.replace({ name: 'dashboard' });
+    router.replace({ name: 'dashboard', params: { lang: locale.lang } });
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to save onboarding';
   } finally {
@@ -92,7 +94,7 @@ async function onSkip() {
     // Empty body — backend stamps onboarded_at only, leaves preferences alone.
     const updated = await onboardingApi.complete({});
     auth.setUser(updated);
-    router.replace({ name: 'dashboard' });
+    router.replace({ name: 'dashboard', params: { lang: locale.lang } });
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to skip onboarding';
   } finally {

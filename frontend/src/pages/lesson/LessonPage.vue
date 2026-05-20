@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { lessonsApi } from '../../api/lessons.api';
 import { badgesApi } from '../../api/badges.api';
 import { useAuthStore } from '../../stores/auth.store';
+import { useLocaleStore } from '../../stores/locale.store';
 import type {
   AttemptResult,
   CompleteLessonResult,
@@ -21,6 +22,7 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const locale = useLocaleStore();
 
 const sessionId = route.params.session_id as string;
 
@@ -157,7 +159,7 @@ async function load() {
       if (detail.mode === 'mock') {
         await router.replace({
           name: 'mock-breakdown',
-          params: { session_id: sessionId },
+          params: { lang: locale.lang, session_id: sessionId },
         });
         return;
       }
@@ -281,7 +283,7 @@ async function onComplete() {
     if (sessionMode.value === 'mock') {
       await router.replace({
         name: 'mock-breakdown',
-        params: { session_id: sessionId },
+        params: { lang: locale.lang, session_id: sessionId },
       });
       return;
     }
@@ -306,7 +308,7 @@ async function onComplete() {
 
 function onQuit() {
   if (summary.value || confirm(t('lesson.quit_confirm'))) {
-    router.push({ name: 'dashboard' });
+    router.push({ name: 'dashboard', params: { lang: locale.lang } });
   }
 }
 
@@ -427,7 +429,7 @@ onUnmounted(() => {
         </div>
 
         <div class="mt-6">
-          <button class="btn btn-primary" @click="router.push({ name: 'dashboard' })">
+          <button class="btn btn-primary" @click="router.push({ name: 'dashboard', params: { lang: locale.lang } })">
             {{ t('lesson.complete_back') }}
           </button>
         </div>

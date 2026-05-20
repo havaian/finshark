@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { mocksApi } from '../api/mocks.api';
+import { useLocaleStore } from '../stores/locale.store';
+import { useLocalePath } from '../router/useLocalePath';
 import AppNav from '../components/AppNav.vue';
 import type { MockBreakdown } from '../types/mocks';
 
@@ -14,6 +16,8 @@ import type { MockBreakdown } from '../types/mocks';
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const locale = useLocaleStore();
+const lp = useLocalePath();
 
 const sessionId = route.params.session_id as string;
 
@@ -56,7 +60,7 @@ async function onStartReview() {
     const result = await mocksApi.startReview(sessionId);
     // Navigate into the new (regular-lesson) session. LessonPage handles it
     // like any other lesson — including showing theory primers and hearts.
-    router.push({ name: 'lesson', params: { session_id: result.session_id } });
+    router.push({ name: 'lesson', params: { lang: locale.lang, session_id: result.session_id } });
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to start review session';
   } finally {
@@ -130,7 +134,7 @@ onMounted(load);
 
         <!-- Actions: review wrongs (if any), or back to dashboard. -->
         <div class="row mt-6" style="gap: 12px; justify-content: flex-end;">
-          <RouterLink to="/dashboard" class="btn btn-ghost">
+          <RouterLink :to="lp(`/dashboard`)" class="btn btn-ghost">
             {{ t('mocks.done_btn') }}
           </RouterLink>
           <button v-if="hasWrongs" class="btn btn-primary" :disabled="startingReview" @click="onStartReview">

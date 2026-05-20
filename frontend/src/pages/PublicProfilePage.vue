@@ -7,6 +7,7 @@ import { publicProfileApi, type PublicProfileResponse } from '../api/public-prof
 import { achievementsApi } from '../api/achievements.api';
 import type { PublicEarnedAchievement } from '../types/achievements';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocalePath } from '../router/useLocalePath';
 import { fmtDate } from '../i18n/dates';
 import AppNav from '../components/AppNav.vue';
 
@@ -24,6 +25,7 @@ import AppNav from '../components/AppNav.vue';
 const { t, locale } = useI18n();
 const route = useRoute();
 const auth = useAuthStore();
+const lp = useLocalePath();
 
 const profile = ref<PublicProfileResponse | null>(null);
 const loading = ref(true);
@@ -108,7 +110,7 @@ onMounted(load);
         <div v-if="auth.user && auth.user.id === profile.id" class="card" style="margin-bottom: 16px;">
           <p class="dim text-sm" style="margin: 0;">
             {{ t('public_profile.viewing_self') }}
-            <RouterLink to="/profile" class="btn-link accent" style="margin-left: 8px;">
+            <RouterLink :to="lp(`/profile`)" class="btn-link accent" style="margin-left: 8px;">
               {{ t('public_profile.viewing_self_link') }}
             </RouterLink>
           </p>

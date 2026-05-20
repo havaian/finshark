@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { authApi } from '../api/auth.api';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocalePath } from '../router/useLocalePath';
 
 // Lands here after the Google callback decided the user needs a second
 // factor. The pending token is in the URL fragment (kept out of server
@@ -19,6 +20,7 @@ import { useAuthStore } from '../stores/auth.store';
 const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
+const lp = useLocalePath();
 
 const pendingToken = ref<string | null>(null);
 const code = ref('');
@@ -65,7 +67,7 @@ async function submit() {
     // Clear the fragment so the pending token (now consumed) doesn't sit
     // in browser history.
     history.replaceState(null, '', window.location.pathname);
-    router.replace('/dashboard');
+    router.replace(lp('/dashboard'));
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 401) {
       // Either the code was wrong OR the pending token expired (5min TTL).
@@ -91,7 +93,7 @@ onMounted(() => {
   if (!token) {
     // No challenge to verify against. Bounce to login — they probably
     // pasted the URL or reloaded after a long pause.
-    router.replace('/login');
+    router.replace(lp('/login'));
     return;
   }
   pendingToken.value = token;

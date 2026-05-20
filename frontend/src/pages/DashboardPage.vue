@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocaleStore } from '../stores/locale.store';
+import { useLocalePath } from '../router/useLocalePath';
 import { lessonsApi } from '../api/lessons.api';
 import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
@@ -11,6 +13,8 @@ import type { Paper } from '../types/content';
 const { t } = useI18n();
 const auth = useAuthStore();
 const router = useRouter();
+const locale = useLocaleStore();
+const lp = useLocalePath();
 
 const papers = ref<Paper[]>([]);
 const selectedPaperId = ref<string>('');
@@ -48,7 +52,7 @@ async function onStartLesson() {
     const res = await lessonsApi.start({
       paper_id: selectedPaperId.value || undefined,
     });
-    router.push({ name: 'lesson', params: { session_id: res.session_id } });
+    router.push({ name: 'lesson', params: { lang: locale.lang, session_id: res.session_id } });
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to start lesson';
   } finally {
@@ -91,14 +95,14 @@ function extractError(e: unknown): string | null {
       <section class="mt-8">
         <div class="row" style="justify-content: space-between; margin-bottom: 14px;">
           <h2>{{ t('dashboard.start_lesson_heading') }}</h2>
-          <RouterLink to="/progress" class="btn-link">{{ t('dashboard.view_progress') }}</RouterLink>
+          <RouterLink :to="lp(`/progress`)" class="btn-link">{{ t('dashboard.view_progress') }}</RouterLink>
         </div>
 
         <p v-if="papersLoading" class="dim text-sm">{{ t('dashboard.loading_papers') }}</p>
         <p v-else-if="!hasPapers" class="dim text-sm">
           {{ t('dashboard.no_papers') }}
           <span v-if="auth.user?.is_admin">
-            <RouterLink to="/admin/papers" class="btn-link accent">{{ t('dashboard.no_papers_admin') }}</RouterLink>
+            <RouterLink :to="lp(`/admin/papers`)" class="btn-link accent">{{ t('dashboard.no_papers_admin') }}</RouterLink>
           </span>
         </p>
 
@@ -117,7 +121,7 @@ function extractError(e: unknown): string | null {
         <!-- Mock CTA — secondary action below the lesson row. Always offered
              when papers exist; the mock page handles paper selection itself. -->
         <div v-if="papers.length > 0" class="row mt-4" style="justify-content: flex-end;">
-          <RouterLink to="/mocks/start" class="btn btn-ghost">
+          <RouterLink :to="lp(`/mocks/start`)" class="btn btn-ghost">
             {{ t('nav.mocks') }} →
           </RouterLink>
         </div>

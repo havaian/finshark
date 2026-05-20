@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { totpApi } from '../api/totp.api';
 import { authApi } from '../api/auth.api';
 import { useAuthStore } from '../stores/auth.store';
+import { useLocalePath } from '../router/useLocalePath';
 import AppNav from '../components/AppNav.vue';
 import type { TotpSetupBeginResult } from '../types/totp';
 
@@ -38,6 +39,7 @@ const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const auth = useAuthStore();
+const lp = useLocalePath();
 
 const step = ref<Step>('scan');
 const loading = ref(true);
@@ -61,8 +63,8 @@ const isAdmin = computed(() => auth.user?.is_admin === true);
 const forced = computed(() => route.query.force === '1');
 const nextPath = computed<string>(() => {
   const raw = route.query.next;
-  if (typeof raw !== 'string') return '/admin';
-  if (!raw.startsWith('/') || raw.startsWith('//')) return '/admin';
+  if (typeof raw !== 'string') return lp('/admin');
+  if (!raw.startsWith('/') || raw.startsWith('//')) return lp('/admin');
   return raw;
 });
 
@@ -119,7 +121,7 @@ async function finishAndExit() {
   }
   // Forced flow lands the admin on the page they were trying to reach.
   // Normal flow returns to /settings where they came from.
-  router.replace(forced.value ? nextPath.value : '/settings');
+  router.replace(forced.value ? nextPath.value : lp('/settings'));
 }
 
 function copyRecoveryCodes() {
@@ -137,7 +139,7 @@ function copyRecoveryCodes() {
 onMounted(() => {
   if (!isAdmin.value) {
     // Defence-in-depth — router guard should have caught this too.
-    router.replace('/settings');
+    router.replace(lp('/settings'));
     return;
   }
   beginSetup();

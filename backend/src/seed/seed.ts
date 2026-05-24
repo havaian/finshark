@@ -141,8 +141,8 @@ async function main() {
 // Insert a single question into the given LO using the active tx handle.
 // Discriminates on q.type to populate the right shape per type:
 //   - mcq: options JSONB + correct option key in correct_answer_en
-//   - short_answer: canonical text per language
 //   - number_entry: numeric value (string) in correct_answer_en, optional tolerance
+// (short_answer is retired — see Grading Spec — and no longer a seed type.)
 async function insertQuestion(
   tx: postgres.TransactionSql,
   lo_id: string,
@@ -189,9 +189,9 @@ async function insertQuestion(
         TRUE
       )
     `;
-  } else if (q.type === "number_entry") {
-    // No options; correct_answer_ru is null (numbers are language-neutral);
-    // tolerance flows through if provided.
+  } else {
+    // number_entry. No options; correct_answer_ru is null (numbers are
+    // language-neutral); tolerance flows through if provided.
     await tx`
       INSERT INTO questions (
         lo_id, type, difficulty,
@@ -210,29 +210,6 @@ async function insertQuestion(
         ${q.explanation_en}, ${q.explanation_ru},
         ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
         ${q.acceptable_tolerance ?? null},
-        TRUE
-      )
-    `;
-  } else {
-    // short_answer
-    await tx`
-      INSERT INTO questions (
-        lo_id, type, difficulty,
-        prompt_en, prompt_ru,
-        options,
-        correct_answer_en, correct_answer_ru,
-        explanation_en, explanation_ru,
-        concept_bite_en, concept_bite_ru,
-        acceptable_tolerance,
-        is_active
-      ) VALUES (
-        ${lo_id}, ${q.type}, ${q.difficulty},
-        ${q.prompt_en}, ${q.prompt_ru},
-        ${null},
-        ${q.correct_answer_en}, ${q.correct_answer_ru},
-        ${q.explanation_en}, ${q.explanation_ru},
-        ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
-        ${null},
         TRUE
       )
     `;

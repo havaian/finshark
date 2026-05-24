@@ -128,19 +128,42 @@ export const F2_PAPER: SeedPaper = {
             "Операционное планирование охватывает краткосрочные, рутинные ежедневные решения линейного менеджмента — недельный производственный график это хрестоматийный пример. Три уровня: стратегический (долгосрочный, высшее руководство, миссия и рынок), тактический (среднесрочный, средний звено, ресурсы и бюджеты), операционный (краткосрочный, линейный менеджмент, расписание и исполнение).",
         },
         // -------- Q3 — easy short_answer on ACCURATE --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            'In the ACCURATE mnemonic for qualities of good management information, what does the letter "T" stand for?',
-          prompt_ru:
-            'В мнемонике ACCURATE для характеристик качественной управленческой информации что обозначает буква "T"?',
-          correct_answer_en: "Timely",
-          correct_answer_ru: "Timely (своевременная)",
-          explanation_en:
-            "ACCURATE = Accurate, Complete, Cost-effective, Understandable, Relevant, Authoritative, Timely, Easy to use. Timely information reaches the decision-maker BEFORE the decision must be made — old information has reduced value even if technically correct.",
-          explanation_ru:
-            "ACCURATE = Accurate (точная), Complete (полная), Cost-effective (экономически целесообразная), Understandable (понятная), Relevant (релевантная), Authoritative (из надёжного источника), Timely (своевременная), Easy to use (удобная). Своевременная информация попадает к лицу, принимающему решение, ДО того, как решение должно быть принято — устаревшая информация теряет ценность, даже если технически верна.",
+          prompt_en: "In the ACCURATE mnemonic for the qualities of good management information, what does the letter \"T\" stand for?",
+          prompt_ru: "В мнемонике ACCURATE для качеств хорошей управленческой информации, что обозначает буква \"T\"?",
+          options: [
+            {
+              key: "A",
+              text_en: "Timely",
+              text_ru: "Своевременная (Timely)",
+            },
+            {
+              key: "B",
+              text_en: "Technical",
+              text_ru: "Техническая",
+              why_wrong_en: "ACCURATE has no \"Technical\" quality; the T stands for Timely.",
+              why_wrong_ru: "В ACCURATE нет качества «техническая»; T означает «своевременная».",
+            },
+            {
+              key: "C",
+              text_en: "Targeted",
+              text_ru: "Целевая",
+              why_wrong_en: "\"Targeted\" is not part of ACCURATE; the relevant quality is Relevant (R), and T is Timely.",
+              why_wrong_ru: "«Целевая» не входит в ACCURATE; соответствующее качество — релевантная (R), а T — своевременная.",
+            },
+            {
+              key: "D",
+              text_en: "Transparent",
+              text_ru: "Прозрачная",
+              why_wrong_en: "Transparency is not one of the ACCURATE qualities; the T is Timely.",
+              why_wrong_ru: "Прозрачность не входит в качества ACCURATE; T — своевременная.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "ACCURATE = Accurate, Complete, Cost-effective, Understandable, Relevant, Authoritative, Timely, Easy to use. Timely information reaches the decision-maker before the decision must be made; out-of-date information loses value even if technically correct.",
+          explanation_ru: "ACCURATE = точная, полная, экономичная, понятная, релевантная, авторитетная, своевременная, простая в использовании. Своевременная информация поступает к лицу, принимающему решение, до момента принятия решения; устаревшая информация теряет ценность, даже будучи технически верной.",
         },
         // -------- Q4 — easy MCQ on data vs information --------
         {
@@ -433,19 +456,42 @@ export const F2_PAPER: SeedPaper = {
             "Финансовый учёт должен соответствовать МСФО или местным стандартам, потому что его результаты идут внешним пользователям — акционерам, регуляторам, налоговым органам, — которым нужна согласованная сопоставимая информация по разным компаниям. У управленческого учёта внешних стандартов нет; руководители могут использовать любой формат, частоту и показатели, помогающие принимать решения.",
         },
         // -------- Q10 — medium short_answer on three planning levels --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Name the THREE levels of organisational planning in order from longest to shortest time horizon.",
-          prompt_ru:
-            "Назовите ТРИ уровня организационного планирования в порядке от самого длинного к самому короткому временному горизонту.",
-          correct_answer_en: "Strategic, tactical, operational",
-          correct_answer_ru: "Стратегическое, тактическое, операционное",
-          explanation_en:
-            "Strategic (3-10 years, senior management, mission and major investment) \u2192 tactical (1-3 years, middle management, resources and budgets) \u2192 operational (days to a year, line management, day-to-day scheduling). Each level cascades down: the strategic frame constrains tactical choices, which in turn constrain operational decisions. The shorter the horizon, the more concrete and detailed the planning becomes.",
-          explanation_ru:
-            "Стратегическое (3-10 лет, высшее руководство, миссия и крупные инвестиции) → тактическое (1-3 года, средний звено, ресурсы и бюджеты) → операционное (от дней до года, линейный менеджмент, ежедневное расписание). Каждый уровень каскадируется вниз: стратегическая рамка ограничивает тактические выборы, которые в свою очередь ограничивают операционные решения. Чем короче горизонт, тем конкретнее и детальнее планирование.",
+          prompt_en: "What is the correct order of the three levels of organisational planning, from the longest to the shortest time horizon?",
+          prompt_ru: "Каков верный порядок трёх уровней организационного планирования — от самого длинного к самому короткому горизонту?",
+          options: [
+            {
+              key: "A",
+              text_en: "Strategic → tactical → operational",
+              text_ru: "Стратегический → тактический → операционный",
+            },
+            {
+              key: "B",
+              text_en: "Operational → tactical → strategic",
+              text_ru: "Операционный → тактический → стратегический",
+              why_wrong_en: "This reverses the horizons: operational is the SHORTEST, strategic the LONGEST, so the order is inverted.",
+              why_wrong_ru: "Это обратный порядок: операционный — САМЫЙ короткий, стратегический — САМЫЙ длинный, порядок перевёрнут.",
+            },
+            {
+              key: "C",
+              text_en: "Tactical → strategic → operational",
+              text_ru: "Тактический → стратегический → операционный",
+              why_wrong_en: "Strategic has the longest horizon and must come first; tactical sits between strategic and operational.",
+              why_wrong_ru: "Стратегический имеет самый длинный горизонт и должен идти первым; тактический — между стратегическим и операционным.",
+            },
+            {
+              key: "D",
+              text_en: "Strategic → operational → tactical",
+              text_ru: "Стратегический → операционный → тактический",
+              why_wrong_en: "Operational is the shortest horizon and must come last; tactical is the middle level.",
+              why_wrong_ru: "Операционный — самый короткий горизонт и должен идти последним; тактический — средний уровень.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Strategic (3-10 years, senior management, mission and major investment) → tactical (1-3 years, middle management, resources and budgets) → operational (days to a year, line management, day-to-day scheduling). Each level cascades down and constrains the next.",
+          explanation_ru: "Стратегический (3-10 лет, высшее руководство, миссия и крупные инвестиции) → тактический (1-3 года, среднее звено, ресурсы и бюджеты) → операционный (от дней до года, линейное руководство, текущее планирование). Каждый уровень каскадно ограничивает следующий.",
         },
         // -------- Q11 — medium MCQ on accuracy --------
         {
@@ -536,21 +582,42 @@ export const F2_PAPER: SeedPaper = {
             "Уровень планирования определяется СУЩНОСТЬЮ, а не только горизонтом времени. Приобретение конкурента для выхода на новый рынок перекраивает конкурентное положение организации — это и есть определение стратегического. 18 месяцев — это срок реализации, а не природа решения. Различать важно: экзаменационная ловушка — классифицировать только по календарю, относя «меньше 3 лет» автоматически к тактическому.",
         },
         // -------- Q13 — medium short_answer on data vs information --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            'Define the difference between "data" and "information" in one sentence.',
-          prompt_ru:
-            "Определите разницу между «данными» и «информацией» одним предложением.",
-          correct_answer_en:
-            "Data are raw, unprocessed facts; information is data that has been processed, organised, or presented in a way that makes it useful for a decision-maker.",
-          correct_answer_ru:
-            "Данные — это сырые, необработанные факты; информация — это данные, обработанные, организованные или представленные таким образом, чтобы быть полезными лицу, принимающему решение.",
-          explanation_en:
-            'The shorthand is "information = processed data". Examples: a list of all transactions in May = data; a summary chart of May sales by region = information. Same underlying facts, different level of processing. Some texts add "knowledge" as a higher tier (information combined with experience and judgement), but F2 only tests the data vs information distinction.',
-          explanation_ru:
-            "Сокращённо: «информация = обработанные данные». Примеры: список всех операций за май — данные; сводная диаграмма продаж за май по регионам — информация. Те же исходные факты, разный уровень обработки. Некоторые учебники добавляют «знание» как более высокий уровень (информация в сочетании с опытом и суждением), но F2 проверяет только различие данные/информация.",
+          prompt_en: "Which statement correctly distinguishes data from information?",
+          prompt_ru: "Какое утверждение верно различает данные и информацию?",
+          options: [
+            {
+              key: "A",
+              text_en: "Data are raw, unprocessed facts; information is data processed or organised to be useful for a decision",
+              text_ru: "Данные — это необработанные факты; информация — это данные, обработанные или организованные так, чтобы быть полезными для решения",
+            },
+            {
+              key: "B",
+              text_en: "Data is always numeric; information is always text",
+              text_ru: "Данные всегда числовые; информация всегда текстовая",
+              why_wrong_en: "The distinction is about processing for usefulness, not data format — both data and information can be numeric or textual.",
+              why_wrong_ru: "Различие в обработке ради полезности, а не в формате — и данные, и информация могут быть числовыми или текстовыми.",
+            },
+            {
+              key: "C",
+              text_en: "Information is raw facts; data is the processed result",
+              text_ru: "Информация — это сырые факты; данные — обработанный результат",
+              why_wrong_en: "This reverses the definitions: data are the raw facts, and information is the processed, useful result.",
+              why_wrong_ru: "Это меняет определения местами: данные — сырые факты, а информация — обработанный, полезный результат.",
+            },
+            {
+              key: "D",
+              text_en: "Data and information mean the same thing",
+              text_ru: "Данные и информация означают одно и то же",
+              why_wrong_en: "They are distinct: information is data that has been processed or organised to support a decision.",
+              why_wrong_ru: "Это разные понятия: информация — это данные, обработанные или организованные для поддержки решения.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The shorthand is \"information = processed data\". A list of every transaction in May is data; a summary chart of May sales by region is information — the same underlying facts at a different level of processing.",
+          explanation_ru: "Кратко: «информация = обработанные данные». Список всех операций за май — это данные; сводная диаграмма продаж за май по регионам — это информация: те же исходные факты на другом уровне обработки.",
         },
         // -------- Q14 — hard MCQ on relevance vs completeness --------
         {
@@ -772,20 +839,42 @@ export const F2_PAPER: SeedPaper = {
             "Ожидаемое значение (EV) = Σ (вероятность × исход). Это взвешенное по вероятности среднее всех возможных исходов, используемое для сравнения неопределённых альтернатив. EV имеет смысл при многократных повторениях; для разовых решений неприятие риска может склонить вас к более безопасной альтернативе с меньшим EV.",
         },
         // -------- Q3 — easy short_answer on the 5 Vs --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en: "Name THREE of the five Vs that characterise Big Data.",
-          prompt_ru:
-            'Назовите ТРИ из пяти "V", характеризующих большие данные.',
-          correct_answer_en:
-            "Any three of: Volume, Velocity, Variety, Veracity, Value",
-          correct_answer_ru:
-            "Любые три из: Volume (объём), Velocity (скорость), Variety (разнообразие), Veracity (достоверность), Value (ценность)",
-          explanation_en:
-            'The five Vs: Volume (the data set is too large for traditional tools), Velocity (data arrives in real-time or near-real-time), Variety (structured + semi-structured + unstructured \u2014 text, video, sensor), Veracity (uncertainty/noise in the data), Value (must produce useful insight to justify cost). Original frameworks used three Vs; "veracity" and "value" were added later.',
-          explanation_ru:
-            'Пять "V": Volume (набор данных слишком велик для традиционных инструментов), Velocity (данные приходят в реальном или почти реальном времени), Variety (структурированные + полуструктурированные + неструктурированные — текст, видео, датчики), Veracity (неопределённость/шум в данных), Value (должна получаться полезная инсайт, оправдывающая стоимость). Изначально рамки использовали три "V"; "veracity" и "value" добавлены позже.',
+          prompt_en: "Which of the following is one of the five Vs that characterise Big Data?",
+          prompt_ru: "Какой из перечисленных пунктов является одной из пяти «V», характеризующих большие данные?",
+          options: [
+            {
+              key: "A",
+              text_en: "Velocity",
+              text_ru: "Скорость (Velocity)",
+            },
+            {
+              key: "B",
+              text_en: "Visibility",
+              text_ru: "Видимость",
+              why_wrong_en: "Visibility is not one of the five Vs; the five are Volume, Velocity, Variety, Veracity and Value.",
+              why_wrong_ru: "Видимость не входит в пять «V»; это Volume, Velocity, Variety, Veracity и Value.",
+            },
+            {
+              key: "C",
+              text_en: "Validity",
+              text_ru: "Валидность",
+              why_wrong_en: "The recognised fourth V is Veracity (uncertainty/noise), not Validity.",
+              why_wrong_ru: "Признанное четвёртое «V» — Veracity (неопределённость/шум), а не валидность.",
+            },
+            {
+              key: "D",
+              text_en: "Versatility",
+              text_ru: "Универсальность",
+              why_wrong_en: "Versatility is not a Big Data V; the relevant variety-of-formats quality is Variety.",
+              why_wrong_ru: "Универсальность не входит в «V» больших данных; за разнообразие форматов отвечает Variety.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The five Vs are Volume (too large for traditional tools), Velocity (data arrives in real time), Variety (structured + unstructured), Veracity (uncertainty/noise), and Value (must yield useful insight to justify cost).",
+          explanation_ru: "Пять «V»: Volume (слишком велик для традиционных инструментов), Velocity (данные поступают в реальном времени), Variety (структурированные + неструктурированные), Veracity (неопределённость/шум) и Value (должны давать полезную ценность, оправдывающую затраты).",
         },
         // -------- Q4 — easy MCQ on time series components --------
         {
@@ -1049,21 +1138,42 @@ export const F2_PAPER: SeedPaper = {
             "Скользящее среднее усредняет последние n периодов, давая сглаженный ряд. Если взять окно, равное сезонному циклу (например, 4 квартала для квартальных данных), сезонные эффекты в основном гасят друг друга, оставляя видимым тренд. После выделения тренда сезонная составляющая определяется как постоянная разница (аддитивная модель) или отношение (мультипликативная модель) между фактическими данными и трендом.",
         },
         // -------- Q12 — medium short_answer on correlation interpretation --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Two variables have correlation coefficient r = \u22120.92. Describe the strength and direction of the linear relationship.",
-          prompt_ru:
-            "У двух переменных коэффициент корреляции r = −0,92. Опишите силу и направление линейной связи.",
-          correct_answer_en:
-            "Strong (very close to \u22121) and negative (one variable rises as the other falls)",
-          correct_answer_ru:
-            "Сильная (очень близко к −1) и отрицательная (одна переменная растёт, когда другая падает)",
-          explanation_en:
-            "r ranges from \u22121 to +1. Sign indicates direction: positive = move together; negative = move opposite. Magnitude indicates strength: |r| close to 1 = strong linear relationship; |r| close to 0 = weak or no linear relationship. r = \u22120.92 is strong (close to \u22121) and negative. Example: study hours and exam errors might give such a relationship \u2014 more study, fewer errors.",
-          explanation_ru:
-            "r изменяется от −1 до +1. Знак указывает направление: плюс — движутся вместе; минус — в противоположных направлениях. Модуль указывает силу: |r| близко к 1 — сильная линейная связь; |r| близко к 0 — слабая или отсутствие линейной связи. r = −0,92 — сильная (близка к −1) и отрицательная. Пример: часы учёбы и количество ошибок на экзамене могут дать такую связь — больше учёбы, меньше ошибок.",
+          prompt_en: "Two variables have a correlation coefficient r = -0.92. How is this linear relationship best described?",
+          prompt_ru: "У двух переменных коэффициент корреляции r = -0.92. Как лучше всего описать эту линейную связь?",
+          options: [
+            {
+              key: "A",
+              text_en: "Strong and negative",
+              text_ru: "Сильная и отрицательная",
+            },
+            {
+              key: "B",
+              text_en: "Strong and positive",
+              text_ru: "Сильная и положительная",
+              why_wrong_en: "The sign is negative, so the variables move in OPPOSITE directions; a positive r would mean they move together.",
+              why_wrong_ru: "Знак отрицательный, поэтому переменные движутся в ПРОТИВОПОЛОЖНЫХ направлениях; положительный r означал бы совместное движение.",
+            },
+            {
+              key: "C",
+              text_en: "Weak and negative",
+              text_ru: "Слабая и отрицательная",
+              why_wrong_en: "|r| = 0.92 is close to 1, which is a STRONG relationship; weak would be |r| near 0.",
+              why_wrong_ru: "|r| = 0.92 близко к 1 — это СИЛЬНАЯ связь; слабая была бы при |r| около 0.",
+            },
+            {
+              key: "D",
+              text_en: "No linear relationship",
+              text_ru: "Линейной связи нет",
+              why_wrong_en: "No relationship corresponds to r near 0; r = -0.92 indicates a strong linear relationship.",
+              why_wrong_ru: "Отсутствие связи соответствует r около 0; r = -0.92 указывает на сильную линейную связь.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "r ranges from -1 to +1. The sign gives direction (negative = variables move in opposite directions) and the magnitude gives strength (|r| close to 1 = strong). r = -0.92 is therefore a strong, negative linear relationship.",
+          explanation_ru: "r изменяется от -1 до +1. Знак задаёт направление (отрицательный = переменные движутся в противоположные стороны), а величина — силу (|r| близко к 1 = сильная). Поэтому r = -0.92 — сильная отрицательная линейная связь.",
         },
         // -------- Q13 — medium MCQ on high-low weakness --------
         {
@@ -1301,21 +1411,42 @@ export const F2_PAPER: SeedPaper = {
             "EOQ = √(2CoD / Ch) уравновешивает две противоположные затраты. Частые заказы (мелкими партиями) повышают ОБЩИЕ затраты на размещение. Редкие заказы (крупными партиями) повышают средний уровень запасов и затраты на хранение. EOQ — размер заказа, при котором эти эффекты гасят друг друга и совокупные затраты минимальны.",
         },
         // -------- Q3 — easy short_answer on FIFO/AVCO --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Under IFRS (IAS 2), which TWO inventory cost formulas are permitted?",
-          prompt_ru:
-            "По МСФО (IAS 2) какие ДВЕ формулы оценки запасов разрешены?",
-          correct_answer_en:
-            "FIFO (first-in, first-out) and weighted average cost (AVCO)",
-          correct_answer_ru:
-            "FIFO (первым пришёл — первым ушёл) и средневзвешенная стоимость (AVCO)",
-          explanation_en:
-            "IAS 2 permits FIFO and AVCO; LIFO (last-in, first-out) was disallowed in 2003 because it can distort the balance sheet (old, possibly low costs sitting on inventory) and enable profit manipulation in inflationary environments. US GAAP still permits LIFO, which is a known difference between IFRS and US GAAP.",
-          explanation_ru:
-            "IAS 2 разрешает FIFO и AVCO; LIFO (последним пришёл — первым ушёл) запрещён с 2003 года, поскольку может искажать баланс (старая, возможно низкая, себестоимость в запасах) и позволяет манипулировать прибылью при инфляции. ОПБУ США LIFO по-прежнему допускают, что является известным различием между МСФО и ОПБУ США.",
+          prompt_en: "Under IAS 2, which inventory cost formula is PERMITTED?",
+          prompt_ru: "Какая формула расчёта себестоимости запасов РАЗРЕШЕНА согласно IAS 2?",
+          options: [
+            {
+              key: "A",
+              text_en: "Weighted average cost (AVCO)",
+              text_ru: "Средневзвешенная стоимость (AVCO)",
+            },
+            {
+              key: "B",
+              text_en: "Last-in, first-out (LIFO)",
+              text_ru: "Последним пришёл — первым ушёл (LIFO)",
+              why_wrong_en: "LIFO was disallowed under IAS 2 in 2003 because it can distort the balance sheet and enable profit manipulation; only FIFO and AVCO are permitted.",
+              why_wrong_ru: "LIFO запрещён в IAS 2 с 2003 года, так как искажает баланс и допускает манипуляцию прибылью; разрешены только FIFO и AVCO.",
+            },
+            {
+              key: "C",
+              text_en: "Highest-in, first-out (HIFO)",
+              text_ru: "Самым дорогим пришёл — первым ушёл (HIFO)",
+              why_wrong_en: "HIFO is not a permitted IAS 2 method; the permitted formulas are FIFO and weighted average.",
+              why_wrong_ru: "HIFO не разрешён в IAS 2; разрешённые формулы — FIFO и средневзвешенная.",
+            },
+            {
+              key: "D",
+              text_en: "Next-in, first-out (NIFO)",
+              text_ru: "Следующим пришёл — первым ушёл (NIFO)",
+              why_wrong_en: "NIFO uses replacement cost and is not permitted under IAS 2; only FIFO and AVCO are allowed.",
+              why_wrong_ru: "NIFO основан на восстановительной стоимости и не разрешён в IAS 2; допустимы только FIFO и AVCO.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "IAS 2 permits FIFO (first-in, first-out) and weighted average cost (AVCO). LIFO was disallowed in 2003. US GAAP still permits LIFO, a well-known IFRS/US GAAP difference.",
+          explanation_ru: "IAS 2 разрешает FIFO (первым пришёл — первым ушёл) и средневзвешенную стоимость (AVCO). LIFO запрещён с 2003 года. US GAAP по-прежнему допускает LIFO — известное различие между IFRS и US GAAP.",
         },
         // -------- Q4 — easy MCQ on overhead allocation step --------
         {
@@ -1573,21 +1704,42 @@ export const F2_PAPER: SeedPaper = {
             "Нормальная потеря — неустранимая потеря, ожидаемая в процессе при эффективной работе: испарение, обрезки, брак в пределах допуска. Она включается в себестоимость ГОДНОЙ продукции, и каждая выходная единица несёт свою долю. Аномальная потеря превышает норму и исследуется отдельно, относится в ОПУ, а не на годное производство. Аномальная ПРИБЫЛЬ (потеря меньше ожидаемой) — зеркальный случай.",
         },
         // -------- Q12 — medium short_answer on labour ratios --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "What does the LABOUR EFFICIENCY RATIO measure, and how is it calculated?",
-          prompt_ru:
-            "Что измеряет КОЭФФИЦИЕНТ ЭФФЕКТИВНОСТИ ТРУДА и как он рассчитывается?",
-          correct_answer_en:
-            "It measures how efficiently labour produced output, calculated as: standard hours for actual output / actual hours worked \u00d7 100%",
-          correct_answer_ru:
-            "Измеряет, насколько эффективно труд произвёл выпуск: нормативные часы на фактический выпуск / фактически отработанные часы × 100%",
-          explanation_en:
-            "Three labour ratios decompose performance: EFFICIENCY = standard hours for actual output / actual hours worked (> 100% means workers beat the standard); CAPACITY = actual hours worked / budgeted hours (> 100% means more hours worked than planned); PRODUCTION VOLUME = standard hours for actual output / budgeted hours (combined effect on output). Efficiency \u00d7 Capacity = Volume.",
-          explanation_ru:
-            "Три коэффициента труда раскладывают результативность: ЭФФЕКТИВНОСТЬ = нормативные часы на факт выпуска / фактические часы (> 100% — рабочие превзошли норматив); МОЩНОСТЬ = фактические часы / бюджетные часы (> 100% — отработано больше плана); ОБЪЁМ ПРОИЗВОДСТВА = нормативные часы на факт выпуска / бюджетные часы (совокупный эффект). Эффективность × Мощность = Объём.",
+          prompt_en: "How is the labour efficiency ratio calculated?",
+          prompt_ru: "Как рассчитывается коэффициент эффективности труда?",
+          options: [
+            {
+              key: "A",
+              text_en: "Standard hours for actual output ÷ actual hours worked × 100%",
+              text_ru: "Нормативные часы на фактический выпуск ÷ фактически отработанные часы × 100%",
+            },
+            {
+              key: "B",
+              text_en: "Actual hours worked ÷ budgeted hours × 100%",
+              text_ru: "Фактически отработанные часы ÷ бюджетные часы × 100%",
+              why_wrong_en: "That is the CAPACITY ratio, which compares hours worked to hours planned, not efficiency of output.",
+              why_wrong_ru: "Это коэффициент ЗАГРУЗКИ, сравнивающий отработанные часы с запланированными, а не эффективность выпуска.",
+            },
+            {
+              key: "C",
+              text_en: "Standard hours for actual output ÷ budgeted hours × 100%",
+              text_ru: "Нормативные часы на фактический выпуск ÷ бюджетные часы × 100%",
+              why_wrong_en: "That is the PRODUCTION VOLUME ratio (the combined effect on output), not efficiency.",
+              why_wrong_ru: "Это коэффициент ОБЪЁМА ПРОИЗВОДСТВА (совокупный эффект на выпуск), а не эффективность.",
+            },
+            {
+              key: "D",
+              text_en: "Actual hours worked ÷ standard hours for actual output × 100%",
+              text_ru: "Фактически отработанные часы ÷ нормативные часы на фактический выпуск × 100%",
+              why_wrong_en: "This inverts the efficiency ratio; efficiency puts standard hours for output on top, not actual hours.",
+              why_wrong_ru: "Это перевёрнутый коэффициент эффективности; в эффективности сверху стоят нормативные часы на выпуск, а не фактические.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Efficiency = standard hours for actual output ÷ actual hours worked × 100% (above 100% means workers beat the standard). Capacity = actual ÷ budgeted hours; Production volume = standard hours for output ÷ budgeted hours. Efficiency × Capacity = Volume.",
+          explanation_ru: "Эффективность = нормативные часы на фактический выпуск ÷ фактически отработанные часы × 100% (выше 100% — рабочие превзошли норматив). Загрузка = фактические ÷ бюджетные часы; Объём производства = нормативные часы на выпуск ÷ бюджетные часы. Эффективность × Загрузка = Объём.",
         },
         // -------- Q13 — medium MCQ on ABC --------
         {
@@ -1828,19 +1980,42 @@ export const F2_PAPER: SeedPaper = {
             "Пересчёт перестраивает бюджет под ФАКТИЧЕСКИЙ уровень активности, пропорционально корректируя переменные затраты и выручку, при этом постоянные затраты остаются без изменений. Это обеспечивает справедливое сравнение: если в бюджете было 10 000 единиц, а сделано 8 000, для анализа отклонений нужно сравнивать с бюджетом, пересчитанным на 8 000, а не с исходным на 10 000. Иначе «отклонение по объёму» скроет реальную картину эффективности.",
         },
         // -------- Q3 — easy short_answer on budget types --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the budgeting approach that requires every cost item to be justified from scratch each period, with no presumption that last year\u2019s figure is correct.",
-          prompt_ru:
-            "Назовите подход к бюджетированию, при котором каждая статья затрат должна обосновываться с нуля каждый период, без предположения, что прошлогодняя цифра верна.",
-          correct_answer_en: "Zero-based budgeting (ZBB)",
-          correct_answer_ru: "Нулевое бюджетирование (ZBB)",
-          explanation_en:
-            "ZBB starts from zero each period: every activity, every cost, every headcount must be re-justified. Pros: forces managers to question entrenched spending, exposes obsolete activities, can yield meaningful savings. Cons: time-consuming and often resisted (people defending their budgets). In practice many firms apply ZBB selectively (e.g. every third year) rather than annually. The opposite extreme is INCREMENTAL budgeting: start with last year and adjust for inflation/growth \u2014 fast but tends to entrench past mistakes.",
-          explanation_ru:
-            "ZBB начинает с нуля каждый период: каждый вид деятельности, каждая затрата, каждая ставка должна быть обоснована заново. Плюсы: заставляет ставить под сомнение укоренившиеся расходы, выявляет устаревшие виды деятельности, может дать существенную экономию. Минусы: трудоёмко, часто встречает сопротивление (люди защищают свои бюджеты). На практике многие компании применяют ZBB выборочно (например, раз в три года), а не ежегодно. Противоположный подход — ИНКРЕМЕНТНЫЙ: отталкиваться от прошлого года и корректировать на инфляцию/рост — быстро, но закрепляет прошлые ошибки.",
+          prompt_en: "Which budgeting approach requires every cost item to be justified from scratch each period, with no presumption that last year's figure is correct?",
+          prompt_ru: "Какой подход к бюджетированию требует обосновывать каждую статью затрат заново в каждом периоде, не предполагая, что прошлогодняя цифра верна?",
+          options: [
+            {
+              key: "A",
+              text_en: "Zero-based budgeting (ZBB)",
+              text_ru: "Бюджетирование с нуля (ZBB)",
+            },
+            {
+              key: "B",
+              text_en: "Incremental budgeting",
+              text_ru: "Приростное бюджетирование",
+              why_wrong_en: "Incremental budgeting starts from last year's figures and adjusts them — the very presumption ZBB rejects.",
+              why_wrong_ru: "Приростное бюджетирование исходит из прошлогодних цифр и корректирует их — именно это предположение ZBB отвергает.",
+            },
+            {
+              key: "C",
+              text_en: "Rolling budgeting",
+              text_ru: "Скользящее бюджетирование",
+              why_wrong_en: "A rolling budget is continuously updated by adding a new period as one expires; it does not require justifying every item from zero.",
+              why_wrong_ru: "Скользящий бюджет постоянно обновляется добавлением нового периода взамен истёкшего; он не требует обоснования каждой статьи с нуля.",
+            },
+            {
+              key: "D",
+              text_en: "Flexible budgeting",
+              text_ru: "Гибкое бюджетирование",
+              why_wrong_en: "A flexible budget is flexed to the actual activity level for control purposes; it is not about re-justifying every cost from scratch.",
+              why_wrong_ru: "Гибкий бюджет пересчитывается под фактический уровень активности для контроля; он не связан с повторным обоснованием каждой статьи с нуля.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Zero-based budgeting starts from zero each period: every activity and cost must be re-justified. It forces managers to question entrenched spending but is time-consuming, so many firms apply it selectively rather than annually. The opposite extreme is incremental budgeting.",
+          explanation_ru: "Бюджетирование с нуля начинает каждый период с нуля: каждая деятельность и затрата должны быть заново обоснованы. Оно заставляет менеджеров пересматривать укоренившиеся расходы, но трудоёмко, поэтому многие фирмы применяют его выборочно, а не ежегодно. Противоположная крайность — приростное бюджетирование.",
         },
         // -------- Q4 — easy MCQ on participative budget --------
         {
@@ -2095,21 +2270,42 @@ export const F2_PAPER: SeedPaper = {
             "Бюджетная слабина возникает, когда менеджеры, отвечающие и за постановку, и за выполнение бюджета, предлагают цели, которые они заведомо могут перевыполнить. Мотивы: бонус, привязанный к выполнению бюджета, репутация «надёжного исполнителя», запас на непредвиденные ситуации. Слабина — известная слабость партисипативного бюджетирования; защитные меры: независимая проверка высшим руководством или финансами, сравнение с историческими ориентирами и вознаграждение за точность прогноза (а не только за выполнение цели).",
         },
         // -------- Q12 — medium short_answer on NPV decision rule --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "State the decision rule for accepting or rejecting an investment project using the NPV method.",
-          prompt_ru:
-            "Сформулируйте правило принятия или отклонения инвестиционного проекта по методу NPV.",
-          correct_answer_en:
-            "Accept the project if NPV is positive; reject if NPV is negative. (When choosing between competing projects, choose the one with the highest NPV.)",
-          correct_answer_ru:
-            "Принять проект, если NPV положительна; отклонить, если отрицательна. (При выборе между конкурирующими проектами — выбрать с максимальной NPV.)",
-          explanation_en:
-            "Positive NPV means the project's discounted cash inflows exceed its initial cost \u2014 the firm is wealthier for doing it. Negative NPV means it destroys value. NPV = 0 is the indifference point: the project just earns the cost of capital, producing no excess value. The rule assumes the cost of capital correctly reflects the project's risk; in practice, project-specific risk-adjusted discount rates are sometimes used to refine the decision for high-risk or unusual projects.",
-          explanation_ru:
-            "Положительная NPV означает, что дисконтированные поступления превышают первоначальные вложения — компания становится богаче от проекта. Отрицательная NPV — проект разрушает стоимость. NPV = 0 — точка безразличия: проект ровно зарабатывает стоимость капитала, без дополнительной ценности. Правило предполагает, что стоимость капитала корректно отражает риск проекта; на практике для высокорискованных или необычных проектов иногда применяются индивидуальные ставки дисконтирования с учётом риска.",
+          prompt_en: "What is the correct decision rule for a single investment project under the NPV method?",
+          prompt_ru: "Каково верное правило принятия решения по одному инвестиционному проекту методом NPV?",
+          options: [
+            {
+              key: "A",
+              text_en: "Accept if NPV is positive; reject if NPV is negative",
+              text_ru: "Принять, если NPV положителен; отклонить, если NPV отрицателен",
+            },
+            {
+              key: "B",
+              text_en: "Accept if NPV is negative",
+              text_ru: "Принять, если NPV отрицателен",
+              why_wrong_en: "A negative NPV means discounted inflows are less than the cost — the project destroys value and should be rejected.",
+              why_wrong_ru: "Отрицательный NPV означает, что дисконтированные поступления меньше затрат — проект разрушает стоимость и должен быть отклонён.",
+            },
+            {
+              key: "C",
+              text_en: "Accept only if NPV equals zero",
+              text_ru: "Принять только если NPV равен нулю",
+              why_wrong_en: "NPV = 0 is the indifference point (just earns the cost of capital); a positive NPV is preferable as it adds value.",
+              why_wrong_ru: "NPV = 0 — точка безразличия (проект лишь покрывает стоимость капитала); положительный NPV предпочтительнее, так как создаёт стоимость.",
+            },
+            {
+              key: "D",
+              text_en: "Accept if the payback period is under two years",
+              text_ru: "Принять, если срок окупаемости менее двух лет",
+              why_wrong_en: "That is the payback rule, a different appraisal method; the NPV rule is based on the sign of the net present value.",
+              why_wrong_ru: "Это правило окупаемости — другой метод оценки; правило NPV основано на знаке чистой приведённой стоимости.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Positive NPV means the project's discounted cash inflows exceed its cost, so the firm is wealthier for doing it; negative NPV destroys value. NPV = 0 is the indifference point. Between competing projects, choose the highest NPV.",
+          explanation_ru: "Положительный NPV означает, что дисконтированные поступления превышают затраты, и фирма становится богаче; отрицательный NPV разрушает стоимость. NPV = 0 — точка безразличия. При выборе между проектами берут наибольший NPV.",
         },
         // -------- Q13 — medium MCQ on incremental budgeting drawback --------
         {
@@ -2352,19 +2548,42 @@ export const F2_PAPER: SeedPaper = {
             "Идеальные нормативы предполагают совершенство: ни потерь, ни простоев, ни поломок, ни переделок. Они полезны для определения абсолютного потолка технически возможного, но обычно ДЕМОТИВИРУЮТ — работники их никогда не достигают. Большинство фирм используют достижимые нормативы — сложные, но реалистичные, с допуском на нормальный уровень неэффективности.",
         },
         // -------- Q3 — easy short_answer on variance type --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "A favourable variance arises when actual results are BETTER than standard. State whether each is favourable (F) or adverse (A): (a) actual material price < standard price, (b) actual labour hours > standard hours for output, (c) actual sales price > standard sales price.",
-          prompt_ru:
-            "Благоприятное отклонение возникает, когда фактический результат ЛУЧШЕ норматива. Укажите F (благоприятное) или A (неблагоприятное) для каждого: (а) фактическая цена материала < нормативной; (б) фактические часы труда > нормативных на выпуск; (в) фактическая цена продаж > нормативной.",
-          correct_answer_en: "(a) F, (b) A, (c) F",
-          correct_answer_ru: "(а) F, (б) A, (в) F",
-          explanation_en:
-            'Apply the rule "actual better than standard = favourable" consistently. (a) Paying LESS for material than budgeted is favourable on cost \u2014 F. (b) Taking MORE hours than the standard requires for the output achieved is adverse on labour efficiency \u2014 A. (c) Selling at a HIGHER price than budgeted is favourable on revenue \u2014 F. The direction sign trips up many students: "less" can be good (costs) or bad (revenue) depending on what is being measured.',
-          explanation_ru:
-            "Применяем правило «факт лучше норматива = благоприятно» последовательно. (а) Платить за материал МЕНЬШЕ запланированного — благоприятно по затратам — F. (б) Затрачивать БОЛЬШЕ часов, чем требует норматив на достигнутый выпуск, — неблагоприятно по эффективности труда — A. (в) Продавать по БОЛЕЕ высокой цене, чем запланировано, — благоприятно по выручке — F. Знак направления сбивает многих: «меньше» может быть хорошо (затраты) или плохо (выручка) в зависимости от того, что измеряем.",
+          prompt_en: "A favourable (F) variance arises when actual results are better than standard. Which classification is correct for: actual material price BELOW standard price; actual labour hours ABOVE standard hours for output; actual sales price ABOVE standard price?",
+          prompt_ru: "Благоприятное (F) отклонение возникает, когда фактический результат лучше норматива. Какая классификация верна для: фактическая цена материала НИЖЕ нормативной; фактические трудочасы ВЫШЕ нормативных на выпуск; фактическая цена продажи ВЫШЕ нормативной?",
+          options: [
+            {
+              key: "A",
+              text_en: "Favourable, Adverse, Favourable",
+              text_ru: "Благоприятное, Неблагоприятное, Благоприятное",
+            },
+            {
+              key: "B",
+              text_en: "Adverse, Favourable, Adverse",
+              text_ru: "Неблагоприятное, Благоприятное, Неблагоприятное",
+              why_wrong_en: "Each is reversed: paying less for material is favourable, taking more hours is adverse, and selling higher is favourable.",
+              why_wrong_ru: "Каждое перевёрнуто: платить меньше за материал — благоприятно, тратить больше часов — неблагоприятно, продавать дороже — благоприятно.",
+            },
+            {
+              key: "C",
+              text_en: "Favourable, Favourable, Favourable",
+              text_ru: "Благоприятное, Благоприятное, Благоприятное",
+              why_wrong_en: "Taking MORE labour hours than the standard for the output is adverse on efficiency, not favourable.",
+              why_wrong_ru: "Затрата БОЛЬШЕГО числа трудочасов, чем норматив на выпуск, неблагоприятна для эффективности, а не благоприятна.",
+            },
+            {
+              key: "D",
+              text_en: "Adverse, Adverse, Adverse",
+              text_ru: "Неблагоприятное, Неблагоприятное, Неблагоприятное",
+              why_wrong_en: "Paying less for material and selling at a higher price are both favourable; only the labour-hours item is adverse.",
+              why_wrong_ru: "Платить меньше за материал и продавать дороже — оба благоприятны; неблагоприятен только пункт по трудочасам.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Apply \"actual better than standard = favourable\" consistently. Paying less for material is favourable (F); taking more hours than the standard allows for the output is adverse on efficiency (A); selling at a higher price than budgeted is favourable on revenue (F).",
+          explanation_ru: "Последовательно применяйте правило «фактическое лучше норматива = благоприятно». Платить за материал меньше — благоприятно (F); затратить больше часов, чем норматив на выпуск, — неблагоприятно для эффективности (A); продать дороже бюджета — благоприятно для выручки (F).",
         },
         // -------- Q4 — easy MCQ on standard cost card components --------
         {
@@ -2591,21 +2810,42 @@ export const F2_PAPER: SeedPaper = {
             "При маржинальном учёте постоянные затраты рассматриваются как затраты периода, не меняющиеся с объёмом. Финансовый эффект от продажи лишней (или недопроданной) единицы — это МАРЖИНАЛЬНЫЙ ДОХОД, который она приносит: цена минус переменные затраты на единицу. При абсорбционном учёте постоянные затраты абсорбируются в единицы, поэтому объём затрагивает и абсорбцию постоянных накладных, и отклонение оценивается по нормативной ПРИБЫЛИ (с учётом доли постоянных). Это частая ловушка экзамена: одинаковый сценарий, разный ответ в зависимости от системы учёта.",
         },
         // -------- Q12 — medium short_answer on variance formula direction --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Why is the material price variance calculated using the QUANTITY PURCHASED, while the material usage variance uses the QUANTITY USED for actual output?",
-          prompt_ru:
-            "Почему отклонение по цене материалов считается на ЗАКУПЛЕННОМ количестве, а отклонение по использованию — на использованном для фактического выпуска?",
-          correct_answer_en:
-            "The price decision is made at the point of purchase, so it applies to all units bought; the usage decision is made in production, so it applies to what was actually consumed in making the output.",
-          correct_answer_ru:
-            "Решение о цене принимается в момент закупки и относится ко всему купленному; решение об использовании принимается в производстве и относится к фактически потреблённому при выпуске.",
-          explanation_en:
-            "Separating where each decision is made gives clean responsibility allocation. Purchasing manager: responsible for price, judged on price variance against quantity bought (whether it's used immediately or stocked). Production manager: responsible for using materials efficiently, judged on usage variance for what was actually consumed. This separation prevents purchasing from being penalised when production wastes, and prevents production from being penalised for purchasing's overpaying. Some texts use a \"stocks-at-actual-cost\" approach where the price variance uses quantity USED; both approaches exist, but ACCA's default is quantity PURCHASED.",
-          explanation_ru:
-            "Разделение по месту принятия решения даёт чёткое распределение ответственности. Менеджер по закупкам: отвечает за цену, оценивается по отклонению цены на купленное количество (независимо от того, использовано оно или в запасе). Производственный менеджер: отвечает за эффективное использование, оценивается по отклонению использования на фактически потреблённое для выпуска. Такое разделение защищает закупки от наказания за производственные потери и производство — за переплату со стороны закупок. В некоторых учебниках используется подход «запасы по фактической себестоимости», где отклонение по цене считают на использованном количестве; оба подхода существуют, но по умолчанию в ACCA — закупленное количество.",
+          prompt_en: "Why is the material price variance based on the quantity PURCHASED, while the usage variance is based on the quantity USED for actual output?",
+          prompt_ru: "Почему отклонение по цене материала рассчитывается по КУПЛЕННОМУ количеству, а отклонение по расходу — по ИСПОЛЬЗОВАННОМУ для фактического выпуска?",
+          options: [
+            {
+              key: "A",
+              text_en: "The price decision is made at purchase (applies to all units bought); the usage decision is made in production (applies to what was consumed)",
+              text_ru: "Решение о цене принимается при закупке (касается всех купленных единиц); решение о расходе — в производстве (касается потреблённого)",
+            },
+            {
+              key: "B",
+              text_en: "Because purchased quantity is always larger than used quantity",
+              text_ru: "Потому что купленное количество всегда больше использованного",
+              why_wrong_en: "The basis is about WHERE the decision is made, not about which quantity is larger; purchases may be more, less, or equal to usage.",
+              why_wrong_ru: "Основа — в том, ГДЕ принимается решение, а не в том, какое количество больше; закупки могут быть больше, меньше или равны расходу.",
+            },
+            {
+              key: "C",
+              text_en: "To make the two variances always equal",
+              text_ru: "Чтобы оба отклонения всегда были равны",
+              why_wrong_en: "The two variances measure different things and are not designed to be equal; the basis reflects responsibility, not equality.",
+              why_wrong_ru: "Эти отклонения измеряют разное и не должны быть равны; основа отражает ответственность, а не равенство.",
+            },
+            {
+              key: "D",
+              text_en: "Because IAS 2 requires it",
+              text_ru: "Потому что этого требует IAS 2",
+              why_wrong_en: "This is a management-accounting convention for responsibility accounting, not an IAS 2 (financial reporting) requirement.",
+              why_wrong_ru: "Это соглашение управленческого учёта для учёта по ответственности, а не требование IAS 2 (финансовая отчётность).",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Separating where each decision is made gives clean responsibility. The purchasing manager controls price and is judged on the price variance for everything bought; the production manager controls usage and is judged on the usage variance for what was actually consumed.",
+          explanation_ru: "Разделение по месту принятия решения обеспечивает чёткую ответственность. Менеджер по закупкам отвечает за цену и оценивается по отклонению цены на всё купленное; менеджер производства отвечает за расход и оценивается по отклонению расхода на фактически потреблённое.",
         },
         // -------- Q13 — medium MCQ on flexed budget for variance --------
         {
@@ -2846,21 +3086,42 @@ export const F2_PAPER: SeedPaper = {
             "Три «Э»: ЭКОНОМНОСТЬ — приобретение нужных ресурсов по минимальной цене (вход). ПРОИЗВОДИТЕЛЬНОСТЬ — максимум выпуска на единицу ресурса (преобразование). РЕЗУЛЬТАТИВНОСТЬ — реальное достижение намеченного результата или социальной цели (выход → результат). Больница, работающая дёшево (экономность), пропускающая много пациентов на медсестру (производительность), но не улучшающая здоровье — провал по результативности. Настоящая ценность за деньги требует всех трёх.",
         },
         // -------- Q3 — easy short_answer on balanced scorecard --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the FOUR perspectives of Kaplan and Norton\u2019s Balanced Scorecard.",
-          prompt_ru:
-            "Назовите ЧЕТЫРЕ перспективы сбалансированной системы показателей Каплана и Нортона.",
-          correct_answer_en:
-            "Financial, customer, internal business process, learning and growth (or innovation)",
-          correct_answer_ru:
-            "Финансовая, клиентская, внутренние бизнес-процессы, обучение и рост (или инновации)",
-          explanation_en:
-            "Kaplan and Norton built the scorecard to balance lagging financial measures with leading non-financial drivers. FINANCIAL (how do we look to shareholders?) measures revenue growth, profitability, ROCE. CUSTOMER (how do customers see us?) tracks satisfaction, retention, market share. INTERNAL PROCESS (what must we excel at?) covers cycle time, quality, productivity. LEARNING & GROWTH (how do we keep improving?) covers employee development, information systems, innovation. The four are causally linked: investing in learning improves processes, which delights customers, which produces financial results.",
-          explanation_ru:
-            "Каплан и Нортон построили карту для баланса запаздывающих финансовых показателей и опережающих нефинансовых драйверов. ФИНАНСОВАЯ (как нас видят акционеры?) — рост выручки, рентабельность, ROCE. КЛИЕНТСКАЯ (как нас видят клиенты?) — удовлетворённость, удержание, доля рынка. ВНУТРЕННИЕ ПРОЦЕССЫ (в чём мы должны быть превосходны?) — длительность цикла, качество, производительность. ОБУЧЕНИЕ И РОСТ (как продолжаем улучшаться?) — развитие сотрудников, информационные системы, инновации. Четыре перспективы причинно связаны: инвестиции в обучение улучшают процессы, что радует клиентов, что даёт финансовый результат.",
+          prompt_en: "Which of the following is one of the four perspectives of Kaplan and Norton's Balanced Scorecard?",
+          prompt_ru: "Какая из перечисленных является одной из четырёх перспектив сбалансированной системы показателей Каплана и Нортона?",
+          options: [
+            {
+              key: "A",
+              text_en: "Internal business process",
+              text_ru: "Внутренние бизнес-процессы",
+            },
+            {
+              key: "B",
+              text_en: "Competitor perspective",
+              text_ru: "Перспектива конкурентов",
+              why_wrong_en: "There is no \"competitor\" perspective; the four are financial, customer, internal process, and learning & growth.",
+              why_wrong_ru: "Перспективы «конкуренты» нет; четыре — финансы, клиенты, внутренние процессы, обучение и рост.",
+            },
+            {
+              key: "C",
+              text_en: "Regulatory perspective",
+              text_ru: "Регуляторная перспектива",
+              why_wrong_en: "Regulation is not one of the four perspectives; the people/innovation dimension is \"learning and growth\".",
+              why_wrong_ru: "Регулирование не входит в четыре перспективы; за людей/инновации отвечает «обучение и рост».",
+            },
+            {
+              key: "D",
+              text_en: "Supplier perspective",
+              text_ru: "Перспектива поставщиков",
+              why_wrong_en: "Suppliers are not a scorecard perspective; the four are financial, customer, internal process, and learning & growth.",
+              why_wrong_ru: "Поставщики не являются перспективой системы; четыре — финансы, клиенты, внутренние процессы, обучение и рост.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The four perspectives are Financial (how do we look to shareholders?), Customer (how do customers see us?), Internal business process (what must we excel at?), and Learning & growth (how do we keep improving?). They balance lagging financial measures with leading non-financial drivers.",
+          explanation_ru: "Четыре перспективы: финансовая (как нас видят акционеры?), клиентская (как нас видят клиенты?), внутренние бизнес-процессы (в чём мы должны преуспеть?) и обучение и рост (как мы продолжаем совершенствоваться?). Они балансируют запаздывающие финансовые показатели с опережающими нефинансовыми драйверами.",
         },
         // -------- Q4 — easy MCQ on quick ratio --------
         {
@@ -3115,21 +3376,42 @@ export const F2_PAPER: SeedPaper = {
             "Критический фактор успеха (CSF) — немногие ВЕЩИ, которые организация должна делать правильно для конкурентного успеха, — широкие стратегические приоритеты. Ключевой показатель эффективности (KPI) — конкретная КОЛИЧЕСТВЕННАЯ метрика для отслеживания CSF. Поток: стратегия → CSF (что важно) → KPI (как измерить важное) → цели и факт. Частая ошибка — определять много KPI без чётких CSF за ними; это приводит к «взрыву метрик» и противоречивым стимулам. Дисциплина: сначала определить CSF, затем спроектировать не более 2–3 KPI на CSF.",
         },
         // -------- Q12 — medium short_answer on lagging vs leading --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            'Why are financial measures often described as "lagging" indicators, and what is the implication for using ONLY financial KPIs to drive performance?',
-          prompt_ru:
-            "Почему финансовые показатели часто называют «запаздывающими» индикаторами, и каково следствие использования ТОЛЬКО финансовых KPI для управления эффективностью?",
-          correct_answer_en:
-            "Financial measures report past results that have already crystallised; by the time a poor financial outcome appears, the underlying problem (loss of customers, falling quality, weak processes) has already happened. Using only financial KPIs means managing the rear-view mirror, so issues are spotted too late to correct cheaply.",
-          correct_answer_ru:
-            "Финансовые показатели отражают прошлые результаты, уже зафиксировавшиеся; к моменту появления слабого финансового результата причина (потеря клиентов, падение качества, слабые процессы) уже произошла. Использование только финансовых KPI означает управление по «зеркалу заднего вида», и проблемы выявляются слишком поздно, чтобы дёшево исправить.",
-          explanation_en:
-            "Lagging indicators (revenue, profit margin, ROCE) record OUTCOMES; leading indicators (customer satisfaction scores, employee engagement, on-time delivery, defect rates, new-product pipeline) record DRIVERS that produce those outcomes. The balanced scorecard's causality is that learning & growth drives internal processes, which drives customer satisfaction, which drives financial results. If you only measure the final stage, you can't intervene early. Best practice: combine lagging financial metrics (to know if strategy is working) with leading non-financial metrics (to predict and steer).",
-          explanation_ru:
-            "Запаздывающие индикаторы (выручка, маржа, ROCE) фиксируют ИСХОДЫ; опережающие (удовлетворённость клиентов, вовлечённость персонала, своевременность поставок, доля брака, поток новых продуктов) фиксируют ДРАЙВЕРЫ этих исходов. Причинно-следственная логика BSC: обучение и рост → внутренние процессы → удовлетворённость клиентов → финансовые результаты. Если измеряется только финал, вмешаться рано невозможно. Лучшая практика: сочетать запаздывающие финансовые показатели (чтобы понять, работает ли стратегия) с опережающими нефинансовыми (для предсказания и управления).",
+          prompt_en: "Why are financial measures often described as \"lagging\" indicators, with implications for relying on them alone?",
+          prompt_ru: "Почему финансовые показатели часто называют «запаздывающими» индикаторами, и каковы последствия опоры только на них?",
+          options: [
+            {
+              key: "A",
+              text_en: "They report outcomes that have already crystallised, so problems show up only after the damage is done",
+              text_ru: "Они отражают уже свершившиеся результаты, поэтому проблемы проявляются лишь после того, как ущерб нанесён",
+            },
+            {
+              key: "B",
+              text_en: "They are calculated more slowly than other measures by the finance team",
+              text_ru: "Их финансовая служба рассчитывает медленнее прочих показателей",
+              why_wrong_en: "\"Lagging\" refers to measuring outcomes after the fact, not to the speed of calculation.",
+              why_wrong_ru: "«Запаздывающий» относится к измерению результата постфактум, а не к скорости расчёта.",
+            },
+            {
+              key: "C",
+              text_en: "They always understate true performance",
+              text_ru: "Они всегда занижают истинные результаты",
+              why_wrong_en: "Lagging means timing (they reflect past results), not a systematic bias up or down.",
+              why_wrong_ru: "Запаздывание — это про сроки (отражают прошлые результаты), а не про систематическое смещение вверх или вниз.",
+            },
+            {
+              key: "D",
+              text_en: "They cannot be audited",
+              text_ru: "Их нельзя проверить аудитом",
+              why_wrong_en: "Financial measures are precisely what auditors examine; the issue is that they are backward-looking, not unauditable.",
+              why_wrong_ru: "Именно финансовые показатели проверяет аудит; проблема в том, что они обращены в прошлое, а не в их непроверяемости.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Lagging indicators (revenue, margin, ROCE) record outcomes; by the time a poor financial result appears, the underlying driver (lost customers, falling quality) has already happened. Leading non-financial indicators (satisfaction, defect rates) signal problems earlier — which is why a balanced scorecard pairs both.",
+          explanation_ru: "Запаздывающие индикаторы (выручка, маржа, ROCE) фиксируют результаты; к моменту появления плохого финансового итога первопричина (потеря клиентов, падение качества) уже произошла. Опережающие нефинансовые индикаторы (удовлетворённость, доля брака) сигналят раньше — поэтому сбалансированная система сочетает и те, и другие.",
         },
         // -------- Q13 — medium MCQ on inventory days --------
         {

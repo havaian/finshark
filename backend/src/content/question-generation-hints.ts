@@ -191,7 +191,7 @@ export const TOPIC_HINTS: Record<string, string> = {
     "statements: profitability ratios (gross margin, net margin, ROCE), liquidity (current ratio, " +
     "quick ratio), efficiency (inventory days, receivables days, payables days, asset turnover), " +
     "gearing (debt/equity, interest cover). RATIO CALCULATIONS and ratio-comparison questions are " +
-    "extremely common — favour number_entry and short_answer formats.",
+    "extremely common — favour number_entry (for the calculated value) and mcq (for interpretation) formats.",
 };
 
 // Helper — fetches hints for an LO with safe fallback to empty string.

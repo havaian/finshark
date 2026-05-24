@@ -33,7 +33,6 @@ const queue = ref<LessonQuestion[]>([]);
 const currentIndex = ref(0);
 
 const selectedOption = ref<string | null>(null);
-const shortAnswer = ref('');
 // number_entry answer kept as a string (not number) so we don't lose mid-typing
 // state like trailing decimals ("12." while user is mid-type). The grader on
 // the server parses it.
@@ -139,7 +138,6 @@ const wrongOptionsForFeedback = computed(() => {
   );
 });
 
-const shortAnswerInput = ref<HTMLTextAreaElement | null>(null);
 const numberAnswerInput = ref<HTMLInputElement | null>(null);
 
 async function load() {
@@ -211,12 +209,9 @@ async function onSubmit() {
   if (q.type === 'mcq') {
     if (!selectedOption.value) return;
     answer = selectedOption.value;
-  } else if (q.type === 'number_entry') {
-    answer = numberAnswer.value.trim();
-    if (!answer) return;
   } else {
-    // short_answer
-    answer = shortAnswer.value.trim();
+    // number_entry
+    answer = numberAnswer.value.trim();
     if (!answer) return;
   }
 
@@ -245,7 +240,6 @@ async function onNext() {
 
   feedback.value = null;
   selectedOption.value = null;
-  shortAnswer.value = '';
   numberAnswer.value = '';
   showWhyWrong.value = false;
 
@@ -314,9 +308,7 @@ function onQuit() {
 
 async function focusInputForType() {
   await nextTick();
-  if (current.value?.type === 'short_answer' && shortAnswerInput.value) {
-    shortAnswerInput.value.focus();
-  } else if (current.value?.type === 'number_entry' && numberAnswerInput.value) {
+  if (current.value?.type === 'number_entry' && numberAnswerInput.value) {
     numberAnswerInput.value.focus();
   }
 }
@@ -330,8 +322,6 @@ function onKeydown(e: KeyboardEvent) {
   if (!current.value) return;
 
   if (e.key === 'Enter') {
-    // textarea on short_answer accepts Shift+Enter for newlines.
-    if (current.value.type === 'short_answer' && e.shiftKey) return;
     e.preventDefault();
     if (feedback.value) onNext();
     else onSubmit();
@@ -497,13 +487,6 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Short answer -->
-        <div v-else-if="current.type === 'short_answer'" class="mt-4">
-          <textarea ref="shortAnswerInput" v-model="shortAnswer" :disabled="!!feedback" rows="3" maxlength="4000"
-            :placeholder="t('lesson.short_answer_placeholder')" />
-          <p class="input-help">{{ t('lesson.short_answer_help') }}</p>
-        </div>
-
         <!-- Number entry — for calculation questions where the answer is a
              single numeric value. inputmode=decimal triggers numeric keyboards
              on mobile while still allowing typed characters on desktop. -->
@@ -567,9 +550,7 @@ onUnmounted(() => {
             </template>
           </div>
           <button v-if="!feedback" class="btn btn-primary" :disabled="submitting || (
-            current.type === 'mcq' ? !selectedOption :
-              current.type === 'number_entry' ? !numberAnswer.trim() :
-                !shortAnswer.trim()
+            current.type === 'mcq' ? !selectedOption : !numberAnswer.trim()
           )" @click="onSubmit">
             {{ submitting ? t('lesson.checking') : t('lesson.submit') }}
           </button>

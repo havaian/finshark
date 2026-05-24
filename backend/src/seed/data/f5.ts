@@ -77,18 +77,42 @@ export const F5_PAPER: SeedPaper = {
           explanation_ru:
             "Мнемоника ACCURATE (точная, полная, экономичная, понятная, релевантная, авторитетная, своевременная, удобная) описывает требуемые свойства. Своевременность, точность и релевантность — основа.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "What does ERP stand for in the context of business systems?",
-          prompt_ru: "Что означает ERP в контексте бизнес-систем?",
-          correct_answer_en: "Enterprise Resource Planning",
-          correct_answer_ru: "Планирование ресурсов предприятия",
-          explanation_en:
-            "ERP systems integrate core business processes — finance, HR, manufacturing, supply chain — into a single database to support real-time management decision-making.",
-          explanation_ru:
-            "ERP-системы объединяют основные бизнес-процессы — финансы, HR, производство, цепочку поставок — в единую базу данных для поддержки управленческих решений в реальном времени.",
+          prompt_en: "What does \"ERP\" stand for in the context of business systems?",
+          prompt_ru: "Что означает «ERP» в контексте бизнес-систем?",
+          options: [
+            {
+              key: "A",
+              text_en: "Enterprise Resource Planning",
+              text_ru: "Планирование ресурсов предприятия (Enterprise Resource Planning)",
+            },
+            {
+              key: "B",
+              text_en: "Enterprise Reporting Platform",
+              text_ru: "Платформа корпоративной отчётности",
+              why_wrong_en: "ERP stands for Enterprise Resource Planning — an integrated operational system, not merely a reporting platform.",
+              why_wrong_ru: "ERP — это планирование ресурсов предприятия, интегрированная операционная система, а не просто платформа отчётности.",
+            },
+            {
+              key: "C",
+              text_en: "External Revenue Projection",
+              text_ru: "Прогноз внешней выручки",
+              why_wrong_en: "ERP is not a forecasting term; it is an integrated business-management system.",
+              why_wrong_ru: "ERP — не термин прогнозирования, а интегрированная система управления бизнесом.",
+            },
+            {
+              key: "D",
+              text_en: "Efficient Resource Procurement",
+              text_ru: "Эффективная закупка ресурсов",
+              why_wrong_en: "Procurement is just one area an ERP may cover; the acronym is Enterprise Resource Planning.",
+              why_wrong_ru: "Закупки — лишь одна из областей ERP; аббревиатура означает «планирование ресурсов предприятия».",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "ERP (Enterprise Resource Planning) systems integrate core business processes — finance, HR, manufacturing, supply chain — into a single database, supporting real-time management decision-making.",
+          explanation_ru: "Системы ERP (планирование ресурсов предприятия) объединяют ключевые бизнес-процессы — финансы, HR, производство, цепочку поставок — в единую базу данных, поддерживая принятие управленческих решений в реальном времени.",
         },
         {
           type: "mcq",
@@ -206,21 +230,42 @@ export const F5_PAPER: SeedPaper = {
           explanation_ru:
             "Целевое калькулирование идёт от рынка: определяют цену, которую заплатят клиенты, вычитают требуемую маржу, и проектируют продукт под оставшуюся сумму затрат.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            'In throughput accounting, what does the "TPAR" (Throughput Accounting Ratio) measure?',
-          prompt_ru:
-            "В учёте пропускной способности что измеряет коэффициент TPAR (Throughput Accounting Ratio)?",
-          correct_answer_en:
-            "Throughput per unit of bottleneck resource divided by factory cost per unit of bottleneck resource",
-          correct_answer_ru:
-            "Пропускная способность на единицу узкого ресурса, делённая на фабричные затраты на единицу узкого ресурса",
-          explanation_en:
-            "A TPAR greater than 1 means a product earns more throughput than the factory costs it consumes — desirable. TPAR < 1 suggests dropping or redesigning the product.",
-          explanation_ru:
-            "TPAR > 1 означает, что продукт приносит больше пропускной способности, чем потребляет фабричных затрат — желательная ситуация. TPAR < 1 — повод отказаться от продукта или переработать его.",
+          prompt_en: "In throughput accounting, how is the Throughput Accounting Ratio (TPAR) calculated?",
+          prompt_ru: "В учёте по пропускной способности как рассчитывается коэффициент TPAR (Throughput Accounting Ratio)?",
+          options: [
+            {
+              key: "A",
+              text_en: "Throughput per unit of bottleneck resource ÷ factory cost per unit of bottleneck resource",
+              text_ru: "Пропускная способность на единицу узкого ресурса ÷ заводские затраты на единицу узкого ресурса",
+            },
+            {
+              key: "B",
+              text_en: "Sales revenue ÷ total variable cost",
+              text_ru: "Выручка ÷ общие переменные затраты",
+              why_wrong_en: "TPAR is built on throughput and factory cost PER UNIT OF THE BOTTLENECK resource, not a simple revenue-to-variable-cost ratio.",
+              why_wrong_ru: "TPAR строится на пропускной способности и заводских затратах НА ЕДИНИЦУ УЗКОГО ресурса, а не на простом отношении выручки к переменным затратам.",
+            },
+            {
+              key: "C",
+              text_en: "Contribution ÷ sales revenue",
+              text_ru: "Маржинальная прибыль ÷ выручка",
+              why_wrong_en: "That is the contribution-to-sales (C/S) ratio, not TPAR.",
+              why_wrong_ru: "Это коэффициент маржинальной прибыли к выручке (C/S), а не TPAR.",
+            },
+            {
+              key: "D",
+              text_en: "Fixed costs ÷ contribution per unit",
+              text_ru: "Постоянные затраты ÷ маржинальная прибыль на единицу",
+              why_wrong_en: "That is the break-even formula, unrelated to the throughput accounting ratio.",
+              why_wrong_ru: "Это формула точки безубыточности, не связанная с коэффициентом TPAR.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "TPAR = throughput per bottleneck hour ÷ factory cost per bottleneck hour. A TPAR above 1 means the product earns more throughput than the factory cost it consumes (desirable); below 1 suggests dropping or redesigning the product.",
+          explanation_ru: "TPAR = пропускная способность на час узкого места ÷ заводские затраты на час узкого места. TPAR выше 1 означает, что продукт приносит больше пропускной способности, чем потребляет заводских затрат (желательно); ниже 1 — продукт стоит снять или переработать.",
         },
         {
           type: "mcq",
@@ -324,20 +369,42 @@ export const F5_PAPER: SeedPaper = {
           explanation_ru:
             "Релевантные затраты — будущие, денежные, отличающиеся. Приростные (дополнительные) затраты, вызванные решением, к ним относятся. Понесённые и исторические — нет, их уже не изменить.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "In CVP analysis, what is the formula for the break-even point in units?",
-          prompt_ru:
-            "В CVP-анализе какова формула точки безубыточности в натуральных единицах?",
-          correct_answer_en: "Fixed costs divided by contribution per unit",
-          correct_answer_ru:
-            "Постоянные затраты, делённые на маржинальный доход на единицу",
-          explanation_en:
-            "Break-even units = Fixed costs ÷ (selling price − variable cost per unit). At this volume, total contribution covers fixed costs exactly and profit is zero.",
-          explanation_ru:
-            "Точка безубыточности (ед.) = Постоянные затраты ÷ (цена − переменные затраты на единицу). На этом объёме маржинальная прибыль ровно покрывает постоянные затраты, и прибыль равна нулю.",
+          prompt_en: "In CVP analysis, what is the formula for the break-even point in units?",
+          prompt_ru: "В CVP-анализе какова формула точки безубыточности в единицах?",
+          options: [
+            {
+              key: "A",
+              text_en: "Fixed costs ÷ contribution per unit",
+              text_ru: "Постоянные затраты ÷ маржинальная прибыль на единицу",
+            },
+            {
+              key: "B",
+              text_en: "Fixed costs ÷ selling price per unit",
+              text_ru: "Постоянные затраты ÷ цена продажи за единицу",
+              why_wrong_en: "Dividing by selling price ignores variable costs; break-even uses CONTRIBUTION (price − variable cost) per unit.",
+              why_wrong_ru: "Деление на цену продажи игнорирует переменные затраты; в безубыточности используется МАРЖИНАЛЬНАЯ прибыль (цена − переменные) на единицу.",
+            },
+            {
+              key: "C",
+              text_en: "Total costs ÷ contribution per unit",
+              text_ru: "Общие затраты ÷ маржинальная прибыль на единицу",
+              why_wrong_en: "Only FIXED costs go on top; variable costs are already captured within contribution.",
+              why_wrong_ru: "Сверху стоят только ПОСТОЯННЫЕ затраты; переменные уже учтены в маржинальной прибыли.",
+            },
+            {
+              key: "D",
+              text_en: "Contribution per unit ÷ fixed costs",
+              text_ru: "Маржинальная прибыль на единицу ÷ постоянные затраты",
+              why_wrong_en: "This is inverted; break-even units put fixed costs on top, divided by contribution per unit.",
+              why_wrong_ru: "Это перевёрнутая формула; в точке безубыточности сверху стоят постоянные затраты, делённые на маржинальную прибыль на единицу.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Break-even units = fixed costs ÷ contribution per unit, where contribution per unit = selling price − variable cost per unit. At this volume total contribution exactly covers fixed costs and profit is zero.",
+          explanation_ru: "Точка безубыточности в единицах = постоянные затраты ÷ маржинальная прибыль на единицу, где маржинальная прибыль = цена продажи − переменные затраты на единицу. При этом объёме совокупная маржинальная прибыль точно покрывает постоянные затраты, а прибыль равна нулю.",
         },
         {
           type: "mcq",
@@ -523,19 +590,42 @@ export const F5_PAPER: SeedPaper = {
           explanation_ru:
             "ZBB отвергает предпосылку, что прошлогодние расходы — отправная точка. Каждый «пакет решений» обосновывается заново: ограничивает рост затрат ценой высокой трудоёмкости.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en: 'What is a "rolling" budget?',
+          prompt_en: "What is a \"rolling\" budget?",
           prompt_ru: "Что такое «скользящий» бюджет?",
-          correct_answer_en:
-            "A budget that is continually updated by adding a new period as the most recent one expires",
-          correct_answer_ru:
-            "Бюджет, который непрерывно обновляется: добавляется новый период по мере истечения предыдущего",
-          explanation_en:
-            'Rolling budgets (e.g. always 12 months ahead) keep planning current and reduce the "January cliff" of annual budgeting, but cost more to maintain.',
-          explanation_ru:
-            "Скользящие бюджеты (например, всегда на 12 месяцев вперёд) поддерживают актуальность планирования и сглаживают «январский обрыв» годового бюджета, но требуют больше работы.",
+          options: [
+            {
+              key: "A",
+              text_en: "A budget continually updated by adding a new period as the most recent one expires",
+              text_ru: "Бюджет, постоянно обновляемый добавлением нового периода по мере истечения текущего",
+            },
+            {
+              key: "B",
+              text_en: "A budget that is fixed for the whole year and never changed",
+              text_ru: "Бюджет, фиксируемый на весь год и не изменяемый",
+              why_wrong_en: "That describes a traditional fixed annual budget — the opposite of a rolling budget, which is continually extended.",
+              why_wrong_ru: "Это описание традиционного фиксированного годового бюджета — противоположность скользящему, который постоянно продлевается.",
+            },
+            {
+              key: "C",
+              text_en: "A budget flexed to the actual level of activity",
+              text_ru: "Бюджет, пересчитанный под фактический уровень активности",
+              why_wrong_en: "That is a FLEXIBLE budget, used for variance control, not a rolling budget.",
+              why_wrong_ru: "Это ГИБКИЙ бюджет для контроля отклонений, а не скользящий.",
+            },
+            {
+              key: "D",
+              text_en: "A budget built from zero each period",
+              text_ru: "Бюджет, составляемый с нуля каждый период",
+              why_wrong_en: "Building from zero describes zero-based budgeting, not a rolling budget.",
+              why_wrong_ru: "Составление с нуля — это бюджетирование с нуля, а не скользящий бюджет.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "A rolling budget (e.g. always 12 months ahead) is continually updated: as one period ends, a new one is added. It keeps planning current and avoids the \"January cliff\" of annual budgeting, but costs more to maintain.",
+          explanation_ru: "Скользящий бюджет (например, всегда на 12 месяцев вперёд) постоянно обновляется: по завершении периода добавляется новый. Он поддерживает актуальность планирования и устраняет «январский обрыв» годового бюджета, но дороже в сопровождении.",
         },
         {
           type: "mcq",
@@ -677,21 +767,42 @@ export const F5_PAPER: SeedPaper = {
           explanation_ru:
             "Четыре перспективы: финансовая, клиентская, внутренние бизнес-процессы, обучение и развитие. Регуляторные вопросы часто включаются в них, но отдельной перспективой не являются.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            'Define "Residual Income" (RI) in the context of divisional performance.',
-          prompt_ru:
-            "Определите «остаточный доход» (Residual Income, RI) в контексте оценки подразделений.",
-          correct_answer_en:
-            "Operating profit minus a notional interest charge on capital employed",
-          correct_answer_ru:
-            "Операционная прибыль за вычетом условного процента на задействованный капитал",
-          explanation_en:
-            'RI = profit − (cost of capital × capital employed). Unlike ROCE, RI is an absolute number, which avoids the "small high-percentage division" problem and aligns better with shareholder value.',
-          explanation_ru:
-            "RI = прибыль − (стоимость капитала × задействованный капитал). В отличие от ROCE, RI — абсолютная величина, что устраняет проблему «маленького подразделения с высоким процентом» и лучше соответствует акционерной стоимости.",
+          prompt_en: "How is Residual Income (RI) defined in divisional performance measurement?",
+          prompt_ru: "Как определяется остаточная прибыль (RI) при оценке результатов подразделений?",
+          options: [
+            {
+              key: "A",
+              text_en: "Operating profit minus a notional interest charge on capital employed",
+              text_ru: "Операционная прибыль за вычетом условного процентного начисления на задействованный капитал",
+            },
+            {
+              key: "B",
+              text_en: "Operating profit divided by capital employed",
+              text_ru: "Операционная прибыль ÷ задействованный капитал",
+              why_wrong_en: "That is ROCE (a percentage), not RI; RI is an absolute amount after a capital charge.",
+              why_wrong_ru: "Это ROCE (в процентах), а не RI; RI — абсолютная величина после начисления на капитал.",
+            },
+            {
+              key: "C",
+              text_en: "Sales revenue minus total costs",
+              text_ru: "Выручка за вычетом всех затрат",
+              why_wrong_en: "That is simply operating profit; RI goes further by deducting a notional charge for the capital used.",
+              why_wrong_ru: "Это просто операционная прибыль; RI идёт дальше, вычитая условную плату за используемый капитал.",
+            },
+            {
+              key: "D",
+              text_en: "Contribution minus fixed costs",
+              text_ru: "Маржинальная прибыль за вычетом постоянных затрат",
+              why_wrong_en: "That yields profit, not residual income; RI specifically deducts a cost-of-capital charge on capital employed.",
+              why_wrong_ru: "Это даёт прибыль, а не остаточную прибыль; RI отдельно вычитает плату за капитал на задействованный капитал.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "RI = operating profit − (cost of capital × capital employed). Unlike ROCE, RI is an absolute figure, which avoids the \"small high-percentage division\" problem and aligns better with maximising shareholder value.",
+          explanation_ru: "RI = операционная прибыль − (стоимость капитала × задействованный капитал). В отличие от ROCE, RI — абсолютная величина, что устраняет проблему «маленького подразделения с высоким процентом» и лучше согласуется с максимизацией стоимости для акционеров.",
         },
         {
           type: "mcq",

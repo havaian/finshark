@@ -5,7 +5,10 @@ import ru from "./ru";
 // Supported languages — must mirror backend src/content/content.types.ts SUPPORTED_LANGS.
 export const SUPPORTED_LANGS = ["en", "ru"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
-export const DEFAULT_LANG: Lang = "ru";
+// Default for new/anonymous users. The ACCA exam itself is in English, so EN
+// is the sensible landing language; existing users keep their saved choice via
+// readLangFromStorage() below (localStorage 'finshark.lang').
+export const DEFAULT_LANG: Lang = "en";
 
 // Read the saved language from localStorage. Falls back to the default.
 const LS_LANG = "finshark.lang";

@@ -294,10 +294,10 @@ function renderCharts() {
   // ---- Type breakdown (doughnut) ----
   if (typeCanvas.value && stats.value.type_breakdown.length > 0) {
     const map = new Map(stats.value.type_breakdown.map((r) => [r.type, r]));
-    const order: Array<'mcq' | 'short_answer'> = ['mcq', 'short_answer'];
+    const order: Array<'mcq' | 'number_entry'> = ['mcq', 'number_entry'];
     const labels = order
       .filter((tp) => map.has(tp))
-      .map((tp) => t(`admin.questions.type_${tp === 'mcq' ? 'mcq' : 'short'}`));
+      .map((tp) => t(`admin.questions.type_${tp === 'mcq' ? 'mcq' : 'number'}`));
     const data = order.filter((tp) => map.has(tp)).map((tp) => map.get(tp)!.attempts);
     const colors = order.filter((tp) => map.has(tp)).map((tp) =>
       tp === 'mcq' ? accent : amber,

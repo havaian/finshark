@@ -14,7 +14,16 @@ import {
   ValidateNested,
 } from "class-validator";
 
-export const QUESTION_TYPES = ["mcq", "short_answer", "number_entry"] as const;
+// Question types. short_answer is RETIRED (see the Grading Spec): it had no
+// faithful ACCA auto-marked exam format and caused the "correct answer marked
+// wrong" grading bug. All legacy rows were converted to mcq/number_entry and
+// the enum value is dropped by migration 20260524000002. Only deterministic,
+// auto-markable formats remain.
+export const QUESTION_TYPES = ["mcq", "number_entry"] as const;
+
+// Alias kept for call sites that distinguished "creatable" types; now identical
+// to QUESTION_TYPES since every supported type is creatable.
+export const CREATABLE_QUESTION_TYPES = QUESTION_TYPES;
 export const DIFFICULTIES = ["easy", "medium", "hard"] as const;
 
 export class McqOptionDto {
@@ -49,8 +58,11 @@ export class McqOptionDto {
 }
 
 export class CreateQuestionDto {
-  @IsEnum(QUESTION_TYPES)
-  type!: (typeof QUESTION_TYPES)[number];
+  // Creation is locked to deterministic, auto-markable types. short_answer is
+  // retired and cannot be created (Grading Spec). Validation message lists the
+  // allowed values via class-validator's IsEnum.
+  @IsEnum(CREATABLE_QUESTION_TYPES)
+  type!: (typeof CREATABLE_QUESTION_TYPES)[number];
 
   @IsEnum(DIFFICULTIES)
   difficulty!: (typeof DIFFICULTIES)[number];
@@ -120,9 +132,12 @@ export class CreateQuestionDto {
 }
 
 export class UpdateQuestionDto {
+  // You may not change a question's type TO short_answer (retired). Omitting
+  // `type` leaves a legacy short_answer row's type untouched; only an explicit
+  // change is constrained, and only to the deterministic creatable set.
   @IsOptional()
-  @IsEnum(QUESTION_TYPES)
-  type?: (typeof QUESTION_TYPES)[number];
+  @IsEnum(CREATABLE_QUESTION_TYPES)
+  type?: (typeof CREATABLE_QUESTION_TYPES)[number];
 
   @IsOptional()
   @IsEnum(DIFFICULTIES)

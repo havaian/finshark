@@ -264,8 +264,8 @@ async function saveEdit() {
       prompt_ru: blankToNull(editPromptRu.value),
       options,
       correct_answer_en: editCorrectEn.value.trim(),
-      correct_answer_ru:
-        editType.value === 'short_answer' ? blankToNull(editCorrectRu.value) : null,
+      // short_answer retired; mcq/number_entry never store correct_answer_ru.
+      correct_answer_ru: null,
       explanation_en: editExplanationEn.value.trim(),
       explanation_ru: blankToNull(editExplanationRu.value),
       concept_bite_en: blankToNull(editConceptBiteEn.value),
@@ -664,8 +664,8 @@ async function submitCreateQuestion() {
       prompt_ru: blankToNull(editPromptRu.value),
       options,
       correct_answer_en: editCorrectEn.value.trim(),
-      correct_answer_ru:
-        editType.value === 'short_answer' ? blankToNull(editCorrectRu.value) : null,
+      // short_answer retired; mcq/number_entry never store correct_answer_ru.
+      correct_answer_ru: null,
       explanation_en: editExplanationEn.value.trim(),
       explanation_ru: blankToNull(editExplanationRu.value),
       concept_bite_en: blankToNull(editConceptBiteEn.value),
@@ -941,7 +941,6 @@ onMounted(reloadTree);
             <label class="field-label">{{ t('admin.questions.type') }}</label>
             <select v-model="editType">
               <option value="mcq">{{ t('admin.questions.type_mcq') }}</option>
-              <option value="short_answer">{{ t('admin.questions.type_short') }}</option>
               <option value="number_entry">{{ t('admin.questions.type_number') }}</option>
             </select>
           </div>
@@ -1000,9 +999,7 @@ onMounted(reloadTree);
             <label class="field-label">
               {{ editType === 'mcq'
                 ? t('admin.questions.correct_label_mcq')
-                : editType === 'number_entry'
-                  ? t('admin.questions.correct_label_number')
-                  : t('admin.questions.correct_label_short_en')
+                : t('admin.questions.correct_label_number')
               }}
             </label>
             <input v-model="editCorrectEn" type="text" :inputmode="editType === 'number_entry' ? 'decimal' : undefined"
@@ -1038,10 +1035,6 @@ onMounted(reloadTree);
                 </div>
               </div>
             </div>
-          </div>
-          <div v-if="editType === 'short_answer'" class="field mt-2">
-            <label class="field-label">{{ t('admin.questions.correct_label_short_ru') }}</label>
-            <input v-model="editCorrectRu" type="text" maxlength="500" />
           </div>
           <div class="field mt-2">
             <label class="field-label">{{ t('admin.questions.explanation_ru') }}</label>

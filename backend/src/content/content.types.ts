@@ -1,14 +1,21 @@
 // Mirrors db/migrations/20260511000003_content_and_srs.js
 //                  + db/migrations/20260513000001_i18n.js
 
-export type QuestionType = "mcq" | "short_answer" | "number_entry";
+// short_answer retired (Grading Spec): no faithful auto-marked ACCA format.
+// Legacy rows are converted/removed by migration 20260524000002; the grader
+// still fails closed on any unexpected type value as a defensive backstop.
+export type QuestionType = "mcq" | "number_entry";
 export type QuestionDifficulty = "easy" | "medium" | "hard";
 
 // Supported UI/content languages. Add to this tuple to add a language;
 // the type system will then force every consumer to handle it.
 export const SUPPORTED_LANGS = ["en", "ru"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
-export const DEFAULT_LANG: Lang = "ru";
+// Default for requests with no explicit language signal (no ?lang, no X-Lang,
+// no matching Accept-Language). The ACCA exam is in English, so EN is the
+// sensible fallback. Authenticated clients send X-Lang from the user's saved
+// locale, so this only affects anonymous/headerless requests.
+export const DEFAULT_LANG: Lang = "en";
 
 // Raw row shapes — store BOTH languages. _en is required (canonical), _ru is optional.
 // Frontend / public-facing layer either picks one (via Accept-Language) and

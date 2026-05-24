@@ -35,7 +35,7 @@ const DEFAULT_TIMEOUT_MS = 90_000;
 // Validation lives in validateLlmQuestion below — we don't trust the model to
 // produce exact JSON without checking.
 interface LlmGeneratedQuestion {
-  type: "mcq" | "short_answer" | "number_entry";
+  type: "mcq" | "number_entry";
   difficulty: "easy" | "medium" | "hard";
   prompt_en: string;
   prompt_ru: string;
@@ -248,11 +248,11 @@ export class QuestionGenerationService {
       existingBlock,
       `Generate exactly ${ctx.count} ORIGINAL practice questions for this LO. Requirements:`,
       ``,
-      `1. Mix question types: roughly 60% "mcq", 25% "short_answer", 15% "number_entry". Use "number_entry" for questions whose correct answer is a single numeric value (calculations, variances, balances).`,
+      `1. Mix question types: roughly 80% "mcq", 20% "number_entry". Use "number_entry" for questions whose correct answer is a single numeric value (calculations, variances, balances). Do NOT generate "short_answer" — it is a retired format.`,
       `2. Mix difficulties: roughly 40% "easy", 40% "medium", 20% "hard".`,
       `3. For MCQ: exactly 4 options keyed A, B, C, D. Distractors must be plausible (common student mistakes), not silly. The correct option must be unambiguous.`,
       `4. For MCQ: EACH WRONG OPTION must include "why_wrong_en" and "why_wrong_ru" — one sentence each explaining the specific misconception the student would have if they picked that option. The CORRECT option must NOT have why_wrong fields (omit them or set to null). These are baked into the content so the student sees them on the feedback screen without an extra AI call.`,
-      `5. For short_answer: the answer should fit in 1–2 sentences; for both EN and RU provide the canonical reference answer.`,
+      `5. (short_answer is retired — never generate it.)`,
       `6. For number_entry: "correct_answer_en" must be a string containing the numeric value (e.g. "12500" or "0.85"). DO NOT include units, currency symbols, or commas in correct_answer_en. Omit "options". Omit "correct_answer_ru" (numbers are language-neutral). If the answer is a calculation where small rounding differences should be accepted, include "acceptable_tolerance" as a non-negative number (e.g. 0.5 to accept ±0.5).`,
       `7. Every question MUST have both English (prompt_en, options[].text_en, etc.) AND Russian (prompt_ru, options[].text_ru, etc.) versions. Russian must read NATURALLY in Russian, not a literal translation of English — write it independently using correct ACCA terminology in Russian (e.g. "маржинальный доход" for contribution, "отклонение по цене материалов" for material price variance).`,
       `8. Every question MUST have an explanation in both languages, 1–3 sentences, that teaches the underlying concept.`,
@@ -279,16 +279,6 @@ export class QuestionGenerationService {
       `    "explanation_ru": "...",`,
       `    "concept_bite_en": "...",  // optional`,
       `    "concept_bite_ru": "..."   // optional`,
-      `  },`,
-      `  {`,
-      `    "type": "short_answer",`,
-      `    "difficulty": "medium",`,
-      `    "prompt_en": "...",`,
-      `    "prompt_ru": "...",`,
-      `    "correct_answer_en": "canonical English answer",`,
-      `    "correct_answer_ru": "канонический русский ответ",`,
-      `    "explanation_en": "...",`,
-      `    "explanation_ru": "..."`,
       `  },`,
       `  {`,
       `    "type": "number_entry",`,
@@ -431,11 +421,8 @@ export class QuestionGenerationService {
     if (typeof obj !== "object" || obj === null) return "not an object";
     const q = obj as Record<string, unknown>;
 
-    if (
-      q.type !== "mcq" &&
-      q.type !== "short_answer" &&
-      q.type !== "number_entry"
-    ) {
+    if (q.type !== "mcq" && q.type !== "number_entry") {
+      // short_answer is retired; if the model emits it anyway, reject it here.
       return `bad type: ${String(q.type)}`;
     }
     if (
@@ -503,9 +490,9 @@ export class QuestionGenerationService {
       if (!keys.has(q.correct_answer_en)) {
         return `correct_answer_en "${q.correct_answer_en}" does not match any option key`;
       }
-    } else if (q.type === "number_entry") {
-      // Must parse as a finite number. Same lenient parsing as the grader for
-      // the strict-error case (commas stripped).
+    } else {
+      // number_entry. Must parse as a finite number. Same lenient parsing as
+      // the grader for the strict-error case (commas stripped).
       const n = parseFloat(q.correct_answer_en.replace(/,/g, ""));
       if (!Number.isFinite(n)) {
         return `number_entry correct_answer_en "${q.correct_answer_en}" not numeric`;
@@ -529,14 +516,6 @@ export class QuestionGenerationService {
         if (Array.isArray(o) && o.length > 0) {
           return "number_entry must not have options";
         }
-      }
-    } else {
-      // short_answer: correct_answer_ru must be present (separate from EN, not a key).
-      if (
-        typeof q.correct_answer_ru !== "string" ||
-        q.correct_answer_ru.length === 0
-      ) {
-        return "short_answer missing correct_answer_ru";
       }
     }
     return null;
@@ -581,10 +560,10 @@ export class QuestionGenerationService {
       prompt_ru: q.prompt_ru.trim(),
       options: normalizedOptions,
       correct_answer_en: q.correct_answer_en.trim(),
-      // MCQ stores option key in _en and leaves _ru null; number_entry uses _en
-      // for the numeric value (also language-neutral); only short_answer uses _ru.
-      correct_answer_ru:
-        isMcq || isNumber ? null : (q.correct_answer_ru ?? "").trim(),
+      // MCQ stores the option key in _en and leaves _ru null; number_entry uses
+      // _en for the numeric value (also language-neutral). With short_answer
+      // retired, the only two remaining types both leave _ru null.
+      correct_answer_ru: null,
       explanation_en: q.explanation_en.trim(),
       explanation_ru: q.explanation_ru.trim(),
       concept_bite_en: q.concept_bite_en?.trim() || null,

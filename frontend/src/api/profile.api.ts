@@ -21,7 +21,8 @@ export interface DifficultyBreakdownRow {
 }
 
 export interface TypeBreakdownRow {
-  type: "mcq" | "short_answer" | "number_entry";
+  // Grouped by live question type; short_answer is retired so only these occur.
+  type: "mcq" | "number_entry";
   attempts: number;
   correct: number;
 }

@@ -295,8 +295,8 @@ export class SeedService {
 
   // Insert a single question. Discriminates on q.type to fill the right shape:
   //   - mcq: options JSONB + correct option key in correct_answer_en
-  //   - short_answer: canonical text per language
   //   - number_entry: numeric value (string) in correct_answer_en, optional tolerance
+  // (short_answer is retired — see Grading Spec — and no longer a seed type.)
   // (Identical to the original seed.ts helper — moved here so the admin path
   // and the CLI path share the exact same insert behaviour.)
   private async insertQuestion(
@@ -345,7 +345,8 @@ export class SeedService {
           TRUE
         )
       `;
-    } else if (q.type === "number_entry") {
+    } else {
+      // number_entry
       await tx`
         INSERT INTO questions (
           lo_id, type, difficulty,
@@ -364,29 +365,6 @@ export class SeedService {
           ${q.explanation_en}, ${q.explanation_ru},
           ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
           ${q.acceptable_tolerance ?? null},
-          TRUE
-        )
-      `;
-    } else {
-      // short_answer
-      await tx`
-        INSERT INTO questions (
-          lo_id, type, difficulty,
-          prompt_en, prompt_ru,
-          options,
-          correct_answer_en, correct_answer_ru,
-          explanation_en, explanation_ru,
-          concept_bite_en, concept_bite_ru,
-          acceptable_tolerance,
-          is_active
-        ) VALUES (
-          ${lo_id}, ${q.type}, ${q.difficulty},
-          ${q.prompt_en}, ${q.prompt_ru},
-          ${null},
-          ${q.correct_answer_en}, ${q.correct_answer_ru},
-          ${q.explanation_en}, ${q.explanation_ru},
-          ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
-          ${null},
           TRUE
         )
       `;

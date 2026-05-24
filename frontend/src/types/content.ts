@@ -3,7 +3,9 @@
 //  - "Raw" (admin) — both _en and _ru fields. Used in admin editor pages.
 //  - Localized   (public) — single resolved string per field. Used in dashboard, lesson, progress.
 
-export type QuestionType = "mcq" | "short_answer" | "number_entry";
+// short_answer retired (Grading Spec): no faithful ACCA auto-marked format.
+// Mirrors the backend QuestionType, which now permits only these two.
+export type QuestionType = "mcq" | "number_entry";
 export type QuestionDifficulty = "easy" | "medium" | "hard";
 
 // ---- Raw (admin) shapes ----

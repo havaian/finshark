@@ -129,21 +129,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Отчёт о финансовом положении (SoFP, ранее «баланс») — единственная основная форма, представляющая моментальный снимок. ОПУ, ДДС и SOCIE охватывают период (год, квартал). Баланс показывает остатки ПО СОСТОЯНИЮ НА 31 декабря — зафиксированные на полночь отчётной даты. Учётное уравнение Активы = Капитал + Обязательства всегда должно сходиться.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the FOUR primary financial statements in a complete set under IFRS.",
-          prompt_ru:
-            "Назовите ЧЕТЫРЕ основные формы финансовой отчётности в полном комплекте по МСФО.",
-          correct_answer_en:
-            "Statement of Financial Position; Statement of Profit or Loss (and Other Comprehensive Income); Statement of Changes in Equity; Statement of Cash Flows",
-          correct_answer_ru:
-            "Отчёт о финансовом положении; Отчёт о прибылях и убытках (и прочем совокупном доходе); Отчёт об изменениях в капитале; Отчёт о движении денежных средств",
-          explanation_en:
-            "IAS 1 prescribes these four primary statements plus notes (which include accounting policies and supporting detail). The four are connected: profit from P/L flows into retained earnings in SOCIE, which feeds the equity section of SoFP; the change in cash on SoFP is explained by the cash flow statement. Comparatives for the prior period are always required.",
-          explanation_ru:
-            "МСФО (IAS) 1 предписывает четыре основные формы плюс примечания (включая учётную политику и детализацию). Четыре формы связаны: прибыль из ОПУ перетекает в нераспределённую прибыль в SOCIE, которая входит в капитал баланса; изменение денежных средств в балансе объясняется отчётом о ДДС. Сопоставимые данные за прошлый период обязательны.",
+          prompt_en: "Which of the following is one of the four primary financial statements in a complete set under IAS 1?",
+          prompt_ru: "Какой из перечисленных является одним из четырёх основных финансовых отчётов в полном комплекте согласно IAS 1?",
+          options: [
+            {
+              key: "A",
+              text_en: "Statement of Changes in Equity",
+              text_ru: "Отчёт об изменениях в капитале",
+            },
+            {
+              key: "B",
+              text_en: "Statement of Retained Earnings only",
+              text_ru: "Только отчёт о нераспределённой прибыли",
+              why_wrong_en: "A standalone retained-earnings statement is a US GAAP style; under IFRS, retained earnings sit within the Statement of Changes in Equity.",
+              why_wrong_ru: "Отдельный отчёт о нераспределённой прибыли — стиль US GAAP; в IFRS нераспределённая прибыль входит в отчёт об изменениях в капитале.",
+            },
+            {
+              key: "C",
+              text_en: "Directors' report",
+              text_ru: "Отчёт директоров",
+              why_wrong_en: "The directors' report is a governance narrative outside the primary financial statements.",
+              why_wrong_ru: "Отчёт директоров — это управленческое повествование вне основных финансовых отчётов.",
+            },
+            {
+              key: "D",
+              text_en: "Auditor's report",
+              text_ru: "Аудиторское заключение",
+              why_wrong_en: "The auditor's report accompanies but is not one of the four primary financial statements.",
+              why_wrong_ru: "Аудиторское заключение прилагается, но не является одним из четырёх основных отчётов.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "IAS 1 prescribes four primary statements plus notes: Statement of Financial Position; Statement of Profit or Loss and Other Comprehensive Income; Statement of Changes in Equity; and Statement of Cash Flows. They interlink, and prior-period comparatives are always required.",
+          explanation_ru: "IAS 1 предписывает четыре основных отчёта плюс примечания: отчёт о финансовом положении; отчёт о прибылях и убытках и прочем совокупном доходе; отчёт об изменениях в капитале; отчёт о движении денежных средств. Они взаимосвязаны, и сравнительные данные за прошлый период обязательны.",
         },
         {
           type: "mcq",
@@ -343,21 +364,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "SOCIE связывает начальный и конечный капитал по категориям. Типичные строки: прибыль за год (→ нераспределённая прибыль), выплаченные дивиденды (→ нераспределённая прибыль со знаком минус), эмиссии акций по номиналу (→ акционерный капитал), премии при эмиссии (→ эмиссионный доход), бонусные эмиссии (внутреннее перераспределение, без денег), доходы от переоценки (→ резерв переоценки). Итог в конечной колонке равен капитальной части баланса. SOCIE — связь между рентабельностью (ОПУ) и итогом капитала в балансе.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "List THREE different user groups of financial statements and state one main interest each has in the statements.",
-          prompt_ru:
-            "Перечислите ТРИ разные группы пользователей финансовой отчётности и укажите главный интерес каждой.",
-          correct_answer_en:
-            "Any three of: Investors (return and risk on their investment); Lenders (ability to repay debt and interest); Employees (job security, remuneration); Suppliers (creditworthiness for credit decisions); Customers (continuity for warranties/long-term supply); Government (tax assessment, statistics); Public (social and environmental impact)",
-          correct_answer_ru:
-            "Любые три из: инвесторы (доходность и риск инвестиций); кредиторы (способность вернуть долг и проценты); сотрудники (стабильность, оплата); поставщики (кредитоспособность для решений о кредите); клиенты (непрерывность для гарантий/долгосрочных поставок); государство (налоги, статистика); общество (социальное и экологическое влияние)",
-          explanation_en:
-            "The Conceptual Framework identifies INVESTORS, LENDERS and OTHER CREDITORS as the PRIMARY users \u2014 the people the standards are written for. Their decisions about providing or withdrawing capital are what drive the need for high-quality information. Other users are not ignored but the framework prioritises investor-class decision-usefulness. In practice this means accounting policies favour information relevant to capital providers (e.g. disaggregating performance, showing risks) over information directly answering operational management.",
-          explanation_ru:
-            "Концептуальные основы определяют ИНВЕСТОРОВ, КРЕДИТОРОВ и ИНЫХ КРЕДИТОРОВ как ОСНОВНЫХ пользователей — людей, для которых пишутся стандарты. Их решения о предоставлении или изъятии капитала формируют потребность в качественной информации. Другие пользователи не игнорируются, но приоритет — полезность для принятия решений капиталодателями. На практике это означает, что учётная политика отдаёт предпочтение информации для поставщиков капитала (дезагрегация результатов, отражение рисков) перед информацией для оперативного управления.",
+          prompt_en: "Under the Conceptual Framework, which group is identified as a PRIMARY user of financial statements?",
+          prompt_ru: "Согласно Концептуальным основам, какая группа определена как ОСНОВНОЙ пользователь финансовой отчётности?",
+          options: [
+            {
+              key: "A",
+              text_en: "Investors (existing and potential)",
+              text_ru: "Инвесторы (текущие и потенциальные)",
+            },
+            {
+              key: "B",
+              text_en: "Competitors",
+              text_ru: "Конкуренты",
+              why_wrong_en: "Competitors may read the statements but are not primary users; the framework prioritises investors, lenders and other creditors.",
+              why_wrong_ru: "Конкуренты могут читать отчётность, но не являются основными пользователями; основы отдают приоритет инвесторам, кредиторам и прочим заимодавцам.",
+            },
+            {
+              key: "C",
+              text_en: "The general public as a whole",
+              text_ru: "Широкая общественность в целом",
+              why_wrong_en: "The public is an \"other\" user; the framework is written for the capital-providing primary users (investors, lenders, other creditors).",
+              why_wrong_ru: "Общественность — «прочий» пользователь; основы написаны для предоставляющих капитал основных пользователей (инвесторы, кредиторы, прочие заимодавцы).",
+            },
+            {
+              key: "D",
+              text_en: "The tax authority",
+              text_ru: "Налоговый орган",
+              why_wrong_en: "Tax authorities have their own statutory returns; they are not the primary users the framework targets.",
+              why_wrong_ru: "У налоговых органов есть собственная отчётность; они не являются основными пользователями, на которых ориентированы основы.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The Conceptual Framework names investors, lenders and other creditors as the PRIMARY users — those who provide capital and whose decisions drive the need for high-quality information. Investors are interested in the return and risk on their investment.",
+          explanation_ru: "Концептуальные основы называют инвесторов, кредиторов и прочих заимодавцев ОСНОВНЫМИ пользователями — теми, кто предоставляет капитал и чьи решения порождают потребность в качественной информации. Инвесторов интересуют доходность и риск их вложений.",
         },
         {
           type: "mcq",
@@ -494,21 +536,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Большая четвёрка (PwC, Deloitte, EY, KPMG) — частные аудиторские фирмы, ПРОВЕРЯЮЩИЕ компании и КОНСУЛЬТИРУЮЩИЕ по применению МСФО; они НЕ входят в регуляторную систему, выпускающую стандарты. С ними консультируются по проектам стандартов (их мнение имеет вес) и они частично финансируют деятельность IFRS Foundation, но стандарты они не устанавливают. Система МСФО: Foundation (управление) → IASB (стандарты) → Interpretations Committee (IFRIC) → Advisory Council (консультации).",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "State the accounting equation that underlies the Statement of Financial Position.",
-          prompt_ru:
-            "Сформулируйте учётное уравнение, лежащее в основе Отчёта о финансовом положении.",
-          correct_answer_en:
-            "Assets = Liabilities + Equity (equivalent forms: Equity = Assets \u2212 Liabilities; Assets \u2212 Liabilities \u2212 Equity = 0)",
-          correct_answer_ru:
-            "Активы = Обязательства + Капитал (эквивалентные формы: Капитал = Активы − Обязательства; Активы − Обязательства − Капитал = 0)",
-          explanation_en:
-            "The accounting equation is the foundation of double-entry bookkeeping. Every transaction affects at least two elements in a way that keeps the equation balanced. Buying inventory on credit: Assets up (inventory), Liabilities up (payables). Paying a supplier: Assets down (cash), Liabilities down (payables). Issuing new shares for cash: Assets up (cash), Equity up (share capital + premium). When the trial balance is prepared, the equation forces the debits and credits to equal \u2014 a sanity check on the bookkeeping.",
-          explanation_ru:
-            "Учётное уравнение — основа двойной записи. Каждая операция затрагивает не менее двух элементов так, чтобы уравнение оставалось сбалансированным. Покупка запасов в кредит: активы выросли (запасы), обязательства выросли (кредиторка). Оплата поставщику: активы упали (деньги), обязательства упали (кредиторка). Эмиссия акций за деньги: активы выросли (деньги), капитал вырос (акционерный + эмиссионный). При составлении пробного баланса уравнение заставляет дебет и кредит совпадать — проверка целостности учёта.",
+          prompt_en: "Which equation correctly states the accounting equation underlying the Statement of Financial Position?",
+          prompt_ru: "Какое уравнение верно выражает учётное равенство, лежащее в основе отчёта о финансовом положении?",
+          options: [
+            {
+              key: "A",
+              text_en: "Assets = Liabilities + Equity",
+              text_ru: "Активы = Обязательства + Капитал",
+            },
+            {
+              key: "B",
+              text_en: "Assets = Equity − Liabilities",
+              text_ru: "Активы = Капитал − Обязательства",
+              why_wrong_en: "Rearranged correctly, Equity = Assets − Liabilities; this version is algebraically wrong.",
+              why_wrong_ru: "При верном преобразовании Капитал = Активы − Обязательства; эта версия алгебраически неверна.",
+            },
+            {
+              key: "C",
+              text_en: "Assets + Liabilities = Equity",
+              text_ru: "Активы + Обязательства = Капитал",
+              why_wrong_en: "Liabilities are a claim against assets, not added to them; the correct form is Assets = Liabilities + Equity.",
+              why_wrong_ru: "Обязательства — это требование на активы, а не слагаемое к ним; верная форма: Активы = Обязательства + Капитал.",
+            },
+            {
+              key: "D",
+              text_en: "Income = Assets − Expenses",
+              text_ru: "Доход = Активы − Расходы",
+              why_wrong_en: "This mixes performance and position elements; the SoFP equation relates assets, liabilities and equity.",
+              why_wrong_ru: "Это смешивает элементы результата и положения; равенство SoFP связывает активы, обязательства и капитал.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Assets = Liabilities + Equity is the foundation of double-entry. Every transaction keeps it balanced: buying inventory on credit raises assets and liabilities equally; issuing shares for cash raises assets and equity equally. Equivalent forms include Equity = Assets − Liabilities.",
+          explanation_ru: "Активы = Обязательства + Капитал — основа двойной записи. Каждая операция сохраняет баланс: покупка запасов в кредит одинаково увеличивает активы и обязательства; выпуск акций за деньги одинаково увеличивает активы и капитал. Эквивалентная форма: Капитал = Активы − Обязательства.",
         },
         {
           type: "mcq",
@@ -779,21 +842,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Достоверное представление имеет три аспекта: ПОЛНОТА (ничего существенного не упущено — не только цифры баланса, но и описания, объяснения и раскрытия, делающие их понятными), НЕЙТРАЛЬНОСТЬ (без склонности в отборе или представлении, опирается на осмотрительность в условиях неопределённости без преднамеренного занижения), СВОБОДА ОТ ОШИБОК (без неточностей в описаниях или процессах оценки — это не означает идеальности, поскольку оценки неизбежны, но означает, что выбранный процесс применяется без ошибок).",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the FOUR enhancing qualitative characteristics from the Conceptual Framework.",
-          prompt_ru:
-            "Назовите ЧЕТЫРЕ улучшающие качественные характеристики из Концептуальных основ.",
-          correct_answer_en:
-            "Comparability, verifiability, timeliness, understandability",
-          correct_answer_ru:
-            "Сопоставимость, проверяемость, своевременность, понятность",
-          explanation_en:
-            "These four enhance the usefulness of information that is already relevant and faithfully represented. COMPARABILITY \u2014 users can identify similarities and differences across entities and periods (supported by CONSISTENCY of policy application). VERIFIABILITY \u2014 different knowledgeable, independent observers reach similar conclusions. TIMELINESS \u2014 information reaches decision-makers in time to influence them. UNDERSTANDABILITY \u2014 information is classified, characterised and presented clearly, with disclosure of complex matters not avoided just because they're hard.",
-          explanation_ru:
-            "Эти четыре характеристики усиливают полезность информации, которая уже уместна и достоверно представлена. СОПОСТАВИМОСТЬ — пользователи могут выявлять сходства и различия между компаниями и периодами (поддерживается ПОСЛЕДОВАТЕЛЬНОСТЬЮ применения учётной политики). ПРОВЕРЯЕМОСТЬ — разные осведомлённые независимые наблюдатели приходят к сходным выводам. СВОЕВРЕМЕННОСТЬ — информация поступает лицам, принимающим решения, в нужное время. ПОНЯТНОСТЬ — информация классифицирована, охарактеризована и ясно представлена; раскрытие сложных вопросов не избегается только потому, что они сложны.",
+          prompt_en: "Which of the following is an ENHANCING qualitative characteristic in the Conceptual Framework?",
+          prompt_ru: "Какая из перечисленных является УЛУЧШАЮЩЕЙ качественной характеристикой в Концептуальных основах?",
+          options: [
+            {
+              key: "A",
+              text_en: "Comparability",
+              text_ru: "Сопоставимость",
+            },
+            {
+              key: "B",
+              text_en: "Relevance",
+              text_ru: "Уместность",
+              why_wrong_en: "Relevance is a FUNDAMENTAL characteristic, not an enhancing one; the enhancing four are comparability, verifiability, timeliness, understandability.",
+              why_wrong_ru: "Уместность — ОСНОВОПОЛАГАЮЩАЯ характеристика, а не улучшающая; четыре улучшающие — сопоставимость, проверяемость, своевременность, понятность.",
+            },
+            {
+              key: "C",
+              text_en: "Faithful representation",
+              text_ru: "Достоверное представление",
+              why_wrong_en: "Faithful representation is the other FUNDAMENTAL characteristic, not an enhancing one.",
+              why_wrong_ru: "Достоверное представление — вторая ОСНОВОПОЛАГАЮЩАЯ характеристика, а не улучшающая.",
+            },
+            {
+              key: "D",
+              text_en: "Prudence",
+              text_ru: "Осмотрительность",
+              why_wrong_en: "Prudence supports neutrality within faithful representation; it is not one of the four enhancing characteristics.",
+              why_wrong_ru: "Осмотрительность поддерживает нейтральность в рамках достоверного представления; она не входит в четыре улучшающие характеристики.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The four enhancing characteristics — comparability, verifiability, timeliness, understandability — improve the usefulness of information that is already relevant and faithfully represented. Comparability lets users identify similarities and differences across entities and periods.",
+          explanation_ru: "Четыре улучшающие характеристики — сопоставимость, проверяемость, своевременность, понятность — повышают полезность информации, которая уже уместна и достоверно представлена. Сопоставимость позволяет выявлять сходства и различия между организациями и периодами.",
         },
         {
           type: "mcq",
@@ -1031,21 +1115,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Своевременность — очевидный провал: информация, устаревшая на 18 месяцев, имеет ограниченную полезность для решений, какой бы точной и понятной она ни была. Решения принимаются на основе доступной информации, и устаревшие данные либо игнорируются, либо ведут к устаревшим решениям. Регуляторные сроки существуют именно для обеспечения своевременности: в большинстве юрисдикций публичные компании должны подавать отчётность через 3–6 месяцев после конца года. Глубже: есть компромисс между СВОЕВРЕМЕННОСТЬЮ и ТОЧНОСТЬЮ — публикация быстрее повышает риск ошибок, ожидание идеальной точности задерживает информацию. Концептуальные основы отдают приоритет полезности для решений перед криминалистической точностью.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            'Explain what is meant by the "cost constraint" in the Conceptual Framework and how it affects financial reporting.',
-          prompt_ru:
-            "Объясните, что означает «ограничение по затратам» в Концептуальных основах и как оно влияет на финансовую отчётность.",
-          correct_answer_en:
-            "The cost constraint recognises that producing financial information has a cost (time, fees, system investment), and the benefits of providing the information to users must justify those costs. It affects what disclosures are required, what level of precision is sought, and whether simpler reporting frameworks (e.g. IFRS for SMEs) are permitted for smaller entities.",
-          correct_answer_ru:
-            "Ограничение по затратам признаёт, что подготовка финансовой информации стоит денег (время, гонорары, инвестиции в системы), и выгоды от предоставления информации пользователям должны оправдывать эти затраты. Оно влияет на то, какие раскрытия требуются, какой уровень точности нужен и допускаются ли более простые системы отчётности (например, IFRS for SMEs) для малых компаний.",
-          explanation_en:
-            'The cost constraint is the single PERVASIVE constraint that applies across all qualitative characteristics. The IASB explicitly considers cost-benefit when developing standards: would the proposed disclosure cost preparers more than it benefits users? At entity level, materiality functions as a cost-constraint application \u2014 trivial errors needn\'t be corrected. The framework also acknowledges that costs and benefits are difficult to measure precisely, so the IASB exercises judgement. In practice, the cost constraint is the most common argument made by companies pushing back against more disclosure requirements: "the cost of producing this exceeds its value to users".',
-          explanation_ru:
-            "Ограничение по затратам — единственное СКВОЗНОЕ ограничение, действующее поверх всех качественных характеристик. IASB прямо учитывает соотношение затрат и выгод при разработке стандартов: будут ли предполагаемые раскрытия стоить составителям больше, чем дадут пользу пользователям? На уровне компании существенность функционирует как применение ограничения по затратам — тривиальные ошибки не нужно исправлять. Концептуальные основы также признают, что затраты и выгоды сложно точно измерить, поэтому IASB действует на основании суждения. На практике ограничение по затратам — самый частый аргумент компаний против более широкого раскрытия: «стоимость подготовки этого превышает его ценность для пользователей».",
+          prompt_en: "What does the \"cost constraint\" in the Conceptual Framework mean?",
+          prompt_ru: "Что означает «ограничение по затратам» в Концептуальных основах?",
+          options: [
+            {
+              key: "A",
+              text_en: "The benefits of reporting information must justify the cost of producing it",
+              text_ru: "Выгоды от раскрытия информации должны оправдывать затраты на её подготовку",
+            },
+            {
+              key: "B",
+              text_en: "Assets must always be measured at historical cost",
+              text_ru: "Активы всегда должны оцениваться по исторической стоимости",
+              why_wrong_en: "The cost constraint is about cost-versus-benefit of information, not a measurement basis like historical cost.",
+              why_wrong_ru: "Ограничение по затратам касается соотношения затрат и выгод информации, а не базы оценки вроде исторической стоимости.",
+            },
+            {
+              key: "C",
+              text_en: "Entities must minimise their operating costs",
+              text_ru: "Организации должны минимизировать операционные расходы",
+              why_wrong_en: "It concerns the cost of providing information, not the entity's business operating costs.",
+              why_wrong_ru: "Оно касается затрат на предоставление информации, а не операционных расходов бизнеса.",
+            },
+            {
+              key: "D",
+              text_en: "Only costs, never benefits, may be recognised",
+              text_ru: "Признаются только затраты, но не выгоды",
+              why_wrong_en: "This misreads the constraint; it weighs the benefits of information against the cost of producing it.",
+              why_wrong_ru: "Это искажает смысл; ограничение взвешивает выгоды информации против затрат на её подготовку.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The cost constraint is the single pervasive constraint across all qualitative characteristics: producing information costs time, fees and systems, and those costs must be justified by the benefit to users. At entity level, materiality is a practical application — trivial items need not be reported.",
+          explanation_ru: "Ограничение по затратам — единственное всеобъемлющее ограничение для всех качественных характеристик: подготовка информации требует времени, расходов и систем, и эти затраты должны оправдываться выгодой для пользователей. На уровне организации материальность — практическое применение: незначительные статьи можно не раскрывать.",
         },
         {
           type: "mcq",
@@ -1145,21 +1250,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "У уместности два аспекта: ПРОГНОЗНАЯ ЦЕННОСТЬ (помогает прогнозировать) и ПОДТВЕРЖДАЮЩАЯ ЦЕННОСТЬ (помогает подтвердить или скорректировать прошлые ожидания). Информация, поступающая через 18 месяцев, в основном сохраняет только слабую подтверждающую ценность — решение уже принято, его не отменить. Информация может ещё сверяться с моделями для будущего обучения, но её основная польза утрачена. Это иллюстрирует, почему Концептуальные основы признают, что цель — не СОВЕРШЕНСТВО: цель — ПОЛЕЗНОСТЬ для решений, требующая и уместности, и достоверного представления. Точность необходима, но недостаточна.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Explain how MATERIALITY relates to the qualitative characteristic of RELEVANCE.",
-          prompt_ru:
-            "Объясните, как СУЩЕСТВЕННОСТЬ связана с качественной характеристикой УМЕСТНОСТИ.",
-          correct_answer_en:
-            "Materiality is the entity-specific aspect of relevance. Information is relevant if it could influence a user's decision; an item is material if its omission, misstatement or obscuring would specifically be likely to influence the decisions of users in the context of a particular entity's financial statements. Materiality therefore makes relevance operational at a specific entity level.",
-          correct_answer_ru:
-            "Существенность — это привязанный к компании аспект уместности. Информация уместна, если может повлиять на решение пользователя; статья существенна, если её пропуск, искажение или сокрытие конкретно способно повлиять на решения пользователей в контексте отчётности данной компании. Таким образом существенность переводит уместность в практическую плоскость на уровне конкретной компании.",
-          explanation_en:
-            "Relevance is the GENERAL property (could this information matter?). Materiality is the SPECIFIC test (does THIS particular item, in THIS particular entity's context, matter enough to require attention?). The same dollar error might be material for a small company and immaterial for a large one. Materiality has both quantitative dimensions (size relative to revenue, profit, equity \u2014 typical benchmarks 0.5\u20131% of revenue or 5\u201310% of profit) and qualitative dimensions (a small fraud might be material because of its nature even if the amount is trivial). The Framework deliberately doesn't set a numerical materiality threshold \u2014 management and auditors exercise judgement.",
-          explanation_ru:
-            "Уместность — это ОБЩЕЕ свойство (может ли информация иметь значение?). Существенность — КОНКРЕТНАЯ проверка (имеет ли ДАННАЯ статья, в контексте ДАННОЙ компании, достаточное значение для внимания?). Одна и та же долларовая ошибка может быть существенной для малой компании и несущественной для большой. У существенности есть количественные измерения (размер относительно выручки, прибыли, капитала — типичные ориентиры 0,5–1% выручки или 5–10% прибыли) и качественные (мелкое мошенничество может быть существенным из-за своей природы, даже если сумма мизерна). Концептуальные основы намеренно не задают числовой порог существенности — руководство и аудиторы применяют суждение.",
+          prompt_en: "How does materiality relate to the qualitative characteristic of relevance?",
+          prompt_ru: "Как материальность связана с качественной характеристикой уместности?",
+          options: [
+            {
+              key: "A",
+              text_en: "Materiality is the entity-specific aspect of relevance",
+              text_ru: "Материальность — это специфичный для организации аспект уместности",
+            },
+            {
+              key: "B",
+              text_en: "Materiality is the opposite of relevance",
+              text_ru: "Материальность противоположна уместности",
+              why_wrong_en: "They are not opposites; materiality is an entity-specific application of relevance.",
+              why_wrong_ru: "Они не противоположны; материальность — специфичное для организации применение уместности.",
+            },
+            {
+              key: "C",
+              text_en: "Materiality is an enhancing characteristic and relevance is not",
+              text_ru: "Материальность — улучшающая характеристика, а уместность — нет",
+              why_wrong_en: "Relevance is a fundamental characteristic, and materiality is its entity-specific facet, not a separate enhancing characteristic.",
+              why_wrong_ru: "Уместность — основополагающая характеристика, а материальность — её специфичный для организации аспект, а не отдельная улучшающая характеристика.",
+            },
+            {
+              key: "D",
+              text_en: "They are unrelated concepts",
+              text_ru: "Это несвязанные понятия",
+              why_wrong_en: "They are closely linked: an item is material if omitting or misstating it could influence users' decisions — the relevance test applied to a specific entity.",
+              why_wrong_ru: "Они тесно связаны: статья материальна, если её пропуск или искажение могут повлиять на решения пользователей — это проверка уместности для конкретной организации.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Relevance is the general property (could this information matter?); materiality is the specific test (does THIS item, in THIS entity's context, matter enough?). The same monetary error can be material for a small entity and immaterial for a large one.",
+          explanation_ru: "Уместность — общее свойство (может ли информация иметь значение?); материальность — конкретная проверка (важна ли ЭТА статья в контексте ЭТОЙ организации?). Одна и та же по величине ошибка может быть материальной для малой организации и несущественной для крупной.",
         },
         {
           type: "mcq",
@@ -1432,21 +1558,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "У возвратов отдельные первичные книги. ВОЗВРАТЫ ВХОДЯЩИЕ (returns inwards / sales returns) — товар возвращается ОТ клиентов. ВОЗВРАТЫ ИСХОДЯЩИЕ (returns outwards / purchases returns) — товар возвращается ПОСТАВЩИКАМ. Двойная запись для возврата по кредитной продаже: Дт Возвраты продаж (уменьшает выручку), Кт Дебиторка (уменьшает задолженность клиента). Журнал зарезервирован для нестандартных проводок: исправления ошибок, конечные корректировки (амортизация, начисления), зарплата, начальные сальдо.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Explain the DEAD CLIC mnemonic for the rules of debit and credit.",
-          prompt_ru:
-            "Объясните мнемонику DEAD CLIC для правил дебета и кредита.",
-          correct_answer_en:
-            "DEAD: Debit increases Expenses, Assets, Drawings. CLIC: Credit increases Liabilities, Income, Capital. To reduce any account, post the opposite entry.",
-          correct_answer_ru:
-            "DEAD: Дебет увеличивает Расходы (Expenses), Активы (Assets), Изъятия (Drawings). CLIC: Кредит увеличивает Обязательства (Liabilities), Доходы (Income), Капитал (Capital). Для уменьшения любого счёта — обратная проводка.",
-          explanation_en:
-            "The mnemonic encodes the natural side of each account class. Assets and expenses normally have DEBIT balances \u2014 to increase them, debit; to reduce them, credit. Liabilities, income and capital normally have CREDIT balances \u2014 to increase, credit; to reduce, debit. Drawings (owner's withdrawals from a sole trader or partnership) reduce capital but are tracked as a debit account, mirroring expenses in their behaviour. Every transaction posts EQUAL debits and credits, preserving the accounting equation.",
-          explanation_ru:
-            "Мнемоника фиксирует естественную сторону каждой группы счетов. Активы и расходы обычно имеют ДЕБЕТОВОЕ сальдо — для увеличения дебетуем, для уменьшения кредитуем. Обязательства, доходы и капитал обычно имеют КРЕДИТОВОЕ сальдо — для увеличения кредитуем, для уменьшения дебетуем. Изъятия (drawings) — выводы собственника из ИП или товарищества — уменьшают капитал, но ведутся как дебетовый счёт, повторяя поведение расходов. Каждая операция отражает РАВНЫЕ дебет и кредит, сохраняя учётное уравнение.",
+          prompt_en: "According to the DEAD CLIC mnemonic, which types of account are INCREASED by a debit entry?",
+          prompt_ru: "Согласно мнемонике DEAD CLIC, какие типы счетов УВЕЛИЧИВАЮТСЯ дебетовой записью?",
+          options: [
+            {
+              key: "A",
+              text_en: "Expenses, Assets, Drawings",
+              text_ru: "Расходы, Активы, Изъятия",
+            },
+            {
+              key: "B",
+              text_en: "Liabilities, Income, Capital",
+              text_ru: "Обязательства, Доходы, Капитал",
+              why_wrong_en: "These (CLIC) are increased by a CREDIT, not a debit.",
+              why_wrong_ru: "Эти (CLIC) увеличиваются КРЕДИТОМ, а не дебетом.",
+            },
+            {
+              key: "C",
+              text_en: "Income, Liabilities, Assets",
+              text_ru: "Доходы, Обязательства, Активы",
+              why_wrong_en: "Income and liabilities are credit-increased; mixing them with assets is incorrect for the debit side.",
+              why_wrong_ru: "Доходы и обязательства увеличиваются кредитом; смешивать их с активами для дебетовой стороны неверно.",
+            },
+            {
+              key: "D",
+              text_en: "Drawings, Capital, Income",
+              text_ru: "Изъятия, Капитал, Доходы",
+              why_wrong_en: "Only Drawings is debit-increased here; Capital and Income are credit-increased.",
+              why_wrong_ru: "Здесь дебетом увеличиваются только Изъятия; Капитал и Доходы увеличиваются кредитом.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "DEAD = Debit increases Expenses, Assets, Drawings. CLIC = Credit increases Liabilities, Income, Capital. To reduce any account, post the opposite entry. Assets and expenses naturally carry debit balances; liabilities, income and capital carry credit balances.",
+          explanation_ru: "DEAD = дебет увеличивает Расходы, Активы, Изъятия. CLIC = кредит увеличивает Обязательства, Доходы, Капитал. Чтобы уменьшить любой счёт, делается обратная запись. Активы и расходы естественно имеют дебетовые остатки; обязательства, доходы и капитал — кредитовые.",
         },
         {
           type: "mcq",
@@ -1634,21 +1781,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Прочтите вопрос внимательно. Контрольный = $35 000; список = $34 200. Контрольный ВЫШЕ на $800. Ошибка по условию: «счёт проведён только по индивидуальному счёту клиента, но НЕ по контрольному». Минуточку — если НЕ проведено по контрольному, контрольный должен быть НИЖЕ, не выше. Значит, ошибка описана в обратном направлении. При повторном чтении: сценарий описывает счёт, проведённый только по индивидуальному счёту, отсутствующий в контрольном, НО контрольный выше — это либо нестандартная формулировка, либо есть другая компенсирующая ошибка. На реальном экзамене это калибровочная проверка. Наиболее чистое прочтение: контрольный проведён правильно, в индивидуальной книге пропущена запись; исправление — провести по индивидуальному счёту. В главной книге дополнительная проводка не нужна.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "A business is sales-tax registered. Explain whether sales tax appears as INCOME or EXPENSE in its statement of profit or loss.",
-          prompt_ru:
-            "Компания зарегистрирована как плательщик налога с продаж. Объясните, появляется ли налог с продаж как ДОХОД или РАСХОД в её отчёте о прибылях и убытках.",
-          correct_answer_en:
-            "Neither. The company is a collector/agent for the tax authority. Sales tax charged to customers is a liability owed to the tax authority (not income). Sales tax paid on purchases is recoverable from the tax authority (not an expense). Both go through a sales-tax control account in the balance sheet; only the NET (tax exclusive) figures appear as revenue and expenses in P/L.",
-          correct_answer_ru:
-            "Ни тем, ни другим. Компания — сборщик/агент для налогового органа. Налог, взимаемый с клиентов, — обязательство перед налоговым органом (не доход). Налог, уплаченный по закупкам, — возмещаемый из налогового органа (не расход). Оба проходят через контрольный счёт налога с продаж в балансе; в ОПУ как выручка и расходы попадают только ЧИСТЫЕ (без налога) суммы.",
-          explanation_en:
-            "Sales tax is COLLECTED on outputs and RECLAIMED on inputs; the difference is what the company periodically pays to (or receives from) the tax authority. The transactions are: on a sale of $1,200 + $240 tax: Dr Cash $1,440, Cr Sales $1,200, Cr Sales tax payable $240. On a purchase of $500 + $100 tax: Dr Purchases $500, Dr Sales tax recoverable $100, Cr Payables $600. Net sales tax position at quarter end = $240 \u2212 $100 = $140 payable to tax authority. The P/L shows only $1,200 revenue and $500 cost \u2014 the tax flows through the balance sheet liability account, never touching P/L.",
-          explanation_ru:
-            "Налог СОБИРАЕТСЯ по выходящим операциям и ВОЗМЕЩАЕТСЯ по входящим; разница периодически уплачивается (или получается) налоговому органу. Проводки: при продаже $1 200 + $240 налог: Дт Денежные средства $1 440, Кт Выручка $1 200, Кт Налог к уплате $240. При закупке $500 + $100 налог: Дт Закупки $500, Дт Возмещаемый налог $100, Кт Кредиторка $600. Чистая позиция по налогу на конец квартала = $240 − $100 = $140 к уплате налоговому органу. В ОПУ только $1 200 выручки и $500 закупок — налог проходит через балансовый счёт обязательства, не касаясь ОПУ.",
+          prompt_en: "For a sales-tax-registered business, how does sales tax appear in the statement of profit or loss?",
+          prompt_ru: "Как у зарегистрированного плательщика налога с продаж этот налог отражается в отчёте о прибылях и убытках?",
+          options: [
+            {
+              key: "A",
+              text_en: "Neither — the business is a collector/agent, so it is a liability/recoverable balance, not P/L income or expense",
+              text_ru: "Никак — бизнес выступает сборщиком/агентом, поэтому это обязательство/возмещаемый остаток, а не доход или расход в ОПУ",
+            },
+            {
+              key: "B",
+              text_en: "As income, because it is collected from customers",
+              text_ru: "Как доход, поскольку взимается с клиентов",
+              why_wrong_en: "Tax collected on sales is owed to the tax authority — a liability, not the entity's income.",
+              why_wrong_ru: "Налог, собранный с продаж, причитается налоговому органу — это обязательство, а не доход организации.",
+            },
+            {
+              key: "C",
+              text_en: "As an expense, because it is paid on purchases",
+              text_ru: "Как расход, поскольку уплачивается при закупках",
+              why_wrong_en: "Tax paid on purchases is recoverable from the authority — an asset, not an expense.",
+              why_wrong_ru: "Налог, уплаченный при закупках, возмещается органом — это актив, а не расход.",
+            },
+            {
+              key: "D",
+              text_en: "As both income and expense, netting to zero",
+              text_ru: "И как доход, и как расход, в сумме ноль",
+              why_wrong_en: "It is recorded through liability and recoverable accounts, not grossed up through P/L income and expense.",
+              why_wrong_ru: "Он учитывается через счета обязательств и возмещения, а не разворачивается через доходы и расходы ОПУ.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Sales tax is collected on outputs and reclaimed on inputs; the business merely remits the net to (or recovers it from) the tax authority. Output tax is a payable (liability); input tax is recoverable (asset). It never touches P/L income or expense.",
+          explanation_ru: "Налог взимается с продаж и возмещается по закупкам; бизнес лишь перечисляет нетто-сумму органу (или получает её обратно). Налог с продаж — обязательство; налог по закупкам — возмещаемый актив. В доходах и расходах ОПУ он не отражается.",
         },
         {
           type: "mcq",
@@ -2006,21 +2174,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Амортизируемая сумма = стоимость − ликвидационная стоимость. Это то, что списывается как расход за срок полезного использования. Ликвидационная — то, что ожидается получить в конце жизни (лом, трейд-ин), она остаётся в балансовой стоимости до выбытия. Методы распределяют амортизируемую сумму по-разному: линейный — равномерно; уменьшаемый остаток — больше в начале.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "List the three criteria from IAS 37 that MUST ALL be met before a provision can be recognised.",
-          prompt_ru:
-            "Перечислите три критерия из МСФО (IAS) 37, которые ВСЕ должны быть выполнены для признания резерва.",
-          correct_answer_en:
-            "(1) Present obligation arising from a past event; (2) Probable outflow of economic resources to settle it; (3) Reliable estimate of the amount can be made",
-          correct_answer_ru:
-            "(1) Существующее обязательство из прошлого события; (2) Вероятный отток экономических ресурсов для его погашения; (3) Можно сделать надёжную оценку суммы",
-          explanation_en:
-            "All three are necessary. PRESENT OBLIGATION can be legal (court order, contract) or constructive (established pattern creates valid expectation). PROBABLE means more likely than not (>50% under most interpretations). RELIABLE ESTIMATE doesn't mean precise \u2014 a range is acceptable, use the midpoint or expected value. If any condition fails, the item becomes a CONTINGENT LIABILITY: disclosed in notes but not recognised. Remote (low probability) outflows aren't even disclosed.",
-          explanation_ru:
-            "Все три обязательны. СУЩЕСТВУЮЩЕЕ ОБЯЗАТЕЛЬСТВО может быть юридическим (судебное решение, договор) или конклюдентным (сложившаяся практика создаёт обоснованное ожидание). ВЕРОЯТНЫЙ — «вероятнее, чем нет» (по большинству трактовок >50%). НАДЁЖНАЯ ОЦЕНКА не означает точную — допустим диапазон, использовать середину или ожидаемое значение. При невыполнении любого условия статья становится УСЛОВНЫМ ОБЯЗАТЕЛЬСТВОМ: раскрывается в примечаниях, но не признаётся. Маловероятные оттоки даже не раскрываются.",
+          prompt_en: "Which of the following is one of the three IAS 37 criteria that must ALL be met to recognise a provision?",
+          prompt_ru: "Какой из перечисленных пунктов является одним из трёх критериев IAS 37, которые ВСЕ должны выполняться для признания резерва?",
+          options: [
+            {
+              key: "A",
+              text_en: "A present obligation arising from a past event",
+              text_ru: "Существующее обязательство, возникшее из прошлого события",
+            },
+            {
+              key: "B",
+              text_en: "Board approval of the expenditure",
+              text_ru: "Одобрение расхода советом директоров",
+              why_wrong_en: "Board approval is not an IAS 37 criterion; the three are present obligation, probable outflow, and reliable estimate.",
+              why_wrong_ru: "Одобрение совета не является критерием IAS 37; три критерия — существующее обязательство, вероятный отток, надёжная оценка.",
+            },
+            {
+              key: "C",
+              text_en: "The amount has already been paid",
+              text_ru: "Сумма уже уплачена",
+              why_wrong_en: "If already paid it is no longer a provision; recognition requires a probable FUTURE outflow, not a past payment.",
+              why_wrong_ru: "Если уже уплачено — это уже не резерв; признание требует вероятного БУДУЩЕГО оттока, а не прошлого платежа.",
+            },
+            {
+              key: "D",
+              text_en: "The obligation is certain rather than probable",
+              text_ru: "Обязательство является достоверным, а не вероятным",
+              why_wrong_en: "IAS 37 requires the outflow to be PROBABLE (more likely than not), not certain.",
+              why_wrong_ru: "IAS 37 требует, чтобы отток был ВЕРОЯТНЫМ (более чем вероятным), а не достоверным.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "All three must hold: (1) a present obligation (legal or constructive) from a past event; (2) a probable outflow of resources to settle it; (3) a reliable estimate of the amount. If any fails, it becomes a contingent liability — disclosed, not recognised.",
+          explanation_ru: "Должны выполняться все три: (1) существующее обязательство (юридическое или конклюдентное) из прошлого события; (2) вероятный отток ресурсов для его погашения; (3) надёжная оценка суммы. Если хоть один не выполнен, это условное обязательство — раскрывается, но не признаётся.",
         },
         {
           type: "mcq",
@@ -2531,20 +2720,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Неравные суммы дебета и кредита ($1 000 против $100) прямо нарушают равенство — пробный баланс расходится на $900. Это ОШИБКА ОДНОСТОРОННЕЙ ПРОВОДКИ (одна сторона неполная). Ошибки, оставляющие баланс сходящимся (пропуск, отнесения, принципа, компенсирующие, исходной записи, инвертированные), отражают равные дебет и кредит, просто не там или в неверных суммах на ОБЕИХ сторонах. Сходящийся баланс необходим, но НЕДОСТАТОЧЕН для корректности.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en: 'What is a "suspense account" and when is it used?',
-          prompt_ru:
-            "Что такое «счёт сомнительных сальдо» (suspense) и когда он используется?",
-          correct_answer_en:
-            "A suspense account is a temporary holding account used to balance a trial balance when the cause of a difference between debits and credits has not yet been identified. The difference is parked in suspense until investigation reveals the error(s), then journal entries clear suspense to zero.",
-          correct_answer_ru:
-            "Счёт сомнительных сальдо — временный счёт-«копилка», используемый для уравновешивания пробного баланса, когда причина разницы между дебетами и кредитами ещё не выявлена. Разница временно зачисляется в suspense до выяснения ошибки(ок), затем закрывается журнальными проводками до нуля.",
-          explanation_en:
-            "Suspense lets the trial balance be drawn up and used (e.g. to begin preparing draft financial statements) while error investigation continues in parallel. Each error correction posts to the relevant account AND to suspense; once all errors are corrected, suspense should be zero. Suspense must NEVER appear in published financial statements \u2014 it represents unresolved errors, which would be a fundamental quality failure if visible to users.",
-          explanation_ru:
-            "Suspense позволяет составить пробный баланс и использовать его (например, начать подготовку проекта отчётности) параллельно расследованию ошибок. Каждое исправление ошибки проводится по соответствующему счёту И по suspense; после исправления всех ошибок suspense обнуляется. Suspense НИКОГДА не должен появляться в публикуемой отчётности — это нерешённые ошибки, что было бы фундаментальным провалом качества.",
+          prompt_en: "What is a suspense account?",
+          prompt_ru: "Что такое счёт расхождений (suspense account)?",
+          options: [
+            {
+              key: "A",
+              text_en: "A temporary holding account used to balance a trial balance while the cause of a difference is investigated",
+              text_ru: "Временный промежуточный счёт для балансировки пробного баланса, пока выясняется причина расхождения",
+            },
+            {
+              key: "B",
+              text_en: "A permanent equity reserve",
+              text_ru: "Постоянный резерв в составе капитала",
+              why_wrong_en: "Suspense is temporary and must clear to zero; it is never a permanent reserve and never appears in published statements.",
+              why_wrong_ru: "Счёт расхождений временный и должен обнуляться; он не является постоянным резервом и не появляется в публикуемой отчётности.",
+            },
+            {
+              key: "C",
+              text_en: "A bank account for surplus cash",
+              text_ru: "Банковский счёт для избыточных денег",
+              why_wrong_en: "It is a bookkeeping holding account, not a real bank account.",
+              why_wrong_ru: "Это бухгалтерский промежуточный счёт, а не реальный банковский счёт.",
+            },
+            {
+              key: "D",
+              text_en: "An account that records directors' bonuses",
+              text_ru: "Счёт для учёта премий директоров",
+              why_wrong_en: "It has nothing to do with remuneration; it temporarily holds unexplained differences in the books.",
+              why_wrong_ru: "Он не связан с вознаграждением; он временно содержит необъяснённые расхождения в учёте.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "A suspense account lets the trial balance be drawn up and used while errors are investigated in parallel. Each correction posts to the relevant account and to suspense; once all errors are fixed, suspense should be zero. It must never appear in published financial statements.",
+          explanation_ru: "Счёт расхождений позволяет составить и использовать пробный баланс, пока параллельно расследуются ошибки. Каждое исправление относится на соответствующий счёт и на счёт расхождений; после устранения всех ошибок он должен обнулиться. В публикуемой отчётности он появляться не должен.",
         },
         {
           type: "mcq",
@@ -2742,21 +2953,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Ошибка ПРИНЦИПА: неверный КЛАСС счёта. Классический пример: пристройка к зданию учтена как ремонтный расход (операционный), а не как добавление к активу (капитальный) — суммы дебета и кредита те же, но экономический смысл иной. Пробный баланс по-прежнему сходится (дебет = кредит), но прибыль, активы и налог искажены. Ошибки принципа особенно опасны, потому что их сложно поймать рутинной сверкой — требуется профессиональное суждение.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Give one example of an error that would NOT cause the trial balance to disagree, and explain why it would not.",
-          prompt_ru:
-            "Приведите один пример ошибки, которая НЕ нарушит равенство пробного баланса, и объясните почему.",
-          correct_answer_en:
-            "Example: a sales invoice of $500 is completely omitted from the books \u2014 no entry on either side. Because both the debit (to receivables) and the credit (to revenue) are missing equally, the trial balance still balances even though the figures are wrong. Other examples: error of commission (wrong customer, right class), error of principle (wrong account class), compensating errors (two errors offsetting), error of original entry (same wrong amount both sides), reversal of entries.",
-          correct_answer_ru:
-            "Пример: счёт на продажу $500 полностью пропущен в учёте — нет проводок ни с одной стороны. Поскольку и дебет (в дебиторку), и кредит (в выручку) отсутствуют одинаково, пробный баланс сходится, хотя цифры неверные. Другие примеры: ошибка отнесения (не тот клиент, верный класс), ошибка принципа (неверный класс счёта), компенсирующие ошибки (две противоположные), ошибка исходной записи (одинаково неверная сумма на обеих сторонах), инвертированные проводки.",
-          explanation_en:
-            "The trial balance equation tests only ARITHMETIC equality of debits and credits. Errors that preserve that equality (by being absent on both sides, or equally wrong on both sides) leave the trial balance balanced. This is why a balanced trial balance is NECESSARY but NOT SUFFICIENT for correct accounting. Additional controls are needed: reconciliations (bank, control accounts), analytical review (do the numbers make business sense?), and the audit process itself.",
-          explanation_ru:
-            "Уравнение пробного баланса проверяет только АРИФМЕТИЧЕСКОЕ равенство дебетов и кредитов. Ошибки, сохраняющие это равенство (отсутствуя на обеих сторонах или одинаково неверные на обеих), не нарушают пробный баланс. Поэтому сходящийся баланс НЕОБХОДИМ, но НЕДОСТАТОЧЕН для корректного учёта. Нужны дополнительные средства: сверки (банк, контрольные счета), аналитический обзор (имеют ли цифры бизнес-смысл?) и сам аудиторский процесс.",
+          prompt_en: "Which type of error would NOT cause the trial balance to disagree?",
+          prompt_ru: "Какой вид ошибки НЕ приведёт к расхождению пробного баланса?",
+          options: [
+            {
+              key: "A",
+              text_en: "Complete omission of a transaction from the books",
+              text_ru: "Полный пропуск операции в учёте",
+            },
+            {
+              key: "B",
+              text_en: "Posting only the debit side of a transaction",
+              text_ru: "Проводка только дебетовой стороны операции",
+              why_wrong_en: "A one-sided entry makes debits and credits unequal, so the trial balance WILL disagree.",
+              why_wrong_ru: "Односторонняя запись делает дебет и кредит неравными, поэтому пробный баланс РАЗОЙДЁТСЯ.",
+            },
+            {
+              key: "C",
+              text_en: "Recording a different amount on the debit than the credit",
+              text_ru: "Указание разной суммы по дебету и кредиту",
+              why_wrong_en: "Unequal amounts on the two sides unbalance the trial balance.",
+              why_wrong_ru: "Неравные суммы по двум сторонам разбалансируют пробный баланс.",
+            },
+            {
+              key: "D",
+              text_en: "Posting a debit twice and the credit once",
+              text_ru: "Двойная дебетовая и одинарная кредитовая проводки",
+              why_wrong_en: "Duplicating one side breaks the debit-credit equality, so the trial balance disagrees.",
+              why_wrong_ru: "Дублирование одной стороны нарушает равенство дебета и кредита, поэтому баланс расходится.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The trial balance only tests arithmetic equality of debits and credits. An error of complete omission leaves out both the debit and the credit equally, so the totals still match. This is why a balanced trial balance is necessary but not sufficient — reconciliations are also needed.",
+          explanation_ru: "Пробный баланс проверяет лишь арифметическое равенство дебета и кредита. При полном пропуске отсутствуют одинаково и дебет, и кредит, поэтому итоги совпадают. Поэтому сбалансированный пробный баланс необходим, но недостаточен — нужны ещё сверки.",
         },
         {
           type: "number_entry",
@@ -3074,21 +3306,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Бонусная эмиссия: существующие акционеры получают бесплатные дополнительные акции пропорционально доле (например, 1 за 4 — одна бесплатная на каждые 4 имеющиеся). Без денег. Финансируется реклассификацией резервов (эмиссионный доход, нераспределённая прибыль) в акционерный капитал. Зачем? Сигнал финансовой устойчивости, снижение цены акции до более ликвидного диапазона, продуктивное использование резервов. ДОЛЕВАЯ собственность каждого акционера не меняется; общая стоимость не меняется (акций больше, цена меньше); меняется только структура капитала в балансе. Проводка: Дт Эмиссионный доход (или Нераспределённая прибыль) X, Кт Акционерный капитал X.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Distinguish between an ADJUSTING and a NON-ADJUSTING event after the reporting period under IAS 10.",
-          prompt_ru:
-            "Различите КОРРЕКТИРУЮЩЕЕ и НЕКОРРЕКТИРУЮЩЕЕ событие после отчётной даты по МСФО (IAS) 10.",
-          correct_answer_en:
-            "An adjusting event provides further evidence of conditions that EXISTED AT the reporting date \u2014 the figures must be adjusted to reflect the new evidence. A non-adjusting event reflects conditions that AROSE AFTER the reporting date \u2014 the figures are not adjusted, but if material, the event is disclosed in the notes.",
-          correct_answer_ru:
-            "Корректирующее событие даёт дополнительные доказательства условий, СУЩЕСТВОВАВШИХ НА отчётную дату — цифры корректируются с учётом новых сведений. Некорректирующее событие отражает условия, ВОЗНИКШИЕ ПОСЛЕ отчётной даты — цифры не корректируются, но при существенности событие раскрывается в примечаниях.",
-          explanation_en:
-            'The test is "what was the situation AT the reporting date?". Example: a customer goes bankrupt 2 weeks after year-end \u2014 was the customer already in trouble at year-end (ADJUSTING: write down the receivable in the period being reported) or did the bankruptcy arise from a NEW, post-date event (NON-ADJUSTING: disclose only)? Often the answer is the former \u2014 financial troubles rarely emerge overnight. Other classic examples: ADJUSTING \u2014 court case settled (clarifying a provision), discovery of fraud during the period, inventory selling below cost just after year-end (confirms NRV<cost at year-end). NON-ADJUSTING \u2014 fire after year-end, major share issue post-date, decline in market value of investments after year-end, acquisition announced post-date.',
-          explanation_ru:
-            "Проверка: «какое было положение НА отчётную дату?». Пример: клиент обанкротился через 2 недели после конца года — был ли клиент уже в трудностях на конец года (КОРРЕКТИРУЮЩЕЕ: уценить дебиторку в отчётном периоде) или банкротство вызвано НОВЫМ событием после даты (НЕКОРРЕКТИРУЮЩЕЕ: только раскрытие)? Часто верен первый вариант — финансовые проблемы редко появляются за ночь. Другие примеры: КОРРЕКТИРУЮЩИЕ — судебное решение (уточнение резерва), выявление мошенничества за период, продажа запасов ниже себестоимости сразу после года (подтверждает NRV<себестоимости на дату). НЕКОРРЕКТИРУЮЩИЕ — пожар после года, крупная эмиссия после даты, падение рыночной стоимости инвестиций после года, объявленное приобретение после даты.",
+          prompt_en: "Under IAS 10, what distinguishes an adjusting event after the reporting period from a non-adjusting one?",
+          prompt_ru: "Согласно IAS 10, чем корректирующее событие после отчётного периода отличается от некорректирующего?",
+          options: [
+            {
+              key: "A",
+              text_en: "An adjusting event gives evidence of conditions that existed AT the reporting date; a non-adjusting event reflects conditions arising AFTER it",
+              text_ru: "Корректирующее событие свидетельствует об условиях, существовавших НА отчётную дату; некорректирующее отражает условия, возникшие ПОСЛЕ неё",
+            },
+            {
+              key: "B",
+              text_en: "An adjusting event is always favourable; a non-adjusting event is always unfavourable",
+              text_ru: "Корректирующее событие всегда благоприятно; некорректирующее всегда неблагоприятно",
+              why_wrong_en: "The distinction is timing of the underlying condition, not whether the news is good or bad.",
+              why_wrong_ru: "Различие — во времени возникновения условия, а не в том, хорошая новость или плохая.",
+            },
+            {
+              key: "C",
+              text_en: "An adjusting event happens before the year-end; a non-adjusting event happens during it",
+              text_ru: "Корректирующее событие происходит до конца года; некорректирующее — в течение него",
+              why_wrong_en: "Both occur AFTER the reporting date; the test is whether the condition existed at that date.",
+              why_wrong_ru: "Оба происходят ПОСЛЕ отчётной даты; критерий — существовало ли условие на эту дату.",
+            },
+            {
+              key: "D",
+              text_en: "Only adjusting events need any disclosure",
+              text_ru: "Раскрытия требуют только корректирующие события",
+              why_wrong_en: "Material non-adjusting events also require disclosure (nature and estimated effect), even though figures are not adjusted.",
+              why_wrong_ru: "Существенные некорректирующие события тоже требуют раскрытия (характер и оценка влияния), хотя цифры не корректируются.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The test is the situation AT the reporting date. If a customer's later bankruptcy confirms they were already in trouble at year-end, that is adjusting — write down the receivable. If trouble arose from a genuinely new post-date event, it is non-adjusting — disclose only if material.",
+          explanation_ru: "Критерий — ситуация НА отчётную дату. Если позднейшее банкротство клиента подтверждает, что он уже был в трудном положении на конец года, это корректирующее событие — списать дебиторку. Если проблема возникла из действительно нового события после даты, оно некорректирующее — раскрыть, если существенно.",
         },
         {
           type: "mcq",
@@ -3303,21 +3556,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Косвенный метод: Операционная прибыль 80 000 + Амортизация 15 000 − Рост дебиторки 5 000 + Снижение запасов 3 000 + Рост кредиторки 4 000 = 97 000. Логика по оборотному капиталу: дебиторка выросла на $5 000 → $5 000 выручки ещё не получено деньгами — ВЫЧЕСТЬ. Запасы упали на $3 000 → $3 000 запасов превратилось в продажи (или деньги при продаже за деньги) — ПРИБАВИТЬ. Кредиторка выросла на $4 000 → $4 000 расходов ещё не оплачены — ПРИБАВИТЬ (деньги сохранены).",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "In the cash flow statement under the indirect method, an INCREASE in receivables is added or subtracted? Explain why.",
-          prompt_ru:
-            "В отчёте о движении денежных средств по косвенному методу РОСТ дебиторки прибавляется или вычитается? Объясните почему.",
-          correct_answer_en:
-            "Subtracted. An increase in receivables means more sales were made on credit but not yet collected in cash; profit recognised the sale, but cash hasn't arrived, so cash from operations is less than reported profit. Subtracting the receivable increase makes the adjustment.",
-          correct_answer_ru:
-            "Вычитается. Рост дебиторки означает, что больше продаж сделано в кредит и ещё не получены деньгами; прибыль признала продажу, но деньги не пришли, поэтому операционный денежный поток меньше показанной прибыли. Вычитание роста дебиторки делает эту корректировку.",
-          explanation_en:
-            "The same logic in mirror: a DECREASE in receivables is ADDED (more cash collected from prior-period customers than current credit sales generated). Working-capital rules: assets (receivables, inventory) up \u2192 subtract; assets down \u2192 add. Liabilities (payables) up \u2192 add; liabilities down \u2192 subtract. The intuition: more money tied up in working-capital assets means less cash flowing through; more money owed (payables up) means less cash actually paid out.",
-          explanation_ru:
-            "Зеркальная логика: СНИЖЕНИЕ дебиторки ПРИБАВЛЯЕТСЯ (получено больше денег от клиентов прошлых периодов, чем сгенерировано новых кредитных продаж). Правила оборотного капитала: активы (дебиторка, запасы) растут → вычесть; активы падают → прибавить. Обязательства (кредиторка) растут → прибавить; падают → вычесть. Интуиция: больше денег связано в оборотных активах — меньше реального cash flow; больше задолжено (кредиторка растёт) — меньше реально потрачено денег.",
+          prompt_en: "In the indirect-method cash flow statement, how is an INCREASE in receivables treated, and why?",
+          prompt_ru: "В отчёте о движении денежных средств косвенным методом как трактуется УВЕЛИЧЕНИЕ дебиторской задолженности и почему?",
+          options: [
+            {
+              key: "A",
+              text_en: "Subtracted — sales were recognised in profit but the cash has not yet been collected",
+              text_ru: "Вычитается — продажи признаны в прибыли, но деньги ещё не поступили",
+            },
+            {
+              key: "B",
+              text_en: "Added — because receivables are an asset",
+              text_ru: "Прибавляется — поскольку дебиторка является активом",
+              why_wrong_en: "An INCREASE in a working-capital asset ties up cash, so it is subtracted; only a DECREASE in receivables is added.",
+              why_wrong_ru: "УВЕЛИЧЕНИЕ оборотного актива связывает деньги, поэтому вычитается; прибавляется только УМЕНЬШЕНИЕ дебиторки.",
+            },
+            {
+              key: "C",
+              text_en: "Added — to match the increase in revenue",
+              text_ru: "Прибавляется — чтобы соответствовать росту выручки",
+              why_wrong_en: "Profit already includes the revenue; the adjustment removes the portion not yet received in cash, so it is subtracted.",
+              why_wrong_ru: "Прибыль уже включает выручку; корректировка убирает не полученную деньгами часть, поэтому вычитается.",
+            },
+            {
+              key: "D",
+              text_en: "Ignored — it has no cash effect",
+              text_ru: "Игнорируется — не влияет на денежные средства",
+              why_wrong_en: "It has a real cash effect: profit overstates cash because some sales remain uncollected, hence the subtraction.",
+              why_wrong_ru: "Оно реально влияет на денежные средства: прибыль завышает деньги, так как часть продаж не получена, отсюда вычитание.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "An increase in receivables means more credit sales were recognised in profit than cash collected, so operating cash is less than reported profit — subtract the increase. Mirror rule: a decrease in receivables is added. Generally, working-capital assets up → subtract; liabilities up → add.",
+          explanation_ru: "Рост дебиторки означает, что в прибыли признано больше продаж в кредит, чем получено денег, поэтому операционный денежный поток меньше прибыли — вычитаем прирост. Зеркальное правило: уменьшение дебиторки прибавляется. В общем: рост оборотных активов → вычесть; рост обязательств → прибавить.",
         },
         {
           type: "mcq",
@@ -3629,21 +3903,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "Гудвилл = Вознаграждение + НДУ − Справедливая стоимость идентифицируемых чистых активов. Почему? Материнская (с НДУ вместе) фактически платит $(вознаграждение + НДУ) за дочернюю; «купленные» чистые активы стоят по справедливой стоимости. Премия — это гудвилл, отражающий ожидаемые синергии, отношения с клиентами, бренд, кадры и т. п., что не отражено в идентифицируемых активах. Гудвилл признаётся в консолидированном балансе и ежегодно тестируется на обесценение (по МСФО НЕ амортизируется).",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "What is the EQUITY method, and which type of investment is it used for?",
-          prompt_ru:
-            "Что такое МЕТОД ДОЛЕВОГО УЧАСТИЯ, и для какого типа инвестиций он применяется?",
-          correct_answer_en:
-            "The equity method records the investment initially at cost, then increases or decreases the carrying amount by the investor's share of the investee's post-acquisition profits or losses (and other equity changes). Used for ASSOCIATES (significant influence, typically 20\u201350% holding) and joint ventures.",
-          correct_answer_ru:
-            "Метод долевого участия признаёт инвестицию изначально по себестоимости, затем увеличивает или уменьшает балансовую стоимость на долю инвестора в посуточных прибылях или убытках объекта (и других изменениях капитала). Применяется для АССОЦИИРОВАННЫХ компаний (значительное влияние, обычно 20–50% доли) и совместных предприятий.",
-          explanation_en:
-            "Under the equity method, the associate's assets and liabilities are NOT line-by-line consolidated (that's for subsidiaries). Instead, ONE LINE on the SoFP shows the investment (\"Investment in associate\") and ONE LINE in the P/L shows the share of associate's profit. The equity method is a hybrid: more than mere fair-value investing (which would only reflect dividends as income), but less than full consolidation (which would absorb the entity into the group). It reflects the investor's economic interest while preserving the separate-entity nature of the associate.",
-          explanation_ru:
-            "По методу долевого участия активы и обязательства ассоциированной компании НЕ консолидируются построчно (это только для дочерних). Вместо этого ОДНА строка в балансе — «Инвестиция в ассоциированную компанию», и ОДНА строка в ОПУ — доля в прибыли ассоциированной. Метод долевого участия — гибрид: больше, чем простое инвестирование по справедливой стоимости (которое признавало бы только дивиденды), но меньше, чем полная консолидация (которая поглотила бы компанию в группу). Отражает экономический интерес инвестора, сохраняя обособленность ассоциированной.",
+          prompt_en: "What best describes the equity method, and for which investment is it used?",
+          prompt_ru: "Что лучше всего описывает метод долевого участия и для каких инвестиций он применяется?",
+          options: [
+            {
+              key: "A",
+              text_en: "Investment recorded at cost then adjusted for the investor's share of post-acquisition profits; used for associates",
+              text_ru: "Инвестиция учитывается по стоимости, затем корректируется на долю инвестора в прибыли после приобретения; применяется для ассоциированных компаний",
+            },
+            {
+              key: "B",
+              text_en: "Line-by-line consolidation of assets and liabilities; used for associates",
+              text_ru: "Построчная консолидация активов и обязательств; для ассоциированных компаний",
+              why_wrong_en: "Line-by-line consolidation is for SUBSIDIARIES (control); associates use the single-line equity method.",
+              why_wrong_ru: "Построчная консолидация — для ДОЧЕРНИХ компаний (контроль); для ассоциированных применяется однострочный метод долевого участия.",
+            },
+            {
+              key: "C",
+              text_en: "Investment held at fair value with only dividends as income; used for associates",
+              text_ru: "Инвестиция по справедливой стоимости, доход только дивиденды; для ассоциированных",
+              why_wrong_en: "Recognising only dividends is the simple investment approach; the equity method recognises the share of profit, not just dividends.",
+              why_wrong_ru: "Признание только дивидендов — простой инвестиционный подход; метод долевого участия признаёт долю прибыли, а не только дивиденды.",
+            },
+            {
+              key: "D",
+              text_en: "Investment written off immediately; used for subsidiaries",
+              text_ru: "Инвестиция немедленно списывается; для дочерних компаний",
+              why_wrong_en: "Investments are not written off on acquisition, and subsidiaries are consolidated, not equity-accounted.",
+              why_wrong_ru: "Инвестиции не списываются при приобретении, а дочерние компании консолидируются, а не учитываются методом долевого участия.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Under the equity method the investment starts at cost and is increased or decreased by the investor's share of the associate's post-acquisition profits or losses. One line on the SoFP shows the investment and one line in P/L shows the share of profit. It is used for associates (significant influence).",
+          explanation_ru: "По методу долевого участия инвестиция учитывается по первоначальной стоимости и корректируется на долю инвестора в прибылях или убытках ассоциированной компании после приобретения. Одна строка в SoFP показывает инвестицию, одна строка в ОПУ — долю прибыли. Применяется для ассоциированных компаний (существенное влияние).",
         },
         {
           type: "mcq",
@@ -3826,21 +4121,42 @@ export const F3_PAPER: SeedPaper = {
           explanation_ru:
             "МСФО (IAS) 28 регулирует ассоциированные: значительное влияние (обычно 20–50% прав голоса, но учитываются и другие индикаторы — представительство в совете, существенные операции, технологическая зависимость) → классификация АССОЦИИРОВАННАЯ, учёт по методу долевого участия. Свыше 50% → дочерняя (контроль, полная консолидация). Ниже 20% без значительного влияния → финансовая инвестиция (справедливая стоимость). 30% доля со значительным влиянием — учебный пример ассоциированной.",
         },
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Why is goodwill arising on consolidation NOT amortised under IFRS, and what is done instead?",
-          prompt_ru:
-            "Почему гудвилл при консолидации НЕ амортизируется по МСФО, и что делается вместо этого?",
-          correct_answer_en:
-            "Goodwill is not amortised because its useful life cannot be reliably estimated and amortising it on an arbitrary basis would not provide useful information. Instead, goodwill is tested for IMPAIRMENT at least annually under IAS 36, and written down if the carrying amount exceeds the recoverable amount.",
-          correct_answer_ru:
-            "Гудвилл не амортизируется, потому что его срок полезного использования невозможно надёжно оценить, и произвольная амортизация не дала бы полезной информации. Вместо этого гудвилл ежегодно тестируется на ОБЕСЦЕНЕНИЕ по МСФО (IAS) 36 и списывается, если балансовая стоимость превышает возмещаемую.",
-          explanation_en:
-            "The pre-IFRS-3 (revised) approach was to amortise goodwill over 5\u201320 years \u2014 but the period choice was arbitrary and produced no signal about whether the goodwill's economic value was actually deteriorating. The current model: goodwill stays at original amount until evidence shows it's impaired. Impairment is assessed at the CASH-GENERATING UNIT (CGU) level; if the CGU's recoverable amount falls below its carrying amount (including goodwill allocated to it), goodwill is written down first, then other assets. Goodwill write-downs cannot be reversed in subsequent periods. The impairment test is one of the most judgemental and high-stakes parts of group accounting.",
-          explanation_ru:
-            "До пересмотра МСФО (IFRS) 3 гудвилл амортизировался за 5–20 лет, но выбор периода был произвольным и не давал сигнала о реальном экономическом ухудшении. Текущая модель: гудвилл остаётся в исходной сумме, пока нет доказательств обесценения. Тест проводится на уровне ЕДИНИЦЫ, ГЕНЕРИРУЮЩЕЙ ДЕНЕЖНЫЕ ПОТОКИ (CGU); если возмещаемая стоимость CGU падает ниже балансовой (с учётом приписанного гудвилла), сначала списывается гудвилл, затем другие активы. Списания гудвилла нельзя восстанавливать в будущих периодах. Тест на обесценение — одна из самых субъективных и значимых частей группового учёта.",
+          prompt_en: "Why is goodwill arising on consolidation NOT amortised under IFRS, and what is done instead?",
+          prompt_ru: "Почему гудвил, возникающий при консолидации, НЕ амортизируется по IFRS, и что делается вместо этого?",
+          options: [
+            {
+              key: "A",
+              text_en: "Its useful life cannot be reliably estimated, so it is tested for impairment instead",
+              text_ru: "Его срок полезного использования нельзя надёжно оценить, поэтому вместо амортизации проводится тест на обесценение",
+            },
+            {
+              key: "B",
+              text_en: "Goodwill is immediately written off to equity on acquisition",
+              text_ru: "Гудвил сразу списывается в капитал при приобретении",
+              why_wrong_en: "Immediate write-off was an old approach not permitted under current IFRS; goodwill is capitalised and impairment-tested.",
+              why_wrong_ru: "Немедленное списание — устаревший подход, не разрешённый текущими IFRS; гудвил капитализируется и тестируется на обесценение.",
+            },
+            {
+              key: "C",
+              text_en: "It is revalued upward each year",
+              text_ru: "Он ежегодно дооценивается",
+              why_wrong_en: "Internally, goodwill is never revalued upward under IFRS; it can only be impaired downward.",
+              why_wrong_ru: "По IFRS гудвил никогда не дооценивается вверх; он может лишь обесцениваться вниз.",
+            },
+            {
+              key: "D",
+              text_en: "It is amortised over a fixed 20-year period",
+              text_ru: "Он амортизируется в течение фиксированных 20 лет",
+              why_wrong_en: "Fixed-period amortisation was the pre-IFRS 3 (revised) approach; the current model is annual impairment testing, not amortisation.",
+              why_wrong_ru: "Амортизация за фиксированный срок — подход до IFRS 3 (пересм.); текущая модель — ежегодный тест на обесценение, а не амортизация.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Amortising goodwill over an arbitrary life gave no signal about its actual economic value, so IFRS holds goodwill at cost and tests it for impairment (at least annually, at the cash-generating-unit level). If the CGU's recoverable amount falls below carrying value, an impairment loss is recognised.",
+          explanation_ru: "Амортизация гудвила за произвольный срок не отражала его реальную экономическую ценность, поэтому IFRS держит гудвил по стоимости и тестирует на обесценение (не реже раза в год, на уровне единицы, генерирующей денежные средства). Если возмещаемая сумма ЕГДС падает ниже балансовой, признаётся убыток от обесценения.",
         },
         {
           type: "mcq",

@@ -41,7 +41,8 @@ import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
 // Fields are LANGUAGE-RESOLVED — frontend receives a single string per field.
 export interface LessonQuestion {
   id: string;
-  type: "mcq" | "short_answer" | "number_entry";
+  // short_answer retired: lessons only serve active mcq/number_entry questions.
+  type: "mcq" | "number_entry";
   difficulty: QuestionDifficulty;
   prompt: string;
   options: LocalizedMcqOption[] | null; // for MCQ

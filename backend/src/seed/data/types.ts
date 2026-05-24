@@ -2,7 +2,9 @@
 // seed runner does the actual DB insert mapping.
 
 export type SeedDifficulty = "easy" | "medium" | "hard";
-export type SeedQuestionType = "mcq" | "short_answer" | "number_entry";
+// short_answer retired (Grading Spec): no faithful ACCA auto-marked format.
+// Seed content is mcq / number_entry only.
+export type SeedQuestionType = "mcq" | "number_entry";
 
 export interface SeedMcqOption {
   key: string;
@@ -34,19 +36,6 @@ export interface SeedMcqQuestion {
   concept_bite_ru?: string;
 }
 
-export interface SeedShortAnswerQuestion {
-  type: "short_answer";
-  difficulty: SeedDifficulty;
-  prompt_en: string;
-  prompt_ru: string;
-  correct_answer_en: string; // canonical English answer
-  correct_answer_ru: string; // canonical Russian answer
-  explanation_en: string;
-  explanation_ru: string;
-  concept_bite_en?: string;
-  concept_bite_ru?: string;
-}
-
 export interface SeedNumberEntryQuestion {
   type: "number_entry";
   difficulty: SeedDifficulty;
@@ -60,10 +49,7 @@ export interface SeedNumberEntryQuestion {
   concept_bite_ru?: string;
 }
 
-export type SeedQuestion =
-  | SeedMcqQuestion
-  | SeedShortAnswerQuestion
-  | SeedNumberEntryQuestion;
+export type SeedQuestion = SeedMcqQuestion | SeedNumberEntryQuestion;
 
 export interface SeedLearningObjective {
   code: string; // e.g. 'A', 'B'

@@ -123,17 +123,42 @@ export const F1_PAPER: SeedPaper = {
             "Стороны с высоким интересом и низкой властью попадают в категорию «Информировать»: им важны решения, но они не могут на них прямо повлиять, поэтому правильная реакция — коммуникация.",
         },
         // -------- existing Q3 (unchanged — short_answer) --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en: 'What does the "P" in the PESTEL framework stand for?',
-          prompt_ru: 'Что обозначает буква "P" в модели PESTEL?',
-          correct_answer_en: "Political",
-          correct_answer_ru: "Политические",
-          explanation_en:
-            "PESTEL stands for Political, Economic, Social, Technological, Environmental and Legal factors of the external environment.",
-          explanation_ru:
-            "PESTEL расшифровывается как политические, экономические, социальные, технологические, экологические и правовые факторы внешней среды.",
+          prompt_en: "In the PESTEL framework for analysing the external environment, what does the letter \"P\" stand for?",
+          prompt_ru: "Что обозначает буква \"P\" в модели PESTEL для анализа внешней среды?",
+          options: [
+            {
+              key: "A",
+              text_en: "Political",
+              text_ru: "Политические",
+            },
+            {
+              key: "B",
+              text_en: "Physical",
+              text_ru: "Физические",
+              why_wrong_en: "PESTEL has no \"Physical\" factor; the closest environmental dimension is the \"E\" for Environmental, not Physical.",
+              why_wrong_ru: "В PESTEL нет фактора «физические»; ближайшее измерение — «E» (экологические), а не физические.",
+            },
+            {
+              key: "C",
+              text_en: "Personal",
+              text_ru: "Личные",
+              why_wrong_en: "PESTEL analyses macro-environmental forces, not personal or individual factors.",
+              why_wrong_ru: "PESTEL анализирует макросреду, а не личные или индивидуальные факторы.",
+            },
+            {
+              key: "D",
+              text_en: "Productivity",
+              text_ru: "Производительность",
+              why_wrong_en: "Productivity is an internal operational measure, not one of the six external PESTEL factors.",
+              why_wrong_ru: "Производительность — внутренний операционный показатель, а не один из шести внешних факторов PESTEL.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "PESTEL stands for Political, Economic, Social, Technological, Environmental and Legal factors of the external environment. The \"P\" is Political — government policy, political stability, tax and trade regulation.",
+          explanation_ru: "PESTEL расшифровывается как политические, экономические, социальные, технологические, экологические и правовые факторы внешней среды. «P» — это политические: государственная политика, политическая стабильность, налоговое и торговое регулирование.",
         },
         // -------- existing Q4 (augmented with why_wrong) --------
         {
@@ -325,20 +350,42 @@ export const F1_PAPER: SeedPaper = {
             "Связанные стороны имеют с организацией договорные или коммерческие отношения, но не входят в неё. К этой категории относятся акционеры, кредиторы, клиенты и поставщики.",
         },
         // -------- NEW Q8 — easy short_answer on Porter's generic strategies --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the three generic competitive strategies described by Porter.",
-          prompt_ru:
-            "Назовите три базовые конкурентные стратегии, описанные Портером.",
-          correct_answer_en: "Cost leadership, differentiation, focus",
-          correct_answer_ru:
-            "Лидерство по издержкам, дифференциация, фокусирование",
-          explanation_en:
-            'Porter argued a firm should choose one of three positions: compete on cost (lowest price), compete on uniqueness (differentiation), or serve a narrow segment well (focus, which can be cost-focus or differentiation-focus). Trying to do all three risks being "stuck in the middle".',
-          explanation_ru:
-            "Портер утверждал, что компания должна выбрать одну из трёх позиций: конкурировать по издержкам (минимальная цена), по уникальности (дифференциация) или хорошо обслуживать узкий сегмент (фокусирование, которое может быть по издержкам или по дифференциации). Попытка совмещать все три рискует «застрять посередине».",
+          prompt_en: "Which of the following is one of Porter's three generic competitive strategies?",
+          prompt_ru: "Какая из перечисленных стратегий относится к трём базовым конкурентным стратегиям Портера?",
+          options: [
+            {
+              key: "A",
+              text_en: "Cost leadership",
+              text_ru: "Лидерство по издержкам",
+            },
+            {
+              key: "B",
+              text_en: "Market penetration",
+              text_ru: "Проникновение на рынок",
+              why_wrong_en: "Market penetration is one of Ansoff's growth strategies, not one of Porter's generic competitive strategies.",
+              why_wrong_ru: "Проникновение на рынок — стратегия роста по Ансоффу, а не базовая конкурентная стратегия Портера.",
+            },
+            {
+              key: "C",
+              text_en: "Diversification",
+              text_ru: "Диверсификация",
+              why_wrong_en: "Diversification is an Ansoff growth direction, not a Porter generic strategy.",
+              why_wrong_ru: "Диверсификация — направление роста по Ансоффу, а не базовая стратегия Портера.",
+            },
+            {
+              key: "D",
+              text_en: "Vertical integration",
+              text_ru: "Вертикальная интеграция",
+              why_wrong_en: "Vertical integration is a structural expansion choice, not one of Porter's three generic positions (cost leadership, differentiation, focus).",
+              why_wrong_ru: "Вертикальная интеграция — структурный выбор расширения, а не одна из трёх базовых позиций Портера (издержки, дифференциация, фокус).",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Porter argued a firm should choose one of three positions: cost leadership (compete on lowest cost), differentiation (compete on uniqueness), or focus (serve a narrow segment well). Trying to do all three risks being \"stuck in the middle\".",
+          explanation_ru: "Портер утверждал, что фирма должна выбрать одну из трёх позиций: лидерство по издержкам (конкуренция по самой низкой цене), дифференциация (конкуренция по уникальности) или фокусирование (качественное обслуживание узкого сегмента). Попытка совместить все три грозит положением «застрявшего посередине».",
         },
         // -------- NEW Q9 — medium MCQ on NFP objectives --------
         {
@@ -534,19 +581,42 @@ export const F1_PAPER: SeedPaper = {
             "Крупный институциональный акционер обладает высокой властью (его голоса могут решать) И демонстрирует высокий интерес (активно вовлечён в вопрос о дивидендах). Стороны с высокой властью и высоким интересом — «ключевые игроки», требующие плотного управления, обычно через прямой диалог с советом.",
         },
         // -------- NEW Q13 — medium short_answer on elasticity --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "What term describes the responsiveness of quantity demanded to a change in price?",
-          prompt_ru:
-            "Какой термин описывает реакцию величины спроса на изменение цены?",
-          correct_answer_en: "Price elasticity of demand",
-          correct_answer_ru: "Ценовая эластичность спроса",
-          explanation_en:
-            "Price elasticity of demand (PED) = percentage change in quantity demanded / percentage change in price. Demand is elastic (PED > 1) if revenue rises when price falls, inelastic (PED < 1) if revenue falls when price falls. Elasticity drives pricing decisions on essentials, luxuries, and substitute-rich markets.",
-          explanation_ru:
-            "Ценовая эластичность спроса (PED) = процентное изменение величины спроса / процентное изменение цены. Спрос эластичный (PED > 1), если при снижении цены выручка растёт; неэластичный (PED < 1), если при снижении цены выручка падает. Эластичность определяет ценовые решения по товарам первой необходимости, предметам роскоши и рынкам с большим числом заменителей.",
+          prompt_en: "What term describes the responsiveness of quantity demanded to a change in price?",
+          prompt_ru: "Какой термин описывает реакцию величины спроса на изменение цены?",
+          options: [
+            {
+              key: "A",
+              text_en: "Price elasticity of demand",
+              text_ru: "Ценовая эластичность спроса",
+            },
+            {
+              key: "B",
+              text_en: "Income elasticity of demand",
+              text_ru: "Эластичность спроса по доходу",
+              why_wrong_en: "Income elasticity measures responsiveness of demand to a change in consumer INCOME, not price.",
+              why_wrong_ru: "Эластичность по доходу измеряет реакцию спроса на изменение ДОХОДА, а не цены.",
+            },
+            {
+              key: "C",
+              text_en: "Cross elasticity of demand",
+              text_ru: "Перекрёстная эластичность спроса",
+              why_wrong_en: "Cross elasticity measures how demand for one good responds to a price change in ANOTHER good.",
+              why_wrong_ru: "Перекрёстная эластичность измеряет реакцию спроса на один товар при изменении цены ДРУГОГО.",
+            },
+            {
+              key: "D",
+              text_en: "Marginal propensity to consume",
+              text_ru: "Предельная склонность к потреблению",
+              why_wrong_en: "This is a macroeconomic term for the share of extra income that is spent, unrelated to price responsiveness.",
+              why_wrong_ru: "Это макроэкономический термин — доля дополнительного дохода, которая тратится; к ценовой чувствительности не относится.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Price elasticity of demand (PED) = % change in quantity demanded / % change in price. Demand is elastic (PED > 1) when revenue rises as price falls, and inelastic (PED < 1) when revenue falls as price falls.",
+          explanation_ru: "Ценовая эластичность спроса (PED) = % изменения величины спроса / % изменения цены. Спрос эластичен (PED > 1), когда при снижении цены выручка растёт, и неэластичен (PED < 1), когда при снижении цены выручка падает.",
         },
         // -------- NEW Q14 — hard MCQ on Porter's generic strategy trap --------
         {
@@ -774,19 +844,42 @@ export const F1_PAPER: SeedPaper = {
             "Матричная структура сознательно нарушает принцип единоначалия: сотрудники подчиняются и функциональному руководителю, и руководителю проекта/продукта.",
         },
         // -------- existing Q3 (unchanged short_answer) --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the Handy culture type characterised by a powerful central figure.",
-          prompt_ru:
-            "Назовите тип культуры по Хэнди, характеризующийся сильной центральной фигурой.",
-          correct_answer_en: "Power culture",
-          correct_answer_ru: "Культура власти",
-          explanation_en:
-            "Power culture (often shown as a web) concentrates control on a single central figure or small group. Decisions are fast but quality depends heavily on the centre.",
-          explanation_ru:
-            "Культура власти (часто изображается в виде паутины) концентрирует контроль на одной центральной фигуре или небольшой группе. Решения принимаются быстро, но качество сильно зависит от центра.",
+          prompt_en: "Which of Handy's culture types is characterised by a single powerful central figure controlling the organisation?",
+          prompt_ru: "Какой тип культуры по Хэнди характеризуется единственной влиятельной центральной фигурой, контролирующей организацию?",
+          options: [
+            {
+              key: "A",
+              text_en: "Power culture",
+              text_ru: "Культура власти",
+            },
+            {
+              key: "B",
+              text_en: "Role culture",
+              text_ru: "Ролевая культура",
+              why_wrong_en: "Role culture is built on rules, hierarchy and job descriptions (the \"Greek temple\"), not on one central figure.",
+              why_wrong_ru: "Ролевая культура строится на правилах, иерархии и должностных инструкциях («греческий храм»), а не на одной центральной фигуре.",
+            },
+            {
+              key: "C",
+              text_en: "Task culture",
+              text_ru: "Культура задачи",
+              why_wrong_en: "Task culture organises around projects and teams (the \"net\"), with power spread by expertise rather than centralised.",
+              why_wrong_ru: "Культура задачи строится вокруг проектов и команд («сеть»); власть распределена по компетенциям, а не централизована.",
+            },
+            {
+              key: "D",
+              text_en: "Person culture",
+              text_ru: "Культура личности",
+              why_wrong_en: "Person culture exists to serve the individuals within it (e.g. a partnership of professionals); there is no dominant central controller.",
+              why_wrong_ru: "Культура личности существует ради входящих в неё людей (например, партнёрство профессионалов); единого доминирующего центра нет.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Power culture (often drawn as a web) concentrates control on a single central figure or small group. Decisions are fast, but quality depends heavily on the centre.",
+          explanation_ru: "Культура власти (часто изображается как паутина) концентрирует контроль на одной центральной фигуре или малой группе. Решения принимаются быстро, но их качество сильно зависит от центра.",
         },
         // -------- existing Q4 (augmented) --------
         {
@@ -977,21 +1070,42 @@ export const F1_PAPER: SeedPaper = {
             "Широкая норма управляемости означает, что каждый руководитель управляет многими подчинёнными. Это требует меньше уровней управления и даёт плоскую структуру с более быстрой коммуникацией, но потенциально менее плотным индивидуальным надзором.",
         },
         // -------- NEW Q8 — easy short_answer on Schein --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Schein describes culture in three levels. Name them in order from most visible to deepest.",
-          prompt_ru:
-            "Шейн описывает культуру тремя уровнями. Назовите их в порядке от наиболее видимого к самому глубинному.",
-          correct_answer_en:
-            "Artefacts, espoused values, basic underlying assumptions",
-          correct_answer_ru:
-            "Артефакты, провозглашаемые ценности, базовые подспудные предположения",
-          explanation_en:
-            "Artefacts are visible: dress codes, office layout, language, rituals. Espoused values are the strategies, goals, and philosophies the organisation publicly states. Basic underlying assumptions are unconscious, taken-for-granted beliefs — the deepest level and the hardest to change.",
-          explanation_ru:
-            "Артефакты видимы: дресс-код, планировка офиса, язык, ритуалы. Провозглашаемые ценности — это стратегии, цели и философия, которые организация декларирует публично. Базовые подспудные предположения — бессознательные, само собой разумеющиеся убеждения; самый глубокий уровень и наиболее трудно изменяемый.",
+          prompt_en: "Schein describes organisational culture in three levels. What is the correct order from most visible to deepest?",
+          prompt_ru: "Шейн описывает организационную культуру на трёх уровнях. Каков правильный порядок от наиболее видимого к самому глубокому?",
+          options: [
+            {
+              key: "A",
+              text_en: "Artefacts → espoused values → basic underlying assumptions",
+              text_ru: "Артефакты → провозглашаемые ценности → базовые подспудные предположения",
+            },
+            {
+              key: "B",
+              text_en: "Basic underlying assumptions → espoused values → artefacts",
+              text_ru: "Базовые предположения → провозглашаемые ценности → артефакты",
+              why_wrong_en: "This reverses the order. The deepest, least visible level (basic assumptions) is listed first, but the question asks most-visible first.",
+              why_wrong_ru: "Это обратный порядок. Самый глубокий, наименее видимый уровень (базовые предположения) указан первым, тогда как вопрос требует начинать с наиболее видимого.",
+            },
+            {
+              key: "C",
+              text_en: "Espoused values → artefacts → basic underlying assumptions",
+              text_ru: "Провозглашаемые ценности → артефакты → базовые предположения",
+              why_wrong_en: "Artefacts are the MOST visible level and must come first; espoused values sit between artefacts and assumptions.",
+              why_wrong_ru: "Артефакты — наиболее видимый уровень и должны идти первыми; провозглашаемые ценности находятся между артефактами и предположениями.",
+            },
+            {
+              key: "D",
+              text_en: "Artefacts → basic underlying assumptions → espoused values",
+              text_ru: "Артефакты → базовые предположения → провозглашаемые ценности",
+              why_wrong_en: "Espoused values are the MIDDLE level, not the deepest; basic underlying assumptions are the deepest.",
+              why_wrong_ru: "Провозглашаемые ценности — СРЕДНИЙ уровень, а не самый глубокий; базовые предположения — самый глубокий уровень.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Artefacts are visible: dress, office layout, language, rituals. Espoused values are the strategies, goals and philosophies the organisation publicly states. Basic underlying assumptions are unconscious, taken-for-granted beliefs — the deepest level and hardest to change.",
+          explanation_ru: "Артефакты видимы: дресс-код, планировка офиса, язык, ритуалы. Провозглашаемые ценности — это стратегии, цели и философия, заявляемые публично. Базовые подспудные предположения — неосознаваемые, само собой разумеющиеся убеждения; это самый глубокий и трудноизменяемый уровень.",
         },
         // -------- NEW Q9 — medium MCQ on Handy task culture --------
         {
@@ -1179,21 +1293,42 @@ export const F1_PAPER: SeedPaper = {
             "Комитет по вознаграждениям состоит из независимых неисполнительных директоров именно для того, чтобы оплату исполнительных директоров устанавливали те, кто её не получает. Это устраняет очевидный конфликт интересов и связывает вознаграждение с критериями эффективности, утверждаемыми NED.",
         },
         // -------- NEW Q13 — medium short_answer on CEO/Chairman --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Why does best practice in corporate governance recommend separating the roles of CEO and Chairman?",
-          prompt_ru:
-            "Почему передовая практика корпоративного управления рекомендует разделять роли CEO и председателя совета?",
-          correct_answer_en:
-            "To avoid concentration of power and ensure independent oversight of the executive",
-          correct_answer_ru:
-            "Чтобы избежать концентрации власти и обеспечить независимый надзор за исполнительным руководством",
-          explanation_en:
-            "If one person held both roles, they would effectively oversee themselves — running the executive AND chairing the board that holds the executive to account. Separation provides a check on executive power, ensures balanced board discussions, and gives shareholders a credible point of contact independent of management.",
-          explanation_ru:
-            "Если бы один человек занимал обе роли, он фактически надзирал бы за самим собой — управляя исполнительной командой И возглавляя совет, который её контролирует. Разделение служит сдержкой исполнительной власти, обеспечивает сбалансированные дискуссии в совете и даёт акционерам надёжную точку контакта, независимую от руководства.",
+          prompt_en: "Why does best practice in corporate governance recommend separating the roles of CEO and Chairman?",
+          prompt_ru: "Почему передовая практика корпоративного управления рекомендует разделять роли генерального директора и председателя совета директоров?",
+          options: [
+            {
+              key: "A",
+              text_en: "To avoid an excessive concentration of power and ensure independent board oversight of the executive",
+              text_ru: "Чтобы избежать чрезмерной концентрации власти и обеспечить независимый надзор совета за исполнительным руководством",
+            },
+            {
+              key: "B",
+              text_en: "To reduce the company's salary costs",
+              text_ru: "Чтобы сократить расходы компании на заработную плату",
+              why_wrong_en: "Separation is about governance checks and balances, not cost saving — indeed it usually means paying two senior individuals.",
+              why_wrong_ru: "Разделение касается системы сдержек и противовесов в управлении, а не экономии — обычно это означает оплату двух руководителей.",
+            },
+            {
+              key: "C",
+              text_en: "Because company law makes it illegal for one person to hold both roles",
+              text_ru: "Потому что закон запрещает одному лицу занимать обе должности",
+              why_wrong_en: "In most jurisdictions combining the roles is discouraged by governance codes (\"comply or explain\"), not outlawed by statute.",
+              why_wrong_ru: "В большинстве юрисдикций совмещение ролей не поощряется кодексами управления («соблюдай или объясни»), но не запрещено законом.",
+            },
+            {
+              key: "D",
+              text_en: "To speed up executive decision-making",
+              text_ru: "Чтобы ускорить принятие исполнительных решений",
+              why_wrong_en: "Separation adds a check on the executive; if anything it slows unilateral decisions — that oversight is the point.",
+              why_wrong_ru: "Разделение добавляет контроль над исполнительной властью; если что, оно замедляет единоличные решения — именно в этом надзоре и смысл.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "If one person held both roles they would effectively oversee themselves — running the executive AND chairing the board that holds the executive to account. Separation provides a check on executive power, ensures balanced board discussion, and gives shareholders an independent point of contact.",
+          explanation_ru: "Если бы одно лицо занимало обе роли, оно фактически контролировало бы само себя — руководя исполнительным звеном И возглавляя совет, который этот менеджмент контролирует. Разделение обеспечивает сдерживание исполнительной власти, сбалансированное обсуждение в совете и даёт акционерам независимую точку контакта.",
         },
         // -------- NEW Q14 — hard MCQ on Mintzberg skills vs Fayol --------
         {
@@ -1406,19 +1541,42 @@ export const F1_PAPER: SeedPaper = {
             "Сверка выявляет расхождения уже после того, как они произошли. Остальные варианты предотвращают проблемы, а не выявляют их.",
         },
         // -------- existing Q3 — fraud triangle (UPDATED with synonyms) --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en: 'Name the three elements of the "fraud triangle".',
-          prompt_ru: "Назовите три элемента «треугольника мошенничества».",
-          correct_answer_en:
-            "Pressure (or motive/incentive), opportunity, rationalisation (or justification)",
-          correct_answer_ru:
-            "Давление (или стимул/мотив), возможность, рационализация (или оправдание)",
-          explanation_en:
-            'Donald Cressey\u2019s fraud triangle proposes that fraud requires three elements: (1) Pressure — also called motive or incentive — typically financial need, performance targets, or addiction; (2) Opportunity — a weakness in controls, an override, or inadequate segregation of duties that makes the act feasible; (3) Rationalisation — also called justification — the internal self-talk through which the perpetrator makes the act acceptable to themselves (e.g. "I\u2019m owed this", "I\u2019ll pay it back"). Any of the synonym terms above is acceptable.',
-          explanation_ru:
-            "Треугольник мошенничества Дональда Кресси: для совершения мошенничества нужны три элемента: (1) Давление — также называемое стимулом или мотивом — обычно финансовая нужда, плановые показатели или зависимость; (2) Возможность — слабость контролей, их обход, недостаточное разделение обязанностей, делающие действие осуществимым; (3) Рационализация — также называемая оправданием — внутренняя логика, через которую нарушитель делает поступок приемлемым для себя (например, «мне это полагается», «я верну»). Любой из перечисленных синонимов засчитывается.",
+          prompt_en: "Which set correctly names the three elements of Cressey's fraud triangle?",
+          prompt_ru: "Какой набор верно называет три элемента треугольника мошенничества Кресси?",
+          options: [
+            {
+              key: "A",
+              text_en: "Pressure, opportunity, rationalisation",
+              text_ru: "Давление, возможность, рационализация",
+            },
+            {
+              key: "B",
+              text_en: "Pressure, capability, concealment",
+              text_ru: "Давление, способность, сокрытие",
+              why_wrong_en: "Capability and concealment belong to the later \"fraud diamond\" extension; the classic triangle's third element is rationalisation, and its second is opportunity.",
+              why_wrong_ru: "Способность и сокрытие относятся к более позднему расширению «бриллиант мошенничества»; третий элемент классического треугольника — рационализация, второй — возможность.",
+            },
+            {
+              key: "C",
+              text_en: "Motive, means, method",
+              text_ru: "Мотив, средства, метод",
+              why_wrong_en: "This is a colloquial crime phrase, not Cressey's model. The model's elements are pressure, opportunity and rationalisation.",
+              why_wrong_ru: "Это бытовая криминалистическая формула, а не модель Кресси. Элементы модели — давление, возможность и рационализация.",
+            },
+            {
+              key: "D",
+              text_en: "Opportunity, detection, prosecution",
+              text_ru: "Возможность, выявление, преследование",
+              why_wrong_en: "Detection and prosecution are responses to fraud, not the conditions that enable it. The enabling conditions are pressure, opportunity and rationalisation.",
+              why_wrong_ru: "Выявление и преследование — это реакция на мошенничество, а не условия, которые его порождают. Порождающие условия — давление, возможность и рационализация.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Cressey's fraud triangle proposes fraud requires three elements: Pressure (motive/incentive — financial need or targets), Opportunity (a control weakness or override), and Rationalisation (the offender justifies the act to themselves).",
+          explanation_ru: "Треугольник мошенничества Кресси предполагает, что для мошенничества нужны три элемента: давление (мотив/стимул — финансовая нужда или цели), возможность (слабость контроля или его обход) и рационализация (нарушитель оправдывает действие перед собой).",
         },
         // -------- existing Q4 (augmented) --------
         {
@@ -1609,19 +1767,42 @@ export const F1_PAPER: SeedPaper = {
             "Аудиторский комитет надзирает за внешним и внутренним аудитом и финансовой отчётностью от имени совета. Он должен быть независим от исполнительного руководства, поэтому его члены — независимые неисполнительные директора. Председатель — обычно NED с соответствующим финансовым опытом.",
         },
         // -------- NEW Q8 — easy short_answer on TARA --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            'In the TARA risk-response framework, what does the letter "T" stand for?',
-          prompt_ru:
-            'В модели реагирования на риски TARA что обозначает буква "T"?',
-          correct_answer_en: "Transfer",
-          correct_answer_ru: "Transfer (передать)",
-          explanation_en:
-            "TARA stands for Transfer, Avoid, Reduce, Accept. Transfer means passing the financial consequences of the risk to another party — typically through insurance or by outsourcing the risky activity. The risk itself doesn't go away; the impact on the organisation does.",
-          explanation_ru:
-            "TARA расшифровывается как Transfer (передать), Avoid (избежать), Reduce (снизить), Accept (принять). Передача означает перенос финансовых последствий риска на другую сторону — обычно через страхование или передачу рискованной деятельности на аутсорсинг. Сам риск не исчезает; исчезает его влияние на организацию.",
+          prompt_en: "In the TARA risk-response framework, which response means passing the financial consequences of a risk to another party, for example through insurance?",
+          prompt_ru: "В модели реагирования на риски TARA какой ответ означает передачу финансовых последствий риска другой стороне, например через страхование?",
+          options: [
+            {
+              key: "A",
+              text_en: "Transfer",
+              text_ru: "Передача (Transfer)",
+            },
+            {
+              key: "B",
+              text_en: "Avoid",
+              text_ru: "Избежание (Avoid)",
+              why_wrong_en: "Avoid means not undertaking the risky activity at all, not passing its consequences to a third party.",
+              why_wrong_ru: "Избежание означает полный отказ от рискованной деятельности, а не передачу её последствий третьей стороне.",
+            },
+            {
+              key: "C",
+              text_en: "Reduce",
+              text_ru: "Снижение (Reduce)",
+              why_wrong_en: "Reduce means lowering the likelihood or impact through controls, while still retaining the risk yourself.",
+              why_wrong_ru: "Снижение означает уменьшение вероятности или воздействия с помощью контролей, при этом риск остаётся у вас.",
+            },
+            {
+              key: "D",
+              text_en: "Accept",
+              text_ru: "Принятие (Accept)",
+              why_wrong_en: "Accept means tolerating the risk and its consequences without action, the opposite of transferring them.",
+              why_wrong_ru: "Принятие означает терпимость к риску и его последствиям без действий — противоположность их передаче.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "TARA stands for Transfer, Avoid, Reduce, Accept. Transfer passes the financial consequences of a risk to another party — typically via insurance or by outsourcing the risky activity. The risk itself does not disappear; only its financial burden shifts.",
+          explanation_ru: "TARA расшифровывается как Transfer (передача), Avoid (избежание), Reduce (снижение), Accept (принятие). Передача перекладывает финансовые последствия риска на другую сторону — обычно через страхование или аутсорсинг рискованной деятельности. Сам риск не исчезает; смещается лишь его финансовое бремя.",
         },
         // -------- NEW Q9 — medium MCQ on gross vs net risk --------
         {
@@ -1806,21 +1987,42 @@ export const F1_PAPER: SeedPaper = {
             "MLRO — старшее лицо в регулируемой компании, которому сотрудники сообщают о подозрениях в отмывании денег. MLRO затем решает, нужно ли эскалировать вопрос путём подачи сообщения о подозрительной операции (SAR) в соответствующий орган. Роль централизует профессиональное суждение и создаёт чёткий путь эскалации.",
         },
         // -------- NEW Q13 — medium short_answer on GDPR --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "Name TWO of the GDPR principles for processing personal data.",
-          prompt_ru:
-            "Назовите ДВА принципа GDPR для обработки персональных данных.",
-          correct_answer_en:
-            "Any two of: lawful basis, purpose limitation, data minimisation, accuracy, storage limitation, integrity and security, accountability",
-          correct_answer_ru:
-            "Любые два из: законность обработки, ограничение цели, минимизация данных, точность, ограничение хранения, целостность и безопасность, подотчётность",
-          explanation_en:
-            "GDPR sets seven principles. Lawful basis means you need a legal reason to process (consent, contract, legal obligation, etc.). Purpose limitation means data collected for one purpose cannot be reused for an unrelated one. Data minimisation means only collect what is needed. Accuracy requires keeping records current. Storage limitation means delete data when no longer needed. Integrity and security cover protection from unauthorised access. Accountability requires the controller to demonstrate compliance.",
-          explanation_ru:
-            "GDPR устанавливает семь принципов. Законность обработки — должна быть правовая основа (согласие, договор, юридическая обязанность и т. д.). Ограничение цели — данные, собранные с одной целью, нельзя использовать для несвязанной. Минимизация — собирать только необходимое. Точность — поддерживать актуальность записей. Ограничение хранения — удалять данные, когда они больше не нужны. Целостность и безопасность — защита от несанкционированного доступа. Подотчётность — контролёр данных должен подтверждать соответствие требованиям.",
+          prompt_en: "Which of the following is one of the GDPR principles for processing personal data?",
+          prompt_ru: "Какой из перечисленных пунктов является одним из принципов GDPR обработки персональных данных?",
+          options: [
+            {
+              key: "A",
+              text_en: "Data minimisation",
+              text_ru: "Минимизация данных",
+            },
+            {
+              key: "B",
+              text_en: "Maximum retention",
+              text_ru: "Максимальный срок хранения",
+              why_wrong_en: "GDPR requires STORAGE LIMITATION — keeping data no longer than necessary — the opposite of maximising retention.",
+              why_wrong_ru: "GDPR требует ОГРАНИЧЕНИЯ ХРАНЕНИЯ — не хранить данные дольше необходимого — это противоположность максимизации хранения.",
+            },
+            {
+              key: "C",
+              text_en: "Unrestricted processing",
+              text_ru: "Неограниченная обработка",
+              why_wrong_en: "GDPR requires a lawful basis and purpose limitation; processing is restricted, not unrestricted.",
+              why_wrong_ru: "GDPR требует законного основания и ограничения цели; обработка ограничена, а не свободна.",
+            },
+            {
+              key: "D",
+              text_en: "Mandatory data sharing",
+              text_ru: "Обязательный обмен данными",
+              why_wrong_en: "GDPR restricts sharing and transfers; there is no principle requiring data to be shared.",
+              why_wrong_ru: "GDPR ограничивает обмен и передачу данных; принципа, обязывающего делиться данными, нет.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "GDPR sets seven principles: lawful basis, purpose limitation, data minimisation, accuracy, storage limitation, integrity and security, and accountability. Data minimisation means collecting only what is genuinely needed for the stated purpose.",
+          explanation_ru: "GDPR устанавливает семь принципов: законное основание, ограничение цели, минимизация данных, точность, ограничение хранения, целостность и безопасность, подотчётность. Минимизация данных означает сбор только того, что действительно необходимо для заявленной цели.",
         },
         // -------- NEW Q14 — hard MCQ on layering complexity --------
         {
@@ -2040,19 +2242,42 @@ export const F1_PAPER: SeedPaper = {
             "Зарплата — гигиенический (поддерживающий) фактор: недостаточная оплата демотивирует, но щедрая сама по себе не создаёт устойчивой мотивации. Мотиваторы носят внутренний характер (достижение, признание, рост).",
         },
         // -------- existing Q3 (short_answer, unchanged) --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "In Tuckman\u2019s model, name the stage where conflict typically emerges as team members assert their roles.",
-          prompt_ru:
-            "В модели Такмена назовите стадию, на которой обычно возникает конфликт, когда члены команды отстаивают свои роли.",
-          correct_answer_en: "Storming",
-          correct_answer_ru: "Шторминг",
-          explanation_en:
-            "Tuckman: forming → storming → norming → performing (→ adjourning). Storming is where individual personalities and ideas clash before the team settles into shared norms.",
-          explanation_ru:
-            "Такмен: формирование → шторминг → нормирование → выполнение (→ расформирование). На стадии шторминга личности и идеи сталкиваются, пока команда не выработает общие нормы.",
+          prompt_en: "In Tuckman's model of team development, which stage is characterised by conflict as members assert their roles and ideas?",
+          prompt_ru: "На каком этапе модели развития команды Такмана возникает конфликт, когда участники отстаивают свои роли и идеи?",
+          options: [
+            {
+              key: "A",
+              text_en: "Storming",
+              text_ru: "Конфликт (Storming)",
+            },
+            {
+              key: "B",
+              text_en: "Forming",
+              text_ru: "Формирование (Forming)",
+              why_wrong_en: "Forming is the polite, tentative first stage where members get acquainted; open conflict has not yet emerged.",
+              why_wrong_ru: "Формирование — вежливый, осторожный первый этап знакомства; открытого конфликта ещё нет.",
+            },
+            {
+              key: "C",
+              text_en: "Norming",
+              text_ru: "Нормирование (Norming)",
+              why_wrong_en: "Norming is when the team RESOLVES conflict and agrees shared ways of working — it follows storming.",
+              why_wrong_ru: "Нормирование — когда команда РАЗРЕШАЕТ конфликт и согласует общие правила работы; следует за конфликтом.",
+            },
+            {
+              key: "D",
+              text_en: "Performing",
+              text_ru: "Функционирование (Performing)",
+              why_wrong_en: "Performing is the mature stage of effective, low-friction delivery, well after the conflict stage.",
+              why_wrong_ru: "Функционирование — зрелый этап эффективной работы с малым трением, наступающий значительно позже стадии конфликта.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Tuckman's sequence is forming → storming → norming → performing (→ adjourning). Storming is where individual personalities and ideas clash before the team settles into shared norms.",
+          explanation_ru: "Последовательность Такмана: формирование → конфликт → нормирование → функционирование (→ расформирование). На стадии конфликта сталкиваются личности и идеи, прежде чем команда выработает общие нормы.",
         },
         // -------- existing Q4 (augmented) --------
         {
@@ -2240,20 +2465,42 @@ export const F1_PAPER: SeedPaper = {
             "Авторитарный стиль концентрирует принятие решений на лидере; подчинённые получают указания и исполняют. Эффективен в кризисе или с неопытной командой, но со временем подавляет инициативу и снижает вовлечённость.",
         },
         // -------- NEW Q8 — easy short_answer on Fayol --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name THREE of the five functions of management identified by Henri Fayol.",
-          prompt_ru: "Назовите ТРИ из пяти функций менеджмента по Анри Файолю.",
-          correct_answer_en:
-            "Any three of: Plan, Organise, Command, Coordinate, Control",
-          correct_answer_ru:
-            "Любые три из: Планирование, Организация, Распорядительство, Координация, Контроль",
-          explanation_en:
-            "Fayol's five functions of management (POCCC) date from 1916 and remain a foundational framework: Plan (set objectives and decide how to achieve them), Organise (allocate resources and structure), Command (direct subordinates), Coordinate (align activities), Control (compare results to plan, take corrective action).",
-          explanation_ru:
-            "Пять функций менеджмента Файоля (POCCC) сформулированы в 1916 году и остаются базовой моделью: Планирование (постановка целей и способов их достижения), Организация (распределение ресурсов и структурирование), Распорядительство (руководство подчинёнными), Координация (согласование действий), Контроль (сравнение результата с планом, корректирующие действия).",
+          prompt_en: "Which of the following is one of Henri Fayol's five functions of management?",
+          prompt_ru: "Какой из перечисленных пунктов является одной из пяти функций управления по Анри Файолю?",
+          options: [
+            {
+              key: "A",
+              text_en: "Coordinate",
+              text_ru: "Координировать",
+            },
+            {
+              key: "B",
+              text_en: "Motivate",
+              text_ru: "Мотивировать",
+              why_wrong_en: "Motivation is a theme of later behavioural writers (e.g. Maslow, Herzberg); Fayol's five functions are plan, organise, command, coordinate, control.",
+              why_wrong_ru: "Мотивация — тема более поздних поведенческих авторов (Маслоу, Герцберг); пять функций Файоля — планировать, организовывать, командовать, координировать, контролировать.",
+            },
+            {
+              key: "C",
+              text_en: "Innovate",
+              text_ru: "Внедрять инновации",
+              why_wrong_en: "Innovation is not one of Fayol's classical functions; his five are plan, organise, command, coordinate, control.",
+              why_wrong_ru: "Инновации не входят в классические функции Файоля; его пять — планировать, организовывать, командовать, координировать, контролировать.",
+            },
+            {
+              key: "D",
+              text_en: "Delegate",
+              text_ru: "Делегировать",
+              why_wrong_en: "Delegation is a management technique, not one of Fayol's five named functions (plan, organise, command, coordinate, control).",
+              why_wrong_ru: "Делегирование — управленческий приём, а не одна из пяти названных функций Файоля (планировать, организовывать, командовать, координировать, контролировать).",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Fayol identified five functions of management: Plan, Organise, Command, Coordinate, and Control. Coordinate means harmonising the activities and efforts of different parts of the organisation toward common objectives.",
+          explanation_ru: "Файоль выделил пять функций управления: планировать, организовывать, командовать, координировать и контролировать. Координировать — значит согласовывать действия и усилия разных частей организации для достижения общих целей.",
         },
         // -------- NEW Q9 — medium MCQ on Vroom expectancy --------
         {
@@ -2448,21 +2695,42 @@ export const F1_PAPER: SeedPaper = {
             "Херси и Бланшар подбирают стиль лидерства под зрелость подчинённого. Высокая зрелость (способен и мотивирован) требует делегирования: лидер передаёт ответственность с минимумом указаний и минимумом «опеки». Чрезмерное управление зрелым сотрудником его демотивирует.",
         },
         // -------- NEW Q13 — medium short_answer on person spec --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "In HR terminology, what is the difference between a job description and a person specification?",
-          prompt_ru:
-            "В терминологии HR в чём разница между должностной инструкцией и профилем должности (person specification)?",
-          correct_answer_en:
-            "Job description sets out duties and responsibilities of the role; person specification sets out the qualities (skills, experience, qualifications) required of the postholder",
-          correct_answer_ru:
-            "Должностная инструкция описывает обязанности и ответственность позиции; профиль должности описывает качества (навыки, опыт, квалификации), требуемые от занимающего её человека",
-          explanation_en:
-            'A job description answers "What does the role do?" — listing duties, reporting lines, scope. A person specification answers "Who can do this role well?" — listing essential and desirable qualifications, experience, skills, and personal qualities. Both documents are inputs to recruitment: the job description goes to candidates, the person specification guides screening and selection criteria.',
-          explanation_ru:
-            "Должностная инструкция отвечает на вопрос «Что делает должность?» — перечисляет обязанности, подчинённость, круг полномочий. Профиль должности отвечает на «Кто может хорошо выполнять эту роль?» — перечисляет обязательные и желательные квалификации, опыт, навыки и личные качества. Оба документа — входы для подбора: должностная инструкция передаётся кандидатам, профиль должности задаёт критерии отбора.",
+          prompt_en: "What is the key difference between a job description and a person specification?",
+          prompt_ru: "В чём ключевое различие между должностной инструкцией и профилем кандидата?",
+          options: [
+            {
+              key: "A",
+              text_en: "A job description sets out the duties of the ROLE; a person specification sets out the qualities required of the POSTHOLDER",
+              text_ru: "Должностная инструкция описывает обязанности ДОЛЖНОСТИ; профиль кандидата описывает качества, требуемые от РАБОТНИКА",
+            },
+            {
+              key: "B",
+              text_en: "A job description is for permanent staff; a person specification is for temporary staff",
+              text_ru: "Должностная инструкция — для постоянных сотрудников; профиль кандидата — для временных",
+              why_wrong_en: "Both documents apply regardless of contract type; the distinction is role-focused vs person-focused, not permanent vs temporary.",
+              why_wrong_ru: "Оба документа применяются независимо от типа контракта; различие — «о должности» против «о человеке», а не «постоянный» против «временного».",
+            },
+            {
+              key: "C",
+              text_en: "A job description is written by HR; a person specification is written by the candidate",
+              text_ru: "Должностную инструкцию пишет HR; профиль кандидата пишет сам кандидат",
+              why_wrong_en: "Both are prepared by the employer/HR; candidates do not write the person specification.",
+              why_wrong_ru: "Оба документа готовит работодатель/HR; кандидат профиль не пишет.",
+            },
+            {
+              key: "D",
+              text_en: "They are two names for the same document",
+              text_ru: "Это два названия одного и того же документа",
+              why_wrong_en: "They are distinct documents: one describes the job's duties, the other the attributes a suitable postholder needs.",
+              why_wrong_ru: "Это разные документы: один описывает обязанности должности, другой — качества, нужные подходящему работнику.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "A job description answers \"what does the role involve?\" — duties, responsibilities, reporting lines. A person specification answers \"who do we need?\" — the skills, experience, qualifications and attributes of a suitable postholder. Together they underpin fair recruitment.",
+          explanation_ru: "Должностная инструкция отвечает на вопрос «что включает должность?» — обязанности, ответственность, подчинённость. Профиль кандидата отвечает на вопрос «кто нам нужен?» — навыки, опыт, квалификация и качества подходящего работника. Вместе они обеспечивают справедливый подбор.",
         },
         // -------- NEW Q14 — hard MCQ on Maslow scenario --------
         {
@@ -2686,18 +2954,42 @@ export const F1_PAPER: SeedPaper = {
             "Технический жаргон, непонятный получателю, — это «шумовой» барьер. Остальные варианты, наоборот, СНИЖАЮТ барьеры в коммуникации.",
         },
         // -------- existing Q3 (short_answer, unchanged) --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the four learning styles in Honey and Mumford\u2019s model.",
-          prompt_ru: "Назовите четыре стиля обучения в модели Хани и Мамфорда.",
-          correct_answer_en: "Activist, Reflector, Theorist, Pragmatist",
-          correct_answer_ru: "Деятель, рефлектор, теоретик, прагматик",
-          explanation_en:
-            "Honey and Mumford built on Kolb\u2019s learning cycle to define four learner types — Activists (experience), Reflectors (review), Theorists (concept), Pragmatists (apply).",
-          explanation_ru:
-            "Хани и Мамфорд развили цикл обучения Колба, выделив четыре типа: деятели (опыт), рефлекторы (обзор), теоретики (концепция), прагматики (применение).",
+          prompt_en: "Which set correctly names the four learning styles in Honey and Mumford's model?",
+          prompt_ru: "Какой набор верно называет четыре стиля обучения в модели Хони и Мамфорда?",
+          options: [
+            {
+              key: "A",
+              text_en: "Activist, Reflector, Theorist, Pragmatist",
+              text_ru: "Деятель, Рефлексирующий, Теоретик, Прагматик",
+            },
+            {
+              key: "B",
+              text_en: "Visual, Auditory, Reading, Kinaesthetic",
+              text_ru: "Визуальный, Аудиальный, Чтение, Кинестетический",
+              why_wrong_en: "These are the VARK learning preferences, a different model from Honey and Mumford's four styles.",
+              why_wrong_ru: "Это предпочтения по модели VARK — другая модель, отличная от четырёх стилей Хони и Мамфорда.",
+            },
+            {
+              key: "C",
+              text_en: "Concrete, Reflective, Abstract, Active",
+              text_ru: "Конкретный, Рефлексивный, Абстрактный, Активный",
+              why_wrong_en: "These describe Kolb's learning CYCLE stages, which Honey and Mumford built on but renamed into four learner TYPES.",
+              why_wrong_ru: "Это стадии цикла обучения Колба, на основе которого Хони и Мамфорд создали четыре ТИПА учащихся с другими названиями.",
+            },
+            {
+              key: "D",
+              text_en: "Activist, Observer, Analyst, Doer",
+              text_ru: "Деятель, Наблюдатель, Аналитик, Исполнитель",
+              why_wrong_en: "Only \"Activist\" is correct; the model's other three are Reflector, Theorist and Pragmatist.",
+              why_wrong_ru: "Верно только «Деятель»; остальные три в модели — Рефлексирующий, Теоретик и Прагматик.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "Honey and Mumford built on Kolb's learning cycle to define four learner types: Activists (learn by doing/experience), Reflectors (learn by reviewing), Theorists (learn by understanding concepts), and Pragmatists (learn by applying ideas practically).",
+          explanation_ru: "Хони и Мамфорд развили цикл обучения Колба, выделив четыре типа учащихся: Деятели (учатся через действие/опыт), Рефлексирующие (через осмысление), Теоретики (через понимание концепций) и Прагматики (через практическое применение идей).",
         },
         // -------- existing Q4 (augmented) --------
         {
@@ -2884,19 +3176,42 @@ export const F1_PAPER: SeedPaper = {
             "Наставничество — это долгосрочные развивающие отношения, обычно между старшим и младшим, который не является непосредственным подчинённым наставника. Фокус широкий: карьерный путь, профессиональные связи, ориентация в организационной политике, ролевые модели. Коучинг — уже (конкретный навык или поведение); консультирование — для личных трудностей.",
         },
         // -------- NEW Q8 — easy short_answer on 360-degree --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en: "What is a 360-degree appraisal?",
-          prompt_ru: "Что такое оценка 360 градусов?",
-          correct_answer_en:
-            "An appraisal that gathers feedback from multiple sources — typically the line manager, peers, subordinates, and sometimes the individual's own self-assessment and external stakeholders",
-          correct_answer_ru:
-            "Оценка, собирающая обратную связь из нескольких источников — обычно от непосредственного руководителя, коллег, подчинённых, а также из самооценки и иногда от внешних сторон",
-          explanation_en:
-            "A 360-degree appraisal aims for a balanced, multi-perspective view of an employee's performance and behaviour. Strengths: reduces single-manager bias; surfaces blind spots; improves perception of fairness. Limitations: time-consuming to administer, anonymity is hard to maintain in small teams, and feedback quality varies by source.",
-          explanation_ru:
-            "Оценка 360 градусов даёт сбалансированный многосторонний взгляд на работу и поведение сотрудника. Сильные стороны: снижает предвзятость одного руководителя, выявляет «слепые зоны», улучшает восприятие справедливости. Ограничения: трудоёмкая процедура, в малых командах сложно сохранить анонимность, качество отзывов зависит от источника.",
+          prompt_en: "What best describes a 360-degree appraisal?",
+          prompt_ru: "Что лучше всего описывает оценку «360 градусов»?",
+          options: [
+            {
+              key: "A",
+              text_en: "An appraisal that gathers feedback from multiple sources — manager, peers, subordinates and often self-assessment",
+              text_ru: "Оценка, собирающая обратную связь из нескольких источников — руководитель, коллеги, подчинённые и часто самооценка",
+            },
+            {
+              key: "B",
+              text_en: "An appraisal conducted only by the employee's line manager",
+              text_ru: "Оценка, проводимая только непосредственным руководителем",
+              why_wrong_en: "That is a traditional top-down appraisal; the defining feature of 360-degree is feedback from MULTIPLE sources, not just the manager.",
+              why_wrong_ru: "Это традиционная оценка «сверху вниз»; отличительная черта «360 градусов» — обратная связь из НЕСКОЛЬКИХ источников, а не только от руководителя.",
+            },
+            {
+              key: "C",
+              text_en: "An appraisal based solely on quantitative sales targets",
+              text_ru: "Оценка, основанная исключительно на количественных планах продаж",
+              why_wrong_en: "360-degree appraisal is about multi-source qualitative feedback, not a single quantitative metric.",
+              why_wrong_ru: "Оценка «360 градусов» — это многосторонняя качественная обратная связь, а не один количественный показатель.",
+            },
+            {
+              key: "D",
+              text_en: "An appraisal carried out once every 360 days",
+              text_ru: "Оценка, проводимая раз в 360 дней",
+              why_wrong_en: "The \"360\" refers to a full circle of feedback sources, not a time interval.",
+              why_wrong_ru: "«360» означает полный круг источников обратной связи, а не временной интервал.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "A 360-degree appraisal seeks a balanced, multi-perspective view of performance by gathering feedback from those around the employee — line manager, peers, subordinates, and often the individual's own self-assessment (and sometimes external stakeholders).",
+          explanation_ru: "Оценка «360 градусов» стремится дать сбалансированный, многосторонний взгляд на результаты, собирая обратную связь от окружения сотрудника — руководителя, коллег, подчинённых и часто самооценку (иногда и от внешних сторон).",
         },
         // -------- NEW Q9 — medium MCQ on channel choice --------
         {
@@ -3090,19 +3405,42 @@ export const F1_PAPER: SeedPaper = {
             "Крупная политика требует формального письменного сообщения (для фиксации, ясности и подотчётности) ПЛЮС поддерживающих встреч (объяснить контекст, ответить на вопросы, собрать обратную связь). Канал должен соответствовать цели: только письменно — нет диалога; только неформально — нет авторитета и фиксации.",
         },
         // -------- NEW Q13 — medium short_answer on Eisenhower --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            "In the Eisenhower matrix, what should you do with a task that is IMPORTANT but NOT URGENT?",
-          prompt_ru:
-            "В матрице Эйзенхауэра что нужно делать с задачей, которая ВАЖНАЯ, но НЕ СРОЧНАЯ?",
-          correct_answer_en: "Schedule it (plan a time to do it)",
-          correct_answer_ru: "Запланировать (определить время для выполнения)",
-          explanation_en:
-            'Important-not-urgent is the "scheduling" quadrant. These are the tasks that build long-term value — strategic planning, skills development, relationship-building, preventive maintenance. They get pushed aside by urgent demands unless deliberately scheduled. Stephen Covey called this "Quadrant II" and argued it is where high performers spend most time.',
-          explanation_ru:
-            "Важное-несрочное — квадрант «планирования». Это задачи, создающие долгосрочную ценность: стратегическое планирование, развитие навыков, выстраивание отношений, профилактическое обслуживание. Они вытесняются срочными делами, если их не планировать целенаправленно. Стивен Кови называл это «Квадрантом II» и считал, что именно там высокоэффективные люди проводят больше всего времени.",
+          prompt_en: "In the Eisenhower matrix, what is the recommended action for a task that is IMPORTANT but NOT URGENT?",
+          prompt_ru: "Что рекомендует матрица Эйзенхауэра для задачи, которая ВАЖНА, но НЕ СРОЧНА?",
+          options: [
+            {
+              key: "A",
+              text_en: "Schedule it — plan a specific time to do it",
+              text_ru: "Запланировать — выделить конкретное время для выполнения",
+            },
+            {
+              key: "B",
+              text_en: "Do it immediately",
+              text_ru: "Сделать немедленно",
+              why_wrong_en: "\"Do it now\" is for IMPORTANT AND URGENT tasks; important-but-not-urgent work should be scheduled, not rushed.",
+              why_wrong_ru: "«Сделать сейчас» — для ВАЖНЫХ И СРОЧНЫХ задач; важное, но не срочное следует планировать, а не спешить.",
+            },
+            {
+              key: "C",
+              text_en: "Delegate it",
+              text_ru: "Делегировать",
+              why_wrong_en: "Delegation suits URGENT but NOT IMPORTANT tasks; an important task generally warrants your own attention, scheduled.",
+              why_wrong_ru: "Делегирование подходит для СРОЧНЫХ, но НЕ ВАЖНЫХ задач; важная задача обычно требует вашего внимания по графику.",
+            },
+            {
+              key: "D",
+              text_en: "Delete it",
+              text_ru: "Удалить",
+              why_wrong_en: "Deleting/ignoring is for tasks that are NEITHER important NOR urgent; an important task must not be dropped.",
+              why_wrong_ru: "Удаление/игнорирование — для задач, которые НИ важны, НИ срочны; важную задачу отбрасывать нельзя.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The Eisenhower matrix sorts tasks by importance and urgency. Important-not-urgent is the \"quadrant of quality\": schedule dedicated time so these valuable tasks get done before they become urgent crises.",
+          explanation_ru: "Матрица Эйзенхауэра сортирует задачи по важности и срочности. Важное-несрочное — это «квадрант качества»: выделите время заранее, чтобы выполнить ценные задачи до того, как они станут срочными кризисами.",
         },
         // -------- NEW Q14 — hard MCQ on appraisal pitfalls --------
         {
@@ -3229,21 +3567,42 @@ export const F1_PAPER: SeedPaper = {
         "Информирование о нарушениях (whistleblowing) сначала идёт по внутренней линии — непосредственный руководитель, затем аудиторский комитет, затем профессиональная организация — и только потом наружу, если внутренние пути исчерпаны и закон это позволяет. Взятки запрещены; небольшие подарки оцениваются на предмет порога, выше которого они могут восприниматься как влияние на профессиональное суждение.",
       questions: [
         // -------- existing Q1 (short_answer, unchanged) --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the five fundamental principles of the IESBA Code of Ethics for professional accountants.",
-          prompt_ru:
-            "Назовите пять фундаментальных принципов Кодекса этики IESBA для профессиональных бухгалтеров.",
-          correct_answer_en:
-            "Integrity, objectivity, professional competence and due care, confidentiality, professional behaviour",
-          correct_answer_ru:
-            "Честность, объективность, профессиональная компетентность и должная осмотрительность, конфиденциальность, профессиональное поведение",
-          explanation_en:
-            "These five principles underpin all ACCA and IESBA ethical guidance and are tested directly in F1 and indirectly in every later paper.",
-          explanation_ru:
-            "Эти пять принципов лежат в основе всех этических рекомендаций ACCA и IESBA. Они напрямую проверяются в F1 и косвенно — в каждом последующем экзамене.",
+          prompt_en: "Which of the following is one of the five fundamental principles of the IESBA Code of Ethics?",
+          prompt_ru: "Какой из перечисленных пунктов является одним из пяти основополагающих принципов Кодекса этики IESBA?",
+          options: [
+            {
+              key: "A",
+              text_en: "Objectivity",
+              text_ru: "Объективность",
+            },
+            {
+              key: "B",
+              text_en: "Profitability",
+              text_ru: "Прибыльность",
+              why_wrong_en: "Profitability is a commercial goal, not an ethical principle. The five principles are integrity, objectivity, professional competence and due care, confidentiality, and professional behaviour.",
+              why_wrong_ru: "Прибыльность — коммерческая цель, а не этический принцип. Пять принципов: честность, объективность, профессиональная компетентность и должная осмотрительность, конфиденциальность, профессиональное поведение.",
+            },
+            {
+              key: "C",
+              text_en: "Loyalty to the employer",
+              text_ru: "Лояльность работодателю",
+              why_wrong_en: "Accountants owe duties to the public interest; unconditional loyalty to an employer can conflict with objectivity and integrity, so it is not a fundamental principle.",
+              why_wrong_ru: "Бухгалтеры несут обязанности перед общественными интересами; безусловная лояльность работодателю может конфликтовать с объективностью и честностью, поэтому это не основополагающий принцип.",
+            },
+            {
+              key: "D",
+              text_en: "Profit maximisation",
+              text_ru: "Максимизация прибыли",
+              why_wrong_en: "This is a business objective, not one of the IESBA ethical principles.",
+              why_wrong_ru: "Это бизнес-цель, а не один из этических принципов IESBA.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The five IESBA fundamental principles are: integrity, objectivity, professional competence and due care, confidentiality, and professional behaviour. Objectivity means not letting bias, conflict of interest, or undue influence override professional judgement.",
+          explanation_ru: "Пять основополагающих принципов IESBA: честность, объективность, профессиональная компетентность и должная осмотрительность, конфиденциальность, профессиональное поведение. Объективность означает не позволять предвзятости, конфликту интересов или давлению влиять на профессиональное суждение.",
         },
         // -------- existing Q2 (augmented) --------
         {
@@ -3526,21 +3885,42 @@ export const F1_PAPER: SeedPaper = {
             "Угроза запугивания возникает, когда бухгалтер ощущает давление — реальное или предполагаемое — согласиться с позицией клиента. Типичные примеры: угрозы увольнения, судебных исков, агрессивное личное поведение. Защитные меры: вовлечение аудиторского комитета, эскалация к старшему руководству фирмы и готовность отказаться от задания при необходимости.",
         },
         // -------- NEW Q8 — easy short_answer on safeguards --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "easy",
-          prompt_en:
-            "Name the three categories of safeguards against ethical threats identified by the IESBA Code.",
-          prompt_ru:
-            "Назовите три категории защитных мер против этических угроз, выделенные в Кодексе IESBA.",
-          correct_answer_en:
-            "Safeguards created by the profession or legislation; safeguards within the firm (or employing organisation); safeguards within the client",
-          correct_answer_ru:
-            "Меры, создаваемые профессией или законодательством; меры внутри фирмы (или организации-работодателя); меры внутри клиента",
-          explanation_en:
-            "Profession/legislation-level safeguards include CPD requirements, professional standards, regulatory oversight, and external review. Firm-level safeguards include independence policies, partner rotation, internal quality reviews, and ethical training. Client-level safeguards include the client's own corporate governance, audit committee oversight, and competent management. The first response when a threat is identified is to apply safeguards from the appropriate level; if no adequate safeguard exists, decline or withdraw.",
-          explanation_ru:
-            "Меры на уровне профессии/законодательства включают требования к непрерывному обучению, профессиональные стандарты, регуляторный надзор и внешнюю проверку. Меры внутри фирмы — политики независимости, ротация партнёров, внутренний контроль качества, этическое обучение. Меры внутри клиента — собственное корпоративное управление клиента, надзор аудиторского комитета, компетентное руководство. Первый ответ при выявлении угрозы — применить меры соответствующего уровня; если адекватной меры нет, отказаться от задания.",
+          prompt_en: "The IESBA Code groups safeguards against ethical threats into three categories. Which of the following is one of them?",
+          prompt_ru: "Кодекс IESBA делит меры защиты от этических угроз на три категории. Какая из перечисленных к ним относится?",
+          options: [
+            {
+              key: "A",
+              text_en: "Safeguards created by the profession or legislation",
+              text_ru: "Меры, созданные профессией или законодательством",
+            },
+            {
+              key: "B",
+              text_en: "Safeguards created by competitors",
+              text_ru: "Меры, создаваемые конкурентами",
+              why_wrong_en: "Competitors play no role in the safeguards framework; the three categories are profession/legislation, the firm, and the client.",
+              why_wrong_ru: "Конкуренты не участвуют в системе мер защиты; три категории — профессия/законодательство, фирма и клиент.",
+            },
+            {
+              key: "C",
+              text_en: "Safeguards created by the tax authority",
+              text_ru: "Меры, создаваемые налоговым органом",
+              why_wrong_en: "The tax authority is not one of the three safeguard sources; these are the profession/legislation, the firm, and the client.",
+              why_wrong_ru: "Налоговый орган не относится к трём источникам мер; это профессия/законодательство, фирма и клиент.",
+            },
+            {
+              key: "D",
+              text_en: "Safeguards created by shareholders",
+              text_ru: "Меры, создаваемые акционерами",
+              why_wrong_en: "Shareholders are not a recognised safeguard category; the three are profession/legislation, within the firm, and within the client.",
+              why_wrong_ru: "Акционеры не являются признанной категорией мер; три категории — профессия/законодательство, внутри фирмы и у клиента.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The IESBA Code groups safeguards into three sources: those created by the profession or legislation (e.g. CPD, standards, regulatory oversight); those within the firm or employing organisation (e.g. independence policies, partner rotation); and those within the client's own systems and governance.",
+          explanation_ru: "Кодекс IESBA выделяет три источника мер защиты: созданные профессией или законодательством (например, CPD, стандарты, регуляторный надзор); существующие внутри фирмы или организации-работодателя (например, политики независимости, ротация партнёров); и существующие в системах и управлении самого клиента.",
         },
         // -------- NEW Q9 — medium MCQ on familiarity threat --------
         {
@@ -3742,21 +4122,42 @@ export const F1_PAPER: SeedPaper = {
             "Честность требует от бухгалтера быть прямым и порядочным во всех профессиональных и деловых отношениях. Перенос даты документа задним числом — это прямое искажение, фальсификация времени операции с целью ввести в заблуждение пользователей отчётности. Младший бухгалтер должен отказаться и эскалировать. Затронуты и другие принципы (профессиональное поведение, возможно объективность), но главное нарушение — честности.",
         },
         // -------- NEW Q13 — medium short_answer on due care --------
-        {
-          type: "short_answer",
+                {
+          type: "mcq",
           difficulty: "medium",
-          prompt_en:
-            'The IESBA principle of "professional competence and due care" has TWO distinct obligations. What are they?',
-          prompt_ru:
-            "Принцип IESBA «профессиональная компетентность и должная осмотрительность» состоит из ДВУХ отдельных обязанностей. Каких?",
-          correct_answer_en:
-            "(1) Maintain professional knowledge and skill at the level required to provide competent service; (2) act diligently and in accordance with applicable technical and professional standards",
-          correct_answer_ru:
-            "(1) Поддерживать профессиональные знания и навыки на уровне, необходимом для оказания компетентных услуг; (2) действовать добросовестно и в соответствии с применимыми техническими и профессиональными стандартами",
-          explanation_en:
-            "The principle has two limbs that examiners often test separately. Competence is the OBLIGATION TO KEEP LEARNING: continuing professional development (CPD), staying current with changes in standards, declining work outside one's expertise. Due care is the OBLIGATION TO ACT CAREFULLY: applying knowledge diligently, following procedures, supervising junior staff appropriately, completing work to professional standard. A competent accountant who is careless is just as culpable as a careful accountant who is incompetent.",
-          explanation_ru:
-            "Принцип состоит из двух частей, которые экзаменаторы часто проверяют отдельно. Компетентность — это ОБЯЗАННОСТЬ УЧИТЬСЯ: непрерывное профессиональное развитие (CPD), отслеживание изменений в стандартах, отказ от работы за пределами своей экспертизы. Должная осмотрительность — это ОБЯЗАННОСТЬ ДЕЙСТВОВАТЬ ВНИМАТЕЛЬНО: добросовестное применение знаний, следование процедурам, надлежащий надзор за младшими сотрудниками, выполнение работы по профессиональным стандартам. Компетентный, но небрежный бухгалтер виновен так же, как внимательный, но некомпетентный.",
+          prompt_en: "The IESBA principle of \"professional competence and due care\" has two distinct obligations. Which option correctly states BOTH?",
+          prompt_ru: "Принцип IESBA «профессиональная компетентность и должная осмотрительность» состоит из двух отдельных обязанностей. В каком варианте верно указаны ОБЕ?",
+          options: [
+            {
+              key: "A",
+              text_en: "Maintain professional knowledge and skill at the required level; and act diligently in accordance with applicable standards",
+              text_ru: "Поддерживать профессиональные знания и навыки на требуемом уровне; и действовать добросовестно в соответствии с применимыми стандартами",
+            },
+            {
+              key: "B",
+              text_en: "Keep client information confidential; and avoid conflicts of interest",
+              text_ru: "Сохранять конфиденциальность информации клиента; и избегать конфликта интересов",
+              why_wrong_en: "These describe confidentiality and objectivity — different fundamental principles, not the two limbs of competence and due care.",
+              why_wrong_ru: "Это описывает конфиденциальность и объективность — другие основополагающие принципы, а не две части компетентности и должной осмотрительности.",
+            },
+            {
+              key: "C",
+              text_en: "Be honest in all dealings; and behave professionally in public",
+              text_ru: "Быть честным во всех делах; и вести себя профессионально публично",
+              why_wrong_en: "These describe integrity and professional behaviour, not competence and due care.",
+              why_wrong_ru: "Это описывает честность и профессиональное поведение, а не компетентность и должную осмотрительность.",
+            },
+            {
+              key: "D",
+              text_en: "Charge fair fees; and complete work on time",
+              text_ru: "Назначать справедливые гонорары; и выполнять работу в срок",
+              why_wrong_en: "Fee-setting and timeliness are practice-management matters, not the two obligations within competence and due care.",
+              why_wrong_ru: "Назначение гонораров и соблюдение сроков — вопросы управления практикой, а не две обязанности в рамках компетентности и должной осмотрительности.",
+            },
+          ],
+          correct_answer_en: "A",
+          explanation_en: "The principle has two limbs. Competence is the obligation to keep learning — CPD, staying current with standards, and declining work outside one's expertise. Due care is the obligation to act carefully — applying knowledge diligently, following procedures, and completing work to professional standard.",
+          explanation_ru: "Принцип состоит из двух частей. Компетентность — обязанность учиться: CPD, отслеживание изменений в стандартах, отказ от работы вне своей экспертизы. Должная осмотрительность — обязанность действовать внимательно: добросовестно применять знания, следовать процедурам и выполнять работу по профессиональным стандартам.",
         },
         // -------- NEW Q14 — hard MCQ on multiple threats scenario --------
         {

@@ -1,44 +1,56 @@
 import { Injectable } from "@nestjs/common";
 import type { QuestionRow, Lang } from "../content/content.types";
-import { LlmGraderService } from "../llm/llm-grader.service";
 
 export interface GradeResult {
   was_correct: boolean;
-  // Stored in attempts.llm_grade_json. Null for MCQ (no provider involved).
-  // For short_answer this is the structured verdict from LlmGraderService.
+  // Stored in attempts.llm_grade_json. Always null now — grading is fully
+  // deterministic (mcq / number_entry) and no LLM is involved in the grading
+  // path. The column is retained for historical rows and a possible future
+  // authoring-side use; the grader never populates it.
   llm_grade_json: unknown | null;
 }
 
+// Grading is locked to DETERMINISTIC question types only (mcq, number_entry).
+// See the Grading Spec: ACCA auto-marks only objective formats (MCQ,
+// multiple-response, matching, numeric fill-in-the-blank). Free-text
+// short_answer is not a real auto-marked exam format, so it is being retired
+// from the question bank; the grader no longer has a code path for it. No fuzzy
+// string matching, no synonym sets, and no LLM in the grading path — that is
+// what produced the "Zero based budgeting marked wrong" trust bug.
+
 @Injectable()
 export class GraderService {
-  constructor(private readonly llm: LlmGraderService) {}
+  // No dependencies: grading is self-contained and deterministic. The
+  // LlmGraderService is intentionally NOT injected here anymore — it stays
+  // dormant in the tree (no callers) for a possible future authoring-side use.
 
-  // user_id is required so LLM grading can enforce its per-user daily cap.
-  // lang determines which language's correct_answer / prompt we compare against
-  // for short-answer grading. MCQ and number_entry are language-neutral
-  // (we compare option keys / numeric values).
+  // user_id and lang are kept in the signature for caller compatibility and
+  // future use; deterministic grading doesn't need either (option keys and
+  // numeric values are language-neutral).
   async grade(
     question: QuestionRow,
-    user_id: string,
+    _user_id: string,
     user_answer: string,
-    lang: Lang
+    _lang: Lang
   ): Promise<GradeResult> {
     if (question.type === "mcq") {
       return this.gradeMcq(question, user_answer);
     }
     if (question.type === "number_entry") {
       const numeric = this.gradeNumber(question, user_answer);
-      // If the user submitted gibberish that didn't parse, fall through to the
-      // LLM path so the verdict is reasoned about (and may catch "12 (rounded)"
-      // or similar near-valid inputs). Cheap because most number_entry answers
-      // parse cleanly on the first try.
-      if (numeric !== null) return numeric;
+      // Parse failure (gibberish / unparseable input) is simply WRONG. We do
+      // NOT fall through to any LLM or fuzzy path — there is none. Returning
+      // incorrect directly keeps grading deterministic and dispute-free.
+      if (numeric === null) {
+        return { was_correct: false, llm_grade_json: null };
+      }
+      return numeric;
     }
-    const verdict = await this.llm.grade(question, user_id, user_answer, lang);
-    return {
-      was_correct: verdict.was_correct,
-      llm_grade_json: verdict.llm_grade_json,
-    };
+    // Any non-deterministic type (e.g. a stray legacy short_answer that wasn't
+    // migrated) is not auto-gradable. Fail closed: mark incorrect rather than
+    // silently passing, and never invoke an LLM. Once the short_answer audit /
+    // migration (Grading Spec steps 1-6) lands, no such rows should remain.
+    return { was_correct: false, llm_grade_json: null };
   }
 
   private gradeMcq(question: QuestionRow, user_answer: string): GradeResult {

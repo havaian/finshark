@@ -255,9 +255,11 @@ export class ContentService {
       prompt_ru: dto.prompt_ru ?? null,
       options: dto.type === "mcq" ? cleanedOpts : null,
       correct_answer_en: dto.correct_answer_en,
-      // MCQ + number_entry are language-neutral on correct answer; only short_answer uses _ru.
-      correct_answer_ru:
-        dto.type === "short_answer" ? dto.correct_answer_ru ?? null : null,
+      // Created questions are always deterministic (mcq / number_entry), and for
+      // both the correct answer is language-neutral (an option key, or a numeric
+      // value), so correct_answer_ru is always null. (short_answer, the only type
+      // that used _ru, is retired and cannot be created.)
+      correct_answer_ru: null,
       explanation_en: dto.explanation_en,
       explanation_ru: dto.explanation_ru ?? null,
       concept_bite_en: dto.concept_bite_en ?? null,
@@ -292,9 +294,9 @@ export class ContentService {
         ? this.scrubCorrectOptionWhyWrong(nextOptions, nextType, nextCorrect)
         : undefined;
 
-    // Normalise: if type is short_answer or number_entry, force options to null.
-    // If type is mcq or number_entry, force correct_answer_ru to null.
-    // If type is not number_entry, force acceptable_tolerance to null.
+    // Normalise: number_entry forces options to null.
+    // mcq or number_entry forces correct_answer_ru to null.
+    // Anything other than number_entry forces acceptable_tolerance to null.
     const patch: Parameters<QuestionsRepository["update"]>[1] = {
       type: dto.type,
       difficulty: dto.difficulty,
@@ -310,8 +312,7 @@ export class ContentService {
       acceptable_tolerance: dto.acceptable_tolerance,
       is_active: dto.is_active,
     };
-    if (nextType === "short_answer" || nextType === "number_entry")
-      patch.options = null;
+    if (nextType === "number_entry") patch.options = null;
     if (nextType === "mcq" || nextType === "number_entry")
       patch.correct_answer_ru = null;
     if (nextType !== "number_entry") patch.acceptable_tolerance = null;
@@ -394,7 +395,8 @@ export class ContentService {
           `correct_answer "${correct_answer_en}" must match one of the option keys`
         );
       }
-    } else if (type === "number_entry") {
+    } else {
+      // number_entry.
       if (options && options.length > 0) {
         throw new BadRequestException(
           "number_entry questions must not have options"
@@ -412,18 +414,6 @@ export class ContentService {
       if (!Number.isFinite(n)) {
         throw new BadRequestException(
           `number_entry correct_answer_en "${correct_answer_en}" must be a valid number`
-        );
-      }
-    } else {
-      // short_answer
-      if (options && options.length > 0) {
-        throw new BadRequestException(
-          "short_answer questions must not have options"
-        );
-      }
-      if (!correct_answer_en.trim()) {
-        throw new BadRequestException(
-          "short_answer requires a non-empty correct_answer_en"
         );
       }
     }

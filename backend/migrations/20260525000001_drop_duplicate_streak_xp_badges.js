@@ -30,21 +30,22 @@ const DROPPED_CODES = [
   'xp_10000',
 ];
 
+// Inlined IN list. node-pg-migrate's pgm.sql() takes a string only — it does
+// NOT accept a {text, values} parameterised form. Inlining is safe here
+// because the values are hardcoded constants from this file, not user input,
+// so there's nothing to SQL-inject.
+const IN_LIST = DROPPED_CODES.map((c) => `'${c}'`).join(', ');
+
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  // 1) Sweep earned rows for the dropped codes. Using ANY($1) so this is a
-  //    single statement regardless of array size.
-  pgm.sql({
-    text: `DELETE FROM user_badges WHERE badge_code = ANY($1)`,
-    values: [DROPPED_CODES],
-  });
+  // 1) Sweep earned rows for the dropped codes. user_badges.badge_code is
+  //    ON DELETE RESTRICT, so we MUST clear referrers before deleting the
+  //    catalog rows below.
+  pgm.sql(`DELETE FROM user_badges WHERE badge_code IN (${IN_LIST})`);
 
   // 2) Drop the catalog rows. Now safe because the FK has nothing to RESTRICT.
-  pgm.sql({
-    text: `DELETE FROM badges WHERE code = ANY($1)`,
-    values: [DROPPED_CODES],
-  });
+  pgm.sql(`DELETE FROM badges WHERE code IN (${IN_LIST})`);
 };
 
 exports.down = (pgm) => {

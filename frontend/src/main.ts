@@ -5,12 +5,26 @@ import router from "./router";
 import "./style.css";
 import { i18n, applyOverrides, readLangFromStorage } from "./i18n";
 import { api } from "./api/client";
+import { useEntitlementStore } from "./stores/entitlement.store";
 
 const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(i18n);
 app.mount("#app");
+
+// Entitlement bootstrap. If the user has a stored access token (i.e. they're
+// hot-reloading the SPA already signed in), pull /me/entitlement so chrome
+// chips have data on first paint instead of after the dashboard mounts.
+// Best-effort: 401 is handled by the axios interceptor (refresh + retry or
+// forced-logout). Any other failure falls through silently — the store stays
+// empty and UI components hide their quota chips.
+//
+// The cheap LS_ACCESS check avoids a 401 hit when the user has never signed
+// in. Bare visitors (LoginPage) skip this entirely.
+if (localStorage.getItem("finshark.access_token")) {
+  void useEntitlementStore().fetch();
+}
 
 // Fetch UI overrides for the current language and merge over the static
 // locale. Overrides live as JSON files on the backend (backend/locales/) and

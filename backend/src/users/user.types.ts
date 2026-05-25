@@ -36,6 +36,17 @@ export interface UserRow {
   // disable, kept in lockstep with totp_secret.
   totp_secret: string | null;
   totp_enrolled_at: Date | null;
+  // IANA timezone name. Default 'Asia/Tashkent' (UZ launch market). Used by
+  // the billing layer to refill the free-tier heart pool at the user's local
+  // midnight. See migration 20260525000003_add_user_timezone.js.
+  timezone: string;
+  // Free-tier daily heart pool. Premium users ignore these (their session
+  // hearts come from the per-session default). For free users, the pool IS
+  // the session hearts: a session starts with min(pool, 3), wrong answer
+  // deducts 1 from the pool, refill at local midnight via
+  // ensureFreeHeartPoolRefilled() lazily on the next heart-touching call.
+  free_hearts_pool: number; // 0..3
+  free_hearts_pool_date: Date | null; // the local date the pool corresponds to
   created_at: Date;
   updated_at: Date;
 }

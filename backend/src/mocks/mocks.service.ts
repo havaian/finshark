@@ -12,11 +12,18 @@ import { LessonSessionsRepository } from "../lessons/lesson-sessions.repository"
 import { LessonSessionQuestionsRepository } from "../lessons/lesson-session-questions.repository";
 import { AttemptsRepository } from "../lessons/attempts.repository";
 import { QuestionsRepository } from "../content/questions.repository";
+import { PapersRepository } from "../content/papers.repository";
+import { UsersRepository } from "../users/users.repository";
+import { EntitlementsService } from "../billing/entitlements.service";
 import type {
   LessonQuestion,
   LessonTheoryBite,
 } from "../lessons/lessons.service";
 import type { Lang } from "../content/content.types";
+
+// Free-tier monthly mock quota. Premium = unlimited. Single edit if product
+// later wants 2/month free.
+const FREE_MOCKS_PER_MONTH = 1;
 
 // MocksService runs alongside LessonsService and reuses much of its surface
 // area. The mock is just a lesson_session with mode='mock' — the attempt
@@ -69,6 +76,9 @@ export class MocksService {
     private readonly sessionQuestions: LessonSessionQuestionsRepository,
     private readonly attempts: AttemptsRepository,
     private readonly questions: QuestionsRepository,
+    private readonly papers: PapersRepository,
+    private readonly users: UsersRepository,
+    private readonly entitlements: EntitlementsService,
     private readonly lessons: LessonsService
   ) {}
 
@@ -82,6 +92,29 @@ export class MocksService {
       time_limit_seconds?: number;
     }
   ): Promise<StartMockResult> {
+    // Free-tier gates. Mocks don't touch hearts, so only paper-access and
+    // monthly quota apply. Premium users bypass both.
+    const entitlement = await this.entitlements.getEntitlement(user_id);
+    if (entitlement.tier === "free") {
+      const paper = await this.papers.findById(opts.paper_id);
+      if (paper && !paper.free_accessible) {
+        throw new ForbiddenException(
+          "this paper is available to premium members only"
+        );
+      }
+      const user = await this.users.findById(user_id);
+      if (!user) throw new NotFoundException("user not found");
+      const mocksThisMonth = await this.sessions.countMocksThisMonthInTimezone(
+        user_id,
+        user.timezone
+      );
+      if (mocksThisMonth >= FREE_MOCKS_PER_MONTH) {
+        throw new ForbiddenException(
+          `free tier: ${FREE_MOCKS_PER_MONTH} mock per month reached — upgrade or wait until next month`
+        );
+      }
+    }
+
     const queue = await this.questions.findRandomForMock(
       opts.paper_id,
       opts.question_count

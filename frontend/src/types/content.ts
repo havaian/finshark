@@ -15,6 +15,10 @@ export interface PaperRaw {
   code: string;
   name_en: string;
   name_ru: string | null;
+  // Free-tier access flag. When false, only premium users can start lessons
+  // or mocks against this paper. Admin can toggle from the paper edit form
+  // in AdminContentPage. See backend migration 20260525000006.
+  free_accessible: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -79,6 +83,10 @@ export interface Paper {
   id: string;
   code: string;
   name: string;
+  // Whether this paper is reachable on the free tier. Exposed even on the
+  // public listing so the picker UI can render a lock badge; backend still
+  // enforces the gate on lesson/mock start.
+  free_accessible: boolean;
   created_at: string;
   updated_at: string;
 }

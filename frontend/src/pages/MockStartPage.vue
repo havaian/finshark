@@ -7,6 +7,7 @@ import { lessonsApi } from '../api/lessons.api';
 import { mocksApi } from '../api/mocks.api';
 import { useAuthStore } from '../stores/auth.store';
 import { useLocaleStore } from '../stores/locale.store';
+import { useEntitlementStore } from '../stores/entitlement.store';
 import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
 
@@ -24,6 +25,7 @@ const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 const locale = useLocaleStore();
+const entitlement = useEntitlementStore();
 
 const papers = ref<Paper[]>([]);
 const papersLoading = ref(true);
@@ -38,9 +40,43 @@ const minutes = ref<number>(60);
 const submitting = ref(false);
 const submitError = ref<string | null>(null);
 
+// Free-tier mock gates. Premium users bypass these — same shape as
+// DashboardPage so the chrome stays consistent.
+//   - blockedByPaper: selected paper is premium-only.
+//   - blockedByQuota: monthly mock allowance already used.
+// Both are reactive on the entitlement store; the start button respects
+// them so we don't even hit the server for a known-blocked attempt.
+const blockedByPaper = computed(() => {
+  if (!entitlement.isFree) return false;
+  if (!paperId.value) return false;
+  const p = papers.value.find((x) => x.id === paperId.value);
+  return p ? !p.free_accessible : false;
+});
+
+const blockedByQuota = computed(() => {
+  if (!entitlement.isFree) return false;
+  const ent = entitlement.entitlement;
+  if (!ent || ent.mocks.limit === null) return false;
+  return ent.mocks.used >= ent.mocks.limit;
+});
+
 const canSubmit = computed(
-  () => !!paperId.value && questionCount.value > 0 && !submitting.value,
+  () =>
+    !!paperId.value &&
+    questionCount.value > 0 &&
+    !submitting.value &&
+    !blockedByPaper.value &&
+    !blockedByQuota.value,
 );
+
+// Friendly explanation shown below the start button when the gate is
+// blocking. Mirrors the dashboard quotaBlockMsg pattern.
+const quotaBlockMsg = computed<string | null>(() => {
+  if (!entitlement.isFree) return null;
+  if (blockedByPaper.value) return t('dashboard.paper_locked_suffix');
+  if (blockedByQuota.value) return t('dashboard.quota_mocks_exhausted');
+  return null;
+});
 
 async function loadPapers() {
   papersLoading.value = true;
@@ -77,6 +113,11 @@ async function onStart() {
     router.push({ name: 'lesson', params: { lang: locale.lang, session_id: result.session_id } });
   } catch (e) {
     submitError.value = extractError(e) ?? 'failed to start mock';
+    // 403 ≈ free-tier gate trip — refresh chrome chips so the cap counter
+    // updates to whatever the server thinks the truth is.
+    if (e instanceof AxiosError && e.response?.status === 403) {
+      void entitlement.fetch();
+    }
   } finally {
     submitting.value = false;
   }
@@ -116,6 +157,9 @@ onMounted(loadPapers);
               :class="['mock-option', { selected: paperId === p.id }]" @click="paperId = p.id">
               <span class="mono">{{ p.code }}</span>
               <span class="dim" style="margin-left: 8px;">{{ p.name }}</span>
+              <span v-if="entitlement.isFree && !p.free_accessible" class="dim" style="margin-left: 8px;">
+                {{ t('dashboard.paper_locked_suffix') }}
+              </span>
             </button>
           </div>
         </div>
@@ -145,6 +189,7 @@ onMounted(loadPapers);
         </div>
 
         <p v-if="submitError" class="error-text">{{ submitError }}</p>
+        <p v-if="quotaBlockMsg" class="dim text-sm">{{ quotaBlockMsg }}</p>
 
         <div class="row mt-6" style="justify-content: flex-end;">
           <button class="btn btn-primary" :disabled="!canSubmit" @click="onStart">

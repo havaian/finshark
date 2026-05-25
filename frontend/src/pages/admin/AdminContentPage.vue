@@ -427,6 +427,9 @@ const showAddPaper = ref(false);
 const newPaperCode = ref('');
 const newPaperNameEn = ref('');
 const newPaperNameRu = ref('');
+// Defaults to true — same as the DB default. Admin can flip to create a
+// premium-only paper from the start.
+const newPaperFreeAccessible = ref(true);
 const addPaperBusy = ref(false);
 const addPaperError = ref<string | null>(null);
 
@@ -434,6 +437,7 @@ function openAddPaper() {
   newPaperCode.value = '';
   newPaperNameEn.value = '';
   newPaperNameRu.value = '';
+  newPaperFreeAccessible.value = true;
   addPaperError.value = null;
   showAddPaper.value = true;
 }
@@ -450,6 +454,7 @@ async function submitAddPaper() {
       code: newPaperCode.value.trim(),
       name_en: newPaperNameEn.value.trim(),
       name_ru: newPaperNameRu.value.trim() || null,
+      free_accessible: newPaperFreeAccessible.value,
     });
     await reloadTree();
     showAddPaper.value = false;
@@ -457,6 +462,65 @@ async function submitAddPaper() {
     addPaperError.value = extractError(e) ?? 'failed to create paper';
   } finally {
     addPaperBusy.value = false;
+  }
+}
+
+// ---- Edit paper ----
+// Inline modal: change code / name_en / name_ru / free_accessible. Fetches the
+// full PaperRaw row on open so we know the current free_accessible value
+// (the content tree intentionally doesn't carry it). PATCH on save then
+// reload the tree so the row reflects any name changes immediately.
+const showEditPaper = ref(false);
+const editPaperId = ref<string | null>(null);
+const editPaperCode = ref('');
+const editPaperNameEn = ref('');
+const editPaperNameRu = ref('');
+const editPaperFreeAccessible = ref(true);
+const editPaperBusy = ref(false);
+const editPaperError = ref<string | null>(null);
+
+async function openEditPaper(paperId: string) {
+  editPaperError.value = null;
+  editPaperBusy.value = true;
+  try {
+    const full = await adminApi.getPaper(paperId);
+    editPaperId.value = full.id;
+    editPaperCode.value = full.code;
+    editPaperNameEn.value = full.name_en;
+    editPaperNameRu.value = full.name_ru ?? '';
+    editPaperFreeAccessible.value = full.free_accessible;
+    showEditPaper.value = true;
+  } catch (e) {
+    treeError.value = extractError(e) ?? 'failed to load paper';
+  } finally {
+    editPaperBusy.value = false;
+  }
+}
+
+function closeEditPaper() {
+  if (editPaperBusy.value) return;
+  showEditPaper.value = false;
+  editPaperId.value = null;
+}
+
+async function submitEditPaper() {
+  if (!editPaperId.value || editPaperBusy.value) return;
+  editPaperBusy.value = true;
+  editPaperError.value = null;
+  try {
+    await adminApi.updatePaper(editPaperId.value, {
+      code: editPaperCode.value.trim(),
+      name_en: editPaperNameEn.value.trim(),
+      name_ru: editPaperNameRu.value.trim() || null,
+      free_accessible: editPaperFreeAccessible.value,
+    });
+    await reloadTree();
+    showEditPaper.value = false;
+    editPaperId.value = null;
+  } catch (e) {
+    editPaperError.value = extractError(e) ?? 'failed to update paper';
+  } finally {
+    editPaperBusy.value = false;
   }
 }
 
@@ -766,11 +830,14 @@ onMounted(reloadTree);
           <span class="content-tree-paper-code mono">{{ p.code }}</span>
           <span class="content-tree-paper-name">{{ p.name_en }}</span>
         </button>
-        <!-- Per-paper actions (Add LO, Delete paper). Shown only when paper
-             is expanded so collapsed view stays clean. -->
+        <!-- Per-paper actions (Add LO, Edit paper, Delete paper). Shown only
+             when paper is expanded so collapsed view stays clean. -->
         <div v-if="!collapsedPapers.has(p.id)" class="content-tree-paper-actions">
           <button type="button" class="btn-link accent text-xs" @click="openAddLo(p.id)">
             + {{ t('admin.los.add_btn') }}
+          </button>
+          <button type="button" class="btn-link text-xs" @click="openEditPaper(p.id)">
+            {{ t('admin.papers.edit_btn') }}
           </button>
           <button type="button" class="btn-link text-xs" style="color: var(--danger);"
             @click="deletePaper(p.id, p.code)">
@@ -1131,6 +1198,15 @@ onMounted(reloadTree);
           <label class="field-label">{{ t('admin.papers.add_name_ru_ph') }}</label>
           <input v-model="newPaperNameRu" type="text" maxlength="200" />
         </div>
+        <div class="field mt-2">
+          <label class="row" style="gap: 8px; cursor: pointer;">
+            <input v-model="newPaperFreeAccessible" type="checkbox" />
+            <span>{{ t('admin.papers.free_accessible_label') }}</span>
+          </label>
+          <p class="dim text-xs" style="margin-top: 4px;">
+            {{ t('admin.papers.free_accessible_help') }}
+          </p>
+        </div>
         <p v-if="addPaperError" class="error-text">{{ addPaperError }}</p>
         <div class="admin-edit-actions mt-4">
           <button class="btn btn-primary" :disabled="addPaperBusy || !newPaperCode.trim() || !newPaperNameEn.trim()"
@@ -1138,6 +1214,48 @@ onMounted(reloadTree);
             {{ addPaperBusy ? t('common.adding') : t('common.add') }}
           </button>
           <button class="btn btn-ghost" :disabled="addPaperBusy" @click="closeAddPaper">
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Edit paper modal ─── -->
+    <div v-if="showEditPaper" class="modal-backdrop" @click="closeEditPaper">
+      <div class="modal-card" @click.stop>
+        <header class="modal-head">
+          <h2>{{ t('admin.papers.edit_modal_title') }}</h2>
+          <button type="button" class="btn-link" :disabled="editPaperBusy" @click="closeEditPaper">✕</button>
+        </header>
+        <div class="field">
+          <label class="field-label">{{ t('admin.papers.add_code_ph') }}</label>
+          <input v-model="editPaperCode" type="text" maxlength="16" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.papers.add_name_en_ph') }}</label>
+          <input v-model="editPaperNameEn" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.papers.add_name_ru_ph') }}</label>
+          <input v-model="editPaperNameRu" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
+          <label class="row" style="gap: 8px; cursor: pointer;">
+            <input v-model="editPaperFreeAccessible" type="checkbox" />
+            <span>{{ t('admin.papers.free_accessible_label') }}</span>
+          </label>
+          <p class="dim text-xs" style="margin-top: 4px;">
+            {{ t('admin.papers.free_accessible_help') }}
+          </p>
+        </div>
+        <p v-if="editPaperError" class="error-text">{{ editPaperError }}</p>
+        <div class="admin-edit-actions mt-4">
+          <button class="btn btn-primary"
+            :disabled="editPaperBusy || !editPaperCode.trim() || !editPaperNameEn.trim()"
+            @click="submitEditPaper">
+            {{ editPaperBusy ? t('common.saving') : t('common.save_changes') }}
+          </button>
+          <button class="btn btn-ghost" :disabled="editPaperBusy" @click="closeEditPaper">
             {{ t('common.cancel') }}
           </button>
         </div>

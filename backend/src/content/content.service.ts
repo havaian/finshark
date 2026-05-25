@@ -53,6 +53,7 @@ export class ContentService {
       code: dto.code,
       name_en: dto.name_en,
       name_ru: dto.name_ru ?? null,
+      free_accessible: dto.free_accessible,
     });
   }
 

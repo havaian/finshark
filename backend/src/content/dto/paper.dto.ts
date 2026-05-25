@@ -1,4 +1,10 @@
-import { IsOptional, IsString, Length, ValidateIf } from "class-validator";
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  Length,
+  ValidateIf,
+} from "class-validator";
 
 export class CreatePaperDto {
   @IsString()
@@ -16,6 +22,12 @@ export class CreatePaperDto {
   @IsString()
   @Length(1, 200)
   name_ru?: string | null;
+
+  // Free-tier access flag. Default true on create (matches DB default); admins
+  // toggle this on the paper edit screen to gate a paper behind premium.
+  @IsOptional()
+  @IsBoolean()
+  free_accessible?: boolean;
 }
 
 export class UpdatePaperDto {
@@ -34,4 +46,10 @@ export class UpdatePaperDto {
   @IsString()
   @Length(1, 200)
   name_ru?: string | null;
+
+  // Toggle free-tier access. Free users only see papers where this is true;
+  // they also can't start lessons / mocks against locked papers.
+  @IsOptional()
+  @IsBoolean()
+  free_accessible?: boolean;
 }

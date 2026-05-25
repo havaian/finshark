@@ -3,7 +3,7 @@ import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
 import type { PaperRow } from "./content.types";
 
-const COLS = `id, code, name_en, name_ru, created_at, updated_at`;
+const COLS = `id, code, name_en, name_ru, free_accessible, created_at, updated_at`;
 
 @Injectable()
 export class PapersRepository {
@@ -33,10 +33,14 @@ export class PapersRepository {
     code: string;
     name_en: string;
     name_ru: string | null;
+    // Default true (matches the DB default) so old admin UIs that don't send
+    // this still produce a paper visible to free users.
+    free_accessible?: boolean;
   }): Promise<PaperRow> {
+    const free = input.free_accessible ?? true;
     const rows = await this.sql<PaperRow[]>`
-      INSERT INTO papers (code, name_en, name_ru)
-      VALUES (${input.code}, ${input.name_en}, ${input.name_ru})
+      INSERT INTO papers (code, name_en, name_ru, free_accessible)
+      VALUES (${input.code}, ${input.name_en}, ${input.name_ru}, ${free})
       RETURNING ${this.sql.unsafe(COLS)}
     `;
     return rows[0];
@@ -49,15 +53,18 @@ export class PapersRepository {
       code?: string;
       name_en?: string;
       name_ru?: string | null;
+      free_accessible?: boolean;
     }
   ): Promise<PaperRow | null> {
     // Build a partial UPDATE without an ORM. Empty patch → just return current row.
     // Note: postgres.js sql(record) treats null as NULL, undefined keys are skipped
     // by us here explicitly so the helper sees only the columns we want to set.
-    const sets: Record<string, string | null> = {};
+    const sets: Record<string, string | null | boolean> = {};
     if (input.code !== undefined) sets.code = input.code;
     if (input.name_en !== undefined) sets.name_en = input.name_en;
     if (input.name_ru !== undefined) sets.name_ru = input.name_ru;
+    if (input.free_accessible !== undefined)
+      sets.free_accessible = input.free_accessible;
 
     if (Object.keys(sets).length === 0) return this.findById(id);
 

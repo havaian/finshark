@@ -26,6 +26,10 @@ export interface PaperRow {
   code: string;
   name_en: string;
   name_ru: string | null;
+  // Whether this paper is reachable on the free tier. Default true on creation;
+  // admin can flip it to lock a paper behind premium. See migration
+  // 20260525000006_papers_free_accessible.js.
+  free_accessible: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -109,6 +113,7 @@ export interface LocalizedPaper {
   id: string;
   code: string;
   name: string;
+  free_accessible: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -168,6 +173,7 @@ export function toLocalizedPaper(row: PaperRow, lang: Lang): LocalizedPaper {
     id: row.id,
     code: row.code,
     name: pickLocalized(row.name_en, row.name_ru, lang),
+    free_accessible: row.free_accessible,
     created_at: row.created_at.toISOString(),
     updated_at: row.updated_at.toISOString(),
   };

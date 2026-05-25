@@ -12,6 +12,7 @@ const USER_COLS = `
   bg_level, time_budget_minutes, preferred_paper_id, onboarded_at,
   leaderboard_opt_in,
   totp_secret, totp_enrolled_at,
+  timezone, free_hearts_pool, free_hearts_pool_date,
   created_at, updated_at
 `;
 
@@ -282,5 +283,52 @@ export class UsersRepository {
         AND (last_active_date IS NULL OR last_active_date < ${today})
         AND (last_active_date IS NULL OR last_active_date > ${today}::date - INTERVAL '30 days')
     `;
+  }
+
+  // ── Free-tier heart pool ─────────────────────────────────────────────
+  //
+  // The pool is refilled lazily: every code path that touches free-tier
+  // hearts calls ensureFreeHeartPoolRefilled() first. That single UPDATE
+  // resets the pool to 3 if the stored pool_date doesn't match "today" in
+  // the user's IANA timezone, and otherwise leaves it alone. We do the
+  // comparison entirely in SQL so we don't have to think about JS date
+  // arithmetic across timezones.
+  //
+  // Both methods return the post-write pool value so callers can branch on
+  // the immediate result (e.g. "block session creation if pool == 0").
+
+  // Refill the pool to 3 IF the stored pool_date != today-in-user-tz; otherwise
+  // no-op. Always writes pool_date = today-in-user-tz (it's idempotent).
+  // Returns the resulting pool count.
+  async ensureFreeHeartPoolRefilled(userId: string): Promise<number> {
+    const rows = await this.sql<Array<{ free_hearts_pool: number }>>`
+      UPDATE users SET
+        free_hearts_pool = CASE
+          WHEN free_hearts_pool_date IS DISTINCT FROM (NOW() AT TIME ZONE timezone)::date
+          THEN 3
+          ELSE free_hearts_pool
+        END,
+        free_hearts_pool_date = (NOW() AT TIME ZONE timezone)::date
+      WHERE id = ${userId}
+      RETURNING free_hearts_pool
+    `;
+    return rows[0]?.free_hearts_pool ?? 0;
+  }
+
+  // Consume one heart from the pool. Bounded at 0 by GREATEST so we never
+  // underflow against the chk_free_hearts_pool_range CHECK constraint.
+  // Returns the post-decrement pool count.
+  //
+  // Caller is responsible for having refilled first via ensureFreeHeartPoolRefilled.
+  // Race between the refill and the consume is benign: at worst we burn one
+  // heart from yesterday's pool, which the next refill resets.
+  async consumeFreeHeart(userId: string): Promise<number> {
+    const rows = await this.sql<Array<{ free_hearts_pool: number }>>`
+      UPDATE users SET
+        free_hearts_pool = GREATEST(free_hearts_pool - 1, 0)
+      WHERE id = ${userId}
+      RETURNING free_hearts_pool
+    `;
+    return rows[0]?.free_hearts_pool ?? 0;
   }
 }

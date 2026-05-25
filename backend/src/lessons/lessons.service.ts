@@ -9,6 +9,7 @@ import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
 import { QuestionsRepository } from "../content/questions.repository";
 import { LearningObjectivesRepository } from "../content/learning-objectives.repository";
+import { PapersRepository } from "../content/papers.repository";
 import { UsersRepository } from "../users/users.repository";
 import { LessonSessionsRepository } from "./lesson-sessions.repository";
 import { LessonSessionQuestionsRepository } from "./lesson-session-questions.repository";
@@ -17,6 +18,7 @@ import { UserQuestionStateRepository } from "./user-question-state.repository";
 import { GraderService } from "./grader.service";
 import { BadgesService } from "../badges/badges.service";
 import { AchievementsService } from "../achievements/achievements.service";
+import { EntitlementsService } from "../billing/entitlements.service";
 import type { SessionMode } from "./lesson.types";
 import {
   applyMastery,
@@ -132,6 +134,11 @@ export interface SessionDetail {
 
 const DEFAULT_LESSON_SIZE = 5;
 
+// Free-tier daily lesson quota. Mirrors the spec ("3 lessons/day" free).
+// Premium = unlimited. Kept here so the gate is a single edit if product
+// later wants 5/day or per-paper limits.
+const FREE_LESSONS_PER_DAY = 3;
+
 @Injectable()
 export class LessonsService {
   constructor(
@@ -139,13 +146,15 @@ export class LessonsService {
     private readonly users: UsersRepository,
     private readonly questions: QuestionsRepository,
     private readonly los: LearningObjectivesRepository,
+    private readonly papers: PapersRepository,
     private readonly sessions: LessonSessionsRepository,
     private readonly sessionQuestions: LessonSessionQuestionsRepository,
     private readonly attempts: AttemptsRepository,
     private readonly uqs: UserQuestionStateRepository,
     private readonly grader: GraderService,
     private readonly badges: BadgesService,
-    private readonly achievements: AchievementsService
+    private readonly achievements: AchievementsService,
+    private readonly entitlements: EntitlementsService
   ) {}
 
   // ---- start ----
@@ -155,15 +164,61 @@ export class LessonsService {
     lang: Lang,
     opts: { paper_id?: string; size?: number }
   ): Promise<StartLessonResult> {
+    // Free-tier gates. Premium users skip every check below — they get the
+    // pre-billing behavior unchanged.
+    //
+    // We load the user row once and reuse it. The entitlement query is a
+    // separate cheap indexed lookup.
+    const user = await this.users.findById(user_id);
+    if (!user) throw new NotFoundException("user not found");
+
+    const entitlement = await this.entitlements.getEntitlement(user_id);
+    const isFree = entitlement.tier === "free";
+
+    if (isFree) {
+      // 1. Paper-access gate. If the user picked a paper that's marked
+      //    premium-only, refuse. We resolve the paper by id (preferred when
+      //    explicit) or by the user's saved preferred_paper_id; both can be
+      //    null (the queue builder will fall back to global LO selection).
+      const paperIdForGate = opts.paper_id ?? user.preferred_paper_id;
+      if (paperIdForGate) {
+        const paper = await this.papers.findById(paperIdForGate);
+        if (paper && !paper.free_accessible) {
+          throw new ForbiddenException(
+            "this paper is available to premium members only"
+          );
+        }
+      }
+
+      // 2. Daily lesson quota. count BEFORE we create the new session so the
+      //    cap is a hard stop, not "you can have 4 if you race".
+      const lessonsToday = await this.sessions.countLessonsTodayInTimezone(
+        user_id,
+        user.timezone
+      );
+      if (lessonsToday >= FREE_LESSONS_PER_DAY) {
+        throw new ForbiddenException(
+          `free tier: ${FREE_LESSONS_PER_DAY} lessons/day reached — upgrade or come back tomorrow`
+        );
+      }
+
+      // 3. Heart pool. Refill if it's a new local day, then refuse if empty.
+      //    The pool IS the session hearts: the new session below is created
+      //    with the default 3 by the repo, then we override it to min(pool, 3)
+      //    so the user can't get more hearts than the pool allows.
+      const pool = await this.users.ensureFreeHeartPoolRefilled(user_id);
+      if (pool <= 0) {
+        throw new ForbiddenException(
+          "you're out of hearts for today — come back tomorrow or upgrade to premium"
+        );
+      }
+    }
+
     // Resolve lesson size precedence: explicit request param > user's saved
     // preference > module default. The settings UI doesn't currently send size
     // per-call — it just updates the stored preference — but accepting both
     // keeps the API flexible (e.g. for future "extra practice" buttons).
-    let size = opts.size;
-    if (size === undefined) {
-      const user = await this.users.findById(user_id);
-      size = user?.lesson_size ?? DEFAULT_LESSON_SIZE;
-    }
+    const size = opts.size ?? user.lesson_size ?? DEFAULT_LESSON_SIZE;
 
     const queue = await this.buildQueue(user_id, opts.paper_id ?? null, size);
 
@@ -178,6 +233,25 @@ export class LessonsService {
       question_count: queue.length,
     });
 
+    // For free users: clamp the session's starting hearts to the daily pool.
+    // For premium: leave the default 3 untouched.
+    let heartsForResponse = session.hearts_remaining;
+    if (isFree) {
+      // ensureFreeHeartPoolRefilled was called above; re-read just the pool
+      // for the clamp (cheap query — same row we already touched).
+      // Avoid a second SELECT by re-deriving: pool was returned by the
+      // refill, but it's been consumed by nothing yet, so it's still valid.
+      // Re-fetch in case some other request raced; we'd rather take the
+      // latest authoritative number than trust a stale local.
+      const fresh = await this.users.findById(user_id);
+      const pool = fresh?.free_hearts_pool ?? 0;
+      const startingHearts = Math.min(pool, session.hearts_remaining);
+      if (startingHearts !== session.hearts_remaining) {
+        await this.sessions.overrideHearts(session.id, startingHearts);
+        heartsForResponse = startingHearts;
+      }
+    }
+
     await this.sessionQuestions.insertMany(
       session.id,
       queue.map((q) => q.id)
@@ -186,7 +260,7 @@ export class LessonsService {
     return {
       session_id: session.id,
       questions: queue.map((q) => this.toLessonQuestion(q, lang)),
-      hearts_remaining: session.hearts_remaining,
+      hearts_remaining: heartsForResponse,
       theory_bites: await this.buildTheoryBites(queue, lang),
     };
   }
@@ -413,6 +487,21 @@ export class LessonsService {
       `;
       return { mastery: rows[0], hearts_remaining: heartsAfter };
     });
+
+    // Free-tier pool deduction. Mirrors the session-level decrement above but
+    // on users.free_hearts_pool so the cap persists across sessions. Done
+    // OUTSIDE the attempt tx — losing the pool delta is acceptable (worst case
+    // the user gets one bonus heart back tomorrow); losing the attempt isn't.
+    //
+    // Skipped for: mocks (no heart penalty), correct answers, and premium users.
+    // We only check entitlement on wrong answers in non-mock sessions, so the
+    // hot path of premium players answering correctly stays a no-op here.
+    if (session.mode !== "mock" && !grade.was_correct) {
+      const entitlement = await this.entitlements.getEntitlement(user_id);
+      if (entitlement.tier === "free") {
+        await this.users.consumeFreeHeart(user_id);
+      }
+    }
 
     // Out-of-hearts auto-end. Runs OUTSIDE the attempt tx so the attempt is
     // persisted even if the end-session write hits a transient error — we'd

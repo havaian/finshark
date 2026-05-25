@@ -91,6 +91,8 @@ export default {
     admin_users: "Admin · Users",
     admin_localization: "Admin · Localization",
     admin_whitelist: "Admin · Whitelist",
+    admin_promocodes: "Admin · Promocodes",
+    admin_subscriptions: "Admin · Subscriptions",
   },
 
   home: {
@@ -198,6 +200,22 @@ export default {
     daily_reminders_sub: "A nudge at 18:00 if you haven't studied yet.",
     reminders_on: "Turn off reminders",
     reminders_off: "Turn on reminders",
+    // Quota chips, shown to free-tier users on the dashboard above the
+    // lesson-start row. {used}/{limit} pattern; refreshes after each lesson
+    // / mock complete via the entitlement store.
+    quota_lessons: "{used}/{limit} lessons today",
+    quota_mocks: "{used}/{limit} mocks this month",
+    quota_hearts: "{pool}/{max} hearts today",
+    quota_upgrade: "Upgrade",
+    quota_lessons_exhausted: "Daily lesson limit reached — back tomorrow.",
+    quota_hearts_exhausted: "Out of hearts — back tomorrow.",
+    quota_mocks_exhausted: "Monthly mock limit reached.",
+    premium_badge: "Premium",
+    // Locked paper picker entry (used by the dashboard + mock-start <option>).
+    // We keep the picker showing premium-only papers so free users can see
+    // what they'd unlock; the start button surfaces a friendly 403 when they
+    // try.
+    paper_locked_suffix: "🔒 Premium",
   },
 
   leaderboards: {
@@ -440,6 +458,29 @@ export default {
     tfa_audit_event_recovery_codes_regenerated: "Recovery codes regenerated",
     tfa_audit_event_recovery_code_consumed: "Recovery code used",
     tfa_audit_event_locked_out: "Account locked out (too many failures)",
+
+    // Premium / redeem section. Visible to all users; redeem widget is a
+    // single input + button regardless of current tier. Already-premium
+    // redemption extends instead of double-charging the slot, so we don't
+    // hide the widget for premium users.
+    premium_section: "Premium",
+    premium_section_sub:
+      "Unlimited lessons, mocks, hearts, and full-paper access.",
+    premium_status_free: "You're on the free plan.",
+    premium_status_premium: "Premium · {plan}",
+    premium_ends_at: "Renews / ends on {date}",
+    premium_lifetime: "No expiry",
+    redeem_label: "Have a promo code?",
+    redeem_placeholder: "Enter code",
+    redeem_btn: "Redeem",
+    redeem_busy: "Redeeming…",
+    redeem_success_new: "Welcome to premium! Active until {date}.",
+    redeem_success_new_lifetime: "Welcome to premium! No expiry.",
+    redeem_success_extended: "Premium extended. Active until {date}.",
+    redeem_success_extended_lifetime: "Premium extended to lifetime.",
+    redeem_error_invalid: "Invalid or expired code.",
+    redeem_error_already_used: "You've already used this code.",
+    redeem_error_generic: "Couldn't redeem this code. Try again.",
   },
 
   tfa_verify: {
@@ -589,13 +630,137 @@ export default {
       title: "Papers",
       add_btn: "Add paper",
       add_modal_title: "New paper",
+      edit_modal_title: "Edit paper",
+      edit_btn: "Edit",
       delete_btn: "Delete",
       add_code_ph: "Code (e.g. F1)",
       add_name_en_ph: "Name (English)",
       add_name_ru_ph: "Name (Russian, optional)",
+      // Free-tier access flag on each paper. Default true; admin can flip
+      // to lock a paper behind premium. Backend gate enforces; the picker
+      // just shows a lock icon for free users.
+      free_accessible_label: "Free-tier accessible",
+      free_accessible_help:
+        "When off, only premium users can start lessons and mocks on this paper.",
       delete_confirm:
         'Delete paper "{code}" and ALL its LOs and questions? This cascades.',
       empty: "No papers yet. Add one above to get started.",
+    },
+
+    // Promocodes admin page — list / create / disable / redemption drill-in.
+    promocodes: {
+      title: "Promocodes",
+      sub: "Redeemable codes that grant premium for a fixed window.",
+      add_btn: "New code",
+      add_modal_title: "Create promocode",
+      table_code: "Code",
+      table_grants: "Grants",
+      table_used: "Used",
+      table_window: "Window",
+      table_status: "Status",
+      table_actions: "Actions",
+      status_active: "Active",
+      status_disabled: "Disabled",
+      status_window_pending: "Pending",
+      status_window_expired: "Expired",
+      status_exhausted: "Exhausted",
+      disable_btn: "Disable",
+      enable_btn: "Enable",
+      redemptions_btn: "Redemptions",
+      grants_format: "{plan} · {days} days",
+      grants_format_lifetime: "{plan} · lifetime",
+      grants_format_plan_default: "{plan}",
+      used_format: "{count} / {max}",
+      used_format_unlimited: "{count} / ∞",
+      window_open: "Always",
+      window_from: "From {date}",
+      window_until: "Until {date}",
+      window_between: "{from} → {until}",
+      empty: "No promocodes yet.",
+      // Create form
+      form_code_label: "Code",
+      form_code_ph: "WELCOME2026",
+      form_plan_label: "Plan",
+      form_days_label: "Days (leave empty to use plan period)",
+      form_days_ph: "e.g. 30",
+      form_max_redemptions_label: "Max redemptions (blank = unlimited)",
+      form_per_user_limit_label: "Per-user limit",
+      form_valid_from_label: "Valid from (optional)",
+      form_valid_until_label: "Valid until (optional)",
+      form_notes_label: "Notes (admin-only)",
+      form_create_btn: "Create",
+      // Redemptions drill-in
+      redemptions_modal_title: "Redemptions for {code}",
+      redemptions_empty: "No one has redeemed this code yet.",
+      redemptions_col_user: "User",
+      redemptions_col_when: "Redeemed",
+      redemptions_col_sub: "Subscription",
+    },
+
+    // Subscriptions admin page — pick a user, see history, grant / extend /
+    // cancel / revoke, plus the event audit log.
+    subscriptions: {
+      title: "Subscriptions",
+      sub: "Manual grants, extensions, and audit log per user.",
+      pick_user_ph: "Search by name or email",
+      pick_user_empty: "No matching users.",
+      pick_user_hint: "Start typing to find a user.",
+      sub_history_heading: "Subscription history",
+      sub_history_empty: "This user has no subscription history.",
+      events_heading: "Audit log",
+      events_empty: "No events recorded yet.",
+      // Per-sub row labels
+      sub_status_active: "Active",
+      sub_status_expired: "Expired",
+      sub_status_cancelled: "Cancelled",
+      sub_status_pending: "Pending",
+      sub_source_manual: "manual",
+      sub_source_promocode: "promocode",
+      sub_source_trial: "trial",
+      sub_source_payme: "payme",
+      sub_source_click: "click",
+      sub_source_stripe: "stripe",
+      sub_starts: "Started {date}",
+      sub_ends: "Ends {date}",
+      sub_ends_never: "No expiry",
+      sub_cancelled_at: "Cancelled {date}",
+      sub_extend_btn: "Extend",
+      sub_cancel_btn: "Cancel",
+      sub_revoke_btn: "Revoke",
+      // Grant form
+      grant_heading: "Grant a new subscription",
+      grant_plan_label: "Plan",
+      grant_days_label: "Days",
+      grant_days_help:
+        "Leave empty to use plan default. Set to 0 for open-ended (no expiry).",
+      grant_reason_label: "Reason (audit log)",
+      grant_btn: "Grant",
+      grant_busy: "Granting…",
+      grant_success: "Granted.",
+      // Extend / cancel / revoke
+      extend_modal_title: "Extend subscription",
+      extend_days_label: "Add days",
+      extend_reason_label: "Reason (optional)",
+      extend_confirm: "Extend",
+      cancel_modal_title: "Cancel subscription",
+      cancel_warn:
+        "User immediately loses premium access. The audit row is kept.",
+      cancel_reason_label: "Reason (optional)",
+      cancel_confirm: "Cancel subscription",
+      revoke_modal_title: "Revoke subscription",
+      revoke_warn:
+        "Hard revoke — ends_at is forced to now. Use for refunds or abuse.",
+      revoke_reason_label: "Reason (required for audit)",
+      revoke_confirm: "Revoke",
+      // Event kinds in the audit log
+      event_granted: "Granted",
+      event_extended: "Extended",
+      event_revoked: "Revoked",
+      event_cancelled: "Cancelled",
+      event_expired: "Expired",
+      event_renewed: "Renewed",
+      event_webhook: "Webhook event",
+      event_note: "Note",
     },
     los: {
       title: "Learning objectives",

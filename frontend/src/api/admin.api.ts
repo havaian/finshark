@@ -33,8 +33,16 @@ export const adminApi = {
     code: string;
     name_en: string;
     name_ru?: string | null;
+    // Defaults true on the backend; pass false to create a premium-only paper.
+    free_accessible?: boolean;
   }): Promise<PaperRaw> =>
     (await api.post<PaperRaw>("/admin/papers", input)).data,
+
+  // Single-paper fetch — needed by the inline edit modal in AdminContentPage
+  // so we know the current free_accessible flag (the content tree doesn't
+  // include it, to keep that payload small).
+  getPaper: async (id: string): Promise<PaperRaw> =>
+    (await api.get<PaperRaw>(`/admin/papers/${id}`)).data,
 
   updatePaper: async (
     id: string,
@@ -42,6 +50,7 @@ export const adminApi = {
       code: string;
       name_en: string;
       name_ru: string | null;
+      free_accessible: boolean;
     }>
   ): Promise<PaperRaw> =>
     (await api.patch<PaperRaw>(`/admin/papers/${id}`, input)).data,

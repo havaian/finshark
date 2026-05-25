@@ -43,6 +43,10 @@ const AdminLocalizationPage = () =>
 const AdminContentPage = () => import("../pages/admin/AdminContentPage.vue");
 const AdminWhitelistPage = () =>
   import("../pages/admin/AdminWhitelistPage.vue");
+const AdminPromocodesPage = () =>
+  import("../pages/admin/AdminPromocodesPage.vue");
+const AdminSubscriptionsPage = () =>
+  import("../pages/admin/AdminSubscriptionsPage.vue");
 const TwoFactorVerifyPage = () => import("../pages/TwoFactorVerifyPage.vue");
 const TwoFactorSetupPage = () => import("../pages/TwoFactorSetupPage.vue");
 
@@ -220,6 +224,18 @@ const routes: RouteRecordRaw[] = [
             name: "admin-whitelist",
             component: AdminWhitelistPage,
             meta: { titleKey: "page_titles.admin_whitelist" },
+          },
+          {
+            path: "promocodes",
+            name: "admin-promocodes",
+            component: AdminPromocodesPage,
+            meta: { titleKey: "page_titles.admin_promocodes" },
+          },
+          {
+            path: "subscriptions",
+            name: "admin-subscriptions",
+            component: AdminSubscriptionsPage,
+            meta: { titleKey: "page_titles.admin_subscriptions" },
           },
           // Legacy redirects: any bookmarked /admin/papers, /admin/papers/:id/los,
           // /admin/los/:id/questions now bounce to the unified content browser.

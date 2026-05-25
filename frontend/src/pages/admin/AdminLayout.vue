@@ -55,6 +55,8 @@ const navItems = computed<NavItem[]>(() => [
   { to: lp('/admin/whitelist'), labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] },
   // Unified content browser — the only editor for papers/LOs/questions now.
   { to: lp('/admin/content'), labelKey: 'admin.content.title', activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
+  { to: lp('/admin/promocodes'), labelKey: 'admin.promocodes.title', activePrefixes: ['/admin/promocodes'] },
+  { to: lp('/admin/subscriptions'), labelKey: 'admin.subscriptions.title', activePrefixes: ['/admin/subscriptions'] },
   { to: lp('/admin/localization'), labelKey: 'admin.localization.title', activePrefixes: ['/admin/localization'] },
 ]);
 

@@ -2,6 +2,7 @@ import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { authApi } from "../api/auth.api";
 import { onForcedLogout, TOKEN_STORAGE_KEYS } from "../api/client";
+import { useEntitlementStore } from "./entitlement.store";
 import type { PublicUser } from "../types/auth";
 
 const LS_USER = "finshark.user";
@@ -35,6 +36,11 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.removeItem(LS_USER);
     localStorage.removeItem(TOKEN_STORAGE_KEYS.access);
     localStorage.removeItem(TOKEN_STORAGE_KEYS.refresh);
+    // Drop any cached entitlement so the next signed-in user can't briefly
+    // see the previous user's premium chip / quota. Imported lazily inside
+    // the function to avoid a Pinia init order surprise — both stores are
+    // registered before any caller invokes clear().
+    useEntitlementStore().clear();
   }
 
   // Called by the /auth/callback page after a successful Google round-trip.
@@ -55,6 +61,9 @@ export const useAuthStore = defineStore("auth", () => {
       const u = await authApi.me();
       user.value = u;
       localStorage.setItem(LS_USER, JSON.stringify(u));
+      // Eager fetch — first thing the user sees after sign-in is the
+      // dashboard, which expects chrome chips to be populated.
+      void useEntitlementStore().fetch();
     } catch (e) {
       // /me failed despite fresh tokens — wipe and rethrow so the callback page can show an error.
       clear();
@@ -76,10 +85,14 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   // Re-fetch user profile (useful after page load to validate the stored access token).
+  // Also kicks off an entitlement refresh so chrome chips stay in sync with
+  // the latest tier / quota state. The entitlement fetch is fire-and-forget
+  // — fetchMe must not fail just because /me/entitlement was slow or 5xx'd.
   async function fetchMe() {
     const u = await authApi.me();
     user.value = u;
     localStorage.setItem(LS_USER, JSON.stringify(u));
+    void useEntitlementStore().fetch();
   }
 
   // Same idea as completeGoogleLogin but for the 2FA verify endpoint, which
@@ -96,6 +109,9 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem(TOKEN_STORAGE_KEYS.access, input.access_token);
     localStorage.setItem(TOKEN_STORAGE_KEYS.refresh, input.refresh_token);
     localStorage.setItem(LS_USER, JSON.stringify(input.user));
+    // Same eager fetch as completeGoogleLogin — entitlement chips need to
+    // be populated on first dashboard paint.
+    void useEntitlementStore().fetch();
   }
 
   // Replace the user object in the store + localStorage. Used by flows that

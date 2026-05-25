@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
 import { useLocaleStore } from '../stores/locale.store';
+import { useEntitlementStore } from '../stores/entitlement.store';
 import { useLocalePath } from '../router/useLocalePath';
 import { lessonsApi } from '../api/lessons.api';
 import AppNav from '../components/AppNav.vue';
@@ -15,6 +16,7 @@ const auth = useAuthStore();
 const router = useRouter();
 const locale = useLocaleStore();
 const lp = useLocalePath();
+const entitlement = useEntitlementStore();
 
 const papers = ref<Paper[]>([]);
 const selectedPaperId = ref<string>('');
@@ -55,10 +57,55 @@ async function onStartLesson() {
     router.push({ name: 'lesson', params: { lang: locale.lang, session_id: res.session_id } });
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to start lesson';
+    // 403 from start ≈ free-tier gate trip (lesson cap, heart pool, premium-
+    // only paper). Refresh entitlement so the chrome chips reflect the
+    // current state — the server already knows we hit the wall, and the
+    // chip update is the affirmative explanation paired with the error.
+    if (e instanceof AxiosError && e.response?.status === 403) {
+      void entitlement.fetch();
+    }
   } finally {
     starting.value = false;
   }
 }
+
+// True when the currently-selected paper (or the user's first paper if
+// "Any" is chosen) is premium-only for a free user. Used to disable the
+// start button so the gate is enforced in the UI before the server says no.
+const blockedByPaper = computed(() => {
+  if (!entitlement.isFree) return false;
+  if (!selectedPaperId.value) return false;
+  const p = papers.value.find((x) => x.id === selectedPaperId.value);
+  return p ? !p.free_accessible : false;
+});
+
+// True when the free user has run out of their daily lesson allowance OR
+// their daily heart pool. Either condition is a hard stop on lesson start.
+const blockedByQuota = computed(() => {
+  if (!entitlement.isFree) return false;
+  const ent = entitlement.entitlement;
+  if (!ent) return false;
+  if (ent.lessons.limit !== null && ent.lessons.used >= ent.lessons.limit) return true;
+  if (ent.hearts.pool !== null && ent.hearts.pool <= 0) return true;
+  return false;
+});
+
+const startDisabled = computed(
+  () => starting.value || blockedByPaper.value || blockedByQuota.value,
+);
+
+// User-facing quota explanation when the start button is disabled by a
+// free-tier limit. Picks the most specific reason (paper > hearts > lessons)
+// so the message lines up with what the user just clicked.
+const quotaBlockMsg = computed<string | null>(() => {
+  if (!entitlement.isFree) return null;
+  if (blockedByPaper.value) return t('dashboard.paper_locked_suffix');
+  const ent = entitlement.entitlement;
+  if (!ent) return null;
+  if (ent.hearts.pool !== null && ent.hearts.pool <= 0) return t('dashboard.quota_hearts_exhausted');
+  if (ent.lessons.limit !== null && ent.lessons.used >= ent.lessons.limit) return t('dashboard.quota_lessons_exhausted');
+  return null;
+});
 
 function extractError(e: unknown): string | null {
   if (e instanceof AxiosError) {
@@ -92,6 +139,33 @@ function extractError(e: unknown): string | null {
         </div>
       </div>
 
+      <!-- Quota chips for free-tier users. Hidden entirely for premium (their
+           limits are nulls). Renders only after the entitlement store has
+           fetched so we don't flash 0/3 for premium users on a cold load. -->
+      <div v-if="entitlement.isFree && entitlement.entitlement" class="row mt-4" style="gap: 8px; flex-wrap: wrap;">
+        <span v-if="entitlement.entitlement.lessons.limit !== null" class="pill pill-grey">
+          {{ t('dashboard.quota_lessons', {
+            used: entitlement.entitlement.lessons.used,
+            limit: entitlement.entitlement.lessons.limit,
+          }) }}
+        </span>
+        <span v-if="entitlement.entitlement.hearts.max !== null" class="pill pill-grey">
+          {{ t('dashboard.quota_hearts', {
+            pool: entitlement.entitlement.hearts.pool ?? 0,
+            max: entitlement.entitlement.hearts.max,
+          }) }}
+        </span>
+        <span v-if="entitlement.entitlement.mocks.limit !== null" class="pill pill-grey">
+          {{ t('dashboard.quota_mocks', {
+            used: entitlement.entitlement.mocks.used,
+            limit: entitlement.entitlement.mocks.limit,
+          }) }}
+        </span>
+      </div>
+      <div v-else-if="entitlement.isPremium" class="row mt-4">
+        <span class="pill pill-accent">{{ t('dashboard.premium_badge') }}</span>
+      </div>
+
       <section class="mt-8">
         <div class="row" style="justify-content: space-between; margin-bottom: 14px;">
           <h2>{{ t('dashboard.start_lesson_heading') }}</h2>
@@ -110,13 +184,14 @@ function extractError(e: unknown): string | null {
           <select v-model="selectedPaperId" class="grow">
             <option value="">{{ t('dashboard.any_paper') }}</option>
             <option v-for="p in papers" :key="p.id" :value="p.id">
-              {{ p.code }} — {{ p.name }}
+              {{ p.code }} — {{ p.name }}<template v-if="entitlement.isFree && !p.free_accessible"> · {{ t('dashboard.paper_locked_suffix') }}</template>
             </option>
           </select>
-          <button class="btn btn-primary" :disabled="starting" @click="onStartLesson">
+          <button class="btn btn-primary" :disabled="startDisabled" @click="onStartLesson">
             {{ starting ? t('dashboard.starting') : t('dashboard.start_lesson_btn') }}
           </button>
         </div>
+        <p v-if="quotaBlockMsg" class="dim text-sm mt-2">{{ quotaBlockMsg }}</p>
 
         <!-- Mock CTA — secondary action below the lesson row. Always offered
              when papers exist; the mock page handles paper selection itself. -->

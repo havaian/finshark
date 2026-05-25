@@ -4,6 +4,7 @@ import { UsersModule } from "../users/users.module";
 import { ContentModule } from "../content/content.module";
 import { BadgesModule } from "../badges/badges.module";
 import { AchievementsModule } from "../achievements/achievements.module";
+import { BillingModule } from "../billing/billing.module";
 import { LessonsController } from "./lessons.controller";
 import { LessonsService } from "./lessons.service";
 import { LessonSessionsRepository } from "./lesson-sessions.repository";
@@ -19,6 +20,7 @@ import { GraderService } from "./grader.service";
     ContentModule,
     BadgesModule,
     AchievementsModule,
+    BillingModule,
   ],
   controllers: [LessonsController],
   providers: [

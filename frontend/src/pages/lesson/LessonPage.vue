@@ -125,8 +125,21 @@ const isLast = computed(() => currentIndex.value >= queue.value.length - 1);
 
 // Width of the progress bar — answered count / total. Uses currentIndex when not in feedback,
 // currentIndex+1 when feedback is showing (so the bar moves when you submit).
+// When the user has finished the last question (summary fetched or session
+// completed via out-of-hearts), the bar pins to 100% — previously it sat at
+// whatever the last computed value was and visibly wiggled during the
+// transition from "answering last Q" → "fetching summary" → "summary shown".
 const progressPct = computed(() => {
   if (queue.value.length === 0) return 0;
+  // Once we're past the last question (or showing the summary / completing),
+  // the bar is done — clamp to 100% and stay there.
+  if (
+    summary.value ||
+    completing.value ||
+    currentIndex.value >= queue.value.length
+  ) {
+    return 100;
+  }
   const answered = feedback.value ? currentIndex.value + 1 : currentIndex.value;
   return Math.min(100, Math.round((answered / queue.value.length) * 100));
 });
@@ -474,8 +487,15 @@ onUnmounted(() => {
       </section>
 
       <!-- Theory primer — shown before the question flow when at least one LO
-           in the queue has theory_en populated. User clicks Start to proceed. -->
+           in the queue has theory_en populated. User clicks Start to proceed.
+           The Skip recap button is sticky-floated alongside the bites so users
+           who already know the material can jump straight in without scrolling
+           to the bottom of the recap. Same action as the bottom Start button;
+           rendered first so it's reachable on the first paint. -->
       <section v-else-if="!theoryDismissed && theoryBites.length > 0" class="card theory-intro">
+        <button class="btn btn-primary btn-sm theory-skip" @click="onStartFromTheory">
+          {{ t('lesson.theory_skip') }} →
+        </button>
         <h1>{{ t('lesson.theory_title') }}</h1>
         <p class="dim mt-2">{{ t('lesson.theory_subtitle') }}</p>
         <div class="theory-list mt-6">
@@ -558,6 +578,14 @@ onUnmounted(() => {
             <div class="sparkle s2">✦</div>
             <div class="sparkle s3">✦</div>
           </template>
+          <template v-else>
+            <!-- Wrong-answer counterpart to the sparkles: little × marks that
+                 sway left/right on the same staggered timings. Adds visual
+                 weight to the wrong-answer state so it doesn't feel flat. -->
+            <div class="wrong-mark s1">✕</div>
+            <div class="wrong-mark s2">✕</div>
+            <div class="wrong-mark s3">✕</div>
+          </template>
           <div class="feedback-head">
             {{ feedback.was_correct ? t('lesson.correct') : t('lesson.wrong') }}
             <span v-if="feedback.xp_earned > 0" class="xp-badge">+{{ feedback.xp_earned }} XP</span>
@@ -567,11 +595,13 @@ onUnmounted(() => {
           </div>
           <div class="feedback-body">{{ feedback.explanation }}</div>
 
-          <!-- "Why are the others wrong?" — only on wrong MCQ when at least one
-               wrong option has a baked-in explanation. Per-option text comes
-               from the lesson queue payload; no additional API call. -->
+          <!-- "Show explanations" — only on wrong MCQ when at least one
+               wrong option has a baked-in explanation. The toggle uses a
+               pill button (not a text link) so it's obvious you can click it,
+               with a question-mark icon to reinforce the affordance. -->
           <div v-if="!feedback.was_correct && wrongOptionsForFeedback.length > 0" class="why-wrong-section">
-            <button type="button" class="btn-link why-wrong-toggle" @click="showWhyWrong = !showWhyWrong">
+            <button type="button" class="why-wrong-toggle" @click="showWhyWrong = !showWhyWrong">
+              <span class="why-wrong-toggle-icon" aria-hidden="true">?</span>
               {{ showWhyWrong ? t('lesson.why_wrong_hide') : t('lesson.why_wrong_show') }}
             </button>
             <ul v-if="showWhyWrong" class="why-wrong-list">
@@ -580,25 +610,6 @@ onUnmounted(() => {
                 <span class="why-wrong-text">{{ o.why_wrong }}</span>
               </li>
             </ul>
-          </div>
-
-          <div class="feedback-meta">
-            <!-- Mastery line shows both the post-attempt score and the
-                 delta from this single attempt. The delta is colour-coded
-                 (positive = success, negative = danger) and styled like a
-                 small chip so the eye lands on it. Hidden when delta is 0
-                 (rare — only when the user was already at the [0,100]
-                 boundary). -->
-            <span class="feedback-mastery">
-              {{ t('lesson.mastery_label', { pct: feedback.mastery_score }) }}
-              <span v-if="feedback.mastery_delta > 0" class="mastery-delta mastery-delta-up">
-                +{{ feedback.mastery_delta }}
-              </span>
-              <span v-else-if="feedback.mastery_delta < 0" class="mastery-delta mastery-delta-down">
-                {{ feedback.mastery_delta }}
-              </span>
-            </span>
-            <span>{{ t('lesson.next_review_label', { date: feedback.next_due_date }) }}</span>
           </div>
         </div>
 

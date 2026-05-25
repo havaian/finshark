@@ -625,6 +625,41 @@ textarea {
     border-top: none;
 }
 
+/* When .list-row is rendered as a <button> (admin pickers — Subscriptions
+   user search, Email Templates list, etc.) the browser-default button chrome
+   leaks through. Reset to a clean transparent surface with hover + active
+   states that read consistently in both light and dark themes. */
+button.list-row {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: inherit;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.list-bordered button.list-row {
+    /* The first row's missing top border is preserved by the existing
+       :first-child rule; we just keep the box-model consistent. */
+    border-top: 1px solid var(--border);
+}
+
+.list-bordered button.list-row:first-child {
+    border-top: none;
+}
+
+button.list-row:hover {
+    background: var(--bg-elev);
+}
+
+button.list-row.active {
+    background: var(--accent-soft-bg);
+    color: var(--text);
+    /* Left accent strip so the active row reads at a glance without relying
+       on subtle background contrast that can look washed out in light theme. */
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
 /* -----------------------------------------------------------
    13) Lesson page
    ----------------------------------------------------------- */
@@ -861,29 +896,98 @@ textarea {
     background: color-mix(in srgb, var(--danger, #c00) 14%, transparent);
 }
 
-/* Sparkle decoration on correct */
+/* Sparkle decoration on correct. The bob keyframes give each star a slow,
+   loop-forever vertical float so the feedback panel feels alive rather than
+   static. Three slightly offset durations + delays prevent the stars from
+   syncing up. */
 .sparkle {
     position: absolute;
     color: var(--success);
     opacity: 0.5;
+    animation: sparkle-bob 2.4s ease-in-out infinite;
+    will-change: transform;
 }
 
 .sparkle.s1 {
     top: 12px;
     right: 18px;
     font-size: 14px;
+    animation-duration: 2.6s;
 }
 
 .sparkle.s2 {
     bottom: 14px;
     right: 80px;
     font-size: 10px;
+    animation-duration: 2.1s;
+    animation-delay: 0.4s;
 }
 
 .sparkle.s3 {
     top: 28px;
     right: 60px;
     font-size: 8px;
+    animation-duration: 2.9s;
+    animation-delay: 0.8s;
+}
+
+@keyframes sparkle-bob {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+/* Wrong-answer marks: little × symbols that mirror the sparkles, but use a
+   gentle left/right rotation instead of vertical bob and are tinted with
+   the danger colour. Same offset / staggered timing trick. */
+.wrong-mark {
+    position: absolute;
+    color: var(--danger);
+    opacity: 0.55;
+    transform-origin: center;
+    animation: wrong-sway 2.4s ease-in-out infinite;
+    will-change: transform;
+}
+
+.wrong-mark.s1 {
+    top: 12px;
+    right: 18px;
+    font-size: 16px;
+    animation-duration: 2.6s;
+}
+
+.wrong-mark.s2 {
+    bottom: 14px;
+    right: 80px;
+    font-size: 12px;
+    animation-duration: 2.1s;
+    animation-delay: 0.4s;
+}
+
+.wrong-mark.s3 {
+    top: 28px;
+    right: 60px;
+    font-size: 10px;
+    animation-duration: 2.9s;
+    animation-delay: 0.8s;
+}
+
+@keyframes wrong-sway {
+
+    0%,
+    100% {
+        transform: rotate(-12deg);
+    }
+
+    50% {
+        transform: rotate(12deg);
+    }
 }
 
 .lesson-foot {
@@ -2013,9 +2117,31 @@ textarea {
     gap: 8px;
 }
 
+/* In the admin prefs row the language picker sits next to ThemeSwitch (a
+   36×36 square). Match its compact size — the prior `flex: 1 1 auto`
+   stretched it to fill the whole row, which looked oversized for a button
+   that just shows "EN" / "RU". */
 .admin-sidebar-prefs .lang-picker,
 .admin-drawer-prefs .lang-picker {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+}
+
+.admin-sidebar-prefs .lang-picker-btn,
+.admin-drawer-prefs .lang-picker-btn {
+    /* Cancel the wider sidebar-foot override above; in the prefs row we want
+       the picker the same height as ThemeSwitch and only as wide as needed. */
+    width: auto;
+    justify-content: center;
+}
+
+/* The admin sidebar foot is anchored to the bottom of the viewport, so the
+   default downward-opening menu falls off-screen. Flip it to open above the
+   trigger when the picker is inside the sidebar/drawer footer. */
+.admin-sidebar-foot .lang-picker-menu,
+.app-nav-drawer-foot-controls .lang-picker-menu,
+.admin-drawer-prefs .lang-picker-menu {
+    top: auto;
+    bottom: calc(100% + 6px);
 }
 
 .admin-drawer-prefs {

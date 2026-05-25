@@ -194,6 +194,12 @@
 .activity-heatmap-wrap {
     position: relative;
     margin-top: 12px;
+    /* Cell + gap are driven by Vue so the heatmap can scale up when fewer
+       columns are rendered (90/180-day windows used to leave the heatmap
+       hugging the left edge of the card; now cells grow to fill the row). */
+    --heat-cell: 12px;
+    --heat-gap: 3px;
+    --heat-col: calc(var(--heat-cell) + var(--heat-gap));
 }
 
 .activity-months {
@@ -238,7 +244,7 @@
 
 .activity-heatmap {
     display: flex;
-    gap: 3px;
+    gap: var(--heat-gap);
     margin-left: 28px;
     overflow-x: auto;
     padding-bottom: 4px;
@@ -247,12 +253,12 @@
 .activity-col {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--heat-gap);
 }
 
 .activity-cell {
-    width: 12px;
-    height: 12px;
+    width: var(--heat-cell);
+    height: var(--heat-cell);
     border-radius: 2px;
     background: var(--grey-band);
     cursor: pointer;
@@ -375,7 +381,8 @@
     padding: 24px;
 }
 
-.modal-card {
+.modal-card,
+.modal {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -387,12 +394,58 @@
     overflow-y: auto;
 }
 
+/* `.modal-body` is the inner content wrapper used by AdminSubscriptions /
+   AdminPromocodes; no chrome needed but it must NOT be transparent — the
+   modal-card backing handles that already, this just keeps the box-model
+   consistent. */
+.modal-body {
+    display: block;
+}
+
+/* Close-button (✕) shared with modal-head. Subtle by default, accent on hover.
+   Reset native button chrome that otherwise leaks a grey background. */
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.modal-close:hover {
+    background: var(--bg-elev);
+    color: var(--text);
+}
+
+.modal-close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* -----------------------------------------------------------
    27) Theory primer (pre-lesson Kaplan-style bites)
    ----------------------------------------------------------- */
 
 .theory-intro {
-    /* The card class already provides surface + padding; this just tunes copy. */
+    /* Need a positioning context for the floating "Skip recap" button. */
+    position: relative;
+}
+
+/* Floating "Skip recap" button anchored to the theory card. Keeps the user's
+   most likely next action (start the lesson) reachable without scrolling all
+   the way past the theory bites. position: sticky inside the card keeps the
+   button glued near the top of the user's viewport as they scroll the recap
+   contents. */
+.theory-skip {
+    position: sticky;
+    top: 16px;
+    float: right;
+    z-index: 2;
+    margin: 0 0 12px 12px;
 }
 
 .theory-list {
@@ -471,8 +524,34 @@
 }
 
 .why-wrong-toggle {
-    /* Inherits .btn-link styling. No padding override; this is a tight inline action. */
+    /* The "Show explanations" toggle was previously a plain text link
+       (.btn-link), which read as part of the body copy and easy to miss.
+       Promote it to a soft pill-shaped button with an icon so it's obviously
+       interactive. Keeps the danger-tinted background to stay consistent
+       with the wrong-answer feedback card it sits inside. */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    background: var(--danger-bg, rgba(220, 38, 38, 0.12));
+    color: var(--danger, #c00);
+    border: 1px solid color-mix(in srgb, var(--danger, #c00) 30%, transparent);
+    border-radius: 999px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.why-wrong-toggle:hover {
+    background: color-mix(in srgb, var(--danger, #c00) 20%, transparent);
+    border-color: color-mix(in srgb, var(--danger, #c00) 45%, transparent);
+}
+
+.why-wrong-toggle-icon {
+    font-size: 14px;
+    line-height: 1;
 }
 
 .why-wrong-list {
@@ -605,6 +684,11 @@
     overflow-y: auto;
     min-height: 0;
     /* allow flex/grid child to shrink for scroll */
+    /* Reserve the scrollbar gutter even before content overflows. Without
+       this the head row's two buttons fit in one line during loading, then
+       wrap onto two lines the moment papers arrive and the scrollbar steals
+       ~15px of width. Stable gutter = no layout shift between states. */
+    scrollbar-gutter: stable;
 }
 
 .content-tree-head {
@@ -1442,7 +1526,10 @@
 
 .badges-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    /* auto-fit (not auto-fill) so when there are fewer tiles than fit on a
+       row they expand to share the full width evenly, instead of clustering
+       at min-width on the left and leaving a wide gap on the right. */
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 12px;
 }
 
@@ -2099,6 +2186,46 @@
     .dashboard-start-row>.btn {
         width: 100%;
     }
+}
+
+/* Prominent block-state banner shown on the dashboard when the free user
+   has run out of hearts (or hit the daily lesson cap, or the mock-this-
+   month cap). Previously this was a `.dim .text-sm` line that disappeared
+   into the surrounding copy — a hard-stop deserves to be loud. */
+.quota-block-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    border-radius: 10px;
+    color: var(--text);
+}
+
+.quota-block-banner-icon {
+    font-size: 22px;
+    line-height: 1;
+    color: var(--danger);
+    flex: 0 0 auto;
+}
+
+.quota-block-banner-body {
+    flex: 1 1 auto;
+    line-height: 1.4;
+}
+
+.quota-block-banner-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+}
+
+.quota-block-banner-sub {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--text-dim);
 }
 
 /* Profile: 2-column charts grid → single column. The grid is .profile-grid-2;

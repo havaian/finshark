@@ -36,6 +36,12 @@ onMounted(async () => {
   } catch {
     /* axios interceptor handles forced-logout */
   }
+  // Refresh the entitlement on every dashboard mount. The store is only
+  // bootstrapped once at app startup and elsewhere only refetched on a 403;
+  // without this the quota chips and hearts-out banner stay stale after
+  // returning from a lesson, so users would see "0/3 lessons today" even
+  // after just completing two.
+  void entitlement.fetch();
   await loadPapers();
 });
 
@@ -92,6 +98,16 @@ const blockedByQuota = computed(() => {
   if (ent.lessons.limit !== null && ent.lessons.used >= ent.lessons.limit) return true;
   if (ent.hearts.pool !== null && ent.hearts.pool <= 0) return true;
   return false;
+});
+
+// True when the heart pool is specifically empty. Drives the prominent
+// "no hearts left" banner — different surface treatment than the generic
+// quotaBlockMsg line below (the latter is a small dim line under the start
+// button which is too easy to miss for the most common free-tier wall).
+const heartsEmpty = computed(() => {
+  if (!entitlement.isFree) return false;
+  const ent = entitlement.entitlement;
+  return !!(ent && ent.hearts.pool !== null && ent.hearts.pool <= 0);
 });
 
 const startDisabled = computed(
@@ -174,6 +190,18 @@ function extractError(e: unknown): string | null {
         <div class="row" style="justify-content: space-between; margin-bottom: 14px;">
           <h2>{{ t('dashboard.start_lesson_heading') }}</h2>
           <RouterLink :to="lp(`/progress`)" class="btn-link">{{ t('dashboard.view_progress') }}</RouterLink>
+        </div>
+
+        <!-- Hearts-empty banner. Loud, coloured, visually distinct from the
+             generic "quota reached" suffix line below the start button —
+             without this the most common free-tier wall (zero hearts) was a
+             tiny dim line easy to scroll past. -->
+        <div v-if="heartsEmpty" class="quota-block-banner" role="status">
+          <span class="quota-block-banner-icon" aria-hidden="true">♡</span>
+          <div class="quota-block-banner-body">
+            <div class="quota-block-banner-title">{{ t('dashboard.hearts_empty_banner_title') }}</div>
+            <div class="quota-block-banner-sub">{{ t('dashboard.hearts_empty_banner_sub') }}</div>
+          </div>
         </div>
 
         <p v-if="papersLoading" class="dim text-sm">{{ t('dashboard.loading_papers') }}</p>

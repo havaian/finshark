@@ -84,33 +84,69 @@ function resetForm() {
   formNotes.value = '';
 }
 
+// Convert a YYYY-MM-DD string into an ISO timestamp at the given clock.
+// Returns null on empty input and throws on a clearly-invalid date so the
+// surrounding form can surface a precise message instead of the generic
+// "failed to create promocode" fallback. Previously these conversions
+// happened inline; if the date parsed to "Invalid Date" the .toISOString()
+// would throw a RangeError that the caller bucketed as a generic failure
+// with no network call ever made — confusing for admins debugging in the
+// browser network tab.
+function toIsoBound(ymd: string, clock: 'start' | 'end'): string | null {
+  const trimmed = ymd.trim();
+  if (trimmed === '') return null;
+  const suffix = clock === 'start' ? 'T00:00:00Z' : 'T23:59:59Z';
+  const d = new Date(`${trimmed}${suffix}`);
+  if (Number.isNaN(d.getTime())) {
+    throw new Error(`Invalid ${clock === 'start' ? 'start' : 'end'} date: ${trimmed}`);
+  }
+  return d.toISOString();
+}
+
+// Parse an optional integer field. Empty → undefined (server falls back),
+// invalid → throw with the field name so the user sees what to fix.
+function parseOptionalInt(raw: string, field: string): number | undefined {
+  const trimmed = raw.trim();
+  if (trimmed === '') return undefined;
+  const n = parseInt(trimmed, 10);
+  if (!Number.isFinite(n)) {
+    throw new Error(`${field} must be a whole number`);
+  }
+  return n;
+}
+
 async function onCreate() {
   if (createBusy.value) return;
   const code = formCode.value.trim();
-  if (!code || !formPlanId.value) return;
+  if (!code || !formPlanId.value) {
+    // Surface this case explicitly — the disabled-button state can be missed
+    // when an autofill fills in only one of the two fields.
+    createError.value = !code
+      ? 'Code is required.'
+      : 'Plan is required.';
+    return;
+  }
 
   createBusy.value = true;
   createError.value = null;
   try {
-    const days = formDays.value.trim();
-    const maxR = formMaxRedemptions.value.trim();
-    const perU = formPerUserLimit.value.trim();
-    const vf = formValidFrom.value.trim();
-    const vu = formValidUntil.value.trim();
+    const grant_days = parseOptionalInt(formDays.value, 'Days');
+    const max_redemptions = parseOptionalInt(formMaxRedemptions.value, 'Max redemptions');
+    const per_user_limit = parseOptionalInt(formPerUserLimit.value, 'Per-user limit');
+    const valid_from = toIsoBound(formValidFrom.value, 'start');
+    const valid_until = toIsoBound(formValidUntil.value, 'end');
     const notes = formNotes.value.trim();
 
     const created = await adminBillingApi.createPromocode({
       code,
       grant_plan_id: formPlanId.value,
-      // Empty string → undefined so the server falls back to plan period.
-      // A positive number wins; 0 is rejected by class-validator @Min(1).
-      grant_days: days === '' ? undefined : parseInt(days, 10),
-      max_redemptions: maxR === '' ? undefined : parseInt(maxR, 10),
-      per_user_limit: perU === '' ? undefined : parseInt(perU, 10),
-      // Date inputs return YYYY-MM-DD — convert to ISO at midnight UTC so
-      // the backend (ISO8601) accepts it. Empty stays null.
-      valid_from: vf === '' ? null : new Date(`${vf}T00:00:00Z`).toISOString(),
-      valid_until: vu === '' ? null : new Date(`${vu}T23:59:59Z`).toISOString(),
+      // grant_days: empty → undefined (server uses plan period); 0 is rejected
+      // by class-validator @Min(1) so we don't bother sending it.
+      grant_days,
+      max_redemptions,
+      per_user_limit,
+      valid_from,
+      valid_until,
       notes: notes === '' ? null : notes,
     });
     // Newest first — prepend.
@@ -118,7 +154,14 @@ async function onCreate() {
     resetForm();
     showCreate.value = false;
   } catch (e) {
-    createError.value = extractError(e) ?? 'failed to create promocode';
+    // Always log the real exception. Without this the generic fallback below
+    // hides RangeError / TypeError thrown before the network call, leaving
+    // the user staring at "failed to create promocode" with an empty network
+    // tab and no console signal.
+    console.error('[promocode create]', e);
+    const fromAxios = extractError(e);
+    const fromError = e instanceof Error ? e.message : null;
+    createError.value = fromAxios ?? fromError ?? 'failed to create promocode';
   } finally {
     createBusy.value = false;
   }

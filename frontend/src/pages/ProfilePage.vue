@@ -402,6 +402,28 @@ interface MonthLabel { col: number; key: string; short: string }
 type HeatmapWindow = 90 | 180 | 365;
 const heatmapWindow = ref<HeatmapWindow>(90);
 
+// Cell + gap scale up at smaller windows so the heatmap fills the card width
+// instead of hugging the left edge at 12px cells. Tuned against the 280–
+// 720px range of card widths the wrap sits inside; cells stay square so the
+// grid still reads as a calendar.
+const heatmapCellPx = computed<number>(() => {
+  switch (heatmapWindow.value) {
+    case 90: return 26;
+    case 180: return 16;
+    case 365:
+    default: return 12;
+  }
+});
+const heatmapGapPx = computed<number>(() => (heatmapWindow.value === 90 ? 4 : 3));
+const heatmapColPx = computed<number>(() => heatmapCellPx.value + heatmapGapPx.value);
+
+// Style object piped to the wrap as CSS variables. The .activity-cell /
+// .activity-col rules in pages.css consume these.
+const heatmapStyleVars = computed<Record<string, string>>(() => ({
+  '--heat-cell': `${heatmapCellPx.value}px`,
+  '--heat-gap': `${heatmapGapPx.value}px`,
+}));
+
 // Locale: pull from the active i18n composer once on render and re-read on
 // language change (vue-i18n's t() rebinds reactively when locale.value
 // changes). For 'ru' we use the abbreviated names; 'en' uses 3-char month.
@@ -574,6 +596,18 @@ function extractError(e: unknown): string | null {
   return null;
 }
 
+// Resolve a plan id (e.g. `premium_lifetime`) to a localized human-readable
+// label. The backend stores the raw id on each subscription — the user-facing
+// payments section was previously printing it directly, which leaked the slug
+// into the UI ("premium_lifetime" instead of "Premium · lifetime"). Falls
+// back to the raw id when no i18n key exists, so unknown plans (future PSPs)
+// still render something rather than nothing.
+function planNameFor(planId: string): string {
+  const key = `profile.plan_name_${planId}`;
+  const translated = t(key);
+  return translated === key ? planId : translated;
+}
+
 onMounted(load);
 </script>
 
@@ -674,21 +708,23 @@ onMounted(load);
                column on the left, and the 53x7 cell grid in the main area.
                Tooltip floats above on hover, positioned absolutely relative
                to .activity-heatmap-wrap. -->
-          <div ref="heatmapWrap" class="activity-heatmap-wrap">
+          <div ref="heatmapWrap" class="activity-heatmap-wrap" :style="heatmapStyleVars">
             <!-- Month labels row: only renders for months whose column ≥ 1
-                 (avoids overlap with the weekday label column on the far left). -->
+                 (avoids overlap with the weekday label column on the far left).
+                 Positions use the dynamic col width so labels still line up
+                 with grid cells when cells scale up at smaller windows. -->
             <div class="activity-months">
               <span v-for="m in heatmapData.months" :key="m.key" class="activity-month-label"
-                :style="{ left: (m.col * 15) + 'px' }">{{ m.short }}</span>
+                :style="{ left: (m.col * heatmapColPx) + 'px' }">{{ m.short }}</span>
             </div>
 
             <div class="activity-body">
-              <!-- Weekday labels (Mon/Wed/Fri). Rows are 15px tall (12 cell + 3
-                   gap) to align with the grid columns next to them. -->
+              <!-- Weekday labels (Mon/Wed/Fri). Rows scale with --heat-cell + --heat-gap,
+                   so Mon = col*1, Wed = col*3, Fri = col*5 (alternating rows). -->
               <div class="activity-weekdays">
-                <span class="activity-weekday" style="top: 15px;">{{ weekdayLabels.mon }}</span>
-                <span class="activity-weekday" style="top: 45px;">{{ weekdayLabels.wed }}</span>
-                <span class="activity-weekday" style="top: 75px;">{{ weekdayLabels.fri }}</span>
+                <span class="activity-weekday" :style="{ top: heatmapColPx + 'px' }">{{ weekdayLabels.mon }}</span>
+                <span class="activity-weekday" :style="{ top: (heatmapColPx * 3) + 'px' }">{{ weekdayLabels.wed }}</span>
+                <span class="activity-weekday" :style="{ top: (heatmapColPx * 5) + 'px' }">{{ weekdayLabels.fri }}</span>
               </div>
 
               <div class="activity-heatmap">
@@ -876,7 +912,7 @@ onMounted(load);
             <div v-for="s in subscriptions" :key="s.id" class="list-row">
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <div>
-                  <span style="font-weight: 500;">{{ s.plan_id }}</span>
+                  <span style="font-weight: 500;">{{ planNameFor(s.plan_id) }}</span>
                   <span class="pill pill-grey" style="margin-left: 10px;">
                     {{ t(`admin.subscriptions.sub_status_${s.status}`) }}
                   </span>

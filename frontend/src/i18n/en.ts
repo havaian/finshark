@@ -211,6 +211,12 @@ export default {
     quota_lessons_exhausted: "Daily lesson limit reached — back tomorrow.",
     quota_hearts_exhausted: "Out of hearts — back tomorrow.",
     quota_mocks_exhausted: "Monthly mock limit reached.",
+    // Banner copy for the prominent hearts-empty state on the dashboard.
+    // Two-line block (title + sub) keeps the call-to-action separable from
+    // the situation summary.
+    hearts_empty_banner_title: "You're out of hearts for today",
+    hearts_empty_banner_sub:
+      "Hearts refill at midnight in your timezone. Upgrade to premium to study without limits.",
     premium_badge: "Premium",
     // Locked paper picker entry (used by the dashboard + mock-start <option>).
     // We keep the picker showing premium-only papers so free users can see
@@ -294,11 +300,12 @@ export default {
     number_entry_placeholder: "Enter a number",
     number_entry_help: "Enter to submit.",
     number_entry_tolerance: "Accepts ±{tol}.",
-    why_wrong_show: "Why are the other options wrong?",
+    why_wrong_show: "Show explanations",
     why_wrong_hide: "Hide explanations",
     theory_title: "Before we start",
     theory_subtitle: "A quick refresher on what this lesson covers.",
     theory_start: "Start lesson",
+    theory_skip: "Skip recap",
     complete_title: "Lesson complete",
     complete_correct: "Correct",
     complete_xp_earned: "XP earned",
@@ -408,6 +415,13 @@ export default {
     payments_empty: "You don't have any subscriptions yet.",
     payments_redeem_hint:
       "Have a promo code? Redeem it from the Premium section in Settings.",
+    // Display labels for the plan column in the payments history. Keyed by
+    // the backend plan id (free / premium_monthly / premium_yearly /
+    // premium_lifetime). Unknown ids fall back to the raw id at the call site.
+    plan_name_free: "Free",
+    plan_name_premium_monthly: "Premium · monthly",
+    plan_name_premium_yearly: "Premium · yearly",
+    plan_name_premium_lifetime: "Premium · lifetime",
     danger_zone: "Danger zone",
     delete_account: "Delete account",
     delete_account_warning:
@@ -790,7 +804,7 @@ export default {
     // supplied JSON variable map and sends through the regular EmailService.
     email_templates: {
       title: "Email templates",
-      sub: "Edit transactional and reminder email copy. Templates render with {{var}} substitution.",
+      sub: "Edit transactional and reminder email copy. Templates render with {'{{var}}'} substitution.",
       new_btn: "New template",
       new_title: "New template",
       edit_title: "Edit template",
@@ -815,8 +829,8 @@ export default {
       test_to_label: "To",
       test_lang_label: "Language",
       test_vars_label: "Variables (JSON)",
-      test_vars_placeholder: "{\"display_name\":\"Alex\",\"streak\":7}",
-      test_vars_help: "JSON object mapping variable names to values. Unsupplied {{vars}} stay unrendered.",
+      test_vars_placeholder: "{'{\"display_name\":\"Alex\",\"streak\":7}'}",
+      test_vars_help: "JSON object mapping variable names to values. Unsupplied {'{{vars}}'} stay unrendered.",
       test_invalid_json: "Variables must be a valid JSON object.",
       test_resolved_lang: "Rendered language: {lang}",
       send_test_btn: "Send test email",

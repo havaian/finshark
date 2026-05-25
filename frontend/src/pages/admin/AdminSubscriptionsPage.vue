@@ -373,7 +373,7 @@ onMounted(loadUsersAndPlans);
                     {{ t('admin.subscriptions.sub_cancel_btn') }}
                   </button>
                   <button class="btn btn-ghost btn-sm" style="color: var(--danger, #c00);"
-                    :disabled="busyIds.has(s.id)"
+                    :disabled="s.status !== 'active' || busyIds.has(s.id)"
                     @click="openAction('revoke', s)">
                     {{ t('admin.subscriptions.sub_revoke_btn') }}
                   </button>

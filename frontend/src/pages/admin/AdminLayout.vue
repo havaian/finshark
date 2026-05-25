@@ -6,6 +6,8 @@ import { useLocaleStore } from '../../stores/locale.store';
 import { useLocalePath } from '../../router/useLocalePath';
 import { SUPPORTED_LANGS } from '../../i18n';
 import { useRoute, useRouter } from 'vue-router';
+import LangPicker from '../../components/LangPicker.vue';
+import ThemeSwitch from '../../components/ThemeSwitch.vue';
 
 // Admin shell — sidebar nav + topbar with a "back to dashboard" exit.
 // Nested admin routes render in the <RouterView/> below.
@@ -127,6 +129,13 @@ function onExitMobile() {
           <div class="admin-sidebar-me-name">{{ auth.user.display_name }}</div>
           <div class="admin-sidebar-me-email dim text-xs">{{ auth.user.email }}</div>
         </div>
+        <!-- Preferences row: language + theme. Admins spend long sessions here,
+             so language/theme should be reachable without going back to the
+             user app. Same components as AppNav for a single source of truth. -->
+        <div class="admin-sidebar-prefs">
+          <LangPicker />
+          <ThemeSwitch />
+        </div>
         <button class="btn btn-ghost btn-block" @click="onExit">{{ t('nav.back_to_app') }}</button>
       </div>
     </aside>
@@ -190,6 +199,14 @@ function onExitMobile() {
           <div v-if="auth.user" class="admin-drawer-me">
             <div class="admin-sidebar-me-name">{{ auth.user.display_name }}</div>
             <div class="admin-sidebar-me-email dim text-xs">{{ auth.user.email }}</div>
+          </div>
+
+          <!-- Preferences row in the drawer too, mirroring the desktop sidebar
+               foot. Same pickers — language stays in sync because both use the
+               locale store. -->
+          <div class="admin-drawer-prefs">
+            <LangPicker />
+            <ThemeSwitch />
           </div>
 
           <!-- "Back to app" pinned to the bottom — equivalent to the desktop

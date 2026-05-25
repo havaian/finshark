@@ -51,6 +51,11 @@ export default {
     admin_panel: "Админ-панель",
     back_to_dashboard: "← На главную",
     back_to_app: "← Назад в приложение",
+    stat_level_tip:
+      "Уровень {level} · {intoLevel} / {bandSize} XP до уровня {next}",
+    stat_level_short: "Ур. {level}",
+    stat_freeze_tip:
+      "Заморозки серии — каждая закрывает один пропущенный день. Выдаётся за каждые 14 дней серии (максимум 2).",
     stat_streak_tip:
       "Стрик — количество дней подряд, в которые ты прошёл хотя бы один урок.",
     stat_xp_tip:
@@ -279,7 +284,12 @@ export default {
     complete_correct: "Верно",
     complete_xp_earned: "Получено опыта",
     complete_streak: "Серия",
+    complete_level: "Уровень",
     complete_back: "На главную",
+    level_up: "Новый уровень — теперь вы на {level}!",
+    streak_freeze_used:
+      "Серия спасена заморозкой! (осталось: {remaining})",
+    streak_freeze_earned: "Вы получили заморозку серии — теперь их {count}.",
     loading: "Загрузка урока…",
     out_of_hearts_title: "Жизни закончились",
     out_of_hearts_body:

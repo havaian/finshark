@@ -6,6 +6,10 @@ export interface PublicUser {
   email: string;
   display_name: string;
   streak_count: number;
+  // Stockpile of streak freezes the user can spend to cover a 1-day gap.
+  // Granted at every 14-day streak milestone, capped at 2.
+  // See backend src/lessons/srs.ts (MAX_FREEZES / FREEZE_GRANT_INTERVAL).
+  streak_freezes_remaining: number;
   xp: number;
   level: number;
   last_active_date: string | null;

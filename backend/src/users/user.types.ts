@@ -10,6 +10,10 @@ export interface UserRow {
   google_sub: string; // Google's stable user identifier (sub claim)
   display_name: string;
   streak_count: number;
+  // See migration 20260525000002 — count of streak freezes the user can
+  // spend to cover a single missed day. Granted at every 14-day streak
+  // milestone, capped at MAX_FREEZES (src/lessons/srs.ts).
+  streak_freezes_remaining: number;
   xp: number;
   level: number;
   last_active_date: Date | null;
@@ -42,6 +46,7 @@ export interface PublicUser {
   email: string;
   display_name: string;
   streak_count: number;
+  streak_freezes_remaining: number;
   xp: number;
   level: number;
   last_active_date: string | null;
@@ -68,6 +73,7 @@ export function toPublicUser(row: UserRow): PublicUser {
     email: row.email,
     display_name: row.display_name,
     streak_count: row.streak_count,
+    streak_freezes_remaining: row.streak_freezes_remaining,
     xp: row.xp,
     level: row.level,
     last_active_date: row.last_active_date

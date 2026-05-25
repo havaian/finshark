@@ -56,6 +56,11 @@ export default {
       "Daily streak — number of consecutive days with at least one lesson.",
     stat_xp_tip:
       "Experience points — earned for correct answers and completed lessons.",
+    stat_level_tip:
+      "Level {level} · {intoLevel} / {bandSize} XP toward level {next}",
+    stat_level_short: "Lv {level}",
+    stat_freeze_tip:
+      "Streak freezes — each covers one missed day. Earn one every 14-day streak (max 2).",
     open_menu: "Open menu",
     menu: "Menu",
     theme: "Theme",
@@ -279,7 +284,12 @@ export default {
     complete_correct: "Correct",
     complete_xp_earned: "XP earned",
     complete_streak: "Streak",
+    complete_level: "Level",
     complete_back: "Back to dashboard",
+    level_up: "Level up — you're now level {level}!",
+    streak_freeze_used:
+      "Streak saved by a freeze! ({remaining} freeze(s) left)",
+    streak_freeze_earned: "You earned a streak freeze — now you have {count}.",
     loading: "Loading lesson…",
     out_of_hearts_title: "No hearts left",
     out_of_hearts_body:

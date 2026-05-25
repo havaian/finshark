@@ -75,6 +75,13 @@ export interface CompleteLessonResult {
   new_xp: number;
   new_level: number;
   new_streak: number;
+  // Streak-freeze fields, mirroring backend CompleteLessonResult (added in
+  // migration 20260525000002_streak_freezes). new_streak_freezes is the
+  // post-session count; the booleans drive the "saved by a freeze!" /
+  // "+1 freeze!" banners on the finale.
+  new_streak_freezes: number;
+  freeze_consumed: boolean;
+  freeze_granted: boolean;
   ended_out_of_hearts: boolean;
   // Badge codes earned by this session completion. Empty when none.
   // The lesson page renders these as a brief toast on the summary screen.

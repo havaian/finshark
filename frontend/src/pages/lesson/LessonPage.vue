@@ -46,6 +46,15 @@ const showWhyWrong = ref(false);
 
 const completing = ref(false);
 const summary = ref<CompleteLessonResult | null>(null);
+// Snapshot of the user's level RIGHT BEFORE complete() returns so the finale
+// can render a "Level up!" banner when summary.new_level > prevLevel.
+// Captured in onComplete() because we update auth.user.level immediately after
+// the network call — comparing against the live store would always read equal.
+const prevLevel = ref<number | null>(null);
+const leveledUp = computed(() => {
+  if (!summary.value || prevLevel.value === null) return false;
+  return summary.value.new_level > prevLevel.value;
+});
 // Hydrated PublicBadge details for the codes in summary.newly_earned_badges.
 // We fetch /me/badges only when there ARE newly earned badges so the common
 // case (no earns) has zero extra cost.
@@ -260,12 +269,16 @@ async function onNext() {
 async function onComplete() {
   completing.value = true;
   errorMsg.value = null;
+  // Snapshot level BEFORE the network call so we can detect a cross at the
+  // finale. The store update below overwrites auth.user.level immediately.
+  prevLevel.value = auth.user?.level ?? null;
   try {
     summary.value = await lessonsApi.complete(sessionId);
     if (auth.user) {
       auth.user.xp = summary.value.new_xp;
       auth.user.level = summary.value.new_level;
       auth.user.streak_count = summary.value.new_streak;
+      auth.user.streak_freezes_remaining = summary.value.new_streak_freezes;
     }
     // Stop the countdown ASAP on completion so the user doesn't see it tick
     // during the navigation transition.
@@ -389,6 +402,27 @@ onUnmounted(() => {
         <p v-if="summary.ended_out_of_hearts" class="dim mt-4">
           {{ t('lesson.out_of_hearts_body') }}
         </p>
+
+        <!-- Level-up banner. Only renders when this session pushed the user
+             across a level boundary, so for the typical finale (no level
+             change) the visual stays the same as before. -->
+        <div v-if="leveledUp" class="level-up-banner mt-4">
+          <span class="level-up-icon">★</span>
+          <span class="level-up-text">{{ t('lesson.level_up', { level: summary.new_level }) }}</span>
+        </div>
+
+        <!-- Streak-freeze banners. Mutually exclusive at the data layer:
+             consume happens on a missed-day session, grant happens on a 14-day
+             milestone — never both in the same call. -->
+        <div v-if="summary.freeze_consumed" class="freeze-banner mt-4">
+          <span class="freeze-banner-icon">❄</span>
+          <span class="freeze-banner-text">{{ t('lesson.streak_freeze_used', { remaining: summary.new_streak_freezes }) }}</span>
+        </div>
+        <div v-if="summary.freeze_granted" class="freeze-banner mt-4">
+          <span class="freeze-banner-icon">❄</span>
+          <span class="freeze-banner-text">{{ t('lesson.streak_freeze_earned', { count: summary.new_streak_freezes }) }}</span>
+        </div>
+
         <div class="stats mt-6">
           <div class="stat">
             <div class="stat-lbl">{{ t('lesson.complete_correct') }}</div>
@@ -398,6 +432,10 @@ onUnmounted(() => {
           <div class="stat">
             <div class="stat-lbl">{{ t('lesson.complete_xp_earned') }}</div>
             <div class="stat-val">+{{ summary.xp_earned }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-lbl">{{ t('lesson.complete_level') }}</div>
+            <div class="stat-val">{{ summary.new_level }}</div>
           </div>
           <div class="stat stat-streak">
             <div class="stat-lbl">{{ t('lesson.complete_streak') }}</div>

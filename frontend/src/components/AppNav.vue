@@ -2,12 +2,15 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import { Cog6ToothIcon } from '@heroicons/vue/24/outline';
 import { useAuthStore } from '../stores/auth.store';
 import { useLocaleStore } from '../stores/locale.store';
 import { useThemeStore } from '../stores/theme.store';
-import { SUPPORTED_LANGS, type Lang } from '../i18n';
+import { SUPPORTED_LANGS } from '../i18n';
 import { useLocalePath } from '../router/useLocalePath';
+import { levelProgress } from '../lib/level';
 import ThemeSwitch from './ThemeSwitch.vue';
+import LangPicker from './LangPicker.vue';
 
 // Top-of-page horizontal navigation, used on all authed user pages
 // (Dashboard, Profile, Progress, Settings, Leaderboards, Mocks).
@@ -41,51 +44,17 @@ const lp = useLocalePath();
 // Drawer-only: which stat tip is expanded (click to reveal). null = none.
 // Tap a stat tile to expand its description; tap again to collapse. Mutually
 // exclusive — opening one collapses the other so the drawer doesn't grow.
-type StatKey = 'streak' | 'xp';
+type StatKey = 'level' | 'streak' | 'xp';
 const expandedStat = ref<StatKey | null>(null);
 function toggleStat(key: StatKey) {
   expandedStat.value = expandedStat.value === key ? null : key;
 }
 
-// Languages shown in the drawer picker. Derived from i18n SUPPORTED_LANGS so
-// adding a new language in i18n/index.ts automatically surfaces it here.
-// `code` is the 2-letter UI code shown in the pill; `nameKey` resolves to the
-// language's own native name via existing i18n keys (lang.name_en etc).
-const langOptions = computed(() =>
-  SUPPORTED_LANGS.map((code) => ({
-    code,
-    label: code.toUpperCase(),
-    nameKey: `lang.name_${code}`,
-  })),
-);
-
-function setLang(next: Lang) {
-  // Swap the :lang segment in the current URL and trigger a full page reload.
-  // Full reload (instead of router.push) is intentional — it discards any
-  // already-rendered strings that came from the previous lang's i18n bundle
-  // and re-fetches the /api/ui-translations/<lang> overrides cleanly on
-  // boot. The locale store is updated before reload so any code reading
-  // localStorage on boot sees the new value.
-  if (next === locale.lang) return;
-  locale.setLang(next);
-
-  const url = new URL(window.location.href);
-  const segments = url.pathname.split("/");
-  // segments[0] is '' (leading slash); segments[1] is the current lang
-  // (guaranteed by router structure for any localized route). For bare
-  // entry routes (/auth/callback, /unsubscribe) this swap won't apply
-  // anyway — they aren't reachable from the drawer. Defensive guard:
-  // only swap if the second segment is a known lang.
-  if (segments.length >= 2 && (SUPPORTED_LANGS as readonly string[]).includes(segments[1])) {
-    segments[1] = next;
-    url.pathname = segments.join("/");
-  } else {
-    // No lang prefix in URL (shouldn't happen inside the app, but defensive):
-    // prepend one.
-    url.pathname = `/${next}${url.pathname}`;
-  }
-  window.location.assign(url.toString());
-}
+// Live level-band progress for the level pill tooltip. Derives from the
+// reactive auth.user.xp so the tooltip stays in sync after a lesson updates
+// xp/level in the store. Returns zeros when there's no user yet — the pill
+// itself is v-if-gated on auth.user, but computed has to be safe regardless.
+const lvlProgress = computed(() => levelProgress(auth.user?.xp ?? 0));
 
 interface NavItem { to: string; labelKey: string; exact?: boolean }
 
@@ -205,9 +174,22 @@ function onLogoutMobile() {
              small CSS tooltip explaining what each icon means — useful for new
              users who haven't seen the dashboard yet. -->
         <div v-if="auth.user" class="app-nav-stats">
+          <span class="app-nav-stat app-nav-stat-level"
+            :data-tip="t('nav.stat_level_tip', { level: lvlProgress.level, intoLevel: lvlProgress.intoLevel, bandSize: lvlProgress.bandSize, next: lvlProgress.level + 1 })">
+            <span class="app-nav-stat-icon">★</span>
+            <span class="app-nav-stat-val">{{ t('nav.stat_level_short', { level: auth.user.level }) }}</span>
+          </span>
           <span class="app-nav-stat" :data-tip="t('nav.stat_streak_tip')">
             <span class="app-nav-stat-icon">🔥</span>
             <span class="app-nav-stat-val">{{ auth.user.streak_count }}</span>
+          </span>
+          <!-- Freeze pill: only rendered when the user actually has freezes.
+               Stays silent for the common case (no freezes, no clutter) and
+               surfaces as a small snowflake count once they earn one. -->
+          <span v-if="auth.user.streak_freezes_remaining > 0" class="app-nav-stat app-nav-stat-freeze"
+            :data-tip="t('nav.stat_freeze_tip')">
+            <span class="app-nav-stat-icon">❄</span>
+            <span class="app-nav-stat-val">{{ auth.user.streak_freezes_remaining }}</span>
           </span>
           <span class="app-nav-stat" :data-tip="t('nav.stat_xp_tip')">
             <span class="app-nav-stat-icon">✦</span>
@@ -215,6 +197,7 @@ function onLogoutMobile() {
           </span>
         </div>
 
+        <LangPicker />
         <ThemeSwitch />
 
         <!-- Admin entry: vivid styling so it stands out. Only rendered for admins. -->
@@ -228,7 +211,9 @@ function onLogoutMobile() {
           </span>
         </RouterLink>
 
-        <RouterLink :to="lp(`/settings`)" class="app-nav-icon-btn" :title="t('nav.settings')">⚙</RouterLink>
+        <RouterLink :to="lp(`/settings`)" class="app-nav-icon-btn" :title="t('nav.settings')">
+          <Cog6ToothIcon class="app-nav-icon-svg" aria-hidden="true" />
+        </RouterLink>
 
         <button class="btn btn-ghost btn-sm" @click="onLogout">
           {{ t('common.sign_out') }}
@@ -246,15 +231,26 @@ function onLogoutMobile() {
       </RouterLink>
 
       <div v-if="auth.user" class="app-nav-mobile-stats">
+        <span class="app-nav-stat app-nav-stat-level">
+          <span class="app-nav-stat-icon">★</span>
+          <span class="app-nav-stat-val">{{ t('nav.stat_level_short', { level: auth.user.level }) }}</span>
+        </span>
         <span class="app-nav-stat">
           <span class="app-nav-stat-icon">🔥</span>
           <span class="app-nav-stat-val">{{ auth.user.streak_count }}</span>
+        </span>
+        <span v-if="auth.user.streak_freezes_remaining > 0" class="app-nav-stat app-nav-stat-freeze">
+          <span class="app-nav-stat-icon">❄</span>
+          <span class="app-nav-stat-val">{{ auth.user.streak_freezes_remaining }}</span>
         </span>
         <span class="app-nav-stat">
           <span class="app-nav-stat-icon">✦</span>
           <span class="app-nav-stat-val">{{ auth.user.xp }}</span>
         </span>
       </div>
+
+      <!-- Lang picker visible on the mobile bar too — same component as desktop. -->
+      <LangPicker class="app-nav-mobile-lang" />
 
       <button type="button" class="app-nav-burger" :aria-label="t('nav.open_menu')" :aria-expanded="drawerOpen"
         @click="openDrawer">
@@ -304,6 +300,18 @@ function onLogoutMobile() {
              compact; only one tile is expanded at a time. -->
         <div v-if="auth.user" class="app-nav-drawer-stats">
           <button type="button"
+            :class="['app-nav-drawer-stat', { expanded: expandedStat === 'level' }]"
+            :aria-expanded="expandedStat === 'level'"
+            @click="toggleStat('level')">
+            <span class="app-nav-drawer-stat-row">
+              <span class="app-nav-stat-icon">★</span>
+              <span class="app-nav-drawer-stat-val">{{ t('nav.stat_level_short', { level: auth.user.level }) }}</span>
+            </span>
+            <span v-if="expandedStat === 'level'" class="app-nav-drawer-stat-lbl dim text-xs">
+              {{ t('nav.stat_level_tip', { level: lvlProgress.level, intoLevel: lvlProgress.intoLevel, bandSize: lvlProgress.bandSize, next: lvlProgress.level + 1 }) }}
+            </span>
+          </button>
+          <button type="button"
             :class="['app-nav-drawer-stat', { expanded: expandedStat === 'streak' }]"
             :aria-expanded="expandedStat === 'streak'"
             @click="toggleStat('streak')">
@@ -349,26 +357,11 @@ function onLogoutMobile() {
              bottom regardless of how many primary items there are. -->
         <div class="app-nav-drawer-spacer"></div>
 
-        <!-- Footer controls block: language → theme → settings → sign out.
+        <!-- Footer controls block: theme → settings → sign out.
              Pinned to the bottom of the drawer. Each row uses the same
-             label-on-left / control-on-right pattern. -->
+             label-on-left / control-on-right pattern. Language is omitted —
+             the navbar's <LangPicker /> is visible on mobile too. -->
         <div class="app-nav-drawer-foot-controls">
-          <!-- Language picker: segmented pill, one button per supported language.
-               Uses the same store (useLocaleStore) as the Settings page, so
-               changing it here is reflected there and vice versa. -->
-          <div class="app-nav-drawer-ctrlrow">
-            <span class="dim text-sm">{{ t('lang.label') }}</span>
-            <div class="app-nav-drawer-seg" role="group" :aria-label="t('lang.label')">
-              <button v-for="opt in langOptions" :key="opt.code" type="button"
-                :class="['app-nav-drawer-seg-btn', { active: locale.lang === opt.code }]"
-                :aria-pressed="locale.lang === opt.code"
-                :title="t(opt.nameKey)"
-                @click="setLang(opt.code)">
-                {{ opt.label }}
-              </button>
-            </div>
-          </div>
-
           <!-- Theme picker: segmented pill, sun = light, moon = dark. Replaces
                the single-icon ThemeSwitch in the drawer only — the desktop nav
                still uses <ThemeSwitch /> unchanged. Uses useThemeStore directly
@@ -412,7 +405,8 @@ function onLogoutMobile() {
           <!-- Settings link: full-width row, separated from primary nav so it
                sits with the other "preferences" controls at the bottom. -->
           <RouterLink :to="lp(`/settings`)" class="app-nav-drawer-link" @click="closeDrawer">
-            <span aria-hidden="true" style="margin-right: 10px;">⚙</span>{{ t('nav.settings') }}
+            <Cog6ToothIcon class="app-nav-drawer-link-icon" aria-hidden="true" />
+            {{ t('nav.settings') }}
           </RouterLink>
         </div>
 

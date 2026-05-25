@@ -9,8 +9,6 @@ import { PG } from "../db/db.module";
 //   3) Add a catalog entry in src/seed/data/badges.ts.
 //   4) Wire the rule into RULES below, keyed by the catalog `code`.
 export interface BadgeContext {
-  xp: number;
-  streak_count: number;
   // Distinct paper codes the user has answered at least one question in.
   // Computed via attempts → questions → learning_objectives → papers.
   distinct_papers_studied: number;
@@ -33,16 +31,12 @@ export class BadgeContextRepository {
   async build(user_id: string): Promise<BadgeContext> {
     const rows = await this.sql<
       Array<{
-        xp: number;
-        streak_count: number;
         distinct_papers_studied: number;
         lo_mastered_count: number;
         has_any_attempt: boolean;
       }>
     >`
       SELECT
-        u.xp                                                            AS xp,
-        u.streak_count                                                  AS streak_count,
         (
           SELECT COUNT(DISTINCT lo.paper_id)::int
           FROM attempts a
@@ -65,8 +59,6 @@ export class BadgeContextRepository {
     if (!r) {
       // User vanished mid-call. Return a zero context so callers behave sanely.
       return {
-        xp: 0,
-        streak_count: 0,
         distinct_papers_studied: 0,
         lo_mastered_count: 0,
         has_any_attempt: false,
@@ -84,17 +76,12 @@ type Rule = (ctx: BadgeContext) => boolean;
 // a catalog code means that badge is unearnable; a rule for a code that isn't
 // in the catalog will fail the FK at insert time. The sanity check at module
 // init time logs a warning if these drift.
+// Streak / XP threshold rules were removed alongside their catalog rows in
+// migration 20260525000001_drop_duplicate_streak_xp_badges — the streak_days
+// and xp_earned achievement ladders cover those milestones. Keep this map
+// limited to discovery / event-style badges so the two surfaces don't
+// duplicate each other again.
 export const RULES: Record<string, Rule> = {
-  // Streak family
-  streak_7: (c) => c.streak_count >= 7,
-  streak_30: (c) => c.streak_count >= 30,
-  streak_100: (c) => c.streak_count >= 100,
-
-  // XP family
-  xp_500: (c) => c.xp >= 500,
-  xp_2500: (c) => c.xp >= 2500,
-  xp_10000: (c) => c.xp >= 10000,
-
   // Paper exploration
   paper_started: (c) => c.has_any_attempt,
   paper_explorer: (c) => c.distinct_papers_studied >= 3,

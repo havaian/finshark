@@ -50,4 +50,18 @@ export class AttemptsRepository {
     `;
     return rows.map((r) => r.question_id);
   }
+
+  // Total XP awarded across every attempt in a session. Used at session
+  // complete to derive the XP bump applied to users.xp — preferable to
+  // re-deriving from correct_count * XP_PER_CORRECT because that loses any
+  // partial-credit XP (see XP_PER_FIRST_WRONG in srs.ts) and any future
+  // scoring nuances that vary per attempt rather than per outcome.
+  async sumXpInSession(session_id: string): Promise<number> {
+    const rows = await this.sql<{ total: number }[]>`
+      SELECT COALESCE(SUM(xp_earned), 0)::int AS total
+      FROM attempts
+      WHERE session_id = ${session_id}
+    `;
+    return rows[0]?.total ?? 0;
+  }
 }

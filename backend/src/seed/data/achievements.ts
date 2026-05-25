@@ -115,4 +115,92 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
       { level: 3, threshold: 20, ...LEVEL_NAMES.member },
     ],
   },
+
+  // ── Per-paper ladders ──────────────────────────────────────────────
+  // Each paper gets its own three-level ladder so progress in (say) F3 isn't
+  // gated behind the cross-paper `lessons_completed` total. Thresholds are
+  // ~30% of the overall lessons_completed thresholds (3 / 15 / 50) — enough
+  // to feel like a real milestone without making a paper untouchable for
+  // someone who only practices the others occasionally. A mixed-paper session
+  // credits every paper it touched (see SQL in achievements.rules.ts).
+  {
+    code: "f1_lessons_completed",
+    name_en: "F1 lessons completed",
+    name_ru: "Завершено уроков по F1",
+    description_en: "Complete lessons covering F1 — Business and Technology.",
+    description_ru: "Завершите уроки по предмету F1 — Бизнес и технологии.",
+    icon: "🏢",
+    sort_order: 110,
+    levels: [
+      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
+    ],
+  },
+  {
+    code: "f2_lessons_completed",
+    name_en: "F2 lessons completed",
+    name_ru: "Завершено уроков по F2",
+    description_en: "Complete lessons covering F2 — Management Accounting.",
+    description_ru:
+      "Завершите уроки по предмету F2 — Управленческий учёт.",
+    icon: "📊",
+    sort_order: 120,
+    levels: [
+      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
+    ],
+  },
+  {
+    code: "f3_lessons_completed",
+    name_en: "F3 lessons completed",
+    name_ru: "Завершено уроков по F3",
+    description_en: "Complete lessons covering F3 — Financial Accounting.",
+    description_ru: "Завершите уроки по предмету F3 — Финансовый учёт.",
+    icon: "📒",
+    sort_order: 130,
+    levels: [
+      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
+    ],
+  },
+  {
+    code: "f5_lessons_completed",
+    name_en: "F5 lessons completed",
+    name_ru: "Завершено уроков по F5",
+    description_en: "Complete lessons covering F5 — Performance Management.",
+    description_ru:
+      "Завершите уроки по предмету F5 — Управление эффективностью.",
+    icon: "📈",
+    sort_order: 140,
+    levels: [
+      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
+    ],
+  },
+
+  // ── Quality (not just volume) ──────────────────────────────────────
+  // Rewards consistent accuracy rather than raw activity. Stays at 0 until
+  // the user has cleared a minimum-attempts gate (see
+  // ROLLING_ACCURACY_MIN_ATTEMPTS in achievements.rules.ts) so a single
+  // lucky answer can't unlock it on day one.
+  {
+    code: "accuracy_rolling_30",
+    name_en: "Rolling 30-day accuracy",
+    name_ru: "Точность за 30 дней",
+    description_en:
+      "Maintain a high rolling-30-day accuracy across all your attempts.",
+    description_ru:
+      "Поддерживайте высокую точность за последние 30 дней.",
+    icon: "🎯",
+    sort_order: 200,
+    levels: [
+      { level: 1, threshold: 60, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 75, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 90, ...LEVEL_NAMES.member },
+    ],
+  },
 ];

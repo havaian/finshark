@@ -26,6 +26,7 @@ import {
   qualityFromCorrect,
   toUtcDateOnly,
   XP_PER_CORRECT,
+  XP_PER_FIRST_WRONG,
   type SrsState,
 } from "./srs";
 import type {
@@ -92,6 +93,14 @@ export interface CompleteLessonResult {
   new_xp: number;
   new_level: number;
   new_streak: number;
+  // Streak-freeze fields (see srs.ts nextStreak / migration
+  // 20260525000002_streak_freezes). new_streak_freezes is the post-session
+  // stockpile; the two booleans let the lesson finale render a
+  // "Streak saved by a freeze!" / "+1 streak freeze!" banner without the
+  // frontend having to diff before/after.
+  new_streak_freezes: number;
+  freeze_consumed: boolean;
+  freeze_granted: boolean;
   ended_out_of_hearts: boolean;
   // Badge codes earned by this session-completion. Empty array if none.
   // Frontend uses these to render a one-time toast on the completion screen.
@@ -315,7 +324,20 @@ export class LessonsService {
     // module compute "XP earned in last N days" without us needing to reconstruct
     // it from correct_count after the fact (which wouldn't survive a future change
     // to scoring rules).
-    const xpForThisAttempt = grade.was_correct ? XP_PER_CORRECT : 0;
+    //
+    // Scoring:
+    //   correct                          → XP_PER_CORRECT (10)
+    //   wrong AND first time seeing this → XP_PER_FIRST_WRONG (2) — partial
+    //                                      credit so honest attempts on new
+    //                                      questions aren't punished. See the
+    //                                      constant doc for rationale.
+    //   wrong AND has prior state        → 0 (repeat wrong; SRS handles it).
+    const isFirstEncounter = prevState === null;
+    const xpForThisAttempt = grade.was_correct
+      ? XP_PER_CORRECT
+      : isFirstEncounter
+      ? XP_PER_FIRST_WRONG
+      : 0;
     const newState = await this.sql.begin(async (tx) => {
       // 1) Record the attempt.
       // `as any`: postgres.js's JSONValue is overly strict; runtime accepts any JSON-serializable value.
@@ -429,7 +451,7 @@ export class LessonsService {
       explanation: explanationForResponse,
       mastery_score: newState.mastery.mastery_score,
       next_due_date: this.toDateString(newState.mastery.due_date),
-      xp_earned: grade.was_correct ? XP_PER_CORRECT : 0,
+      xp_earned: xpForThisAttempt,
       hearts_remaining: newState.hearts_remaining,
       session_ended_out_of_hearts: sessionEnded,
     };
@@ -458,6 +480,11 @@ export class LessonsService {
         new_xp: user.xp,
         new_level: user.level,
         new_streak: user.streak_count,
+        // Idempotent re-call: freeze movement already happened on the first
+        // complete, so we report the steady-state count with both flags off.
+        new_streak_freezes: user.streak_freezes_remaining,
+        freeze_consumed: false,
+        freeze_granted: false,
         ended_out_of_hearts: session.ended_out_of_hearts,
         // Idempotent re-call: we don't re-evaluate badges. Any badges earned
         // by the original completion were toasted at that time; surfacing them
@@ -472,28 +499,35 @@ export class LessonsService {
       return this.complete(user_id, session_id);
     }
 
-    // Compute the deltas. XP comes from correct attempts in this session;
-    // streak is based on the user's last_active_date.
-    // Out-of-hearts sessions still get XP/streak for the questions they DID answer
-    // correctly — running out of hearts is a soft fail, not a forfeit.
-    const xpEarned = completed.correct_count * XP_PER_CORRECT;
+    // Compute the deltas. XP comes from the per-attempt xp_earned values we
+    // wrote during the session, summed here. We deliberately do NOT derive XP
+    // from correct_count * XP_PER_CORRECT because that would discard partial-
+    // credit XP (XP_PER_FIRST_WRONG) and any future scoring nuance that varies
+    // per-attempt rather than per-outcome.
+    //
+    // Streak is based on the user's last_active_date. Out-of-hearts sessions
+    // still get XP/streak for the questions they DID answer correctly —
+    // running out of hearts is a soft fail, not a forfeit.
+    const xpEarned = await this.attempts.sumXpInSession(session_id);
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
 
     const today = toUtcDateOnly(new Date());
     const newXp = user.xp + xpEarned;
     const newLevel = levelFromXp(newXp);
-    const newStreak = nextStreak(
+    const streakResult = nextStreak(
       user.streak_count,
       user.last_active_date,
-      today
+      today,
+      user.streak_freezes_remaining
     );
 
     const updated = await this.users.applySessionResult({
       id: user_id,
       xp: newXp,
       level: newLevel,
-      streak_count: newStreak,
+      streak_count: streakResult.streak,
+      streak_freezes_remaining: streakResult.freezes_remaining,
       last_active_date: today,
     });
 
@@ -522,6 +556,9 @@ export class LessonsService {
       new_xp: updated.xp,
       new_level: updated.level,
       new_streak: updated.streak_count,
+      new_streak_freezes: updated.streak_freezes_remaining,
+      freeze_consumed: streakResult.freeze_consumed,
+      freeze_granted: streakResult.freeze_granted,
       ended_out_of_hearts: completed.ended_out_of_hearts,
       newly_earned_badges: newlyEarnedBadges,
     };

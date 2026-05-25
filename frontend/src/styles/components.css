@@ -106,6 +106,54 @@
     font-size: 22px;
 }
 
+/* Level-up banner — accent-tinted strip above the finale stats, only shown
+   when the session pushed the user across a level boundary. */
+.level-up-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--accent-soft-bg);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 15px;
+    border: 1px solid var(--accent);
+}
+
+.level-up-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.level-up-text {
+    flex: 1 1 auto;
+}
+
+/* Freeze banner — same layout as the level-up banner, cool blue palette to
+   match the navbar freeze pill so the two surfaces feel like one mechanic. */
+.freeze-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: color-mix(in srgb, #38bdf8 14%, var(--bg-elev));
+    color: #0284c7;
+    font-weight: 600;
+    font-size: 15px;
+    border: 1px solid #38bdf8;
+}
+
+.freeze-banner-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.freeze-banner-text {
+    flex: 1 1 auto;
+}
+
 /* -----------------------------------------------------------
    7) Forms
    ----------------------------------------------------------- */
@@ -314,6 +362,113 @@ textarea {
 .theme-toggle svg {
     width: 18px;
     height: 18px;
+}
+
+/* -----------------------------------------------------------
+   10b) Language picker (globe dropdown)
+   ----------------------------------------------------------- */
+
+/* Sits beside the theme toggle in the navbar / admin sidebar foot. Matches
+   .theme-toggle's height (36px) and visual weight so the two read as a pair.
+   The dropdown menu is absolutely positioned beneath the trigger; the parent
+   is `position: relative` so the menu anchors to it. */
+.lang-picker {
+    position: relative;
+    display: inline-flex;
+}
+
+.lang-picker-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.lang-picker-btn:hover,
+.lang-picker-btn[aria-expanded="true"] {
+    background: var(--bg-elev-hover);
+    color: var(--text);
+    border-color: var(--border-strong);
+}
+
+.lang-picker-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.lang-picker-current {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+
+/* Menu: top:calc(100% + 6px) sits just below the trigger; right:0 anchors
+   to the trigger's right edge so the menu stays inside the navbar even when
+   the trigger is near the right side of the viewport. */
+.lang-picker-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 160px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    padding: 4px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.lang-picker-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    font-size: 13px;
+}
+
+.lang-picker-item:hover {
+    background: var(--bg-elev);
+}
+
+.lang-picker-item.active {
+    background: var(--accent-soft-bg);
+    color: var(--accent);
+}
+
+.lang-picker-item-code {
+    font-weight: 600;
+    min-width: 24px;
+}
+
+/* When stacked into the admin sidebar foot (column layout) the picker should
+   span the row. The default inline-flex makes it shrink to content. */
+.admin-sidebar-foot .lang-picker,
+.app-nav-drawer-foot-controls .lang-picker {
+    display: flex;
+    width: 100%;
+}
+
+.admin-sidebar-foot .lang-picker-btn,
+.app-nav-drawer-foot-controls .lang-picker-btn {
+    width: 100%;
+    justify-content: space-between;
 }
 
 /* -----------------------------------------------------------
@@ -936,6 +1091,29 @@ textarea {
     opacity: 0.9;
 }
 
+/* Level pill: accent-tinted so it visually separates "level" (achievement
+   ladder progress) from "streak/XP" (raw activity counters). */
+.app-nav-stat-level {
+    background: var(--accent-soft-bg);
+    color: var(--accent);
+}
+
+.app-nav-stat-level .app-nav-stat-icon {
+    opacity: 1;
+}
+
+/* Freeze pill: cool blue tint so the snowflake reads as "saved-day fuel"
+   distinct from the warm fire of the streak. Only ever rendered when count > 0
+   so it doesn't appear for users who haven't earned one yet. */
+.app-nav-stat-freeze {
+    background: color-mix(in srgb, #38bdf8 14%, var(--bg-elev));
+    color: #0284c7;
+}
+
+.app-nav-stat-freeze .app-nav-stat-icon {
+    opacity: 1;
+}
+
 .app-nav-stat-val {
     font-weight: 500;
 }
@@ -1022,6 +1200,26 @@ textarea {
 .app-nav-icon-btn:hover {
     color: var(--text);
     background: var(--bg-elev);
+}
+
+.app-nav-icon-svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Drawer settings row uses the same cog icon — inherit drawer link's color
+   via currentColor and size it to match the row's text. */
+.app-nav-drawer-link-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    flex: 0 0 auto;
+}
+
+/* Mobile bar lang picker: nudge it left of the burger so it doesn't crowd the
+   stats. Inherits its own .lang-picker styling for the trigger/menu. */
+.app-nav-mobile-lang {
+    flex: 0 0 auto;
 }
 
 @media (max-width: 720px) {
@@ -1732,6 +1930,27 @@ textarea {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+/* Preferences row inside the admin sidebar foot: LangPicker takes the
+   available width, ThemeSwitch is a fixed-size square next to it. The same
+   layout repeats in the drawer (admin-drawer-prefs) so both surfaces feel
+   identical. */
+.admin-sidebar-prefs,
+.admin-drawer-prefs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-sidebar-prefs .lang-picker,
+.admin-drawer-prefs .lang-picker {
+    flex: 1 1 auto;
+}
+
+.admin-drawer-prefs {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
 }
 
 .admin-sidebar-me {

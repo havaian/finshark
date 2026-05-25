@@ -5,7 +5,8 @@ import type { UserRow } from "./user.types";
 
 // Centralised so every SELECT * matches the UserRow shape.
 const USER_COLS = `
-  id, email, google_sub, display_name, streak_count, xp, level,
+  id, email, google_sub, display_name, streak_count, streak_freezes_remaining,
+  xp, level,
   last_active_date, is_admin, email_reminders_enabled,
   reminder_hour_utc, preferred_difficulty, lesson_size,
   bg_level, time_budget_minutes, preferred_paper_id, onboarded_at,
@@ -83,19 +84,26 @@ export class UsersRepository {
   // Apply post-session deltas atomically. Called once per lesson completion.
   // We compute the new values in the service (so we have access to the SRS logic)
   // and write them here in a single statement.
+  //
+  // streak_freezes_remaining is included even though most sessions don't move
+  // it — writing the unchanged value is cheap and saves us a conditional
+  // builder. The nextStreak() helper returns the post-session value either
+  // way.
   async applySessionResult(input: {
     id: string;
     xp: number;
     level: number;
     streak_count: number;
+    streak_freezes_remaining: number;
     last_active_date: Date;
   }): Promise<UserRow> {
     const rows = await this.sql<UserRow[]>`
       UPDATE users SET
-        xp                = ${input.xp},
-        level             = ${input.level},
-        streak_count      = ${input.streak_count},
-        last_active_date  = ${input.last_active_date}
+        xp                       = ${input.xp},
+        level                    = ${input.level},
+        streak_count             = ${input.streak_count},
+        streak_freezes_remaining = ${input.streak_freezes_remaining},
+        last_active_date         = ${input.last_active_date}
       WHERE id = ${input.id}
       RETURNING ${this.sql.unsafe(USER_COLS)}
     `;

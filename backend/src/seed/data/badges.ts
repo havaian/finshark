@@ -21,65 +21,12 @@ export interface SeedBadge {
   sort_order: number;
 }
 
+// Streak / XP threshold badges were removed in migration
+// 20260525000001_drop_duplicate_streak_xp_badges — the streak_days and
+// xp_earned achievement ladders already cover those milestones with the
+// same thresholds. Keep this catalog reserved for discovery / event-style
+// recognition (first lesson, cross-paper learner, LO mastery, etc.).
 export const BADGES: SeedBadge[] = [
-  // ── Streak family ──────────────────────────────────────────────────
-  {
-    code: "streak_7",
-    name_en: "On a roll",
-    name_ru: "В ритме",
-    description_en: "Studied for 7 days in a row.",
-    description_ru: "Занимались 7 дней подряд.",
-    icon: "🔥",
-    sort_order: 10,
-  },
-  {
-    code: "streak_30",
-    name_en: "Month of momentum",
-    name_ru: "Месяц подряд",
-    description_en: "Studied for 30 days in a row.",
-    description_ru: "Занимались 30 дней подряд.",
-    icon: "🔥",
-    sort_order: 11,
-  },
-  {
-    code: "streak_100",
-    name_en: "Centurion",
-    name_ru: "Сто дней",
-    description_en: "Studied for 100 days in a row.",
-    description_ru: "Занимались 100 дней подряд.",
-    icon: "🔥",
-    sort_order: 12,
-  },
-
-  // ── XP milestones ──────────────────────────────────────────────────
-  {
-    code: "xp_500",
-    name_en: "Getting started",
-    name_ru: "Старт",
-    description_en: "Earned 500 XP total.",
-    description_ru: "Набрали 500 опыта.",
-    icon: "✦",
-    sort_order: 20,
-  },
-  {
-    code: "xp_2500",
-    name_en: "Building up",
-    name_ru: "Набирает обороты",
-    description_en: "Earned 2,500 XP total.",
-    description_ru: "Набрали 2 500 опыта.",
-    icon: "✦",
-    sort_order: 21,
-  },
-  {
-    code: "xp_10000",
-    name_en: "Marathon mind",
-    name_ru: "Марафонец",
-    description_en: "Earned 10,000 XP total.",
-    description_ru: "Набрали 10 000 опыта.",
-    icon: "✦",
-    sort_order: 22,
-  },
-
   // ── Paper exploration ──────────────────────────────────────────────
   {
     code: "paper_started",

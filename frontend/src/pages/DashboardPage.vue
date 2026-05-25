@@ -114,19 +114,6 @@ const startDisabled = computed(
   () => starting.value || blockedByPaper.value || blockedByQuota.value,
 );
 
-// User-facing quota explanation when the start button is disabled by a
-// free-tier limit. Picks the most specific reason (paper > hearts > lessons)
-// so the message lines up with what the user just clicked.
-const quotaBlockMsg = computed<string | null>(() => {
-  if (!entitlement.isFree) return null;
-  if (blockedByPaper.value) return t('dashboard.paper_locked_suffix');
-  const ent = entitlement.entitlement;
-  if (!ent) return null;
-  if (ent.hearts.pool !== null && ent.hearts.pool <= 0) return t('dashboard.quota_hearts_exhausted');
-  if (ent.lessons.limit !== null && ent.lessons.used >= ent.lessons.limit) return t('dashboard.quota_lessons_exhausted');
-  return null;
-});
-
 function extractError(e: unknown): string | null {
   if (e instanceof AxiosError) {
     const msg = (e.response?.data as { message?: string | string[] })?.message;
@@ -223,7 +210,6 @@ function extractError(e: unknown): string | null {
             {{ starting ? t('dashboard.starting') : t('dashboard.start_lesson_btn') }}
           </button>
         </div>
-        <p v-if="quotaBlockMsg" class="dim text-sm mt-2">{{ quotaBlockMsg }}</p>
 
         <!-- Mock CTA — secondary action below the lesson row. Always offered
              when papers exist; the mock page handles paper selection itself. -->

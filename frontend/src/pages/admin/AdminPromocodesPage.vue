@@ -84,16 +84,22 @@ function resetForm() {
   formNotes.value = '';
 }
 
+// Stringify a possibly-non-string form value before trimming. `<input
+// type="number">` bound via v-model can return a number (not a string) on
+// some browsers / autofill paths — calling .trim() directly on that crashed
+// with "o.trim is not a function". Coerce here so every other helper can
+// assume a string.
+function asTrimmedString(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  return String(v).trim();
+}
+
 // Convert a YYYY-MM-DD string into an ISO timestamp at the given clock.
 // Returns null on empty input and throws on a clearly-invalid date so the
 // surrounding form can surface a precise message instead of the generic
-// "failed to create promocode" fallback. Previously these conversions
-// happened inline; if the date parsed to "Invalid Date" the .toISOString()
-// would throw a RangeError that the caller bucketed as a generic failure
-// with no network call ever made — confusing for admins debugging in the
-// browser network tab.
-function toIsoBound(ymd: string, clock: 'start' | 'end'): string | null {
-  const trimmed = ymd.trim();
+// "failed to create promocode" fallback.
+function toIsoBound(raw: unknown, clock: 'start' | 'end'): string | null {
+  const trimmed = asTrimmedString(raw);
   if (trimmed === '') return null;
   const suffix = clock === 'start' ? 'T00:00:00Z' : 'T23:59:59Z';
   const d = new Date(`${trimmed}${suffix}`);
@@ -105,8 +111,8 @@ function toIsoBound(ymd: string, clock: 'start' | 'end'): string | null {
 
 // Parse an optional integer field. Empty → undefined (server falls back),
 // invalid → throw with the field name so the user sees what to fix.
-function parseOptionalInt(raw: string, field: string): number | undefined {
-  const trimmed = raw.trim();
+function parseOptionalInt(raw: unknown, field: string): number | undefined {
+  const trimmed = asTrimmedString(raw);
   if (trimmed === '') return undefined;
   const n = parseInt(trimmed, 10);
   if (!Number.isFinite(n)) {
@@ -117,7 +123,7 @@ function parseOptionalInt(raw: string, field: string): number | undefined {
 
 async function onCreate() {
   if (createBusy.value) return;
-  const code = formCode.value.trim();
+  const code = asTrimmedString(formCode.value);
   if (!code || !formPlanId.value) {
     // Surface this case explicitly — the disabled-button state can be missed
     // when an autofill fills in only one of the two fields.
@@ -135,7 +141,7 @@ async function onCreate() {
     const per_user_limit = parseOptionalInt(formPerUserLimit.value, 'Per-user limit');
     const valid_from = toIsoBound(formValidFrom.value, 'start');
     const valid_until = toIsoBound(formValidUntil.value, 'end');
-    const notes = formNotes.value.trim();
+    const notes = asTrimmedString(formNotes.value);
 
     const created = await adminBillingApi.createPromocode({
       code,
@@ -287,7 +293,7 @@ onMounted(load);
     <section v-if="showCreate" class="card mt-4">
       <h3>{{ t('admin.promocodes.add_modal_title') }}</h3>
 
-      <div class="row mt-4" style="gap: 12px; flex-wrap: wrap;">
+      <div class="row mt-4" style="gap: 12px; flex-wrap: wrap; align-items: end;">
         <div class="field" style="flex: 1 1 200px;">
           <label class="field-label">{{ t('admin.promocodes.form_code_label') }}</label>
           <input v-model="formCode" type="text" maxlength="64"
@@ -332,7 +338,7 @@ onMounted(load);
 
       <p v-if="createError" class="error-text mt-2">{{ createError }}</p>
 
-      <div class="row mt-4" style="gap: 8px;">
+      <div class="row mt-4" style="gap: 8px; align-items: end;">
         <button class="btn btn-primary" :disabled="createBusy || !formCode.trim() || !formPlanId" @click="onCreate">
           {{ createBusy ? t('common.saving') : t('admin.promocodes.form_create_btn') }}
         </button>

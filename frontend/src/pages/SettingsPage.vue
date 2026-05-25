@@ -706,3 +706,9 @@ const premiumEndsLine = computed<string | null>(() => {
     </div>
   </main>
 </template>
+
+<style>
+.card {
+  margin-top: 1em;
+}
+</style>

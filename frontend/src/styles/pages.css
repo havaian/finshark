@@ -2071,10 +2071,6 @@
         padding: 18px;
         border-radius: 12px;
     }
-
-    .card+.card {
-        margin-top: 12px;
-    }
 }
 
 /* AppNav: collapse stats pills and shrink admin button before the breakpoint

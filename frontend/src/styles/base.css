@@ -234,6 +234,7 @@ p {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin: 1em 0;
 }
 
 .row-end {

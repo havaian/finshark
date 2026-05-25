@@ -298,7 +298,7 @@ onMounted(loadUsersAndPlans);
           <!-- Grant form -->
           <div class="mt-6">
             <h3>{{ t('admin.subscriptions.grant_heading') }}</h3>
-            <div class="row mt-4" style="gap: 12px; flex-wrap: wrap;">
+            <div class="row mt-4" style="gap: 12px; flex-wrap: wrap; align-items: start;">
               <div class="field" style="flex: 1 1 200px;">
                 <label class="field-label">{{ t('admin.subscriptions.grant_plan_label') }}</label>
                 <select v-model="grantPlanId">
@@ -373,7 +373,7 @@ onMounted(loadUsersAndPlans);
                     {{ t('admin.subscriptions.sub_cancel_btn') }}
                   </button>
                   <button class="btn btn-ghost btn-sm" style="color: var(--danger, #c00);"
-                    :disabled="s.status !== 'active' || busyIds.has(s.id)"
+                    :disabled="busyIds.has(s.id)"
                     @click="openAction('revoke', s)">
                     {{ t('admin.subscriptions.sub_revoke_btn') }}
                   </button>
@@ -462,3 +462,11 @@ onMounted(loadUsersAndPlans);
     </div>
   </div>
 </template>
+
+<style>
+@media (max-width: 1200px) {
+  .card {
+    min-width: 100% !important;
+  }
+}
+</style>

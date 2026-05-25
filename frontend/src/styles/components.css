@@ -9,10 +9,6 @@
     padding: 28px;
 }
 
-.card+.card {
-    margin-top: 16px;
-}
-
 /* -----------------------------------------------------------
    5) Brand mark (logo)
    The only place sage appears in the UI. Deliberate.
@@ -1396,7 +1392,7 @@ button.list-row.active {
     flex: 0 0 auto;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 1200px) {
     .app-nav {
         margin: -48px -16px 24px;
         padding: 10px 14px;
@@ -2115,15 +2111,6 @@ button.list-row.active {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-/* In the admin prefs row the language picker sits next to ThemeSwitch (a
-   36×36 square). Match its compact size — the prior `flex: 1 1 auto`
-   stretched it to fill the whole row, which looked oversized for a button
-   that just shows "EN" / "RU". */
-.admin-sidebar-prefs .lang-picker,
-.admin-drawer-prefs .lang-picker {
-    flex: 0 0 auto;
 }
 
 .admin-sidebar-prefs .lang-picker-btn,

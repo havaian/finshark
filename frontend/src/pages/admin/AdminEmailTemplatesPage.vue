@@ -258,7 +258,7 @@ onMounted(load);
 
     <div class="row mt-6" style="gap: 24px; align-items: stretch; flex-wrap: wrap;">
       <!-- LEFT: template list -->
-      <section class="card" style="flex: 0 0 280px; min-width: 240px;">
+      <section class="card" style="flex: 0 0 280px; min-width: 240px; height: fit-content;">
         <p v-if="loading" class="dim text-sm">{{ t('common.loading') }}</p>
         <div v-else class="list-bordered" style="max-height: 560px; overflow: auto;">
           <button v-for="tpl in templates" :key="tpl.key" type="button"
@@ -277,7 +277,7 @@ onMounted(load);
       </section>
 
       <!-- RIGHT: editor + test panel -->
-      <section class="card grow" style="flex: 1 1 520px;">
+      <section class="card grow" style="flex: 1 1 520px; padding-top: 0px !important;">
         <div class="row" style="justify-content: space-between; gap: 12px;">
           <h3>
             <template v-if="editorMode === 'new'">{{ t('admin.email_templates.new_title') }}</template>
@@ -411,3 +411,11 @@ onMounted(load);
     </div>
   </div>
 </template>
+
+<style>
+@media (max-width: 1200px) {
+  .card {
+    min-width: 100% !important;
+  }
+}
+</style>

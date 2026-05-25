@@ -2,10 +2,14 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
+import { EmailTemplatesService } from "../email/email-templates.service";
+import { UsersRepository } from "../users/users.repository";
 import { PlansRepository } from "./plans.repository";
 import { SubscriptionEventsRepository } from "./subscription-events.repository";
 import { SubscriptionsRepository } from "./subscriptions.repository";
@@ -23,14 +27,24 @@ import {
 // Promocode redemption lives in PromocodesService and calls grant() with
 // source='promocode'. PSP webhook handlers (Payme/Click later) will do the
 // same with source='payme' / 'click' / etc.
+//
+// Email notifications (premium_granted template) fire AFTER the transaction
+// commits and are best-effort: a failed send logs a warning but does NOT
+// roll back the grant — the user's premium is real even if their email
+// bounced.
 
 @Injectable()
 export class SubscriptionsService {
+  private readonly log = new Logger(SubscriptionsService.name);
+
   constructor(
     @Inject(PG) private readonly sql: Sql,
     private readonly subs: SubscriptionsRepository,
     private readonly plans: PlansRepository,
-    private readonly events: SubscriptionEventsRepository
+    private readonly events: SubscriptionEventsRepository,
+    private readonly users: UsersRepository,
+    private readonly templates: EmailTemplatesService,
+    private readonly config: ConfigService
   ) {}
 
   // Create a new subscription. Resolves the plan to compute ends_at when
@@ -65,8 +79,8 @@ export class SubscriptionsService {
       input.days === undefined ? plan.period_days : input.days;
     const endsAt = periodEnd(startsAt, effectiveDays);
 
-    return this.sql.begin(async (tx) => {
-      const sub = await this.subs.insert(
+    const sub = await this.sql.begin(async (tx) => {
+      const row = await this.subs.insert(
         {
           user_id: input.userId,
           plan_id: input.planId,
@@ -81,7 +95,7 @@ export class SubscriptionsService {
       );
       await this.events.insert(
         {
-          subscription_id: sub.id,
+          subscription_id: row.id,
           user_id: input.userId,
           kind: "granted",
           actor_user_id: input.createdByUserId ?? null,
@@ -94,8 +108,19 @@ export class SubscriptionsService {
         },
         tx
       );
-      return sub;
+      return row;
     });
+
+    // Fire-and-forget email AFTER the tx commits so a flaky SMTP doesn't
+    // roll back the grant. Only sends for premium-tier plans — granting a
+    // 'free' subscription (e.g. an explicit downgrade record) doesn't
+    // warrant a "welcome to premium" email. Errors are logged inside the
+    // helper and swallowed here.
+    if (plan.tier === "premium") {
+      void this.notifyPremiumGranted(sub);
+    }
+
+    return sub;
   }
 
   // Extend an existing subscription by N days. If the sub had already expired,
@@ -130,9 +155,9 @@ export class SubscriptionsService {
     const anchor = existing.ends_at > now ? existing.ends_at : now;
     const newEnd = new Date(anchor.getTime() + input.days * 86_400_000);
 
-    return this.sql.begin(async (tx) => {
-      const updated = await this.subs.setEndsAt(existing.id, newEnd, tx);
-      if (!updated) throw new NotFoundException("subscription not found");
+    const updated = await this.sql.begin(async (tx) => {
+      const row = await this.subs.setEndsAt(existing.id, newEnd, tx);
+      if (!row) throw new NotFoundException("subscription not found");
       await this.events.insert(
         {
           subscription_id: existing.id,
@@ -144,8 +169,17 @@ export class SubscriptionsService {
         },
         tx
       );
-      return updated;
+      return row;
     });
+
+    // Same fire-and-forget notification as grant. We reuse the premium_granted
+    // template intentionally — copy reads cleanly for both "you're now
+    // premium until X" and "your premium is now active until X". A future
+    // dedicated "premium_extended" template can replace this call by key
+    // without changing the wiring.
+    void this.notifyPremiumGranted(updated);
+
+    return updated;
   }
 
   // Mark cancelled. User keeps remaining paid time — billing systems should
@@ -209,5 +243,73 @@ export class SubscriptionsService {
 
   async getById(id: string): Promise<SubscriptionRow | null> {
     return this.subs.findById(id);
+  }
+
+  // ── Email notification ────────────────────────────────────────────────
+  //
+  // Fires the 'premium_granted' template after a successful grant or extend.
+  // Variables fed to the template (declared in the seed):
+  //   display_name   — user's first-line greeting
+  //   period_clause  — "until 15 Jul 2026" OR "for life" (when ends_at = NULL)
+  //   app_url        — APP_PUBLIC_URL, used in the CTA link
+  //
+  // All failures are swallowed with a warning log. Reasoning: a successful
+  // grant is the contractual state; an email-send failure is operational
+  // noise the user can recover from (they can see their premium in the
+  // app). Surfacing this as a 500 would block the admin grant flow on
+  // SMTP availability, which is wrong.
+  //
+  // Public so PromocodesService.redeem can call it after its own tx
+  // commits. Keeping the helper here (instead of duplicating in
+  // PromocodesService) means the period-clause formatter has a single
+  // source of truth — important when we eventually replace it with a
+  // per-user-locale version.
+  async notifyPremiumGranted(sub: SubscriptionRow): Promise<void> {
+    try {
+      const user = await this.users.findById(sub.user_id);
+      if (!user) {
+        this.log.warn(
+          `premium_granted email skipped: user ${sub.user_id} not found`
+        );
+        return;
+      }
+      const appUrl = this.config
+        .getOrThrow<string>("APP_PUBLIC_URL")
+        .replace(/\/$/, "");
+      // Period phrasing. ends_at = NULL → lifetime (no expiry). Otherwise
+      // format the date in en-US (matching the EN-only email language for
+      // now; per-user language preference is a future epic). Locale-aware
+      // formatting once we add user.email_language.
+      const periodClause =
+        sub.ends_at === null
+          ? "for life"
+          : `until ${sub.ends_at.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            })}`;
+      const sent = await this.templates.sendByTemplate({
+        templateKey: "premium_granted",
+        to: user.email,
+        lang: "en",
+        variables: {
+          display_name: user.display_name,
+          period_clause: periodClause,
+          app_url: appUrl,
+        },
+      });
+      if (!sent) {
+        this.log.warn(
+          `premium_granted template not available; user ${sub.user_id} got no welcome email`
+        );
+      }
+    } catch (err) {
+      this.log.warn(
+        `failed to send premium_granted email to user ${sub.user_id}: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    }
   }
 }

@@ -432,6 +432,16 @@ onUnmounted(() => {
           <div class="stat">
             <div class="stat-lbl">{{ t('lesson.complete_xp_earned') }}</div>
             <div class="stat-val">+{{ summary.xp_earned }}</div>
+            <!-- Streak bonus breakdown. Hidden when there's no bonus (streak=0
+                 sessions or first lesson) so the stat stays clean for new
+                 users. The base/bonus split lets the user see why their
+                 streak matters on every lesson, not just at milestones. -->
+            <div v-if="summary.xp_streak_bonus > 0" class="dim text-xs" style="margin-top: 4px;">
+              {{ t('lesson.complete_xp_streak_bonus', {
+                base: summary.xp_base,
+                bonus: summary.xp_streak_bonus,
+              }) }}
+            </div>
           </div>
           <div class="stat">
             <div class="stat-lbl">{{ t('lesson.complete_level') }}</div>
@@ -573,7 +583,21 @@ onUnmounted(() => {
           </div>
 
           <div class="feedback-meta">
-            <span>{{ t('lesson.mastery_label', { pct: feedback.mastery_score }) }}</span>
+            <!-- Mastery line shows both the post-attempt score and the
+                 delta from this single attempt. The delta is colour-coded
+                 (positive = success, negative = danger) and styled like a
+                 small chip so the eye lands on it. Hidden when delta is 0
+                 (rare — only when the user was already at the [0,100]
+                 boundary). -->
+            <span class="feedback-mastery">
+              {{ t('lesson.mastery_label', { pct: feedback.mastery_score }) }}
+              <span v-if="feedback.mastery_delta > 0" class="mastery-delta mastery-delta-up">
+                +{{ feedback.mastery_delta }}
+              </span>
+              <span v-else-if="feedback.mastery_delta < 0" class="mastery-delta mastery-delta-down">
+                {{ feedback.mastery_delta }}
+              </span>
+            </span>
             <span>{{ t('lesson.next_review_label', { date: feedback.next_due_date }) }}</span>
           </div>
         </div>

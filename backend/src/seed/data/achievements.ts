@@ -116,69 +116,33 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     ],
   },
 
-  // ── Per-paper ladders ──────────────────────────────────────────────
-  // Each paper gets its own three-level ladder so progress in (say) F3 isn't
-  // gated behind the cross-paper `lessons_completed` total. Thresholds are
-  // ~30% of the overall lessons_completed thresholds (3 / 15 / 50) — enough
-  // to feel like a real milestone without making a paper untouchable for
-  // someone who only practices the others occasionally. A mixed-paper session
-  // credits every paper it touched (see SQL in achievements.rules.ts).
+  // ── Paper specialist ladder ────────────────────────────────────────
+  // Replaces the four per-paper ladders (f1/f2/f3/f5_lessons_completed) that
+  // shipped originally. The migration 20260525000008_collapse_paper_achievements
+  // drops the old rows; this one new row is what users see now.
+  //
+  // Metric: max lessons completed in ANY single paper (not the sum across
+  // papers). Rewards depth in one paper rather than breadth. Cross-paper
+  // breadth is already covered by the 'paper_explorer' badge (3 distinct
+  // papers).
+  //
+  // Thresholds chosen to mirror the original per-paper ones at the top end
+  // so a user who'd already grinded F1 to level 3 (50 lessons) lands at
+  // level 1 of the new ladder. 100 + 200 give them somewhere to keep going.
   {
-    code: "f1_lessons_completed",
-    name_en: "F1 lessons completed",
-    name_ru: "Завершено уроков по F1",
-    description_en: "Complete lessons covering F1 — Business and Technology.",
-    description_ru: "Завершите уроки по предмету F1 — Бизнес и технологии.",
-    icon: "🏢",
+    code: "paper_specialist",
+    name_en: "Paper specialist",
+    name_ru: "Специалист по предмету",
+    description_en:
+      "Complete N lessons in your strongest paper. Rewards depth — pick a paper and master it.",
+    description_ru:
+      "Завершите N уроков по сильнейшему предмету. Награда за глубину — выберите предмет и освойте его.",
+    icon: "🎓",
     sort_order: 110,
     levels: [
-      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
-      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
-      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
-    ],
-  },
-  {
-    code: "f2_lessons_completed",
-    name_en: "F2 lessons completed",
-    name_ru: "Завершено уроков по F2",
-    description_en: "Complete lessons covering F2 — Management Accounting.",
-    description_ru:
-      "Завершите уроки по предмету F2 — Управленческий учёт.",
-    icon: "📊",
-    sort_order: 120,
-    levels: [
-      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
-      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
-      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
-    ],
-  },
-  {
-    code: "f3_lessons_completed",
-    name_en: "F3 lessons completed",
-    name_ru: "Завершено уроков по F3",
-    description_en: "Complete lessons covering F3 — Financial Accounting.",
-    description_ru: "Завершите уроки по предмету F3 — Финансовый учёт.",
-    icon: "📒",
-    sort_order: 130,
-    levels: [
-      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
-      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
-      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
-    ],
-  },
-  {
-    code: "f5_lessons_completed",
-    name_en: "F5 lessons completed",
-    name_ru: "Завершено уроков по F5",
-    description_en: "Complete lessons covering F5 — Performance Management.",
-    description_ru:
-      "Завершите уроки по предмету F5 — Управление эффективностью.",
-    icon: "📈",
-    sort_order: 140,
-    levels: [
-      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
-      { level: 2, threshold: 15, ...LEVEL_NAMES.affiliate },
-      { level: 3, threshold: 50, ...LEVEL_NAMES.member },
+      { level: 1, threshold: 50, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 100, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 200, ...LEVEL_NAMES.member },
     ],
   },
 

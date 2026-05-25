@@ -12,6 +12,7 @@ import { PlansRepository } from "./plans.repository";
 import { PromocodesRepository } from "./promocodes.repository";
 import { SubscriptionEventsRepository } from "./subscription-events.repository";
 import { SubscriptionsRepository } from "./subscriptions.repository";
+import { SubscriptionsService } from "./subscriptions.service";
 import {
   normalisePromocode,
   periodEnd,
@@ -41,7 +42,14 @@ export class PromocodesService {
     private readonly codes: PromocodesRepository,
     private readonly subs: SubscriptionsRepository,
     private readonly plans: PlansRepository,
-    private readonly events: SubscriptionEventsRepository
+    private readonly events: SubscriptionEventsRepository,
+    // Only used for the email-send side effect after a successful redeem.
+    // We don't call its grant() / extend() because those would wrap the
+    // operation in a second transaction; the redeem flow is intentionally
+    // self-contained in one tx (lock the promocode row, write the sub +
+    // redemption + events together). The service is injected purely to
+    // borrow its notifyPremiumGranted() helper.
+    private readonly subscriptions: SubscriptionsService
   ) {}
 
   // ── Admin operations ─────────────────────────────────────────────────
@@ -125,8 +133,10 @@ export class PromocodesService {
     if (!code) throw new BadRequestException("code is required");
 
     // Everything inside one transaction so concurrent redemptions of the
-    // same code serialise on the FOR UPDATE lock.
-    return this.sql.begin(async (tx) => {
+    // same code serialise on the FOR UPDATE lock. We capture the result
+    // and then fire the welcome email AFTER commit — see the
+    // notifyPremiumGranted call below for why it lives outside the tx.
+    const result = await this.sql.begin(async (tx) => {
       const promo = await this.codes.findByCodeForUpdate(code, tx);
       if (!promo) {
         // Don't disclose whether the code exists but is expired/used vs
@@ -249,6 +259,15 @@ export class PromocodesService {
         isNewSubscription: isNew,
       };
     });
+
+    // Welcome / extension email. Fire-and-forget AFTER the redemption tx
+    // commits so a flaky SMTP can't roll back a paid grant. Promocodes
+    // currently only ever grant premium tier (PromocodesService.create
+    // refuses to create a code that grants 'free'), so we don't need to
+    // tier-check before notifying.
+    void this.subscriptions.notifyPremiumGranted(result.subscription);
+
+    return result;
   }
 
   // Pure validation — throws the appropriate exception type so the redeem

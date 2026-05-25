@@ -26,16 +26,13 @@ export interface AchievementMetrics {
   // Completed mock sessions where correct_count / question_count >= 0.5.
   // We treat >=50% as "passed" per the seed's threshold semantics.
   mocks_passed: number;
-  // Per-paper lesson counts. Counted as "any completed lesson_session whose
-  // attempts touched a question whose LO belongs to this paper" — so a
-  // mixed-paper session counts toward every paper it touched. Rationale:
-  // diversified-due queue means a single lesson commonly spans multiple
-  // papers, and we don't want users to feel the "F1 ladder" stuck because
-  // their lessons happened to be cross-paper.
-  f1_lessons_completed: number;
-  f2_lessons_completed: number;
-  f3_lessons_completed: number;
-  f5_lessons_completed: number;
+  // Max lessons completed in any single paper. Replaces the old
+  // f1/f2/f3/f5_lessons_completed quartet — see the gamification audit notes.
+  // A mixed-paper session counts toward every paper it touched, same as
+  // before, so the metric naturally selects the paper the user has dug
+  // deepest into. Cross-paper breadth is rewarded by the 'paper_explorer'
+  // badge instead.
+  paper_specialist: number;
   // Rolling-30-day accuracy as an integer percentage (0-100). Gated to 0
   // until the user has ROLLING_ACCURACY_MIN_ATTEMPTS attempts in the window
   // so a new user with one lucky right answer doesn't insta-unlock 100%.
@@ -58,10 +55,7 @@ export const METRICS_BY_CODE: Record<string, keyof AchievementMetrics> = {
   xp_earned: "xp_earned",
   perfect_lessons: "perfect_lessons",
   mocks_passed: "mocks_passed",
-  f1_lessons_completed: "f1_lessons_completed",
-  f2_lessons_completed: "f2_lessons_completed",
-  f3_lessons_completed: "f3_lessons_completed",
-  f5_lessons_completed: "f5_lessons_completed",
+  paper_specialist: "paper_specialist",
   accuracy_rolling_30: "accuracy_rolling_30",
 };
 
@@ -95,10 +89,7 @@ export class AchievementMetricsRepository {
         xp_earned: number;
         perfect_lessons: number;
         mocks_passed: number;
-        f1_lessons_completed: number;
-        f2_lessons_completed: number;
-        f3_lessons_completed: number;
-        f5_lessons_completed: number;
+        paper_specialist: number;
         accuracy_rolling_30: number;
       }>
     >`
@@ -152,10 +143,7 @@ export class AchievementMetricsRepository {
             AND s.question_count > 0
             AND (s.correct_count::float / s.question_count::float) >= 0.5
         )                            AS mocks_passed,
-        COALESCE((SELECT sessions FROM per_paper WHERE paper_code = 'F1'), 0) AS f1_lessons_completed,
-        COALESCE((SELECT sessions FROM per_paper WHERE paper_code = 'F2'), 0) AS f2_lessons_completed,
-        COALESCE((SELECT sessions FROM per_paper WHERE paper_code = 'F3'), 0) AS f3_lessons_completed,
-        COALESCE((SELECT sessions FROM per_paper WHERE paper_code = 'F5'), 0) AS f5_lessons_completed,
+        COALESCE((SELECT MAX(sessions) FROM per_paper), 0)::int AS paper_specialist,
         (
           SELECT CASE
             WHEN r.total_attempts < ${minAttempts} THEN 0
@@ -178,10 +166,7 @@ export class AchievementMetricsRepository {
         xp_earned: 0,
         perfect_lessons: 0,
         mocks_passed: 0,
-        f1_lessons_completed: 0,
-        f2_lessons_completed: 0,
-        f3_lessons_completed: 0,
-        f5_lessons_completed: 0,
+        paper_specialist: 0,
         accuracy_rolling_30: 0,
       };
     }

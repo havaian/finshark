@@ -93,6 +93,7 @@ export default {
     admin_whitelist: "Admin · Whitelist",
     admin_promocodes: "Admin · Promocodes",
     admin_subscriptions: "Admin · Subscriptions",
+    admin_email_templates: "Admin · Email templates",
   },
 
   home: {
@@ -301,6 +302,10 @@ export default {
     complete_title: "Lesson complete",
     complete_correct: "Correct",
     complete_xp_earned: "XP earned",
+    // Sub-line under the XP total on the finale screen when a streak bonus
+    // was applied. {base} is the raw XP from this session, {bonus} is the
+    // streak multiplier add-on. Hidden when bonus = 0.
+    complete_xp_streak_bonus: "{base} base + {bonus} streak bonus",
     complete_streak: "Streak",
     complete_level: "Level",
     complete_back: "Back to dashboard",
@@ -778,6 +783,45 @@ export default {
       event_webhook: "Webhook event",
       event_note: "Note",
     },
+
+    // Admin email templates page. CRUD over the DB-backed template table
+    // (subject + body per language, optional HTML, variable allow-list,
+    // notes). Test-send action renders the template against an admin-
+    // supplied JSON variable map and sends through the regular EmailService.
+    email_templates: {
+      title: "Email templates",
+      sub: "Edit transactional and reminder email copy. Templates render with {{var}} substitution.",
+      new_btn: "New template",
+      new_title: "New template",
+      edit_title: "Edit template",
+      inactive_label: "Disabled",
+      enable_btn: "Enable",
+      disable_btn: "Disable",
+      delete_confirm: "Delete email template '{key}'? This cannot be undone.",
+      key_label: "Key",
+      key_help: "Stable slug referenced from code (e.g. 'reminder_daily'). Cannot be renamed after creation — delete + re-create instead.",
+      subject_en_label: "Subject (English)",
+      subject_ru_label: "Subject (Russian, optional)",
+      body_en_label: "Body — text (English)",
+      body_ru_label: "Body — text (Russian, optional)",
+      html_en_label: "Body — HTML (English, optional)",
+      html_ru_label: "Body — HTML (Russian, optional)",
+      variables_label: "Variables — one per line",
+      variables_placeholder: "display_name\nstreak\napp_url",
+      variables_missing: "Body references variables not in the list: {vars}",
+      variables_unused: "Listed but not referenced: {vars}",
+      notes_label: "Admin notes (not sent)",
+      test_title: "Send test",
+      test_to_label: "To",
+      test_lang_label: "Language",
+      test_vars_label: "Variables (JSON)",
+      test_vars_placeholder: "{\"display_name\":\"Alex\",\"streak\":7}",
+      test_vars_help: "JSON object mapping variable names to values. Unsupplied {{vars}} stay unrendered.",
+      test_invalid_json: "Variables must be a valid JSON object.",
+      test_resolved_lang: "Rendered language: {lang}",
+      send_test_btn: "Send test email",
+    },
+
     los: {
       title: "Learning objectives",
       add_btn: "Add LO",

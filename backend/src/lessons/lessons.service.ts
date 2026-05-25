@@ -26,9 +26,9 @@ import {
   levelFromXp,
   nextStreak,
   qualityFromCorrect,
+  streakXpMultiplier,
   toUtcDateOnly,
-  XP_PER_CORRECT,
-  XP_PER_FIRST_WRONG,
+  xpForAttempt,
   type SrsState,
 } from "./srs";
 import type {
@@ -79,6 +79,12 @@ export interface AttemptResult {
   correct_answer: string;
   explanation: string;
   mastery_score: number;
+  // Mastery delta from this single attempt (+10 correct / -20 wrong, clamped
+  // by the [0,100] mastery range). Surfaced so the lesson-feedback UI can
+  // render a "Mastery 64 → 74 (+10)" chip per attempt — landing the
+  // learning signal on every question instead of only at the syllabus
+  // heat-map. See applyMastery() in srs.ts.
+  mastery_delta: number;
   next_due_date: string; // 'YYYY-MM-DD'
   xp_earned: number; // just for this attempt
   hearts_remaining: number;
@@ -91,7 +97,13 @@ export interface CompleteLessonResult {
   session_id: string;
   question_count: number;
   correct_count: number;
+  // Total XP awarded for this session, AFTER the streak multiplier is
+  // applied. xp_base + xp_streak_bonus = xp_earned. The frontend renders
+  // a "+X XP (incl. +Y streak bonus)" line on the finale screen — that's
+  // why we surface the breakdown rather than just the total.
   xp_earned: number;
+  xp_base: number;
+  xp_streak_bonus: number;
   new_xp: number;
   new_level: number;
   new_streak: number;
@@ -399,19 +411,18 @@ export class LessonsService {
     // it from correct_count after the fact (which wouldn't survive a future change
     // to scoring rules).
     //
-    // Scoring:
-    //   correct                          → XP_PER_CORRECT (10)
-    //   wrong AND first time seeing this → XP_PER_FIRST_WRONG (2) — partial
-    //                                      credit so honest attempts on new
-    //                                      questions aren't punished. See the
-    //                                      constant doc for rationale.
-    //   wrong AND has prior state        → 0 (repeat wrong; SRS handles it).
+    // Scoring is now difficulty-weighted via xpForAttempt() — see srs.ts for the
+    // tables. Hard correct = 14 XP, easy correct = 10 XP, etc. Repeat wrongs
+    // still award 0; first-encounter wrongs get partial credit scaled by
+    // difficulty (2/3/4). Streak bonus is applied at session-complete, not
+    // per-attempt, so the per-attempt response shows the base XP a user can
+    // mentally tally.
     const isFirstEncounter = prevState === null;
-    const xpForThisAttempt = grade.was_correct
-      ? XP_PER_CORRECT
-      : isFirstEncounter
-      ? XP_PER_FIRST_WRONG
-      : 0;
+    const xpForThisAttempt = xpForAttempt({
+      difficulty: question.difficulty,
+      was_correct: grade.was_correct,
+      is_first_encounter: isFirstEncounter,
+    });
     const newState = await this.sql.begin(async (tx) => {
       // 1) Record the attempt.
       // `as any`: postgres.js's JSONValue is overly strict; runtime accepts any JSON-serializable value.
@@ -534,11 +545,21 @@ export class LessonsService {
       lang
     );
 
+    // Mastery delta = the change between the pre-attempt mastery (0 if this
+    // is the user's first encounter) and the post-attempt mastery. The
+    // applyMastery() function in srs.ts already clamps to [0, 100], so the
+    // delta naturally compresses near the bounds (e.g. a wrong answer at
+    // mastery=10 produces -10, not -20).
+    const masteryBefore = prevState?.mastery_score ?? 0;
+    const masteryAfter = newState.mastery.mastery_score;
+    const masteryDelta = masteryAfter - masteryBefore;
+
     return {
       was_correct: grade.was_correct,
       correct_answer: correctAnswerForResponse,
       explanation: explanationForResponse,
       mastery_score: newState.mastery.mastery_score,
+      mastery_delta: masteryDelta,
       next_due_date: this.toDateString(newState.mastery.due_date),
       xp_earned: xpForThisAttempt,
       hearts_remaining: newState.hearts_remaining,
@@ -566,6 +587,8 @@ export class LessonsService {
         question_count: session.question_count,
         correct_count: session.correct_count,
         xp_earned: 0,
+        xp_base: 0,
+        xp_streak_bonus: 0,
         new_xp: user.xp,
         new_level: user.level,
         new_streak: user.streak_count,
@@ -588,28 +611,40 @@ export class LessonsService {
       return this.complete(user_id, session_id);
     }
 
-    // Compute the deltas. XP comes from the per-attempt xp_earned values we
-    // wrote during the session, summed here. We deliberately do NOT derive XP
-    // from correct_count * XP_PER_CORRECT because that would discard partial-
-    // credit XP (XP_PER_FIRST_WRONG) and any future scoring nuance that varies
-    // per-attempt rather than per-outcome.
+    // Compute the deltas.
     //
-    // Streak is based on the user's last_active_date. Out-of-hearts sessions
-    // still get XP/streak for the questions they DID answer correctly —
-    // running out of hearts is a soft fail, not a forfeit.
-    const xpEarned = await this.attempts.sumXpInSession(session_id);
+    // 1. Base XP = sum of per-attempt xp_earned (already difficulty-weighted).
+    //    We deliberately do NOT derive XP from correct_count * XP_PER_CORRECT
+    //    because that would discard partial-credit XP and difficulty weighting.
+    //
+    // 2. Streak XP bonus = multiplier on top of base, gated on the streak
+    //    AFTER applying nextStreak() — so a session that bumps the streak
+    //    1 → 2 uses the new value (2 days × 1% = +2%). This matches the
+    //    user expectation that "today's lesson keeps my streak going" should
+    //    immediately count in the bonus.
+    //
+    // Out-of-hearts sessions still get XP/streak for the questions they DID
+    // answer correctly — running out of hearts is a soft fail, not a forfeit.
+    const xpBase = await this.attempts.sumXpInSession(session_id);
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
 
     const today = toUtcDateOnly(new Date());
-    const newXp = user.xp + xpEarned;
-    const newLevel = levelFromXp(newXp);
     const streakResult = nextStreak(
       user.streak_count,
       user.last_active_date,
       today,
       user.streak_freezes_remaining
     );
+
+    const multiplier = streakXpMultiplier(streakResult.streak);
+    // Round half-up so the user sees clean integers in the UI. The base value
+    // is already integer (sum of integers), so the streak bonus is the only
+    // fractional source.
+    const xpEarned = Math.round(xpBase * multiplier);
+    const xpStreakBonus = xpEarned - xpBase;
+    const newXp = user.xp + xpEarned;
+    const newLevel = levelFromXp(newXp);
 
     const updated = await this.users.applySessionResult({
       id: user_id,
@@ -642,6 +677,8 @@ export class LessonsService {
       question_count: completed.question_count,
       correct_count: completed.correct_count,
       xp_earned: xpEarned,
+      xp_base: xpBase,
+      xp_streak_bonus: xpStreakBonus,
       new_xp: updated.xp,
       new_level: updated.level,
       new_streak: updated.streak_count,

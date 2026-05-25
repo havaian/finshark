@@ -60,6 +60,11 @@ export interface AttemptResult {
   correct_answer: string;
   explanation: string;
   mastery_score: number;
+  // Mastery change from this single attempt. +10 for correct, -20 for wrong,
+  // clamped by the [0,100] mastery range — so an attempt near the bounds
+  // returns a smaller absolute delta. Used by the lesson feedback UI to
+  // render a "Mastery 64 → 74 (+10)" chip per attempt.
+  mastery_delta: number;
   next_due_date: string;
   xp_earned: number;
   hearts_remaining: number;
@@ -71,7 +76,12 @@ export interface CompleteLessonResult {
   session_id: string;
   question_count: number;
   correct_count: number;
+  // xp_base + xp_streak_bonus = xp_earned. Surfaced separately so the
+  // finale screen can show "+45 XP (incl. +5 streak bonus)" rather than
+  // a flat total.
   xp_earned: number;
+  xp_base: number;
+  xp_streak_bonus: number;
   new_xp: number;
   new_level: number;
   new_streak: number;

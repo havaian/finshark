@@ -66,22 +66,80 @@ export function applyMastery(
   return next;
 }
 
-// XP per correct answer. Wrong = 0 unless this is the user's FIRST encounter
-// with the question — see XP_PER_FIRST_WRONG.
-export const XP_PER_CORRECT = 10;
-
-// Partial-credit XP awarded the FIRST time a user sees a question and gets it
-// wrong. Rationale: the most learning-dense moment in the loop is the one
-// where the user is engaging with a brand-new question, attempting it, and
-// then reading the explanation. Awarding nothing there created a perverse
-// gradient ("guessing is safer than trying hard"). 2 XP is small enough that
-// it can't be farmed (each question is first-seen once) but large enough that
-// the user notices the +2 pill on the feedback card.
+// XP scoring. Two axes:
+//   - Outcome: correct vs first-encounter-wrong vs repeat-wrong (0).
+//   - Difficulty: easy/medium/hard. Tougher questions reward more XP so a
+//     user grinding 50 easy MCQs doesn't dominate someone who powered through
+//     20 hards.
 //
-// Repeat wrongs award 0 — the user has already been credited for their first
-// honest attempt; subsequent wrongs on the same question are a mastery signal,
-// not a learning event, and the SRS interval handles them.
-export const XP_PER_FIRST_WRONG = 2;
+// Tables below are the per-difficulty values. Easy stays at the historical
+// XP_PER_CORRECT=10 / XP_PER_FIRST_WRONG=2 so existing users don't see a
+// regression on the lessons they're already doing. Medium and hard get
+// proportional bumps. Repeat wrongs continue to award 0 — that's a mastery
+// signal handled by the SRS interval, not a learning event.
+//
+// Tuning notes:
+//   - Hard correct = 14 (1.4×). Big enough to reward but small enough that
+//     a single hard ≠ two easies.
+//   - First-wrong scales sub-linearly (2/3/4) so the partial-credit signal
+//     stays visible without making "guessing hard" the rational strategy.
+export type QuestionDifficulty = "easy" | "medium" | "hard";
+
+const XP_CORRECT_BY_DIFFICULTY: Record<QuestionDifficulty, number> = {
+  easy: 10,
+  medium: 12,
+  hard: 14,
+};
+
+const XP_FIRST_WRONG_BY_DIFFICULTY: Record<QuestionDifficulty, number> = {
+  easy: 2,
+  medium: 3,
+  hard: 4,
+};
+
+// Back-compat constants. Old callers / tests that hard-coded 10 / 2 keep
+// working; new code should call xpForAttempt() below.
+export const XP_PER_CORRECT = XP_CORRECT_BY_DIFFICULTY.easy;
+export const XP_PER_FIRST_WRONG = XP_FIRST_WRONG_BY_DIFFICULTY.easy;
+
+// Single source of truth for "how much XP did this attempt earn." Callers
+// pass the question's difficulty + outcome + first-encounter flag.
+//
+// Returns 0 for repeat wrongs.
+export function xpForAttempt(input: {
+  difficulty: QuestionDifficulty;
+  was_correct: boolean;
+  is_first_encounter: boolean;
+}): number {
+  if (input.was_correct) return XP_CORRECT_BY_DIFFICULTY[input.difficulty];
+  if (input.is_first_encounter) {
+    return XP_FIRST_WRONG_BY_DIFFICULTY[input.difficulty];
+  }
+  return 0;
+}
+
+// Streak-XP bonus. Earned in the session-complete path. Multiplier =
+// 1 + min(streak * STREAK_XP_BONUS_PER_DAY, STREAK_XP_BONUS_CAP).
+//
+// At streak=1 → +1% (negligible). At streak=50 → +50% (capped). The bonus
+// makes the streak feel valuable for every lesson, not just at milestones,
+// without making it dominate a user's XP total. Cap exists so the curve
+// flattens once the user is reliably daily — past 50 days the marginal
+// motivation is intrinsic, not extrinsic.
+//
+// Applied AFTER summing per-attempt XP and BEFORE writing to users.xp, so
+// the "this session: +X XP (incl. +Y streak bonus)" framing is clean on the
+// finale screen.
+export const STREAK_XP_BONUS_PER_DAY = 0.01;
+export const STREAK_XP_BONUS_CAP = 0.5;
+
+// Returns the multiplier (≥1.0) to apply to the session's base XP. A 7-day
+// streak returns 1.07; a 200-day streak returns 1.5 (capped).
+export function streakXpMultiplier(streak: number): number {
+  if (streak <= 0) return 1;
+  const raw = streak * STREAK_XP_BONUS_PER_DAY;
+  return 1 + Math.min(raw, STREAK_XP_BONUS_CAP);
+}
 
 // Level curve: tweakable. level = floor(sqrt(xp / 50)) + 1
 //   xp 0     -> level 1

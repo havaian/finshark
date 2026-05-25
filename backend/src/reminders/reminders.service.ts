@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { UsersRepository } from "../users/users.repository";
 import { EmailService } from "../email/email.service";
+import { EmailTemplatesService } from "../email/email-templates.service";
 import { ReminderEmailsSentRepository } from "./reminder-emails-sent.repository";
 import { UnsubscribeTokens } from "./unsubscribe.tokens";
 import { toUtcDateOnly } from "../lessons/srs";
@@ -30,6 +31,7 @@ export class RemindersService {
     private readonly config: ConfigService,
     private readonly users: UsersRepository,
     private readonly email: EmailService,
+    private readonly templates: EmailTemplatesService,
     private readonly sent: ReminderEmailsSentRepository,
     private readonly tokens: UnsubscribeTokens
   ) {}
@@ -66,12 +68,33 @@ export class RemindersService {
         continue;
       }
       try {
-        await this.email.send({
+        // Prefer the DB-backed template so admins can tune copy from the
+        // admin panel without a redeploy. Two keys correspond to the two
+        // copy variants (with/without streak). If the template is missing
+        // or disabled, fall back to the hard-coded body — we'd rather ship
+        // a slightly-stale reminder than skip the user entirely.
+        const templateKey =
+          u.streak_count >= 2 ? "reminder_daily_streak" : "reminder_daily";
+        const variables = this.templateVarsFor(u);
+        const used = await this.templates.sendByTemplate({
+          templateKey,
           to: u.email,
-          from: this.config.getOrThrow<string>("EMAIL_FROM"),
-          subject: this.subjectFor(u),
-          text: this.bodyFor(u),
+          // We don't track preferred reminder language explicitly yet — the
+          // template falls back to EN when subject_ru/body_ru are NULL, which
+          // is the safe default for a global EN-first product.
+          lang: "en",
+          variables,
         });
+        if (!used) {
+          // Fallback path: hard-coded copy (the original implementation).
+          // Kept so a deleted/disabled template can't break the cron.
+          await this.email.send({
+            to: u.email,
+            from: this.config.getOrThrow<string>("EMAIL_FROM"),
+            subject: this.subjectFor(u),
+            text: this.bodyFor(u),
+          });
+        }
         sent++;
       } catch (err) {
         // Don't try to "un-claim" — better to skip this user today than risk doubles
@@ -93,6 +116,26 @@ export class RemindersService {
   }
 
   // ---- email content ----
+
+  // Variable map handed to EmailTemplatesService. Mirrors the placeholders
+  // documented on the two reminder templates' `variables` jsonb column
+  // (display_name / streak / app_url / unsubscribe_url). The unsubscribe
+  // URL embeds a signed token so the link works without an auth session.
+  private templateVarsFor(u: UserRow): Record<string, string | number> {
+    const appUrl = this.config
+      .getOrThrow<string>("APP_PUBLIC_URL")
+      .replace(/\/$/, "");
+    const unsubToken = this.tokens.sign(u.id);
+    const unsubUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(
+      unsubToken
+    )}`;
+    return {
+      display_name: u.display_name,
+      streak: u.streak_count,
+      app_url: appUrl,
+      unsubscribe_url: unsubUrl,
+    };
+  }
 
   private subjectFor(u: UserRow): string {
     if (u.streak_count >= 2)

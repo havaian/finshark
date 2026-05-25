@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
+import { UsersModule } from "../users/users.module";
 import { AdminPromocodesController } from "./admin-promocodes.controller";
 import { AdminSubscriptionsController } from "./admin-subscriptions.controller";
 import { EntitlementsService } from "./entitlements.service";
@@ -22,8 +23,18 @@ import { SubscriptionsService } from "./subscriptions.service";
 // PSP integration (Payme/Click) will live in payment-providers/ and add its
 // own webhook controller; it'll import BillingModule rather than living
 // inside it.
+//
+// Imports:
+//   - AuthModule: provides JwtAuthGuard and AdminWith2faGuard. The guards are
+//     instantiated in BillingModule's injector context when our controllers
+//     declare @UseGuards(...), so their constructor deps must resolve here.
+//   - UsersModule: AdminWith2faGuard depends on UsersRepository. Without this
+//     import, Nest fails to construct the guard with UnknownDependenciesException
+//     (the production crash that surfaced as "Nest can't resolve dependencies
+//     of the AdminWith2faGuard"). Mirrors AdminUsersModule + WhitelistModule
+//     which both pair AuthModule + UsersModule for the same reason.
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, UsersModule],
   controllers: [
     PromocodesController,
     AdminPromocodesController,

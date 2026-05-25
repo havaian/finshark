@@ -17,6 +17,12 @@ const data = ref<ProgressResponse | null>(null);
 const loading = ref(true);
 const errorMsg = ref<string | null>(null);
 
+// Three logical views with one data payload. Default to syllabus (the
+// densest view + the one most users open Progress for). Weak topics is the
+// "what should I study" call-to-action. Recent sessions is the history.
+type ProgressTab = 'syllabus' | 'weak' | 'recent';
+const activeTab = ref<ProgressTab>('syllabus');
+
 async function load() {
   loading.value = true;
   errorMsg.value = null;
@@ -77,8 +83,36 @@ onMounted(load);
       <p v-if="loading" class="dim text-sm">{{ t('progress.loading') }}</p>
 
       <template v-if="!loading && data">
+        <!-- Tab strip. Same .segmented idiom as elsewhere so the three views
+             feel like one decision. Counts are appended to weak / recent so
+             the user knows what's behind each tab without clicking. -->
+        <nav class="segmented progress-tabs" role="tablist">
+          <button type="button" role="tab"
+            :class="{ active: activeTab === 'syllabus' }"
+            :aria-selected="activeTab === 'syllabus'"
+            @click="activeTab = 'syllabus'">
+            {{ t('progress.syllabus_coverage') }}
+          </button>
+          <button type="button" role="tab"
+            :class="{ active: activeTab === 'weak' }"
+            :aria-selected="activeTab === 'weak'"
+            @click="activeTab = 'weak'">
+            {{ t('progress.weak_topics') }}
+            <span v-if="data.weak_topics.length > 0" class="dim text-xs"
+              style="margin-left: 6px;">· {{ data.weak_topics.length }}</span>
+          </button>
+          <button type="button" role="tab"
+            :class="{ active: activeTab === 'recent' }"
+            :aria-selected="activeTab === 'recent'"
+            @click="activeTab = 'recent'">
+            {{ t('progress.recent_sessions') }}
+            <span v-if="data.recent_sessions.length > 0" class="dim text-xs"
+              style="margin-left: 6px;">· {{ data.recent_sessions.length }}</span>
+          </button>
+        </nav>
+
         <!-- Heat map -->
-        <section class="card">
+        <section v-if="activeTab === 'syllabus'" class="card mt-4">
           <div class="row" style="justify-content: space-between; margin-bottom: 6px;">
             <h2>{{ t('progress.syllabus_coverage') }}</h2>
             <div class="legend">
@@ -113,7 +147,7 @@ onMounted(load);
         </section>
 
         <!-- Weak topics -->
-        <section class="card">
+        <section v-else-if="activeTab === 'weak'" class="card mt-4">
           <h2>{{ t('progress.weak_topics') }}</h2>
           <p v-if="data.weak_topics.length === 0" class="dim text-sm mt-4">
             {{ t('progress.no_weak_topics') }}
@@ -132,7 +166,7 @@ onMounted(load);
         </section>
 
         <!-- Recent sessions -->
-        <section class="card">
+        <section v-else-if="activeTab === 'recent'" class="card mt-4">
           <h2>{{ t('progress.recent_sessions') }}</h2>
           <p v-if="data.recent_sessions.length === 0" class="dim text-sm mt-4">
             {{ t('progress.no_sessions') }}

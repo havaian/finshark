@@ -22,7 +22,10 @@ import { badgesApi } from '../api/badges.api';
 import type { PublicBadge } from '../types/badges';
 import { achievementsApi } from '../api/achievements.api';
 import type { PublicAchievement } from '../types/achievements';
+import { billingApi } from '../api/billing.api';
+import type { Subscription } from '../types/billing';
 import { useAuthStore } from '../stores/auth.store';
+import { useEntitlementStore } from '../stores/entitlement.store';
 import { useLocaleStore } from '../stores/locale.store';
 import { useThemeStore } from '../stores/theme.store';
 import { fmtDate } from '../i18n/dates';
@@ -42,6 +45,7 @@ const auth = useAuthStore();
 const localeStore = useLocaleStore();
 const theme = useThemeStore();
 const router = useRouter();
+const entitlement = useEntitlementStore();
 
 const me = ref<ProfileMe | null>(null);
 const stats = ref<ProfileStats | null>(null);
@@ -68,6 +72,14 @@ const achievementsUnlockedCount = computed(() =>
   achievements.value.filter((a) => a.current_level > 0).length,
 );
 const achievementsTotalCount = computed(() => achievements.value.length);
+
+// Payments / subscriptions history. Lazy-loaded in parallel with the rest of
+// the profile so a slow billing query doesn't gate the page paint. Failure
+// is non-fatal — the section just shows the empty state ("no subscriptions
+// yet") rather than disappearing, so users who'd been free always know the
+// section exists for promo redemptions.
+const subscriptions = ref<Subscription[]>([]);
+const subscriptionsLoading = ref(true);
 
 // Display name edit state
 const editName = ref(false);
@@ -135,6 +147,19 @@ async function load() {
         achievementsLoading.value = false;
       });
 
+    // Subscriptions history — same lazy / non-fatal pattern.
+    const subscriptionsPromise = billingApi
+      .getMySubscriptions()
+      .then((rows) => {
+        subscriptions.value = rows;
+      })
+      .catch(() => {
+        subscriptions.value = [];
+      })
+      .finally(() => {
+        subscriptionsLoading.value = false;
+      });
+
     const [meData, statsData] = await Promise.all([
       profileApi.getMe(),
       profileApi.getStats(),
@@ -145,9 +170,10 @@ async function load() {
     // Charts need the DOM to be there first.
     await nextTick();
     renderCharts();
-    // Don't block the page on badges — they show up as soon as they arrive.
+    // Don't block the page on these — they show up as soon as they arrive.
     void badgesPromise;
     void achievementsPromise;
+    void subscriptionsPromise;
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to load profile';
   } finally {
@@ -359,7 +385,9 @@ function renderCharts() {
 
 // Activity heatmap — handled as plain CSS grid rather than chart.js, because
 // chart.js doesn't have a clean Github-contributions heatmap and this is fast.
-// Build a 53-week × 7-day grid ending today (UTC). Each cell shows the count.
+// Window selector lets the user pick 90 / 180 / 365 days; the grid width
+// adjusts (no chunked re-fetch — the backend always returns 365 days of
+// activity, we just slice client-side).
 //
 // Layout: month labels run along the top (positioned at the column where each
 // new month begins), weekday labels run down the left edge (Mon/Wed/Fri only
@@ -367,6 +395,12 @@ function renderCharts() {
 // cell pops a small tooltip with the exact date and count.
 interface HeatCell { date: string; count: number; intensity: 0 | 1 | 2 | 3 | 4 }
 interface MonthLabel { col: number; key: string; short: string }
+
+// User-selectable window. 90 days is the default — shows enough recent
+// activity without scrolling, and matches a typical "did I study this term"
+// question. 180 and 365 are escape hatches for longer-term review.
+type HeatmapWindow = 90 | 180 | 365;
+const heatmapWindow = ref<HeatmapWindow>(90);
 
 // Locale: pull from the active i18n composer once on render and re-read on
 // language change (vue-i18n's t() rebinds reactively when locale.value
@@ -391,11 +425,15 @@ const heatmapData = computed<{ weeks: HeatCell[][]; months: MonthLabel[] }>(() =
   // may not match the app's chosen language.
   const lang = locale.value;
 
-  // Build the last 365 days, starting from Sunday of (today − 52 weeks).
+  // How many weeks to render. We always show full weeks, so we round up
+  // from days/7. The grid starts at the Sunday on/before (today - days).
+  const days = heatmapWindow.value;
+  const weeksToShow = Math.ceil(days / 7);
+
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   const start = new Date(today);
-  start.setUTCDate(start.getUTCDate() - 7 * 52);
+  start.setUTCDate(start.getUTCDate() - 7 * (weeksToShow - 1));
   // Move start back to the previous Sunday so columns are full weeks.
   start.setUTCDate(start.getUTCDate() - start.getUTCDay());
 
@@ -404,7 +442,7 @@ const heatmapData = computed<{ weeks: HeatCell[][]; months: MonthLabel[] }>(() =
   let lastMonth = -1;
   const cursor = new Date(start);
 
-  for (let w = 0; w < 53; w++) {
+  for (let w = 0; w < weeksToShow; w++) {
     const week: HeatCell[] = [];
 
     // Record a month label if the column's first day is in a new month.
@@ -606,11 +644,32 @@ onMounted(load);
           <div v-if="stats.accuracy_by_paper.length > 0" class="chart-wrap">
             <canvas ref="accuracyByPaperCanvas"></canvas>
           </div>
-          <p v-else class="dim text-sm mt-4">{{ t('progress.no_weak_topics') }}</p>
+          <p v-else class="dim text-sm mt-4">{{ t('profile.chart_no_data') }}</p>
         </section>
 
         <section class="card mt-6">
-          <h2>{{ t('profile.chart_activity_heatmap') }}</h2>
+          <header class="row" style="justify-content: space-between; align-items: center; gap: 12px;">
+            <h2>{{ t('profile.chart_activity_heatmap') }}</h2>
+            <!-- Window selector. Segmented pill matching the rest of the
+                 app's segmented controls. 90 days is the compact default
+                 (one quarter), 180 = one half year, 365 = the full
+                 grid the backend serves. The fetch always returns 365
+                 days; switching here just slices the rendered window. -->
+            <div class="segmented activity-window-picker">
+              <button type="button" :class="{ active: heatmapWindow === 90 }"
+                @click="heatmapWindow = 90">
+                {{ t('profile.chart_activity_window_90') }}
+              </button>
+              <button type="button" :class="{ active: heatmapWindow === 180 }"
+                @click="heatmapWindow = 180">
+                {{ t('profile.chart_activity_window_180') }}
+              </button>
+              <button type="button" :class="{ active: heatmapWindow === 365 }"
+                @click="heatmapWindow = 365">
+                {{ t('profile.chart_activity_window_365') }}
+              </button>
+            </div>
+          </header>
           <!-- Heatmap wrap: grid with month-labels row at top, weekday-labels
                column on the left, and the 53x7 cell grid in the main area.
                Tooltip floats above on hover, positioned absolutely relative
@@ -641,11 +700,22 @@ onMounted(load);
             </div>
 
             <!-- Floating tooltip. Positioned at hoverPos (centred above cell),
-                 anchored bottom-up via `transform`. Only renders when hovering. -->
+                 anchored bottom-up via `transform`. Only renders when hovering.
+                 Tooltip count uses singular/plural keys (1 question / N
+                 questions) so the English copy reads naturally; the
+                 'No activity' branch handles zero-count cells. -->
             <div v-if="hoverCell && hoverPos" class="activity-tooltip"
               :style="{ left: hoverPos.x + 'px', top: hoverPos.y + 'px' }">
               <div class="activity-tooltip-count">
-                {{ t('profile.heatmap_tooltip_count', { count: hoverCell.count }) }}
+                <template v-if="hoverCell.count === 0">
+                  {{ t('profile.heatmap_tooltip_none') }}
+                </template>
+                <template v-else-if="hoverCell.count === 1">
+                  {{ t('profile.heatmap_tooltip_count_one', { count: hoverCell.count }) }}
+                </template>
+                <template v-else>
+                  {{ t('profile.heatmap_tooltip_count_other', { count: hoverCell.count }) }}
+                </template>
               </div>
               <div class="activity-tooltip-date">{{ fmtTooltipDate(hoverCell.date) }}</div>
             </div>
@@ -657,7 +727,7 @@ onMounted(load);
           <div v-if="stats.mastery_history.length > 0" class="chart-wrap">
             <canvas ref="masteryCanvas"></canvas>
           </div>
-          <p v-else class="dim text-sm mt-4">{{ t('progress.no_weak_topics') }}</p>
+          <p v-else class="dim text-sm mt-4">{{ t('profile.chart_no_data') }}</p>
         </section>
 
         <div class="profile-grid-2 mt-6">
@@ -666,7 +736,7 @@ onMounted(load);
             <div v-if="stats.difficulty_breakdown.length > 0" class="chart-wrap">
               <canvas ref="difficultyCanvas"></canvas>
             </div>
-            <p v-else class="dim text-sm mt-4">{{ t('progress.no_weak_topics') }}</p>
+            <p v-else class="dim text-sm mt-4">{{ t('profile.chart_no_data') }}</p>
           </section>
 
           <section class="card">
@@ -674,7 +744,7 @@ onMounted(load);
             <div v-if="stats.type_breakdown.length > 0" class="chart-wrap">
               <canvas ref="typeCanvas"></canvas>
             </div>
-            <p v-else class="dim text-sm mt-4">{{ t('progress.no_weak_topics') }}</p>
+            <p v-else class="dim text-sm mt-4">{{ t('profile.chart_no_data') }}</p>
           </section>
         </div>
 
@@ -693,11 +763,18 @@ onMounted(load);
             {{ t('profile.badges_loading') }}
           </p>
           <div v-else class="badges-grid">
-            <div v-for="b in badges" :key="b.code" :class="['badge-tile', { locked: !b.earned }]"
-              :title="b.description">
+            <!-- Description rendered always (not behind a title hover) so the
+                 "how do I earn this?" question is answered without the user
+                 having to discover the native tooltip. Earned tiles also
+                 show their unlock date as the third line. -->
+            <div v-for="b in badges" :key="b.code" :class="['badge-tile', { locked: !b.earned }]">
               <span class="badge-tile-icon">{{ b.icon }}</span>
               <span class="badge-tile-name">{{ b.name }}</span>
-              <span v-if="!b.earned" class="badge-tile-locked-label dim text-xs">
+              <span class="badge-tile-desc dim text-xs">{{ b.description }}</span>
+              <span v-if="b.earned && b.earned_at" class="badge-tile-earned-at dim text-xs">
+                {{ t('profile.badges_earned_at', { date: fmtDate(b.earned_at) }) }}
+              </span>
+              <span v-else-if="!b.earned" class="badge-tile-locked-label dim text-xs">
                 {{ t('profile.badges_unearned_label') }}
               </span>
             </div>
@@ -766,6 +843,68 @@ onMounted(load);
               <div class="achievement-desc dim text-xs">{{ a.description }}</div>
             </div>
           </div>
+        </section>
+
+        <!-- Payments / subscriptions section. Shown to all users; the empty
+             state ("no subscriptions yet") guides free users toward the redeem
+             flow in Settings rather than hiding the section entirely.
+             Header line summarises current entitlement (premium tier + ends_at,
+             or "Free plan") via the entitlement store so the chip stays in
+             sync with the rest of the chrome. -->
+        <section v-if="subscriptionsLoading || subscriptions.length > 0 || entitlement.entitlement"
+          class="card mt-6">
+          <header class="row" style="justify-content: space-between; align-items: center; gap: 12px;">
+            <h2>{{ t('profile.payments_section') }}</h2>
+            <span v-if="entitlement.isPremium" class="pill pill-accent">{{ t('dashboard.premium_badge') }}</span>
+            <span v-else-if="entitlement.isFree" class="pill pill-grey">{{ t('settings.premium_status_free') }}</span>
+          </header>
+
+          <div v-if="entitlement.entitlement && entitlement.isPremium" class="dim text-sm mt-2">
+            <template v-if="entitlement.entitlement.ends_at">
+              {{ t('settings.premium_ends_at', {
+                date: new Date(entitlement.entitlement.ends_at).toLocaleDateString(),
+              }) }}
+            </template>
+            <template v-else>{{ t('settings.premium_lifetime') }}</template>
+          </div>
+
+          <p v-if="subscriptionsLoading" class="dim text-sm mt-4">{{ t('common.loading') }}</p>
+          <p v-else-if="subscriptions.length === 0" class="dim text-sm mt-4">
+            {{ t('profile.payments_empty') }}
+          </p>
+          <div v-else class="list-bordered mt-4">
+            <div v-for="s in subscriptions" :key="s.id" class="list-row">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div>
+                  <span style="font-weight: 500;">{{ s.plan_id }}</span>
+                  <span class="pill pill-grey" style="margin-left: 10px;">
+                    {{ t(`admin.subscriptions.sub_status_${s.status}`) }}
+                  </span>
+                  <span class="dim text-xs" style="margin-left: 8px;">
+                    · {{ t(`admin.subscriptions.sub_source_${s.source}`) }}
+                  </span>
+                </div>
+                <div class="dim text-xs">
+                  {{ t('admin.subscriptions.sub_starts', { date: new Date(s.starts_at).toLocaleDateString() }) }}
+                  <template v-if="s.ends_at">
+                    · {{ t('admin.subscriptions.sub_ends', { date: new Date(s.ends_at).toLocaleDateString() }) }}
+                  </template>
+                  <template v-else>
+                    · {{ t('admin.subscriptions.sub_ends_never') }}
+                  </template>
+                  <template v-if="s.cancelled_at">
+                    · {{ t('admin.subscriptions.sub_cancelled_at', {
+                      date: new Date(s.cancelled_at).toLocaleDateString(),
+                    }) }}
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="dim text-xs mt-4">
+            {{ t('profile.payments_redeem_hint') }}
+          </p>
         </section>
 
         <!-- Danger zone -->

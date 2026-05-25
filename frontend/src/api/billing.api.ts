@@ -19,6 +19,12 @@ export const billingApi = {
 
   redeemPromocode: async (code: string): Promise<RedeemResult> =>
     (await api.post<RedeemResult>("/me/promocodes/redeem", { code })).data,
+
+  // History of the current user's own subscriptions — admin grants, promocode
+  // redemptions, future PSP payments. Same shape as the admin per-user
+  // endpoint, but limited to the caller's own user_id by the backend.
+  getMySubscriptions: async (): Promise<Subscription[]> =>
+    (await api.get<Subscription[]>("/me/subscriptions")).data,
 };
 
 // Admin endpoints. All require admin auth (server enforces); the frontend

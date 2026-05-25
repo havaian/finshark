@@ -174,6 +174,7 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
+input[type="date"],
 select,
 textarea {
     width: 100%;
@@ -182,7 +183,41 @@ textarea {
     color: var(--text);
     padding: 10px 14px;
     border-radius: 8px;
-    transition: border-color 120ms ease, box-shadow 120ms ease;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+/* Custom <select> chrome. The native arrow varies wildly across platforms
+   (Windows shows the system caret; macOS shows a thicker accent caret) so
+   we strip the appearance and paint our own chevron via a background-image.
+   Padding-right makes room for the chevron + a small gap.
+   The SVG is inline (data URI) to avoid an extra request and to swap colour
+   via currentColor — except CSS background-image can't use currentColor, so
+   the stroke is hardcoded to a neutral grey that reads OK on both themes. */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 36px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+}
+
+/* Hover affordance for inputs + selects. Border picks up the accent colour
+   (same one the focus state uses, just without the glow) so the user sees a
+   visual cue that the element is interactive before clicking. Matches the
+   user-facing request: "transition show border (like right now when clicked)
+   on hover". The transition on `border-color` is set on the base rule above. */
+input[type="text"]:hover:not(:disabled),
+input[type="email"]:hover:not(:disabled),
+input[type="password"]:hover:not(:disabled),
+input[type="number"]:hover:not(:disabled),
+input[type="date"]:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+    border-color: var(--accent);
 }
 
 input:focus,
@@ -191,6 +226,14 @@ textarea:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* The native option list still uses the system look (we can't restyle
+   <option> reliably) but at least options pick up the body font on most
+   browsers when this rule is present. */
+select option {
+    background: var(--bg-elev);
+    color: var(--text);
 }
 
 input:disabled,

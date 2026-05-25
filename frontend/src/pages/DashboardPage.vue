@@ -20,7 +20,11 @@ const entitlement = useEntitlementStore();
 
 const papers = ref<Paper[]>([]);
 const selectedPaperId = ref<string>('');
-const papersLoading = ref(false);
+// Defaults to true so the dashboard renders the "loading papers" line on
+// first paint instead of flashing the "no papers" empty state during the
+// gap between mount and the first listPapers() resolve. loadPapers() flips
+// it off in its finally block.
+const papersLoading = ref(true);
 const starting = ref(false);
 const errorMsg = ref<string | null>(null);
 

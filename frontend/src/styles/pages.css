@@ -343,6 +343,23 @@
     color: var(--text);
 }
 
+/* Progress page tab strip uses the segmented control but stretches full-
+   width on narrow viewports so all three tabs are easy thumb targets.
+   Activity-heatmap window picker is similar but stays inline-sized. */
+.progress-tabs {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.progress-tabs button {
+    flex: 1 1 auto;
+    text-align: center;
+}
+
+.activity-window-picker {
+    flex: 0 0 auto;
+}
+
 /* -----------------------------------------------------------
    26) Modal (used by question generator)
    ----------------------------------------------------------- */
@@ -1439,8 +1456,25 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     text-align: center;
-    /* Tooltip cursor on hover signals there's more (the description). */
-    cursor: help;
+    /* No more native title tooltip — description is now always-visible
+       inside the tile, so the default cursor is fine. */
+}
+
+/* Description sits under the name in small dimmed text. Always visible so
+   users learn how to earn each badge at a glance. Three-line clamp so very
+   long descriptions don't shove the tile heights apart. */
+.badge-tile-desc {
+    font-size: 11px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.badge-tile-earned-at {
+    font-size: 10px;
+    letter-spacing: 0.04em;
 }
 
 .badge-tile-icon {

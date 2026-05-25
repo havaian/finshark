@@ -78,13 +78,17 @@ export class PublicProfileService {
     `;
     const total_lessons = Number(lessonRows[0]?.total ?? 0);
 
-    // Overall accuracy across all attempts.
+    // Overall accuracy across all attempts. The attempts table column is
+    // was_correct (see migration 20260511000003_content_and_srs); the prior
+    // version of this query referenced is_correct which threw on every call
+    // (500 internal error any time anyone opened a public profile from the
+    // leaderboard).
     const accuracyRows = await this.sql<
       Array<{ attempts: string; correct: string }>
     >`
       SELECT
         COUNT(*)::text AS attempts,
-        COUNT(*) FILTER (WHERE is_correct)::text AS correct
+        COUNT(*) FILTER (WHERE was_correct)::text AS correct
       FROM attempts
       WHERE user_id = ${viewed_user_id}
     `;

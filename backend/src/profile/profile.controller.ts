@@ -22,6 +22,8 @@ import { UpdateDisplayNameDto, DeleteAccountDto } from "./dto/profile.dto";
 import { UpdatePreferencesDto } from "./dto/preferences.dto";
 import { EntitlementsService } from "../billing/entitlements.service";
 import { LessonSessionsRepository } from "../lessons/lesson-sessions.repository";
+import { SubscriptionsService } from "../billing/subscriptions.service";
+import { toPublicSubscription } from "../billing/billing.types";
 
 // Free-tier limits surfaced on /me/entitlement. Mirror the constants in the
 // corresponding service files — kept literal here because the values are part
@@ -38,7 +40,8 @@ export class ProfileController {
     private readonly users: UsersRepository,
     private readonly stats: ProfileStatsService,
     private readonly entitlements: EntitlementsService,
-    private readonly sessions: LessonSessionsRepository
+    private readonly sessions: LessonSessionsRepository,
+    private readonly subscriptions: SubscriptionsService
   ) {}
 
   // GET /api/me — full public profile including created_at (joined date).
@@ -129,6 +132,17 @@ export class ProfileController {
         max: isFree ? FREE_HEARTS_PER_DAY : null,
       },
     };
+  }
+
+  // GET /api/me/subscriptions — user-facing history of their OWN subscriptions
+  // (admin grants, promocode redemptions, future PSP payments). Same shape as
+  // the admin endpoint /admin/users/:id/subscriptions; backend just uses the
+  // current user's id and skips the admin guard. Used by the Payments section
+  // on the profile page.
+  @Get("subscriptions")
+  async getMySubscriptions(@CurrentUser() current: AccessTokenPayload) {
+    const rows = await this.subscriptions.history(current.sub);
+    return rows.map(toPublicSubscription);
   }
 
   // PATCH /api/me/preferences — update lesson/notification preferences.

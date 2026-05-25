@@ -134,12 +134,15 @@ export class AchievementsService {
 
   // Public read for /me/achievements. Always returns the full catalog so the
   // UI can render locked tiles too (motivates by showing what's achievable).
+  // Per-paper achievements get filtered to only papers that are actually
+  // seeded (see filterCatalogForExistingPapers comment).
   async getForUser(user_id: string, lang: Lang): Promise<PublicAchievement[]> {
-    const [catalog, progressMap] = await Promise.all([
+    const [catalog, progressMap, paperCodes] = await Promise.all([
       this.achievements.listAll(),
       this.achievements.findProgressByUser(user_id),
+      this.achievements.findExistingPaperCodes(),
     ]);
-    return catalog.map((row) =>
+    return this.filterCatalogForExistingPapers(catalog, paperCodes).map((row) =>
       toPublicAchievement(row, progressMap.get(row.code) ?? null, lang)
     );
   }
@@ -151,12 +154,14 @@ export class AchievementsService {
     user_id: string,
     lang: Lang
   ): Promise<PublicEarnedAchievement[]> {
-    const [catalog, progressMap] = await Promise.all([
+    const [catalog, progressMap, paperCodes] = await Promise.all([
       this.achievements.listAll(),
       this.achievements.findProgressByUser(user_id),
+      this.achievements.findExistingPaperCodes(),
     ]);
+    const filtered = this.filterCatalogForExistingPapers(catalog, paperCodes);
     const out: PublicEarnedAchievement[] = [];
-    for (const row of catalog) {
+    for (const row of filtered) {
       const earned = toPublicEarnedAchievement(
         row,
         progressMap.get(row.code) ?? null,
@@ -165,6 +170,29 @@ export class AchievementsService {
       if (earned) out.push(earned);
     }
     return out;
+  }
+
+  // Drop per-paper achievement rows whose paper isn't in the live catalog.
+  // The achievement codes for the per-paper ladders match `{papercode}_lessons_completed`
+  // (lowercased) — e.g. 'f5_lessons_completed' ⇄ 'F5'. If the F5 paper
+  // hasn't been seeded, this user can never earn the achievement and
+  // showing it as a permanently-locked card is just confusing.
+  //
+  // Detection is purely string-based: any code matching /^([a-z]\d+)_lessons_completed$/
+  // is a per-paper ladder, and the prefix uppercased should match a real
+  // paper code. Non-paper achievements (lessons_completed, streak_days, etc.)
+  // fall through untouched.
+  private filterCatalogForExistingPapers(
+    catalog: AchievementRow[],
+    paperCodes: Set<string>
+  ): AchievementRow[] {
+    const perPaperRegex = /^([a-z]\d+)_lessons_completed$/;
+    return catalog.filter((row) => {
+      const match = perPaperRegex.exec(row.code);
+      if (!match) return true; // not a per-paper ladder
+      const paperCode = match[1].toUpperCase();
+      return paperCodes.has(paperCode);
+    });
   }
 
   // Helper for tests / debug: not exposed via API.

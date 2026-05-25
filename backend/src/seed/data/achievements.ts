@@ -191,10 +191,15 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     code: "accuracy_rolling_30",
     name_en: "Rolling 30-day accuracy",
     name_ru: "Точность за 30 дней",
+    // Description has to do the heavy lifting because the progress bar shows
+    // a raw "70 / 75" (your current %) vs (next-tier %). Make both the
+    // metric and the activation gate explicit: only counts the last 30
+    // days, and at least 20 attempts are required before progress starts
+    // accruing — matches ROLLING_ACCURACY_MIN_ATTEMPTS in achievements.rules.ts.
     description_en:
-      "Maintain a high rolling-30-day accuracy across all your attempts.",
+      "Your % correct across the last 30 days. Needs at least 20 attempts in that window to start counting. Unlock the next tier by hitting 60% → 75% → 90%.",
     description_ru:
-      "Поддерживайте высокую точность за последние 30 дней.",
+      "Ваш % правильных ответов за последние 30 дней. Нужно минимум 20 ответов за этот срок. Открывайте следующий уровень при 60% → 75% → 90%.",
     icon: "🎯",
     sort_order: 200,
     levels: [

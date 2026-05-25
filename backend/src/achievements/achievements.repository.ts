@@ -29,6 +29,17 @@ export class AchievementsRepository {
     `;
   }
 
+  // Set of currently-seeded paper codes ('F1', 'F2', …). Used by the service
+  // to drop per-paper achievement rows for papers that aren't actually in
+  // the catalog, so the profile doesn't show ghost "F5 lessons" cards on
+  // installs that only have F1/F2/F3 seeded.
+  async findExistingPaperCodes(): Promise<Set<string>> {
+    const rows = await this.sql<Array<{ code: string }>>`
+      SELECT code FROM papers
+    `;
+    return new Set(rows.map((r) => r.code));
+  }
+
   // All progress rows for a single user, keyed by achievement_code. The
   // evaluator calls this once per evaluation; the API layer maps over the
   // catalog and looks up here per code.

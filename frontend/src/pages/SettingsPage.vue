@@ -40,9 +40,76 @@ const lessonSize = computed({
 });
 
 const reminderHour = computed({
-  get: () => auth.user?.reminder_hour_utc ?? 18,
-  set: (v: number) => persistPreference({ reminder_hour_utc: v }, 'reminder_hour'),
+  get: () => auth.user?.reminder_hour_local ?? 18,
+  set: (v: number) => persistPreference({ reminder_hour_local: v }, 'reminder_hour'),
 });
+
+// Curated list of timezones we surface in the picker. Order: launch market
+// first (UZ → CIS → EU → UK → UTC → US). Storing the IANA name keeps DST
+// and historical-offset edge cases off our plate. If a user's existing
+// timezone isn't in this list we still show it as the selected option so
+// nothing is silently rewritten under them.
+const TIMEZONE_CHOICES: ReadonlyArray<string> = [
+  'Asia/Tashkent',
+  'Asia/Almaty',
+  'Asia/Bishkek',
+  'Asia/Dushanbe',
+  'Asia/Ashgabat',
+  'Asia/Baku',
+  'Asia/Yerevan',
+  'Asia/Tbilisi',
+  'Europe/Moscow',
+  'Europe/Kyiv',
+  'Europe/Minsk',
+  'Europe/Istanbul',
+  'Europe/Berlin',
+  'Europe/Paris',
+  'Europe/London',
+  'UTC',
+  'Asia/Dubai',
+  'Asia/Karachi',
+  'Asia/Kolkata',
+  'Asia/Bangkok',
+  'Asia/Singapore',
+  'Asia/Tokyo',
+  'America/New_York',
+  'America/Chicago',
+  'America/Los_Angeles',
+];
+
+const timezoneOptions = computed<string[]>(() => {
+  const current = auth.user?.timezone;
+  if (current && !TIMEZONE_CHOICES.includes(current)) {
+    return [current, ...TIMEZONE_CHOICES];
+  }
+  return [...TIMEZONE_CHOICES];
+});
+
+const timezone = computed({
+  get: () => auth.user?.timezone ?? 'Asia/Tashkent',
+  set: (v: string) => persistPreference({ timezone: v }, 'timezone'),
+});
+
+// Label a timezone with its current UTC offset, e.g. "Asia/Tashkent (UTC+5)".
+// Computed live so DST-aware zones (Europe/London, America/New_York…) reflect
+// the current offset rather than a hard-coded one.
+function fmtTimezone(tz: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      timeZoneName: 'shortOffset',
+    }).formatToParts(new Date());
+    const offset = parts.find((p) => p.type === 'timeZoneName')?.value ?? '';
+    return offset ? `${tz} (${offset})` : tz;
+  } catch {
+    return tz;
+  }
+}
+
+// Render the reminder hour the way the user thinks of it: "18:00 (Asia/Tashkent)".
+function fmtReminderLocal(h: number, tz: string): string {
+  return `${h.toString().padStart(2, '0')}:00 ${tz}`;
+}
 
 const difficulty = computed<DiffChoice>({
   get: () => auth.user?.preferred_difficulty ?? 'auto',
@@ -482,7 +549,7 @@ const premiumEndsLine = computed<string | null>(() => {
           <div class="grow">
             <div style="font-weight: 500;">{{ t('dashboard.daily_reminders_title') }}</div>
             <div class="dim text-sm" style="margin-top: 2px;">
-              {{ t('dashboard.daily_reminders_sub') }}
+              {{ t('dashboard.daily_reminders_sub', { hour: reminderHour.toString().padStart(2, '0'), tz: timezone }) }}
             </div>
           </div>
           <button class="toggle" :class="{ on: remindersEnabled }" :disabled="savingField === 'email_reminders'"
@@ -493,6 +560,15 @@ const premiumEndsLine = computed<string | null>(() => {
         </div>
 
         <div class="row mt-4" :style="{ opacity: remindersEnabled ? 1 : 0.5 }">
+          <span class="grow">{{ t('settings.timezone') }}</span>
+          <select :value="timezone" :disabled="!remindersEnabled || savingField === 'timezone'"
+            @change="timezone = ($event.target as HTMLSelectElement).value" style="max-width: 280px;">
+            <option v-for="tz in timezoneOptions" :key="tz" :value="tz">{{ fmtTimezone(tz) }}</option>
+          </select>
+          <span v-if="justSaved === 'timezone'" class="dim text-xs">{{ t('admin.localization.saved') }} ✓</span>
+        </div>
+
+        <div class="row mt-4" :style="{ opacity: remindersEnabled ? 1 : 0.5 }">
           <span class="grow">{{ t('settings.reminder_hour') }}</span>
           <select :value="reminderHour" :disabled="!remindersEnabled || savingField === 'reminder_hour'"
             @change="reminderHour = parseInt(($event.target as HTMLSelectElement).value, 10)" style="max-width: 120px;">
@@ -500,6 +576,9 @@ const premiumEndsLine = computed<string | null>(() => {
           </select>
           <span v-if="justSaved === 'reminder_hour'" class="dim text-xs">{{ t('admin.localization.saved') }} ✓</span>
         </div>
+        <p class="dim text-xs mt-2">
+          {{ t('settings.reminder_hour_hint', { time: fmtReminderLocal(reminderHour, timezone) }) }}
+        </p>
       </section>
 
       <!-- Premium / promocode redemption. Visible to all users; the redeem

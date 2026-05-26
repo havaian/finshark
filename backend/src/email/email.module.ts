@@ -5,6 +5,7 @@ import { AdminEmailTemplatesController } from "./admin-email-templates.controlle
 import { EmailService } from "./email.service";
 import { EmailTemplatesRepository } from "./email-templates.repository";
 import { EmailTemplatesService } from "./email-templates.service";
+import { EmailBlastService } from "./email-blast.service";
 
 // Global so other modules (the reminder cron, billing notifications) can
 // inject EmailService and EmailTemplatesService directly without importing
@@ -20,7 +21,12 @@ import { EmailTemplatesService } from "./email-templates.service";
 @Module({
   imports: [AuthModule, UsersModule],
   controllers: [AdminEmailTemplatesController],
-  providers: [EmailService, EmailTemplatesRepository, EmailTemplatesService],
-  exports: [EmailService, EmailTemplatesService],
+  providers: [
+    EmailService,
+    EmailTemplatesRepository,
+    EmailTemplatesService,
+    EmailBlastService,
+  ],
+  exports: [EmailService, EmailTemplatesService, EmailBlastService],
 })
 export class EmailModule {}

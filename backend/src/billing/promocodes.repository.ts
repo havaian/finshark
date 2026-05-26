@@ -180,4 +180,48 @@ export class PromocodesRepository {
       ORDER BY redeemed_at DESC
     `;
   }
+
+  // Admin drill-in variant: same query as findRedemptionsForCode but joined
+  // with users + subscriptions so the UI can show a real name + email + plan
+  // instead of opaque UUIDs. Kept separate from the bare PromocodeRedemptionRow
+  // path so the redemption write path (which doesn't need joins) stays
+  // unchanged.
+  async findRedemptionsForCodeWithDetails(
+    promocodeId: string
+  ): Promise<EnrichedPromocodeRedemptionRow[]> {
+    return this.sql<EnrichedPromocodeRedemptionRow[]>`
+      SELECT
+        pr.id,
+        pr.promocode_id,
+        pr.user_id,
+        pr.subscription_id,
+        pr.redeemed_at,
+        u.display_name AS user_display_name,
+        u.email        AS user_email,
+        s.plan_id      AS subscription_plan_id,
+        s.status       AS subscription_status,
+        s.ends_at      AS subscription_ends_at
+      FROM promocode_redemptions pr
+      JOIN users u ON u.id = pr.user_id
+      LEFT JOIN subscriptions s ON s.id = pr.subscription_id
+      WHERE pr.promocode_id = ${promocodeId}
+      ORDER BY pr.redeemed_at DESC
+    `;
+  }
+}
+
+// Drill-in row shape: base redemption fields plus the user/sub join. Used
+// only by the admin promocodes UI; the bare PromocodeRedemptionRow remains
+// the truth for write-path callers that don't need the joins.
+export interface EnrichedPromocodeRedemptionRow {
+  id: string;
+  promocode_id: string;
+  user_id: string;
+  subscription_id: string | null;
+  redeemed_at: Date;
+  user_display_name: string;
+  user_email: string;
+  subscription_plan_id: string | null;
+  subscription_status: string | null;
+  subscription_ends_at: Date | null;
 }

@@ -15,7 +15,11 @@ export interface PublicUser {
   last_active_date: string | null;
   is_admin: boolean;
   email_reminders_enabled: boolean;
-  reminder_hour_utc: number;
+  // Hour-of-day (0..23) in the user's `timezone` to send the daily reminder.
+  reminder_hour_local: number;
+  // IANA timezone name. Used by Settings to render the picker and by any
+  // "local time" display logic.
+  timezone: string;
   preferred_difficulty: "easy" | "medium" | "hard" | null;
   lesson_size: number;
   // Onboarding (3.1)

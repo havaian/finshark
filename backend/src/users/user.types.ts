@@ -19,7 +19,10 @@ export interface UserRow {
   last_active_date: Date | null;
   is_admin: boolean;
   email_reminders_enabled: boolean;
-  reminder_hour_utc: number; // 0..23
+  // Hour-of-day (0..23) in the user's `timezone` to send the reminder.
+  // Renamed from reminder_hour_utc in 20260526000001 — see that migration
+  // for the rationale.
+  reminder_hour_local: number;
   preferred_difficulty: QuestionDifficulty | null; // null = auto
   lesson_size: number; // 3..10
   // Onboarding fields (3.1)
@@ -63,7 +66,10 @@ export interface PublicUser {
   last_active_date: string | null;
   is_admin: boolean;
   email_reminders_enabled: boolean;
-  reminder_hour_utc: number;
+  reminder_hour_local: number;
+  // IANA timezone — exposed to the frontend so Settings can show the picker
+  // and the dashboard can localise dates.
+  timezone: string;
   preferred_difficulty: QuestionDifficulty | null;
   lesson_size: number;
   bg_level: BgLevel | null;
@@ -92,7 +98,8 @@ export function toPublicUser(row: UserRow): PublicUser {
       : null,
     is_admin: row.is_admin,
     email_reminders_enabled: row.email_reminders_enabled,
-    reminder_hour_utc: row.reminder_hour_utc,
+    reminder_hour_local: row.reminder_hour_local,
+    timezone: row.timezone,
     preferred_difficulty: row.preferred_difficulty,
     lesson_size: row.lesson_size,
     bg_level: row.bg_level,

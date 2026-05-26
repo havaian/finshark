@@ -51,6 +51,9 @@ function stripLang(path: string): string {
 }
 
 const navItems = computed<NavItem[]>(() => [
+  // Overview is the new default landing — sits first in the sidebar so it
+  // also reads as "home" within the admin area.
+  { to: lp('/admin/overview'), labelKey: 'admin.overview.title', activePrefixes: ['/admin/overview'] },
   { to: lp('/admin/users'), labelKey: 'admin.users.title', activePrefixes: ['/admin/users'] },
   { to: lp('/admin/whitelist'), labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] },
   // Unified content browser — the only editor for papers/LOs/questions now.

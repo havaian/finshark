@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { adminBillingApi } from '../../api/billing.api';
+import { useLocalePath } from '../../router/useLocalePath';
 import type {
   Plan,
   Promocode,
@@ -18,6 +19,7 @@ import type {
 // backend surface. Anything else (window, plan, days) should be a new code.
 
 const { t } = useI18n();
+const lp = useLocalePath();
 
 const codes = ref<Promocode[]>([]);
 const plans = ref<Plan[]>([]);
@@ -27,6 +29,15 @@ const plansById = computed(() => {
   for (const p of plans.value) map.set(p.id, p);
   return map;
 });
+
+// Best-effort human label for a plan id ("premium_monthly" → "Monthly").
+// Falls back to the raw slug when the i18n key isn't there so future plans
+// still render something readable.
+function planNameFor(planId: string): string {
+  const key = `dashboard.premium_status.${planId}`;
+  const translated = t(key);
+  return translated === key ? planId : translated;
+}
 
 const loading = ref(false);
 const errorMsg = ref<string | null>(null);
@@ -392,12 +403,19 @@ onMounted(load);
           </p>
           <div v-else class="list-bordered">
             <div v-for="r in redemptionsModal.redemptions" :key="r.id" class="list-row">
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <span class="mono text-sm">
-                  {{ t('admin.promocodes.redemptions_col_user') }}: {{ r.user_id }}
-                </span>
-                <span v-if="r.subscription_id" class="dim text-xs mono">
-                  {{ t('admin.promocodes.redemptions_col_sub') }}: {{ r.subscription_id }}
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                <!-- User: link straight to the admin user-detail page so we
+                     can jump from "who redeemed this" to the user's profile
+                     in one click. Falls back to the raw UUID if the enriched
+                     fields weren't populated for some reason. -->
+                <RouterLink :to="lp(`/admin/users/${r.user_id}`)" class="link-accent" style="font-weight: 500;">
+                  {{ r.user_display_name || r.user_id }}
+                </RouterLink>
+                <span v-if="r.user_email" class="dim text-xs">{{ r.user_email }}</span>
+                <span v-if="r.subscription_plan_id" class="dim text-xs">
+                  {{ t('admin.promocodes.redemptions_col_sub') }}:
+                  {{ planNameFor(r.subscription_plan_id) }}
+                  <span v-if="r.subscription_status">· {{ r.subscription_status }}</span>
                 </span>
               </div>
               <div class="dim text-xs">{{ new Date(r.redeemed_at).toLocaleString() }}</div>

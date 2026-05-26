@@ -14,6 +14,7 @@ import type {
   LessonTheoryBite,
 } from '../../types/lesson';
 import type { PublicBadge } from '../../types/badges';
+import AppNav from '../../components/AppNav.vue';
 
 // Hearts are 3 per session — must match backend lesson_sessions.hearts_remaining default.
 const MAX_HEARTS = 3;
@@ -246,6 +247,17 @@ async function onSubmit() {
     feedback.value = result;
     hearts.value = result.hearts_remaining;
 
+    // Mock mode: exam-style flow — no per-question reveal. We auto-advance
+    // straight to the next question (or finish) so the user never sees the
+    // "correct / wrong + explanation" panel mid-exam. The full breakdown
+    // (per-LO accuracy + per-question review) is shown on the breakdown
+    // page after completion.
+    if (isMock.value) {
+      submitting.value = false;
+      await onNext();
+      return;
+    }
+
     // If the server says this attempt ended the session (hearts hit 0),
     // we still show the feedback for the current question first, then
     // jump straight to the out-of-hearts finale on Next.
@@ -401,7 +413,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="page">
+  <main class="page lesson-page">
+    <!-- Lesson runner used to render without any chrome — no way to navigate
+         to the dashboard / profile mid-lesson except the quit button. Adding
+         AppNav gives the user the same escape hatches as every other authed
+         page; the quit-confirm logic still fires when they hit the "Quit"
+         button inside the lesson body. -->
+    <AppNav />
+    <div class="container">
     <div class="lesson-frame">
 
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
@@ -488,30 +507,46 @@ onUnmounted(() => {
 
       <!-- Theory primer — shown before the question flow when at least one LO
            in the queue has theory_en populated. User clicks Start to proceed.
-           The Skip recap button is sticky-floated alongside the bites so users
-           who already know the material can jump straight in without scrolling
-           to the bottom of the recap. Same action as the bottom Start button;
-           rendered first so it's reachable on the first paint. -->
-      <section v-else-if="!theoryDismissed && theoryBites.length > 0" class="card theory-intro">
-        <button class="btn btn-primary btn-sm theory-skip" @click="onStartFromTheory">
-          {{ t('lesson.theory_skip') }} →
-        </button>
-        <h1>{{ t('lesson.theory_title') }}</h1>
-        <p class="dim mt-2">{{ t('lesson.theory_subtitle') }}</p>
-        <div class="theory-list mt-6">
-          <article v-for="b in theoryBites" :key="b.lo_id" class="theory-card">
-            <header class="theory-card-head">
-              <span class="theory-lo-code mono">{{ b.lo_code }}</span>
-              <span class="theory-lo-title">{{ b.lo_title }}</span>
-            </header>
-            <div class="theory-body">{{ b.theory }}</div>
-          </article>
-        </div>
-        <div class="mt-6">
-          <button class="btn btn-primary" @click="onStartFromTheory">
-            {{ t('lesson.theory_start') }}
+           The Skip recap button sits OUTSIDE the recap card as a sticky bar
+           above it. Previously it lived inside the card with `position:
+           sticky; float: right` which made it overlap theory text on smaller
+           viewports. Sticky outside the card keeps it visible while the user
+           scrolls through bites without ever overlapping content. -->
+      <template v-else-if="!theoryDismissed && theoryBites.length > 0">
+        <div class="theory-skip-bar">
+          <button class="btn btn-primary btn-sm" @click="onStartFromTheory">
+            {{ t('lesson.theory_skip') }} →
           </button>
         </div>
+        <section class="card theory-intro">
+          <h1>{{ t('lesson.theory_title') }}</h1>
+          <p class="dim mt-2">{{ t('lesson.theory_subtitle') }}</p>
+          <div class="theory-list mt-6">
+            <article v-for="b in theoryBites" :key="b.lo_id" class="theory-card">
+              <header class="theory-card-head">
+                <span class="theory-lo-code mono">{{ b.lo_code }}</span>
+                <span class="theory-lo-title">{{ b.lo_title }}</span>
+              </header>
+              <div class="theory-body">{{ b.theory }}</div>
+            </article>
+          </div>
+          <div class="mt-6">
+            <button class="btn btn-primary" @click="onStartFromTheory">
+              {{ t('lesson.theory_start') }}
+            </button>
+          </div>
+        </section>
+      </template>
+
+      <!-- Wrap-up loading state. Renders the moment the user submits the
+           LAST answer and we're waiting for the complete() roundtrip. Without
+           this, the last question would briefly re-render (feedback cleared,
+           current question still on screen) before flipping to the summary
+           — confusing UX, and the user could even resubmit. -->
+      <section v-else-if="completing && !summary" class="card lesson-wrapup">
+        <div class="lesson-wrapup-spinner" aria-hidden="true">⏳</div>
+        <h2>{{ t('lesson.wrapping_up_title') }}</h2>
+        <p class="dim mt-2">{{ t('lesson.wrapping_up_body') }}</p>
       </section>
 
       <!-- Active question -->
@@ -642,6 +677,7 @@ onUnmounted(() => {
 
       </section>
 
+    </div>
     </div>
   </main>
 </template>

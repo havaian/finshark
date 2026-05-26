@@ -36,8 +36,13 @@ const SettingsPage = () => import("../pages/SettingsPage.vue");
 const LeaderboardsPage = () => import("../pages/LeaderboardsPage.vue");
 const MockStartPage = () => import("../pages/MockStartPage.vue");
 const MockBreakdownPage = () => import("../pages/MockBreakdownPage.vue");
+const MockReviewPage = () => import("../pages/MockReviewPage.vue");
 const AdminLayout = () => import("../pages/admin/AdminLayout.vue");
+const AdminOverviewPage = () =>
+  import("../pages/admin/AdminOverviewPage.vue");
 const AdminUsersPage = () => import("../pages/admin/AdminUsersPage.vue");
+const AdminUserDetailPage = () =>
+  import("../pages/admin/AdminUserDetailPage.vue");
 const AdminLocalizationPage = () =>
   import("../pages/admin/AdminLocalizationPage.vue");
 const AdminContentPage = () => import("../pages/admin/AdminContentPage.vue");
@@ -186,6 +191,15 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, titleKey: "page_titles.mock_breakdown" },
       },
       {
+        // Per-question review of a completed mock — distinct from the practice
+        // lesson the old "Review answers" button kicked off. Bookmarkable by
+        // session_id so the user can come back to the walkthrough later.
+        path: "mocks/:session_id/review",
+        name: "mock-review",
+        component: MockReviewPage,
+        meta: { requiresAuth: true, titleKey: "page_titles.mock_review" },
+      },
+      {
         path: "lesson/:session_id",
         name: "lesson",
         component: LessonPage,
@@ -199,10 +213,16 @@ const routes: RouteRecordRaw[] = [
         component: AdminLayout,
         meta: { requiresAuth: true, requiresAdmin: true },
         children: [
-          // Default admin landing — unified content browser is the daily workflow.
+          // Default admin landing — overview dashboard with at-a-glance counts.
           // Use a name-based redirect so the :lang param is preserved automatically;
-          // a string redirect like '/admin/content' would lose the lang prefix.
-          { path: "", redirect: { name: "admin-content" } },
+          // a string redirect like '/admin/overview' would lose the lang prefix.
+          { path: "", redirect: { name: "admin-overview" } },
+          {
+            path: "overview",
+            name: "admin-overview",
+            component: AdminOverviewPage,
+            meta: { titleKey: "page_titles.admin_overview" },
+          },
           {
             path: "content",
             name: "admin-content",
@@ -214,6 +234,14 @@ const routes: RouteRecordRaw[] = [
             name: "admin-users",
             component: AdminUsersPage,
             meta: { titleKey: "page_titles.admin_users" },
+          },
+          {
+            // Single-user admin detail. Deep-linkable from anywhere
+            // (promocode redemption modal, support tickets, etc).
+            path: "users/:user_id",
+            name: "admin-user-detail",
+            component: AdminUserDetailPage,
+            meta: { titleKey: "page_titles.admin_user_detail" },
           },
           {
             path: "localization",

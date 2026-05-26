@@ -52,7 +52,10 @@ export interface ProfileStats {
 }
 
 export interface UpdatePreferencesPayload {
-  reminder_hour_utc?: number;
+  reminder_hour_local?: number;
+  // IANA timezone (e.g. 'Asia/Tashkent'). Changing this shifts when the
+  // user's `reminder_hour_local` actually fires in real time.
+  timezone?: string;
   preferred_difficulty?: "easy" | "medium" | "hard" | null;
   lesson_size?: number;
   email_reminders_enabled?: boolean;

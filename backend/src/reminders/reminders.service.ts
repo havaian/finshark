@@ -9,19 +9,38 @@ import { UnsubscribeTokens } from "./unsubscribe.tokens";
 import { toUtcDateOnly } from "../lessons/srs";
 import type { UserRow } from "../users/user.types";
 
-// Default cron: hourly. Each run picks up users whose reminder_hour_utc
-// matches the current UTC hour. Override via REMINDER_CRON env.
+// Default cron: hourly. Each run picks up users whose current local hour
+// (computed from `reminder_hour_local` + their IANA `timezone`) matches the
+// real-world wall-clock hour in that timezone. Override via REMINDER_CRON env.
 // The @Cron decorator's expression is evaluated at class-load time, so we read
 // the env value at the top of the file. To DISABLE entirely, set REMINDER_CRON
 // to an obviously-impossible-but-valid expression like '0 0 31 2 *' (Feb 31),
 // or comment out the @Cron decorator below before building.
 //
-// Note: changed from '0 18 * * *' to '0 * * * *' when per-user reminder hours
-// were introduced. If you want every user to receive their email at the same
-// fixed hour regardless of their preference, override REMINDER_CRON and remove
-// the hour filter in runOnce (or simply set everyone's reminder_hour_utc to
-// the chosen hour via SQL).
+// History: started as '0 18 * * *' (single global UTC hour) → '0 * * * *'
+// when per-user `reminder_hour_utc` was introduced → still '0 * * * *' but
+// now interpreting the stored hour in the user's timezone after the
+// 20260526000001 rename.
 const CRON_EXPR = process.env.REMINDER_CRON?.trim() || "0 * * * *";
+
+// Current wall-clock hour (0..23) in the given IANA timezone. Uses
+// Intl.DateTimeFormat so DST and offset edges are handled correctly without
+// us doing any date math. An invalid timezone string would throw — we treat
+// users with bad timezone data as "skip this hour" rather than crash the cron
+// (the value is validated on write but we don't trust historical rows).
+function currentHourInTimezone(tz: string, now: Date = new Date()): number | null {
+  try {
+    const fmt = new Intl.DateTimeFormat("en-GB", {
+      timeZone: tz,
+      hour: "2-digit",
+      hour12: false,
+    });
+    // en-GB returns "HH" for the hour part; parseInt drops any leading zero.
+    return parseInt(fmt.format(now), 10);
+  } catch {
+    return null;
+  }
+}
 
 @Injectable()
 export class RemindersService {
@@ -43,18 +62,22 @@ export class RemindersService {
   }
 
   // Public for testability + manual triggering from an admin endpoint.
-  // When called from the cron we filter to users whose reminder_hour_utc
-  // matches the current UTC hour. When called from the admin trigger we
-  // bypass that filter (admin probably wants to test the whole pipeline).
+  // When called from the cron we keep users whose `reminder_hour_local`
+  // matches the current wall-clock hour in their timezone. When called from
+  // the admin trigger we bypass that filter (admin probably wants to test
+  // the whole pipeline).
   async runOnce(opts?: {
     allHours?: boolean;
   }): Promise<{ sent: number; skipped: number; failed: number }> {
     const today = toUtcDateOnly(new Date());
     const allRecipients = await this.users.findReminderRecipients(today);
-    const currentHour = new Date().getUTCHours();
+    const now = new Date();
     const recipients = opts?.allHours
       ? allRecipients
-      : allRecipients.filter((u) => u.reminder_hour_utc === currentHour);
+      : allRecipients.filter((u) => {
+          const hourLocal = currentHourInTimezone(u.timezone, now);
+          return hourLocal !== null && hourLocal === u.reminder_hour_local;
+        });
 
     let sent = 0;
     let skipped = 0;

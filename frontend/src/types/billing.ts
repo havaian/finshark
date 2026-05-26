@@ -91,6 +91,14 @@ export interface PromocodeRedemption {
   user_id: string;
   subscription_id: string | null;
   redeemed_at: string;
+  // Enriched by the admin drill-in endpoint (GET /admin/promocodes/:id/
+  // redemptions). Absent on shapes returned by other paths. The fields let
+  // the UI render a name + email + plan label instead of raw UUIDs.
+  user_display_name?: string;
+  user_email?: string;
+  subscription_plan_id?: string | null;
+  subscription_status?: string | null;
+  subscription_ends_at?: string | null;
 }
 
 // Shape returned by GET /api/me/entitlement. Premium users get `limit: null`

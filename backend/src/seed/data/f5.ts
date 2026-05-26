@@ -508,6 +508,34 @@ export const F5_PAPER: SeedPaper = {
           explanation_ru:
             "$40 000 уже потрачены — это понесённые (sunk) затраты, в анализе игнорируются. Релевантно сравнить $25 000 приростных затрат с $50 000 приростной выручки: приростная выгода $25 000.",
         },
+        {
+          type: "number_entry",
+          difficulty: "easy",
+          prompt_en:
+            "A product sells for $40, has variable cost of $24, and the business has fixed costs of $96,000 per year. What is the break-even point in units?",
+          prompt_ru:
+            "Продукт продаётся по $40, переменные затраты $24, постоянные затраты $96 000 в год. Сколько единиц нужно продать для безубыточности?",
+          correct_answer_en: "6000",
+          explanation_en:
+            "Contribution per unit = $40 − $24 = $16. Break-even units = fixed costs / contribution = $96,000 / $16 = 6,000 units.",
+          explanation_ru:
+            "Маржа на единицу = $40 − $24 = $16. Точка безубыточности = постоянные затраты / маржа = $96 000 / $16 = 6 000 единиц.",
+          acceptable_tolerance: 0,
+        },
+        {
+          type: "number_entry",
+          difficulty: "medium",
+          prompt_en:
+            "A company sells 12,000 units per year. Break-even is 9,000 units. What is the margin of safety as a percentage of budgeted sales? Enter the percentage (e.g. 25 for 25%).",
+          prompt_ru:
+            "Компания продаёт 12 000 единиц в год. Точка безубыточности — 9 000 единиц. Каков запас финансовой прочности в процентах от планового объёма? Введите процент (например, 25 — для 25%).",
+          correct_answer_en: "25",
+          explanation_en:
+            "Margin of safety = (budgeted − break-even) / budgeted × 100 = (12,000 − 9,000) / 12,000 × 100 = 25%.",
+          explanation_ru:
+            "Запас прочности = (план − точка безубыточности) / план × 100 = (12 000 − 9 000) / 12 000 × 100 = 25%.",
+          acceptable_tolerance: 0.5,
+        },
       ],
     },
     // ---------- D ----------
@@ -697,6 +725,34 @@ export const F5_PAPER: SeedPaper = {
           explanation_ru:
             "«Зазор» закладывается менеджерами под давлением показателей, искажая и планирование, и мотивацию. Противодействие — независимый бенчмаркинг и пересмотр с нуля.",
         },
+        {
+          type: "number_entry",
+          difficulty: "medium",
+          prompt_en:
+            "Standard material per unit: 3 kg at $8/kg. Actual production used 6,500 kg at a total cost of $54,600 to make 2,000 units. What is the material price variance? Enter a positive number for adverse, negative for favourable (in $).",
+          prompt_ru:
+            "Норматив: 3 кг материала по $8/кг на единицу. Фактически на 2 000 единиц израсходовано 6 500 кг общей стоимостью $54 600. Каково отклонение по цене материала? Введите положительное число для неблагоприятного, отрицательное — для благоприятного (в $).",
+          correct_answer_en: "2600",
+          explanation_en:
+            "Material price variance = (standard price − actual price) × actual qty. Actual price = $54,600 / 6,500 = $8.40/kg. Variance = ($8 − $8.40) × 6,500 = −$2,600 → $2,600 adverse.",
+          explanation_ru:
+            "Отклонение по цене = (нормативная цена − фактическая) × фактическое количество. Факт. цена = $54 600 / 6 500 = $8,40/кг. Отклонение = ($8 − $8,40) × 6 500 = −$2 600 → $2 600 неблагоприятное.",
+          acceptable_tolerance: 1,
+        },
+        {
+          type: "number_entry",
+          difficulty: "hard",
+          prompt_en:
+            "Standard usage: 3 kg per unit at $8/kg. Actual: 6,500 kg used to produce 2,000 units. What is the material usage variance (in $)? Enter positive for adverse, negative for favourable.",
+          prompt_ru:
+            "Норма: 3 кг на единицу по $8/кг. Факт: 6 500 кг на 2 000 единиц. Каково отклонение по использованию материала (в $)? Введите положительное число для неблагоприятного, отрицательное — для благоприятного.",
+          correct_answer_en: "4000",
+          explanation_en:
+            "Standard usage for actual output = 2,000 × 3 kg = 6,000 kg. Variance = (standard qty − actual qty) × standard price = (6,000 − 6,500) × $8 = −$4,000 → $4,000 adverse.",
+          explanation_ru:
+            "Нормативный расход для фактического выпуска = 2 000 × 3 = 6 000 кг. Отклонение = (норма − факт) × нормативная цена = (6 000 − 6 500) × $8 = −$4 000 → $4 000 неблагоприятное.",
+          acceptable_tolerance: 1,
+        },
       ],
     },
     // ---------- E ----------
@@ -855,6 +911,34 @@ export const F5_PAPER: SeedPaper = {
             "Internal transfers cancel out at the group level. Group contribution = external price − external costs = $40 − $10 (A\u2019s cost) − $20 (B\u2019s extra cost) = $10. The $15 transfer is just a paper allocation.",
           explanation_ru:
             "Внутренние трансферы на уровне группы взаимно сокращаются. Маржа группы = внешняя цена − внешние затраты = $40 − $10 (затраты A) − $20 (доп. затраты B) = $10. Цена $15 — лишь внутренняя оценка.",
+        },
+        {
+          type: "number_entry",
+          difficulty: "easy",
+          prompt_en:
+            "A division has operating profit of $480,000 on capital employed of $3,000,000. What is its Return on Investment (ROI) as a percentage?",
+          prompt_ru:
+            "У подразделения операционная прибыль $480 000 при используемом капитале $3 000 000. Каков ROI в процентах?",
+          correct_answer_en: "16",
+          explanation_en:
+            "ROI = operating profit / capital employed * 100 = 480,000 / 3,000,000 * 100 = 16%.",
+          explanation_ru:
+            "ROI = операционная прибыль / используемый капитал * 100 = 480 000 / 3 000 000 * 100 = 16%.",
+          acceptable_tolerance: 0.5,
+        },
+        {
+          type: "number_entry",
+          difficulty: "medium",
+          prompt_en:
+            "A division has operating profit of $480,000 on capital employed of $3,000,000. The group's cost of capital is 12%. What is the division's Residual Income (RI) in $?",
+          prompt_ru:
+            "У подразделения операционная прибыль $480 000 при используемом капитале $3 000 000. Стоимость капитала группы — 12%. Чему равен остаточный доход (RI) в $?",
+          correct_answer_en: "120000",
+          explanation_en:
+            "Capital charge = $3,000,000 * 12% = $360,000. RI = profit - capital charge = $480,000 - $360,000 = $120,000.",
+          explanation_ru:
+            "Плата за капитал = $3 000 000 * 12% = $360 000. RI = прибыль - плата за капитал = $480 000 - $360 000 = $120 000.",
+          acceptable_tolerance: 1,
         },
       ],
     },

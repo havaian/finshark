@@ -417,12 +417,19 @@ export class LessonsService {
     // difficulty (2/3/4). Streak bonus is applied at session-complete, not
     // per-attempt, so the per-attempt response shows the base XP a user can
     // mentally tally.
+    // Mocks award no XP. The exam-style flow is the reward — adding XP per
+    // attempt blurred the line between "study to learn" (lessons) and "test
+    // yourself" (mocks). Streak still ticks for mock completion (sessions
+    // count as activity); only the XP credit is zeroed here.
     const isFirstEncounter = prevState === null;
-    const xpForThisAttempt = xpForAttempt({
-      difficulty: question.difficulty,
-      was_correct: grade.was_correct,
-      is_first_encounter: isFirstEncounter,
-    });
+    const xpForThisAttempt =
+      session.mode === "mock"
+        ? 0
+        : xpForAttempt({
+            difficulty: question.difficulty,
+            was_correct: grade.was_correct,
+            is_first_encounter: isFirstEncounter,
+          });
     const newState = await this.sql.begin(async (tx) => {
       // 1) Record the attempt.
       // `as any`: postgres.js's JSONValue is overly strict; runtime accepts any JSON-serializable value.

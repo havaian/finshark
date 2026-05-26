@@ -4,11 +4,13 @@ import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { adminApi } from '../../api/admin.api';
 import { useAuthStore } from '../../stores/auth.store';
+import { useLocalePath } from '../../router/useLocalePath';
 import { fmtDate } from '../../i18n/dates';
 import type { PublicUser } from '../../types/auth';
 
 const { t } = useI18n();
 const auth = useAuthStore();
+const lp = useLocalePath();
 
 const users = ref<PublicUser[]>([]);
 const loading = ref(false);
@@ -89,14 +91,17 @@ onMounted(load);
 
     <div v-if="!loading" class="list-bordered">
       <div v-for="u in filtered" :key="u.id" class="list-row">
-        <div style="display: flex; flex-direction: column; gap: 4px;">
-          <div>
-            <span style="font-weight: 500;">{{ u.display_name }}</span>
-            <span v-if="u.is_admin" class="pill pill-accent" style="margin-left: 10px;">{{ t('admin.users.admin_badge')
-              }}</span>
+        <!-- Display block doubles as a link to the user-detail page. We don't
+             wrap the whole row in a RouterLink because the admin toggle
+             buttons need their own click target. -->
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+          <RouterLink :to="lp(`/admin/users/${u.id}`)" class="link-accent" style="font-weight: 500;">
+            {{ u.display_name }}
+            <span v-if="u.is_admin" class="pill pill-accent" style="margin-left: 10px;">{{
+              t('admin.users.admin_badge') }}</span>
             <span v-if="auth.user?.id === u.id" class="pill pill-grey" style="margin-left: 6px;">{{
               t('admin.users.you_badge') }}</span>
-          </div>
+          </RouterLink>
           <div class="dim text-sm">{{ u.email }}</div>
           <div class="mono text-xs muted">
             {{ t('dashboard.streak') }} {{ u.streak_count }} · {{ t('dashboard.xp') }} {{ u.xp }} · {{

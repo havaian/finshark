@@ -26,10 +26,7 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
 import { PromocodesRepository } from "./promocodes.repository";
 import { PromocodesService } from "./promocodes.service";
-import {
-  toPublicPromocode,
-  toPublicPromocodeRedemption,
-} from "./billing.types";
+import { toPublicPromocode } from "./billing.types";
 
 // DTOs are inline so the admin surface stays contained in one file. Same
 // pattern as admin-whitelist.controller.ts; only auth/profile have shared
@@ -135,15 +132,31 @@ export class AdminPromocodesController {
   }
 
   // Per-code redemption list — who used it, when, and which subscription it
-  // anchored. Admin UI shows this on the promocode detail page.
+  // anchored. Returns enriched rows (user display_name + email, plan_id) so
+  // the admin UI can show a name + link to the user page instead of raw
+  // UUIDs. The bare row shape is still used internally by the redeem path;
+  // only this admin-facing GET uses the JOIN variant.
   @Get(":id/redemptions")
   async listRedemptions(@Param("id") id: string) {
     const promo = await this.repo.findById(id);
     if (!promo) throw new NotFoundException("promocode not found");
-    const rows = await this.repo.findRedemptionsForCode(id);
+    const rows = await this.repo.findRedemptionsForCodeWithDetails(id);
     return {
       promocode: toPublicPromocode(promo),
-      redemptions: rows.map(toPublicPromocodeRedemption),
+      redemptions: rows.map((r) => ({
+        id: r.id,
+        promocode_id: r.promocode_id,
+        user_id: r.user_id,
+        subscription_id: r.subscription_id,
+        redeemed_at: r.redeemed_at.toISOString(),
+        user_display_name: r.user_display_name,
+        user_email: r.user_email,
+        subscription_plan_id: r.subscription_plan_id,
+        subscription_status: r.subscription_status,
+        subscription_ends_at: r.subscription_ends_at
+          ? r.subscription_ends_at.toISOString()
+          : null,
+      })),
     };
   }
 }

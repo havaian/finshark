@@ -1375,3 +1375,18 @@ onMounted(reloadTree);
 
   </div>
 </template>
+
+<style>
+.row {
+    display: grid;
+    margin: 0 !important;
+}
+
+.row button {
+  text-align: right !important;
+}
+
+.content-tree {
+  height: fit-content;
+}
+</style>

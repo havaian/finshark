@@ -42,6 +42,30 @@ export interface SendTestResult {
   resolved_lang: "en" | "ru";
 }
 
+export type BlastAudience =
+  | "all"
+  | "premium"
+  | "free"
+  | "reminders_enabled"
+  | "ids";
+
+export interface BlastInput {
+  audience: BlastAudience;
+  user_ids?: string[];
+  lang?: "en" | "ru";
+  extra_variables?: Record<string, string | number>;
+  ignore_opt_out?: boolean;
+  max_recipients?: number;
+}
+
+export interface BlastResult {
+  recipients_targeted: number;
+  sent: number;
+  skipped_opt_out: number;
+  failed: number;
+  sample_recipients: string[];
+}
+
 // All endpoints below require an authenticated admin. The user's totp_secret
 // must be set (AdminWith2faGuard) — non-2FA admins are bounced to the
 // enrollment wizard by the router guard before they get here.
@@ -78,6 +102,17 @@ export const emailTemplatesApi = {
     (
       await api.post<SendTestResult>(
         `/admin/email-templates/${encodeURIComponent(key)}/send-test`,
+        input
+      )
+    ).data,
+
+  // Mass-send to a filtered audience. Personalised variables (display_name,
+  // streak, unsubscribe_url, etc.) are injected per-recipient by the backend;
+  // `extra_variables` is merged on top for campaign-specific overrides.
+  blast: async (key: string, input: BlastInput): Promise<BlastResult> =>
+    (
+      await api.post<BlastResult>(
+        `/admin/email-templates/${encodeURIComponent(key)}/blast`,
         input
       )
     ).data,

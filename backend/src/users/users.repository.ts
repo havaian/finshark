@@ -8,7 +8,7 @@ const USER_COLS = `
   id, email, google_sub, display_name, streak_count, streak_freezes_remaining,
   xp, level,
   last_active_date, is_admin, email_reminders_enabled,
-  reminder_hour_utc, preferred_difficulty, lesson_size,
+  reminder_hour_local, preferred_difficulty, lesson_size,
   bg_level, time_budget_minutes, preferred_paper_id, onboarded_at,
   leaderboard_opt_in,
   totp_secret, totp_enrolled_at,
@@ -145,7 +145,8 @@ export class UsersRepository {
   async updatePreferences(
     id: string,
     input: {
-      reminder_hour_utc?: number;
+      reminder_hour_local?: number;
+      timezone?: string;
       preferred_difficulty?: "easy" | "medium" | "hard" | null;
       lesson_size?: number;
       email_reminders_enabled?: boolean;
@@ -153,8 +154,9 @@ export class UsersRepository {
     }
   ): Promise<UserRow | null> {
     const sets: Record<string, unknown> = {};
-    if (input.reminder_hour_utc !== undefined)
-      sets.reminder_hour_utc = input.reminder_hour_utc;
+    if (input.reminder_hour_local !== undefined)
+      sets.reminder_hour_local = input.reminder_hour_local;
+    if (input.timezone !== undefined) sets.timezone = input.timezone;
     if (input.preferred_difficulty !== undefined)
       sets.preferred_difficulty = input.preferred_difficulty;
     if (input.lesson_size !== undefined) sets.lesson_size = input.lesson_size;

@@ -262,7 +262,7 @@ onMounted(loadUsersAndPlans);
     <div class="row mt-6" style="gap: 24px; align-items: stretch; flex-wrap: wrap;">
 
       <!-- LEFT: user picker -->
-      <section class="card" style="flex: 0 0 320px; min-width: 280px;">
+      <section class="card" id="first-card" style="flex: 0 0 320px; min-width: 280px;">
         <input v-model="filter" type="text" :placeholder="t('admin.subscriptions.pick_user_ph')" />
 
         <p v-if="usersLoading" class="dim text-sm mt-2">{{ t('common.loading') }}</p>
@@ -468,5 +468,9 @@ onMounted(loadUsersAndPlans);
   .card {
     min-width: 100% !important;
   }
+}
+
+#first-card {
+  height: fit-content;
 }
 </style>

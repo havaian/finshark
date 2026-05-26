@@ -35,6 +35,24 @@ export class AdminUsersController {
     return rows.map(toPublicUser);
   }
 
+  // Single-user fetch for the admin user-detail page. The shape includes
+  // `created_at` so the page can show "joined …" — the public user shape
+  // strips it because the dashboard / leaderboard don't need it.
+  @Get(":id")
+  async getOne(@Param("id") id: string) {
+    const user = await this.users.findById(id);
+    if (!user) throw new NotFoundException("user not found");
+    return {
+      ...toPublicUser(user),
+      created_at: user.created_at.toISOString(),
+      updated_at: user.updated_at.toISOString(),
+      timezone: user.timezone,
+      last_active_date: user.last_active_date
+        ? user.last_active_date.toISOString().slice(0, 10)
+        : null,
+    };
+  }
+
   // PATCH /api/admin/users/:id/admin   { is_admin: boolean }
   // Guards:
   //   - 404 if user not found

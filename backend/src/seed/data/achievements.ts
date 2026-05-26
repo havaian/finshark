@@ -53,10 +53,15 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     description_ru: "Завершите уроки.",
     icon: "📚",
     sort_order: 10,
+    // Tuned for early momentum: the first tier should unlock within the
+    // first solid week of study (≈5 lessons), not gate a Trainee badge
+    // behind a 10-lesson commitment. Top end stays ambitious so the
+    // achievement still has a long tail. See the gamification notes in
+    // the matching migration for the previous values (10 / 50 / 200).
     levels: [
-      { level: 1, threshold: 10, ...LEVEL_NAMES.trainee },
-      { level: 2, threshold: 50, ...LEVEL_NAMES.affiliate },
-      { level: 3, threshold: 200, ...LEVEL_NAMES.member },
+      { level: 1, threshold: 5, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 30, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 150, ...LEVEL_NAMES.member },
     ],
   },
   {
@@ -95,10 +100,13 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     description_ru: "Завершите уроки со 100% точностью.",
     icon: "💎",
     sort_order: 40,
+    // Tier 1 dropped from 5 → 3 so users who run a string of easy/recall
+    // lessons feel the achievement engage. Top end stays steep — 80 perfect
+    // lessons is still a real flex.
     levels: [
-      { level: 1, threshold: 5, ...LEVEL_NAMES.trainee },
-      { level: 2, threshold: 25, ...LEVEL_NAMES.affiliate },
-      { level: 3, threshold: 100, ...LEVEL_NAMES.member },
+      { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
+      { level: 2, threshold: 20, ...LEVEL_NAMES.affiliate },
+      { level: 3, threshold: 80, ...LEVEL_NAMES.member },
     ],
   },
   {
@@ -146,30 +154,9 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     ],
   },
 
-  // ── Quality (not just volume) ──────────────────────────────────────
-  // Rewards consistent accuracy rather than raw activity. Stays at 0 until
-  // the user has cleared a minimum-attempts gate (see
-  // ROLLING_ACCURACY_MIN_ATTEMPTS in achievements.rules.ts) so a single
-  // lucky answer can't unlock it on day one.
-  {
-    code: "accuracy_rolling_30",
-    name_en: "Rolling 30-day accuracy",
-    name_ru: "Точность за 30 дней",
-    // Description has to do the heavy lifting because the progress bar shows
-    // a raw "70 / 75" (your current %) vs (next-tier %). Make both the
-    // metric and the activation gate explicit: only counts the last 30
-    // days, and at least 20 attempts are required before progress starts
-    // accruing — matches ROLLING_ACCURACY_MIN_ATTEMPTS in achievements.rules.ts.
-    description_en:
-      "Your % correct across the last 30 days. Needs at least 20 attempts in that window to start counting. Unlock the next tier by hitting 60% → 75% → 90%.",
-    description_ru:
-      "Ваш % правильных ответов за последние 30 дней. Нужно минимум 20 ответов за этот срок. Открывайте следующий уровень при 60% → 75% → 90%.",
-    icon: "🎯",
-    sort_order: 200,
-    levels: [
-      { level: 1, threshold: 60, ...LEVEL_NAMES.trainee },
-      { level: 2, threshold: 75, ...LEVEL_NAMES.affiliate },
-      { level: 3, threshold: 90, ...LEVEL_NAMES.member },
-    ],
-  },
+  // Note: the `accuracy_rolling_30` achievement was removed (migration
+  // 20260526000002_drop_accuracy_rolling_30). The metric was difficult for
+  // users to read at a glance (the progress bar showed "current % / target %"
+  // with a hidden 20-attempt activation gate), and the catalog already
+  // rewards quality via `perfect_lessons`.
 ];

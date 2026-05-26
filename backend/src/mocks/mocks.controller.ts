@@ -39,6 +39,19 @@ export class MocksController {
     return this.mocks.breakdown(current.sub, session_id);
   }
 
+  // GET /mocks/:id/answers → per-question review payload (prompt, options,
+  // correct answer, explanation, user's answer, per-option why-wrong). The
+  // frontend renders this as a stack of read-only review cards — distinct
+  // from POST /:id/review which spins up a re-practice lesson session.
+  @Get(":session_id/answers")
+  answers(
+    @CurrentUser() current: AccessTokenPayload,
+    @Lang() lang: LangType,
+    @Param("session_id") session_id: string
+  ) {
+    return this.mocks.answers(current.sub, session_id, lang);
+  }
+
   // POST /mocks/:id/review → spin up a regular lesson session preloaded with
   // the wrong-answer questions from this mock. Returns the same shape as
   // start-mock so the frontend can use the same UI; mode is 'lesson'.

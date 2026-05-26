@@ -205,24 +205,29 @@
 .activity-months {
     position: relative;
     height: 18px;
-    /* Indent past the weekday-label column so month labels line up with the
-     grid cells, not the labels. */
-    margin-left: 28px;
     margin-bottom: 4px;
     font-size: 11px;
     color: var(--text-mute);
-    overflow: hidden;
+    /* Width is set inline from Vue to (weeks * col-width) so month labels
+       sit inside a box that scrolls together with the grid below. Without
+       a finite width the labels would render in document order and overlap
+       the grid (since they're absolutely positioned but stretched-parent). */
 }
 
 .activity-month-label {
     position: absolute;
     top: 0;
     white-space: nowrap;
-    /* Hide month labels too close to the start (would overlap the previous one). */
+    /* MIN_LABEL_COL_GAP in Vue ensures labels never land less than ~45px
+       apart; that's the actual overlap guard, the CSS just renders. */
 }
 
 .activity-body {
     position: relative;
+    /* Reserve the left gutter for absolute-positioned weekday labels. The
+       gutter is part of `.activity-body` (NOT the scroll container) so it
+       stays fixed when the user scrolls horizontally. */
+    padding-left: 28px;
 }
 
 .activity-weekdays {
@@ -242,12 +247,17 @@
     line-height: 1;
 }
 
+/* Single horizontal scroller holding the month labels and the grid. Both
+   are inline-block-equivalent children laid out vertically; they share an
+   `overflow-x: auto` so scrolling moves them as one unit. */
+.activity-scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
 .activity-heatmap {
     display: flex;
     gap: var(--heat-gap);
-    margin-left: 28px;
-    overflow-x: auto;
-    padding-bottom: 4px;
 }
 
 .activity-col {
@@ -430,22 +440,41 @@
    27) Theory primer (pre-lesson Kaplan-style bites)
    ----------------------------------------------------------- */
 
-.theory-intro {
-    /* Need a positioning context for the floating "Skip recap" button. */
-    position: relative;
+/* `.theory-intro` previously needed `position: relative` as the anchor for
+   a floating sticky button; that button moved out to `.theory-skip-bar`,
+   so the class itself has no styles left — it stays only as a selector for
+   future tweaks. */
+
+/* Skip-recap bar. Sticky to the top of the viewport so it stays visible as
+   the user scrolls the theory bites, but lives OUTSIDE the recap card so it
+   never overlaps the content. Right-aligned to keep the visual weight on the
+   "next action" side; matches the lesson page's primary-action placement. */
+.theory-skip-bar {
+    position: sticky;
+    top: 8px;
+    z-index: 2;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
 }
 
-/* Floating "Skip recap" button anchored to the theory card. Keeps the user's
-   most likely next action (start the lesson) reachable without scrolling all
-   the way past the theory bites. position: sticky inside the card keeps the
-   button glued near the top of the user's viewport as they scroll the recap
-   contents. */
-.theory-skip {
-    position: sticky;
-    top: 16px;
-    float: right;
-    z-index: 2;
-    margin: 0 0 12px 12px;
+/* Wrap-up state shown between the last answer and the summary. Centred so
+   the user can clearly see "we're working on it" rather than re-seeing the
+   last question they just answered. */
+.lesson-wrapup {
+    text-align: center;
+    padding: 48px 28px;
+}
+
+.lesson-wrapup-spinner {
+    font-size: 40px;
+    margin-bottom: 12px;
+    animation: lesson-wrapup-bob 1.4s ease-in-out infinite;
+}
+
+@keyframes lesson-wrapup-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
 }
 
 .theory-list {

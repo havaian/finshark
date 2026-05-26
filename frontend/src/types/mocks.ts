@@ -36,3 +36,36 @@ export interface MockBreakdown {
   // to enable/disable the "Start review session" button (hide if empty).
   wrong_question_ids: string[];
 }
+
+// Per-question review payload. Returned by GET /mocks/:id/answers.
+export interface MockAnswerOption {
+  key: string;
+  text: string;
+  why_wrong: string | null;
+}
+
+export interface MockAnswerEntry {
+  position: number;
+  question_id: string;
+  type: "mcq" | "number_entry";
+  difficulty: "easy" | "medium" | "hard";
+  prompt: string;
+  options: MockAnswerOption[] | null;
+  correct_answer: string;
+  explanation: string;
+  concept_bite: string | null;
+  acceptable_tolerance: number | null;
+  lo_code: string;
+  lo_title: string;
+  // null when the user didn't reach this question (timeout etc).
+  user_answer: string | null;
+  was_correct: boolean | null;
+}
+
+export interface MockAnswers {
+  session_id: string;
+  paper_id: string;
+  total: number;
+  correct: number;
+  entries: MockAnswerEntry[];
+}

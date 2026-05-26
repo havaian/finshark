@@ -152,6 +152,20 @@ export class ProfileController {
     @CurrentUser() current: AccessTokenPayload,
     @Body() dto: UpdatePreferencesDto
   ) {
+    // The DTO's regex catches obvious shape errors, but only the runtime can
+    // tell us whether the IANA name actually exists. We do the canonical
+    // check here so a typo like "Asia/Foo" is rejected before the DB write
+    // — otherwise the bad value would propagate to the heart-pool refill
+    // SQL (`NOW() AT TIME ZONE timezone`) and surface as a 500 there.
+    if (dto.timezone !== undefined) {
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: dto.timezone });
+      } catch {
+        throw new BadRequestException(
+          `unknown IANA timezone: ${dto.timezone}`
+        );
+      }
+    }
     const updated = await this.users.updatePreferences(current.sub, dto);
     if (!updated) throw new NotFoundException("user not found");
     return toPublicUser(updated);

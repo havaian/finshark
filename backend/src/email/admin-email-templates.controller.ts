@@ -13,20 +13,30 @@ import {
 } from "@nestjs/common";
 import {
   ArrayMaxSize,
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsEmail,
   IsIn,
+  IsInt,
+  IsObject,
   IsOptional,
   IsString,
+  IsUUID,
   Length,
+  Max,
   MaxLength,
+  Min,
   ValidateIf,
 } from "class-validator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { EmailTemplatesRepository } from "./email-templates.repository";
 import { EmailTemplatesService } from "./email-templates.service";
+import {
+  EmailBlastService,
+  type BlastAudience,
+} from "./email-blast.service";
 import { toPublicEmailTemplate } from "./email-templates.types";
 
 // Admin CRUD over email_templates + a "send test" endpoint so admins can
@@ -117,12 +127,59 @@ class SendTestDto {
   variables?: Record<string, string | number>;
 }
 
+const BLAST_AUDIENCES: BlastAudience[] = [
+  "all",
+  "premium",
+  "free",
+  "reminders_enabled",
+  "ids",
+];
+
+class BlastDto {
+  @IsIn(BLAST_AUDIENCES)
+  audience!: BlastAudience;
+
+  // Required when audience='ids'. Bounded so a paste-bomb doesn't cause the
+  // service to allocate huge arrays.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5000)
+  @ArrayUnique()
+  @IsUUID("all", { each: true })
+  user_ids?: string[];
+
+  @IsOptional()
+  @IsIn(["en", "ru"])
+  lang?: "en" | "ru";
+
+  // Admin-supplied extras merged on top of per-user vars. Keys constrained
+  // by EmailBlastService — invalid keys are simply ignored at render time.
+  @IsOptional()
+  @IsObject()
+  extra_variables?: Record<string, string | number>;
+
+  // Reserved for legally-required transactional emails (account close,
+  // billing receipts). Default false — most blasts respect opt-out.
+  @IsOptional()
+  @IsBoolean()
+  ignore_opt_out?: boolean;
+
+  // Safety cap per call. Backend has its own conservative default; this
+  // lets ops raise it for a known-large legitimate blast.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(50000)
+  max_recipients?: number;
+}
+
 @Controller("admin/email-templates")
 @UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminEmailTemplatesController {
   constructor(
     private readonly repo: EmailTemplatesRepository,
-    private readonly templates: EmailTemplatesService
+    private readonly templates: EmailTemplatesService,
+    private readonly blast: EmailBlastService
   ) {}
 
   @Get()
@@ -206,5 +263,26 @@ export class AdminEmailTemplatesController {
       rendered_body: rendered.body,
       resolved_lang: rendered.lang,
     };
+  }
+
+  // Mass-send this template to an audience filter ('all', 'premium',
+  // 'free', 'reminders_enabled', or a list of user_ids). Renders each
+  // recipient with their personalised variables (display_name, streak,
+  // unsubscribe_url, etc.) and sends through the standard EmailService.
+  // The blast is synchronous within the request — for very large lists
+  // the throttle stretches the response time, but the result payload
+  // gives the admin a clear sent/failed/skipped breakdown.
+  @Post(":key/blast")
+  @HttpCode(HttpStatus.OK)
+  async sendBlast(@Param("key") key: string, @Body() dto: BlastDto) {
+    return this.blast.run({
+      templateKey: key,
+      audience: dto.audience,
+      user_ids: dto.user_ids,
+      lang: dto.lang,
+      extra_variables: dto.extra_variables,
+      ignore_opt_out: dto.ignore_opt_out,
+      max_recipients: dto.max_recipients,
+    });
   }
 }

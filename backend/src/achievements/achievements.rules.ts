@@ -33,18 +33,7 @@ export interface AchievementMetrics {
   // deepest into. Cross-paper breadth is rewarded by the 'paper_explorer'
   // badge instead.
   paper_specialist: number;
-  // Rolling-30-day accuracy as an integer percentage (0-100). Gated to 0
-  // until the user has ROLLING_ACCURACY_MIN_ATTEMPTS attempts in the window
-  // so a new user with one lucky right answer doesn't insta-unlock 100%.
-  // See the SQL below for the gating math.
-  accuracy_rolling_30: number;
 }
-
-// Minimum attempt volume inside the 30-day window before accuracy_rolling_30
-// is computed. Below this, the metric reports 0 so the achievement stays
-// locked. Tuned for a target learner doing 3-5 lessons/week — 20 attempts
-// is roughly one solid week of practice.
-export const ROLLING_ACCURACY_MIN_ATTEMPTS = 20;
 
 // Maps catalog code → which metric key is the progress value. Keeping this
 // mapping explicit means an evaluator pass over the catalog reads the right
@@ -56,7 +45,6 @@ export const METRICS_BY_CODE: Record<string, keyof AchievementMetrics> = {
   perfect_lessons: "perfect_lessons",
   mocks_passed: "mocks_passed",
   paper_specialist: "paper_specialist",
-  accuracy_rolling_30: "accuracy_rolling_30",
 };
 
 @Injectable()
@@ -77,11 +65,6 @@ export class AchievementMetricsRepository {
     // once as a CTE and pivoted into individual columns via FILTER. This is
     // cheaper than four near-identical subqueries and keeps the join graph
     // visible in one place.
-    //
-    // accuracy_rolling_30 uses a CASE-gated NULLIF so the integer divide
-    // returns 0 (not NULL) when the user is below ROLLING_ACCURACY_MIN_ATTEMPTS,
-    // which matches the interface contract.
-    const minAttempts = ROLLING_ACCURACY_MIN_ATTEMPTS;
     const rows = await this.sql<
       Array<{
         lessons_completed: number;
@@ -90,7 +73,6 @@ export class AchievementMetricsRepository {
         perfect_lessons: number;
         mocks_passed: number;
         paper_specialist: number;
-        accuracy_rolling_30: number;
       }>
     >`
       WITH per_paper AS (
@@ -106,14 +88,6 @@ export class AchievementMetricsRepository {
           AND s.mode = 'lesson'
           AND s.completed_at IS NOT NULL
         GROUP BY p.code
-      ),
-      rolling AS (
-        SELECT
-          COUNT(*)::int                                                   AS total_attempts,
-          SUM(CASE WHEN was_correct THEN 1 ELSE 0 END)::int               AS correct_attempts
-        FROM attempts
-        WHERE user_id = ${user_id}
-          AND answered_at >= NOW() - INTERVAL '30 days'
       )
       SELECT
         COALESCE(u.xp, 0)            AS xp_earned,
@@ -143,14 +117,7 @@ export class AchievementMetricsRepository {
             AND s.question_count > 0
             AND (s.correct_count::float / s.question_count::float) >= 0.5
         )                            AS mocks_passed,
-        COALESCE((SELECT MAX(sessions) FROM per_paper), 0)::int AS paper_specialist,
-        (
-          SELECT CASE
-            WHEN r.total_attempts < ${minAttempts} THEN 0
-            ELSE (r.correct_attempts * 100 / NULLIF(r.total_attempts, 0))
-          END
-          FROM rolling r
-        )                            AS accuracy_rolling_30
+        COALESCE((SELECT MAX(sessions) FROM per_paper), 0)::int AS paper_specialist
       FROM users u
       WHERE u.id = ${user_id}
     `;
@@ -167,7 +134,6 @@ export class AchievementMetricsRepository {
         perfect_lessons: 0,
         mocks_passed: 0,
         paper_specialist: 0,
-        accuracy_rolling_30: 0,
       };
     }
     return r;

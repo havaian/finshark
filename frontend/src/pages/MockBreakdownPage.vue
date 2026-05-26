@@ -132,13 +132,21 @@ onMounted(load);
           </ul>
         </section>
 
-        <!-- Actions: review wrongs (if any), or back to dashboard. -->
-        <div class="row mt-6" style="gap: 12px; justify-content: flex-end;">
+        <!-- Actions:
+             - "Review answers" → MockReviewPage (read-only per-question walkthrough)
+             - "Practice wrong answers" → existing flow that spins up a lesson session
+             - "Done" → back to dashboard
+             The breakdown page is the post-mock landing; the review page is
+             where users actually inspect what they got wrong. -->
+        <div class="row mt-6" style="gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
           <RouterLink :to="lp(`/dashboard`)" class="btn btn-ghost">
             {{ t('mocks.done_btn') }}
           </RouterLink>
+          <RouterLink :to="lp(`/mocks/${sessionId}/review`)" class="btn btn-ghost">
+            {{ t('mocks.review_answers_btn') }}
+          </RouterLink>
           <button v-if="hasWrongs" class="btn btn-primary" :disabled="startingReview" @click="onStartReview">
-            {{ startingReview ? t('mocks.review_starting') : t('mocks.review_btn') }}
+            {{ startingReview ? t('mocks.review_starting') : t('mocks.review_practice_btn') }}
           </button>
         </div>
       </template>

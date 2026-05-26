@@ -19,7 +19,14 @@ import type {
   LessonQuestion,
   LessonTheoryBite,
 } from "../lessons/lessons.service";
-import type { Lang } from "../content/content.types";
+import type {
+  Lang,
+  LocalizedMcqOption,
+  QuestionDifficulty,
+  QuestionType,
+  McqOption,
+} from "../content/content.types";
+import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
 
 // Free-tier monthly mock quota. Premium = unlimited. Single edit if product
 // later wants 2/month free.
@@ -66,6 +73,36 @@ export interface MockBreakdown {
   // Question IDs the user got wrong, in queue order. The frontend uses these
   // to feed POST /mocks/:id/review.
   wrong_question_ids: string[];
+}
+
+// One row per question in the mock queue, in queue order. Includes the
+// canonical answer + explanation + per-option why-wrong text so the
+// frontend can render a read-only review UI (no resubmission). user_answer
+// + was_correct are null when the user didn't reach this question (e.g.
+// time ran out before they got there).
+export interface MockAnswerEntry {
+  position: number;
+  question_id: string;
+  type: QuestionType;
+  difficulty: QuestionDifficulty;
+  prompt: string;
+  options: LocalizedMcqOption[] | null;
+  correct_answer: string;
+  explanation: string;
+  concept_bite: string | null;
+  acceptable_tolerance: number | null;
+  lo_code: string;
+  lo_title: string;
+  user_answer: string | null;
+  was_correct: boolean | null;
+}
+
+export interface MockAnswers {
+  session_id: string;
+  paper_id: string;
+  total: number;
+  correct: number;
+  entries: MockAnswerEntry[];
 }
 
 @Injectable()
@@ -222,6 +259,128 @@ export class MocksService {
       correct,
       per_lo,
       wrong_question_ids: wrongRows.map((r) => r.question_id),
+    };
+  }
+
+  // GET /mocks/:id/answers — full per-question review payload. Same access
+  // checks as breakdown(): mock-mode session, completed, owned by user. The
+  // response is a flat list ordered by queue position so the frontend can
+  // render a stack of "review cards" with the user's answer + the correct
+  // answer + the explanation. Questions the user didn't reach come back with
+  // user_answer = null / was_correct = null so the UI can mark them
+  // "unanswered".
+  async answers(
+    user_id: string,
+    session_id: string,
+    lang: Lang
+  ): Promise<MockAnswers> {
+    const session = await this.sessions.findById(session_id);
+    if (!session) throw new NotFoundException("session not found");
+    if (session.mode !== "mock")
+      throw new NotFoundException("not a mock session");
+    if (session.user_id !== user_id)
+      throw new ForbiddenException("session belongs to another user");
+    if (!session.completed_at)
+      throw new BadRequestException("mock not completed yet");
+    if (!session.paper_id)
+      throw new BadRequestException(
+        "mock has no paper_id — should not happen given chk_mock_has_paper"
+      );
+
+    type Row = {
+      position: number;
+      question_id: string;
+      q_type: QuestionType;
+      difficulty: QuestionDifficulty;
+      prompt_en: string;
+      prompt_ru: string | null;
+      options: McqOption[] | null;
+      correct_answer: string;
+      explanation_en: string;
+      explanation_ru: string | null;
+      concept_bite_en: string | null;
+      concept_bite_ru: string | null;
+      acceptable_tolerance: number | null;
+      lo_code: string;
+      lo_title_en: string;
+      lo_title_ru: string | null;
+      user_answer: string | null;
+      was_correct: boolean | null;
+    };
+
+    // LEFT JOIN attempts so questions the user never reached still appear in
+    // the list (with user_answer = NULL, was_correct = NULL). Ordering by
+    // lsq.position keeps the review in the same order the user saw them.
+    const rows = await this.sql<Row[]>`
+      SELECT
+        lsq.position::int                              AS position,
+        q.id::text                                     AS question_id,
+        q.type                                         AS q_type,
+        q.difficulty                                   AS difficulty,
+        q.prompt_en                                    AS prompt_en,
+        q.prompt_ru                                    AS prompt_ru,
+        q.options                                      AS options,
+        q.correct_answer                               AS correct_answer,
+        q.explanation_en                               AS explanation_en,
+        q.explanation_ru                               AS explanation_ru,
+        q.concept_bite_en                              AS concept_bite_en,
+        q.concept_bite_ru                              AS concept_bite_ru,
+        q.acceptable_tolerance                         AS acceptable_tolerance,
+        lo.code                                        AS lo_code,
+        lo.title_en                                    AS lo_title_en,
+        lo.title_ru                                    AS lo_title_ru,
+        a.user_answer                                  AS user_answer,
+        a.was_correct                                  AS was_correct
+      FROM lesson_session_questions lsq
+      JOIN questions q             ON q.id = lsq.question_id
+      JOIN learning_objectives lo  ON lo.id = q.lo_id
+      LEFT JOIN attempts a         ON a.session_id = lsq.session_id
+                                    AND a.question_id = lsq.question_id
+      WHERE lsq.session_id = ${session_id}
+      ORDER BY lsq.position ASC
+    `;
+
+    const entries: MockAnswerEntry[] = rows.map((r) => ({
+      position: r.position,
+      question_id: r.question_id,
+      type: r.q_type,
+      difficulty: r.difficulty,
+      prompt: pickLocalized(r.prompt_en, r.prompt_ru, lang),
+      options:
+        r.options === null
+          ? null
+          : r.options.map((opt) => ({
+              key: opt.key,
+              text: pickLocalized(opt.text_en, opt.text_ru, lang),
+              why_wrong: pickLocalizedNullable(
+                opt.why_wrong_en ?? null,
+                opt.why_wrong_ru ?? null,
+                lang
+              ),
+            })),
+      correct_answer: r.correct_answer,
+      explanation: pickLocalized(r.explanation_en, r.explanation_ru, lang),
+      concept_bite: pickLocalizedNullable(
+        r.concept_bite_en,
+        r.concept_bite_ru,
+        lang
+      ),
+      acceptable_tolerance: r.acceptable_tolerance,
+      lo_code: r.lo_code,
+      lo_title: pickLocalized(r.lo_title_en, r.lo_title_ru, lang),
+      user_answer: r.user_answer,
+      was_correct: r.was_correct,
+    }));
+
+    const total = entries.length;
+    const correct = entries.filter((e) => e.was_correct === true).length;
+
+    return {
+      session_id,
+      paper_id: session.paper_id,
+      total,
+      correct,
+      entries,
     };
   }
 

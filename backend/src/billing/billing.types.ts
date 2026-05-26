@@ -275,6 +275,14 @@ export interface PublicPromocodeRedemption {
   user_id: string;
   subscription_id: string | null;
   redeemed_at: string;
+  // Enriched fields (set by the admin drill-in endpoint; null on shapes that
+  // come from the bare row). The admin UI uses display_name + email so the
+  // redemption list isn't a wall of UUIDs.
+  user_display_name?: string;
+  user_email?: string;
+  subscription_plan_id?: string | null;
+  subscription_status?: string | null;
+  subscription_ends_at?: string | null;
 }
 
 export function toPublicPromocodeRedemption(

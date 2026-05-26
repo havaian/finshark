@@ -167,16 +167,25 @@ async function load() {
     me.value = meData;
     stats.value = statsData;
     newName.value = meData.display_name;
-    // Charts need the DOM to be there first.
+    // Important: drop the loading guard BEFORE nextTick so the inner
+    // template (which is gated on !loading && me && stats) actually mounts
+    // the chart canvases. The previous flow only flipped loading to false
+    // in `finally`, AFTER renderCharts() — so every canvas ref was null
+    // when we tried to attach a Chart, and the accuracy / difficulty /
+    // type charts silently never rendered.
+    loading.value = false;
     await nextTick();
     renderCharts();
+    // After the heatmap renders, snap its horizontal scroll to the right
+    // edge so the user lands on today's column. Otherwise the 12-month
+    // window opens scrolled to ~12 months ago.
+    void scrollHeatmapToLatest();
     // Don't block the page on these — they show up as soon as they arrive.
     void badgesPromise;
     void achievementsPromise;
     void subscriptionsPromise;
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to load profile';
-  } finally {
     loading.value = false;
   }
 }
@@ -462,23 +471,32 @@ const heatmapData = computed<{ weeks: HeatCell[][]; months: MonthLabel[] }>(() =
   const weeks: HeatCell[][] = [];
   const months: MonthLabel[] = [];
   let lastMonth = -1;
+  let lastLabelCol = -Infinity;
   const cursor = new Date(start);
+
+  // Minimum column gap between month labels so abbreviated names ("May",
+  // "Jun") don't overlap when month boundaries land in adjacent columns.
+  // 3 columns is enough headroom for a 3-letter label at our smallest cell
+  // size (12px cell + 3px gap = 15px/col → 45px gap).
+  const MIN_LABEL_COL_GAP = 3;
 
   for (let w = 0; w < weeksToShow; w++) {
     const week: HeatCell[] = [];
 
-    // Record a month label if the column's first day is in a new month.
-    // We anchor labels to the first day of the column to avoid two labels
-    // landing in adjacent columns when a month boundary falls mid-week.
+    // Record a month label if the column's first day is in a new month AND
+    // there's enough horizontal space since the last label. The gap check
+    // is what stops "May / Jun" from rendering on top of each other when
+    // June's first column lands one or two columns after May's first.
     const colMonth = cursor.getUTCMonth();
-    if (colMonth !== lastMonth) {
+    if (colMonth !== lastMonth && w - lastLabelCol >= MIN_LABEL_COL_GAP) {
       months.push({
         col: w,
         key: `${cursor.getUTCFullYear()}-${colMonth}`,
         short: monthShort(cursor, lang),
       });
-      lastMonth = colMonth;
+      lastLabelCol = w;
     }
+    lastMonth = colMonth;
 
     for (let d = 0; d < 7; d++) {
       const iso = cursor.toISOString().slice(0, 10);
@@ -495,6 +513,20 @@ const heatmapData = computed<{ weeks: HeatCell[][]; months: MonthLabel[] }>(() =
   }
   return { weeks, months };
 });
+
+// Ref for the new combined scroll container (months + grid scroll together).
+// On mount and on window change, we snap scroll to the right edge so the
+// user lands on today's column rather than ~12 months ago.
+const heatmapScroll = ref<HTMLElement | null>(null);
+
+async function scrollHeatmapToLatest() {
+  await nextTick();
+  const el = heatmapScroll.value;
+  if (!el) return;
+  el.scrollLeft = el.scrollWidth;
+}
+
+watch(heatmapWindow, scrollHeatmapToLatest);
 
 // Tooltip state. Hovering a cell sets `hoverCell` and `hoverPos`; mouseleave
 // clears. Position is relative to the heatmap wrap (computed from the
@@ -709,28 +741,33 @@ onMounted(load);
                Tooltip floats above on hover, positioned absolutely relative
                to .activity-heatmap-wrap. -->
           <div ref="heatmapWrap" class="activity-heatmap-wrap" :style="heatmapStyleVars">
-            <!-- Month labels row: only renders for months whose column ≥ 1
-                 (avoids overlap with the weekday label column on the far left).
-                 Positions use the dynamic col width so labels still line up
-                 with grid cells when cells scale up at smaller windows. -->
-            <div class="activity-months">
-              <span v-for="m in heatmapData.months" :key="m.key" class="activity-month-label"
-                :style="{ left: (m.col * heatmapColPx) + 'px' }">{{ m.short }}</span>
-            </div>
-
             <div class="activity-body">
               <!-- Weekday labels (Mon/Wed/Fri). Rows scale with --heat-cell + --heat-gap,
-                   so Mon = col*1, Wed = col*3, Fri = col*5 (alternating rows). -->
-              <div class="activity-weekdays">
-                <span class="activity-weekday" :style="{ top: heatmapColPx + 'px' }">{{ weekdayLabels.mon }}</span>
-                <span class="activity-weekday" :style="{ top: (heatmapColPx * 3) + 'px' }">{{ weekdayLabels.wed }}</span>
-                <span class="activity-weekday" :style="{ top: (heatmapColPx * 5) + 'px' }">{{ weekdayLabels.fri }}</span>
+                   so Mon = col*1, Wed = col*3, Fri = col*5 (alternating rows). The
+                   weekday gutter intentionally stays OUTSIDE the scroll container
+                   so it stays fixed on the left while the cells scroll. -->
+              <div class="activity-weekdays" :style="{ paddingTop: '22px' }">
+                <span class="activity-weekday" :style="{ top: (22 + heatmapColPx) + 'px' }">{{ weekdayLabels.mon }}</span>
+                <span class="activity-weekday" :style="{ top: (22 + heatmapColPx * 3) + 'px' }">{{ weekdayLabels.wed }}</span>
+                <span class="activity-weekday" :style="{ top: (22 + heatmapColPx * 5) + 'px' }">{{ weekdayLabels.fri }}</span>
               </div>
 
-              <div class="activity-heatmap">
-                <div v-for="(week, wi) in heatmapData.weeks" :key="wi" class="activity-col">
-                  <div v-for="cell in week" :key="cell.date" :class="['activity-cell', `intensity-${cell.intensity}`]"
-                    @mouseenter="onCellEnter(cell, $event)" @mouseleave="onCellLeave"></div>
+              <!-- Scroll container holds BOTH the month labels and the grid so
+                   horizontal scrolling moves them together. Previously the
+                   month labels lived outside the scrollable area and stayed
+                   pinned while cells scrolled away from them. -->
+              <div ref="heatmapScroll" class="activity-scroll">
+                <div class="activity-months"
+                  :style="{ width: (heatmapData.weeks.length * heatmapColPx) + 'px' }">
+                  <span v-for="m in heatmapData.months" :key="m.key" class="activity-month-label"
+                    :style="{ left: (m.col * heatmapColPx) + 'px' }">{{ m.short }}</span>
+                </div>
+
+                <div class="activity-heatmap">
+                  <div v-for="(week, wi) in heatmapData.weeks" :key="wi" class="activity-col">
+                    <div v-for="cell in week" :key="cell.date" :class="['activity-cell', `intensity-${cell.intensity}`]"
+                      @mouseenter="onCellEnter(cell, $event)" @mouseleave="onCellLeave"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -913,7 +950,7 @@ onMounted(load);
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <div>
                   <span style="font-weight: 500;">{{ planNameFor(s.plan_id) }}</span>
-                  <span class="pill pill-grey" style="margin-left: 10px;">
+                  <span :class="['pill', s.status === 'active' ? 'pill-accent' : 'pill-grey']" style="margin-left: 10px;">
                     {{ t(`admin.subscriptions.sub_status_${s.status}`) }}
                   </span>
                   <span class="dim text-xs" style="margin-left: 8px;">

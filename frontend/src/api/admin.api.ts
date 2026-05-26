@@ -12,14 +12,60 @@ import type {
 import type { PublicUser } from "../types/auth";
 import type { WhitelistEntry } from "../types/whitelist";
 
+// Mirrors backend AdminOverviewController response. Kept inline here rather
+// than a dedicated types file because the shape is small and used only by
+// the admin overview page.
+export interface AdminOverview {
+  users: {
+    total: number;
+    admins: number;
+    reminders_enabled: number;
+    new_last_7d: number;
+  };
+  premium: {
+    active: number;
+    active_users: number;
+  };
+  activity: {
+    lessons_last_7d: number;
+    mocks_last_7d: number;
+    active_users_last_24h: number;
+  };
+  content: {
+    papers: number;
+    learning_objectives: number;
+    questions_active: number;
+    questions_inactive: number;
+  };
+}
+
 // All endpoints below require an authenticated admin. Axios attaches the bearer
 // token automatically via the interceptor in client.ts.
 // Admin endpoints return RAW i18n shapes (both _en and _ru) so the editor can
 // edit either language.
 export const adminApi = {
+  // ---- Overview (admin landing dashboard) ----
+  // Returns at-a-glance counts: users / premium / recent activity / content.
+  getOverview: async (): Promise<AdminOverview> =>
+    (await api.get<AdminOverview>("/admin/overview")).data,
+
   // ---- Users (admin management) ----
   listUsers: async (): Promise<PublicUser[]> =>
     (await api.get<PublicUser[]>("/admin/users")).data,
+
+  // Full single-user detail for the admin user-detail page. Returns the
+  // public user shape plus `created_at` / `updated_at` / `last_active_date`
+  // so the admin can see when the user joined and last engaged.
+  getUser: async (
+    id: string
+  ): Promise<
+    PublicUser & {
+      created_at: string;
+      updated_at: string;
+      timezone: string;
+      last_active_date: string | null;
+    }
+  > => (await api.get(`/admin/users/${id}`)).data,
 
   setUserAdmin: async (id: string, is_admin: boolean): Promise<PublicUser> =>
     (await api.patch<PublicUser>(`/admin/users/${id}/admin`, { is_admin }))

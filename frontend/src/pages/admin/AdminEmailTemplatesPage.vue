@@ -635,7 +635,11 @@ onMounted(load);
                 </p>
                 <ul v-else class="email-vars-list">
                   <li v-for="name in declaredVariableList" :key="name" class="email-vars-row">
-                    <code class="mono">{{ '{{' + name + '}}' }}</code>
+                    <!-- Split the braces so Vue's template tokenizer doesn't
+                         see literal `}}` inside the expression and close the
+                         interpolation early. The rendered output is still
+                         the literal `{{name}}`. -->
+                    <code class="mono">{{ '{' + '{' + name + '}' + '}' }}</code>
                     <span class="dim text-xs">→</span>
                     <span class="text-xs">{{ formatSampleValue(previewVariables[name]) }}</span>
                   </li>

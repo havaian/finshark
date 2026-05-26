@@ -1380,6 +1380,7 @@ onMounted(reloadTree);
 .row {
     display: grid;
     margin: 0 !important;
+    margin-top: 1em !important;
 }
 
 .row button {

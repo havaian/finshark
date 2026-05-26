@@ -212,6 +212,12 @@ export default {
     hearts_empty_banner_sub:
       "Сердца обновятся в полночь по вашему часовому поясу. Премиум снимает все лимиты.",
     premium_badge: "Премиум",
+    premium_status: {
+      "free": "Бесплатный тариф",
+      "premium_monthly": "Месячный тариф",
+      "premium_yearly": "Годовой тариф",
+      "premium_lifetime": "Навсегда",
+    },
     paper_locked_suffix: "🔒 Премиум",
   },
 

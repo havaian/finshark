@@ -222,6 +222,12 @@ export default {
     // We keep the picker showing premium-only papers so free users can see
     // what they'd unlock; the start button surfaces a friendly 403 when they
     // try.
+    premium_status: {
+      "free": "Free",
+      "premium_monthly": "Monthly",
+      "premium_yearly": "Yearly",
+      "premium_lifetime": "Lifetime",
+    },
     paper_locked_suffix: "🔒 Premium",
   },
 

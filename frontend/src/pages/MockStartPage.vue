@@ -200,3 +200,9 @@ onMounted(loadPapers);
     </div>
   </main>
 </template>
+
+<style>
+.card.mock-start-card {
+  padding-bottom: 0.5em;
+}
+</style>

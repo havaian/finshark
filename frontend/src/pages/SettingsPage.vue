@@ -390,7 +390,13 @@ const premiumStatusLine = computed<string | null>(() => {
   const e = entitlement.entitlement;
   if (!e) return null;
   if (e.tier === 'free') return t('settings.premium_status_free');
-  return t('settings.premium_status_premium', { plan: e.plan_id });
+  // Localize the plan slug via the dashboard.premium_status map (Free /
+  // Monthly / Yearly / Lifetime). Fall back to the raw slug if the map
+  // doesn't have a key for this plan (future PSP plans, custom slugs).
+  const planKey = `dashboard.premium_status.${e.plan_id}`;
+  const localized = t(planKey);
+  const planLabel = localized === planKey ? e.plan_id : localized;
+  return t('settings.premium_status_premium', { plan: planLabel });
 });
 
 const premiumEndsLine = computed<string | null>(() => {

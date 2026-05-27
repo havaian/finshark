@@ -71,8 +71,9 @@ const TwoFactorSetupPage = () => import("../pages/TwoFactorSetupPage.vue");
 //   that can't carry a lang prefix:
 //     - /auth/callback  — registered with Google OAuth as the redirect URI
 //     - /unsubscribe    — emailed to users from the server, no session context
-//   Bare URLs (e.g. /dashboard, /) are caught by the beforeEach guard below
-//   and redirected to the active-lang version (/ru/dashboard).
+//   Bare URLs (e.g. /dashboard, /2fa-verify, /) fall through to the catch-all
+//   at the bottom of this file, which injects the active-lang prefix
+//   (e.g. /en/2fa-verify) while preserving the URL fragment.
 //
 //   The :lang regex (en|ru) means unknown prefixes like /jp/dashboard do NOT
 //   match this branch — they fall through to the * catch-all at the bottom,
@@ -290,16 +291,28 @@ const routes: RouteRecordRaw[] = [
     ],
   },
 
-  // Catch-all for unmatched URLs (bare paths like /dashboard or unknown lang
-  // prefixes like /jp/anything). The beforeEach guard inspects to.path before
-  // this fires; if the path is a bare app path we recognise, it redirects to
-  // the localized version. Anything else lands here and we send them to the
-  // home page in the active lang — that's the simplest "404-ish" behaviour
-  // for an SPA without a dedicated not-found page.
+  // Catch-all for unmatched URLs. Two cases land here:
+  //   1) Bare app paths like /2fa-verify or /dashboard — no lang prefix.
+  //      These come from external entry points (the Google OAuth callback
+  //      redirects to /2fa-verify#... when 2FA is required). We inject the
+  //      preferred lang and preserve the path so the user lands on the right
+  //      page. Vue Router merges to.query/to.hash into the redirect target
+  //      automatically, so the URL fragment carrying pending_2fa_token survives.
+  //   2) Unknown lang prefixes like /jp/anything — send to home in default lang.
+  //
+  // Note: route-level `redirect` resolves BEFORE beforeEach guards in vue-router 4,
+  // so the bare-URL handling has to live here rather than in the guard.
   {
     path: "/:pathMatch(.*)*",
     name: "not-found",
-    redirect: () => ({ path: `/${DEFAULT_LANG}` }),
+    redirect: (to) => {
+      if (!BARE_PATHS.has(to.path) && !hasLangPrefix(to.path)) {
+        const lang = preferredLang();
+        const newPath = to.path === "/" ? `/${lang}` : `/${lang}${to.path}`;
+        return { path: newPath };
+      }
+      return { path: `/${DEFAULT_LANG}` };
+    },
   },
 ];
 

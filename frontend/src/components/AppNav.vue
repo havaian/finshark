@@ -102,7 +102,7 @@ function isActive(item: NavItem): boolean {
 
 function onLogout() {
   auth.logout();
-  router.push({ name: 'login', params: { lang: locale.lang } });
+  router.push({ name: 'home', params: { lang: locale.lang } });
 }
 
 // ---- Mobile drawer ----
@@ -224,7 +224,7 @@ function onLogoutMobile() {
     <!-- Mobile bar. Hidden above 720px via CSS. Brand on the left, stats pills
          (compact) in the middle so they're still glanceable without opening
          the drawer, hamburger on the right. -->
-    <div class="app-nav-mobile">
+    <div class=" ">
       <RouterLink :to="lp(`/dashboard`)" class="brand app-nav-brand app-nav-mobile-brand">
         <div class="brand-mark"></div>
         <span>Finshark</span>

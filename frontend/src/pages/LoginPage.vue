@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { useLocalePath } from '../router/useLocalePath';
 
 const { t } = useI18n();
 const route = useRoute();
+const lp = useLocalePath();
 
 // Where to go after sign-in completes. Set by router.beforeEach when an
 // unauthenticated user hits a protected route. Stash it in sessionStorage so
@@ -31,7 +33,7 @@ function onGoogleSignIn() {
     <div class="auth-card">
       <h1>{{ t('login.title') }}</h1>
       <p class="dim" style="margin-bottom: 22px;">
-        {{ t('login.title') }} - {{ t('login.google_btn') }}
+        {{ t('login.subtitle') }}
       </p>
 
       <button type="button" class="btn btn-primary btn-block" @click="onGoogleSignIn">
@@ -50,6 +52,10 @@ function onGoogleSignIn() {
         </svg>
         {{ t('login.google_btn') }}
       </button>
+
+      <RouterLink :to="lp(`/`)" class="btn btn-ghost btn-block" style="margin-top: 12px;">
+        {{ t('common.back_to_home') }}
+      </RouterLink>
     </div>
   </main>
 </template>

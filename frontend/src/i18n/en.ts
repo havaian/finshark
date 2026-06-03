@@ -19,6 +19,7 @@ export default {
     confirm: "Confirm",
     sign_out: "Sign out",
     sign_in: "Sign in",
+    back_to_home: "Back to home",
     submit: "Submit",
     next: "Next",
     finish: "Finish",
@@ -106,80 +107,99 @@ export default {
   },
 
   landing: {
-    eyebrow: "Finshark - your ACCA hunting partner",
-    hero_title: "Hunt down your ACCA syllabus, 10 minutes at a time.",
+    eyebrow: "ACCA prep, in daily 10-minute sets",
+    hero_title: "Pass ACCA the way you actually have time to study.",
     hero_sub:
-      "Finshark is a finance shark - it smells your weak topics, circles back to them, and won't let go until the exam is yours. Bite-sized daily lessons, adaptive practice, instant explanations.",
+      "Finshark turns the ACCA syllabus into short daily question sets. It tracks what you keep getting wrong and brings those topics back until they stick. Instant feedback and a worked explanation after every question.",
     cta_primary: "Start learning",
     cta_secondary: "See how it works",
     hero_foot:
-      "Built for ACCA students who study between meetings, on the train, at lunch.",
+      "Made for students fitting ACCA around a job - between meetings, on the train, at lunch.",
 
-    // "Why Finshark" - the manifesto block. Keeps the shark metaphor controlled:
-    // it's a sense-of-smell thing (finds weak spots), not a teeth-and-blood thing.
+    // Stat band - three concrete, defensible numbers under the hero. Keep these
+    // honest; they double as the product's current scope.
+    stat_1_value: "10 min",
+    stat_1_label: "a day is the design target",
+    stat_2_value: "F1-F3",
+    stat_2_label: "papers live, more in review",
+    stat_3_value: "EN / RU",
+    stat_3_label: "every question, both languages",
+
+    // Hero product mock - labels for the CSS lesson-card preview on the right
+    // of the hero. Not marketing copy; these render inside the mock UI.
+    mock_topic: "Cost classification",
+    mock_question: "Which cost stays constant in total as output rises?",
+    mock_opt_a: "Direct materials",
+    mock_opt_b: "Factory rent",
+    mock_opt_c: "Sales commission",
+    mock_feedback: "Correct - rent is fixed regardless of output.",
+
+    // "Why Finshark" - the value block. Shark metaphor kept to a light touch:
+    // the name, a single line about tracking weak spots. No teeth, no hunting.
     why_title: "Why Finshark",
     why_lede:
-      "Most ACCA prep treats you like you have unlimited time. You don't. Finshark is built around the 10 minutes you actually have.",
-    why_1_title: "A shark, for finance",
+      "Most ACCA prep assumes you have unlimited study time. Finshark is built around the ten minutes you can find on a normal day.",
+    why_1_title: "Finds your weak spots",
     why_1_body:
-      "Finance + shark. Sharks find weakness by smell - Finshark finds yours by data. The topics you keep missing surface again tomorrow, not in three months.",
-    why_2_title: "Built around your day, not the syllabus",
+      "Finshark watches which topics you keep missing and brings them back the next day. Weak areas resurface in tomorrow's set while they still matter, well before exam week.",
+    why_2_title: "Fits a real schedule",
     why_2_body:
-      "Textbooks are written start-to-end. Your week isn't. Finshark serves you the next-best 10 minutes whenever you open the app - between meetings, on the train, before bed.",
-    why_3_title: "Honest about what you know",
+      "Open the app whenever you get a gap and it serves the next set worth doing. Ten minutes between meetings, on the train, or before bed all add up.",
+    why_3_title: "Shows where you stand",
     why_3_body:
-      "A heatmap of every syllabus learning objective, coloured by your real mastery. No green check-marks for things you barely scraped through.",
+      "A heatmap of every syllabus learning objective, coloured by your real mastery, so you always know which topics still need work before exam day.",
 
     features_title: "Built for the way you actually study",
     feature_1_title: "Fast micro-lessons",
     feature_1_body:
-      "5 to 10 questions a day. Fits into the gap between meetings, the train ride, the coffee break.",
+      "Five to ten questions a day, sized to fit a gap between meetings, a train ride, or a coffee break.",
     feature_2_title: "Adaptive difficulty",
     feature_2_body:
-      "Spaced repetition surfaces what you got wrong yesterday, so you actually remember it next month.",
+      "Spaced repetition brings back what you missed yesterday so it stays with you a month from now.",
     feature_3_title: "Streaks that motivate",
     feature_3_body:
-      "Daily streak, XP, and badges. Skip a day and you start over - the way it works in real life.",
+      "A daily streak, XP, and badges give each session a small reward and keep the habit going day to day.",
     feature_4_title: "See your weak spots",
     feature_4_body:
-      "Syllabus coverage heatmap shows exactly which topics you have nailed and which need work before exam day.",
+      "A syllabus coverage heatmap shows exactly which topics you have nailed and which still need work before exam day.",
 
     steps_title: "How it works",
     step_1_title: "Pick a paper",
     step_1_body:
-      "F1, F2, F3 - pick what you are studying. Add more papers as you go.",
-    step_2_title: "Answer 5 to 10 questions",
+      "Choose what you are studying from F1, F2, or F3, and add more papers as you go.",
+    step_2_title: "Answer five to ten questions",
     step_2_body:
-      "Mix of multiple-choice, short answer, and numeric. Instant feedback and an explanation after every answer.",
+      "A mix of multiple-choice and numeric entry, matching the real ACCA objective-test formats, with instant feedback and a worked explanation after every answer.",
     step_3_title: "Come back tomorrow",
     step_3_body:
-      "Reminders, mock exams, and a syllabus heatmap that grows greener the closer you get to exam-ready.",
+      "Reminders, mock exams, and a syllabus heatmap that grows greener as you get closer to exam-ready.",
 
     // FAQ - short, defensive section. Answers the questions a sceptical visitor
     // would ask before signing up. Keep each answer to ~2 sentences.
     faq_title: "Questions, before you sign up",
     faq_1_q: "Is Finshark a replacement for Kaplan / BPP textbooks?",
     faq_1_a:
-      "No. Textbooks teach you the syllabus from scratch. Finshark keeps you sharp on what you already learned, surfaces what you forgot, and shows you where the gaps are before exam day.",
+      "Finshark works alongside them. Textbooks teach the syllabus from scratch; Finshark keeps you sharp on what you have already learned, brings back what you forgot, and shows you where the gaps are before exam day.",
     faq_2_q: "Which ACCA papers are covered?",
     faq_2_a:
-      "We start with the Applied Knowledge papers (F1–F3). More papers ship as the question banks are reviewed by ACCA-qualified tutors.",
+      "We start with the Applied Knowledge papers, F1 to F3. More papers ship as their question banks are reviewed by ACCA-qualified tutors.",
     faq_3_q: "How long do I need to spend per day?",
     faq_3_a:
-      "Ten minutes is the design target. A daily lesson is 5–10 questions with instant explanations - long enough to learn something, short enough that you actually do it.",
+      "Ten minutes is the design target. A daily lesson is five to ten questions with instant explanations, long enough to learn something and short enough to keep doing every day.",
     faq_4_q: "Do you have past exam questions?",
     faq_4_a:
-      "Yes, where they're publicly available - drawn from the ACCA practice platform and OpenTuition. Each question links back to its learning objective so you know what it's testing.",
+      "Yes, where they are publicly available, drawn from the ACCA practice platform and OpenTuition. Each question links back to its learning objective so you know what it is testing.",
     faq_5_q: "Where do the explanations come from?",
     faq_5_a:
-      "Approved study materials (Kaplan, BPP, ACCA study guides), rewritten into plain language. Every explanation cites the learning objective it covers.",
+      "Approved study materials including Kaplan, BPP, and ACCA study guides, rewritten into plain language. Every explanation cites the learning objective it covers.",
 
-    bottom_cta_title: "The shark is hungry.",
-    bottom_cta_sub: "Sign in and try one lesson. Takes about three minutes.",
+    bottom_cta_title: "Ready to start?",
+    bottom_cta_sub: "Sign in and try one lesson. It takes about three minutes.",
   },
 
   login: {
     title: "Sign in",
+    subtitle: "Sign in with your Google account to start studying.",
     google_btn: "Continue with Google",
     error_callback: "Sign-in failed. Please try again.",
     error_email_not_allowed:

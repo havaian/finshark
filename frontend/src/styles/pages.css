@@ -2405,7 +2405,8 @@
    -----------------------------------------------------------
    Self-contained: doesn't reuse .page / .container because those impose a
    max-width that's too narrow for hero typography. The landing has its own
-   .landing-container (1100px) and full-bleed sections. */
+   .landing-container (1100px) and full-bleed sections. Theme-driven via the
+   same tokens as the app; no transform: scale anywhere. */
 
 .landing {
     min-height: 100vh;
@@ -2438,11 +2439,10 @@
     gap: 16px;
 }
 
-/* Hero - generous vertical space, big headline. Uses a subtle radial gradient
-   behind to lift the text off the background without resorting to a hero
-   image we'd have to design. */
+/* Hero - asymmetric two-column grid (copy + product mock). A subtle radial
+   gradient behind lifts the text off the background without a hero image. */
 .landing-hero {
-    padding: 96px 0 80px;
+    padding: 88px 0 64px;
     position: relative;
     overflow: hidden;
 }
@@ -2450,11 +2450,11 @@
 .landing-hero::before {
     content: '';
     position: absolute;
-    top: -200px;
+    top: -240px;
     left: 50%;
-    transform: translateX(-50%);
+    margin-left: -450px;
     width: 900px;
-    height: 600px;
+    height: 640px;
     background: radial-gradient(ellipse at center,
             var(--accent-glow) 0%,
             transparent 65%);
@@ -2462,10 +2462,17 @@
     z-index: 0;
 }
 
-.landing-hero>.landing-container {
+.landing-hero-grid {
     position: relative;
     z-index: 1;
-    text-align: center;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
+    align-items: center;
+}
+
+.landing-hero-copy {
+    min-width: 0;
 }
 
 .landing-hero-eyebrow {
@@ -2483,33 +2490,29 @@
 }
 
 .landing-hero-title {
-    font-size: 56px;
-    line-height: 1.1;
+    font-size: 52px;
+    line-height: 1.08;
     letter-spacing: -0.03em;
     margin: 0 0 18px;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .landing-hero-sub {
     font-size: 18px;
     line-height: 1.55;
     color: var(--text-dim);
-    max-width: 620px;
-    margin: 0 auto 32px;
+    max-width: 540px;
+    margin: 0 0 30px;
 }
 
 .landing-cta-row {
     display: flex;
     gap: 12px;
-    justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .landing-hero-foot {
-    margin: 8px 0 0;
+    margin: 6px 0 0;
 }
 
 /* Larger button variant for landing CTAs. Only used here. */
@@ -2521,6 +2524,159 @@
     min-height: 48px;
 }
 
+/* ---- Hero product mock ----
+   A single answered MCQ rendered as a lesson card. Pure markup + CSS, themed
+   by the app tokens. Decorative (aria-hidden in the template). */
+.landing-hero-mock {
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.landing-mock-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.55);
+}
+
+.landing-mock-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.landing-mock-topic {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.landing-mock-streak {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--coral);
+}
+
+.landing-mock-q {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    margin: 0 0 18px;
+    color: var(--text);
+}
+
+.landing-mock-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.landing-mock-opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-dim);
+    background: var(--bg-elev);
+}
+
+.landing-mock-opt>span:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+}
+
+.landing-mock-opt.is-correct {
+    border-color: var(--success-border);
+    background: var(--success-bg);
+    color: var(--text);
+    font-weight: 500;
+}
+
+.landing-mock-key {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: color-mix(in srgb, var(--text-dim) 14%, transparent);
+}
+
+.landing-mock-opt.is-correct .landing-mock-key {
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 18%, transparent);
+}
+
+.landing-mock-tick {
+    flex-shrink: 0;
+}
+
+.landing-mock-feedback {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--success);
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+}
+
+/* ---- Stat band ---- */
+.landing-stats {
+    padding: 8px 0 16px;
+}
+
+.landing-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding-top: 28px;
+    padding-bottom: 28px;
+}
+
+.landing-stat {
+    text-align: center;
+    min-width: 0;
+}
+
+.landing-stat-value {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 6px;
+}
+
+.landing-stat-label {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
 .landing-section-title {
     font-size: 32px;
     letter-spacing: -0.02em;
@@ -2528,8 +2684,23 @@
     margin: 0 0 40px;
 }
 
+/* Shared glyph chip - sage-tinted square holding an inline SVG. Replaces the
+   old emoji icons. Colour flows to the SVG via currentColor. */
+.landing-glyph {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    background: var(--accent-soft-bg);
+    border: 1px solid var(--accent-deep);
+    margin-bottom: 16px;
+}
+
 .landing-features {
-    padding: 80px 0;
+    padding: 72px 0;
 }
 
 .landing-features-grid {
@@ -2543,11 +2714,15 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     background: var(--bg-card);
+    min-width: 0;
 }
 
 .landing-feature h3 {
     font-size: 18px;
-    margin: 14px 0 8px;
+    margin: 0 0 8px;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: -0.01em;
 }
 
 .landing-feature p {
@@ -2556,13 +2731,8 @@
     font-size: 14px;
 }
 
-.landing-feature-icon {
-    font-size: 28px;
-    line-height: 1;
-}
-
 .landing-steps {
-    padding: 80px 0;
+    padding: 72px 0;
     background: var(--bg-card);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -2571,13 +2741,11 @@
 .landing-steps-list {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 32px;
     max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .landing-steps-list>li {
@@ -2603,6 +2771,9 @@
 .landing-steps-list h3 {
     font-size: 18px;
     margin: 6px 0 6px;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: -0.01em;
 }
 
 .landing-steps-list p {
@@ -2611,11 +2782,11 @@
     font-size: 14px;
 }
 
-/* "Why Finshark" - manifesto block between hero and features. Background
-   transparent (sits on default --bg), so reads as continuous with hero.
-   Three short cards in a row; collapses to a column on narrow screens. */
+/* "Why Finshark" - value block between stat band and features. Background
+   transparent (sits on default --bg). Three cards in a row; collapses to a
+   column on narrow screens. */
 .landing-why {
-    padding: 80px 0 40px;
+    padding: 72px 0 40px;
 }
 
 .landing-why-lede {
@@ -2637,6 +2808,7 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     background: var(--bg-card);
+    min-width: 0;
     /* Subtle left accent strip - keeps the brand colour present without being
      loud. Same colour as .landing-step-num so the page feels unified. */
     border-left: 3px solid var(--accent);
@@ -2645,6 +2817,8 @@
 .landing-why-card h3 {
     font-size: 17px;
     margin: 0 0 10px;
+    color: var(--text);
+    text-transform: none;
     letter-spacing: -0.01em;
 }
 
@@ -2658,7 +2832,7 @@
    read as list rows; open items expand below the chevron without shifting
    the question. */
 .landing-faq {
-    padding: 60px 0 80px;
+    padding: 60px 0 72px;
 }
 
 .landing-faq-inner {
@@ -2722,7 +2896,12 @@
 }
 
 .landing-cta-bottom {
-    padding: 96px 0;
+    padding: 88px 0;
+}
+
+.landing-cta-bottom-inner {
+    text-align: center;
+    max-width: 620px;
 }
 
 .landing-foot {
@@ -2730,10 +2909,30 @@
     border-top: 1px solid var(--border);
 }
 
+/* Landing tablet - collapse the hero to a single column, mock under copy. */
+@media (max-width: 900px) {
+    .landing-hero-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .landing-hero-sub {
+        max-width: none;
+    }
+
+    .landing-hero-mock {
+        justify-content: flex-start;
+    }
+
+    .landing-mock-card {
+        max-width: 480px;
+    }
+}
+
 /* Landing mobile polish */
 @media (max-width: 720px) {
     .landing-hero {
-        padding: 56px 0 48px;
+        padding: 52px 0 44px;
     }
 
     .landing-hero-title {
@@ -2745,23 +2944,23 @@
     }
 
     .landing-features {
-        padding: 56px 0;
+        padding: 52px 0;
     }
 
     .landing-steps {
-        padding: 56px 0;
+        padding: 52px 0;
     }
 
     .landing-cta-bottom {
-        padding: 56px 0;
+        padding: 52px 0;
     }
 
     .landing-why {
-        padding: 56px 0 28px;
+        padding: 52px 0 28px;
     }
 
     .landing-faq {
-        padding: 40px 0 56px;
+        padding: 40px 0 52px;
     }
 
     .landing-section-title {
@@ -2790,6 +2989,20 @@
     .landing-why-lede {
         font-size: 15px;
         margin-bottom: 28px;
+    }
+
+    .landing-stats-grid {
+        gap: 12px;
+        padding-top: 22px;
+        padding-bottom: 22px;
+    }
+
+    .landing-stat-value {
+        font-size: 24px;
+    }
+
+    .landing-stat-label {
+        font-size: 12px;
     }
 
     .btn-lg {
@@ -2824,6 +3037,15 @@
         width: 32px;
         height: 32px;
         font-size: 14px;
+    }
+
+    .landing-mock-card {
+        padding: 18px;
+    }
+
+    .landing-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
     }
 }
 

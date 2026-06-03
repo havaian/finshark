@@ -295,7 +295,8 @@ export class MocksService {
       prompt_en: string;
       prompt_ru: string | null;
       options: McqOption[] | null;
-      correct_answer: string;
+      correct_answer_en: string;
+      correct_answer_ru: string | null;
       explanation_en: string;
       explanation_ru: string | null;
       concept_bite_en: string | null;
@@ -320,7 +321,8 @@ export class MocksService {
         q.prompt_en                                    AS prompt_en,
         q.prompt_ru                                    AS prompt_ru,
         q.options                                      AS options,
-        q.correct_answer                               AS correct_answer,
+        q.correct_answer_en                            AS correct_answer_en,
+        q.correct_answer_ru                            AS correct_answer_ru,
         q.explanation_en                               AS explanation_en,
         q.explanation_ru                               AS explanation_ru,
         q.concept_bite_en                              AS concept_bite_en,
@@ -358,7 +360,12 @@ export class MocksService {
                 lang
               ),
             })),
-      correct_answer: r.correct_answer,
+      // For MCQ correct_answer is the option key (language-neutral).
+      // For number_entry it's the canonical value in the user's language.
+      correct_answer:
+        r.q_type === "mcq"
+          ? r.correct_answer_en
+          : pickLocalized(r.correct_answer_en, r.correct_answer_ru, lang),
       explanation: pickLocalized(r.explanation_en, r.explanation_ru, lang),
       concept_bite: pickLocalizedNullable(
         r.concept_bite_en,

@@ -117,22 +117,31 @@ export default {
       "Made for students fitting ACCA around a job - between meetings, on the train, at lunch.",
 
     // Stat band - three concrete, defensible numbers under the hero. Keep these
-    // honest; they double as the product's current scope.
+    // honest; they double as the product's current scope. stat_1 counts up on
+    // scroll, so its number and unit are split.
     stat_1_value: "10 min",
+    stat_1_unit: "min",
     stat_1_label: "a day is the design target",
     stat_2_value: "F1-F3",
     stat_2_label: "papers live, more in review",
     stat_3_value: "EN / RU",
     stat_3_label: "every question, both languages",
 
-    // Hero product mock - labels for the CSS lesson-card preview on the right
-    // of the hero. Not marketing copy; these render inside the mock UI.
+    // Hero product demo - an interactive MCQ the visitor can answer. Labels
+    // render inside the demo card. Option B is the correct answer.
     mock_topic: "Cost classification",
     mock_question: "Which cost stays constant in total as output rises?",
     mock_opt_a: "Direct materials",
     mock_opt_b: "Factory rent",
     mock_opt_c: "Sales commission",
-    mock_feedback: "Correct - rent is fixed regardless of output.",
+    mock_why_a: "Direct materials rise with output, so the total is variable.",
+    mock_why_c: "Commission is paid per sale, so it grows as output rises.",
+    mock_submit: "Check answer",
+    mock_retry: "Try again",
+    mock_ring_label: "Syllabus covered",
+    mock_feedback_correct: "Correct - factory rent is fixed regardless of output.",
+    mock_feedback_wrong: "Not quite - the answer is factory rent.",
+    mock_streak: "{n} day streak",
 
     // "Why Finshark" - the value block. Shark metaphor kept to a light touch:
     // the name, a single line about tracking weak spots. No teeth, no hunting.
@@ -192,6 +201,23 @@ export default {
     faq_5_q: "Where do the explanations come from?",
     faq_5_a:
       "Approved study materials including Kaplan, BPP, and ACCA study guides, rewritten into plain language. Every explanation cites the learning objective it covers.",
+
+    // Syllabus heatmap section - illustrative grid of topic mastery. Topic
+    // labels are short ACCA-style headers; the grid itself uses demo numbers.
+    heat_title: "See exactly where you stand",
+    heat_lede:
+      "Every syllabus learning objective, coloured by your real mastery. Green is solid, amber needs review, and grey is untouched - so you always know what to study next.",
+    heat_legend_low: "Needs work",
+    heat_legend_mid: "Getting there",
+    heat_legend_high: "Solid",
+    heat_topic_1: "Business organisation",
+    heat_topic_2: "Cost classification",
+    heat_topic_3: "Double entry",
+    heat_topic_4: "Inventory valuation",
+    heat_topic_5: "Budgeting",
+    heat_topic_6: "Variance analysis",
+    heat_topic_7: "Cash flow statements",
+    heat_topic_8: "Ratio analysis",
 
     bottom_cta_title: "Ready to start?",
     bottom_cta_sub: "Sign in and try one lesson. It takes about three minutes.",

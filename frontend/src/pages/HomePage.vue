@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, onBeforeUnmount, ref, computed, useTemplateRef } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth.store';
@@ -22,8 +22,9 @@ import ThemeSwitch from '../components/ThemeSwitch.vue';
 // without touching this page.
 //
 // Content uses i18n keys under landing.* so EN/RU swap cleanly. The hero
-// product mock is a pure-CSS lesson card (no image asset) whose labels also
-// come from landing.* (mock_*).
+// product mock is an interactive demo of one MCQ (no backend call - all
+// client-side); the stat band counts up on scroll; the heatmap and progress
+// ring are illustrative (static demo data, not real user state).
 
 const { t } = useI18n();
 const router = useRouter();
@@ -31,10 +32,186 @@ const auth = useAuthStore();
 const locale = useLocaleStore();
 const lp = useLocalePath();
 
+// ---- Interactive hero demo ----
+// One MCQ the visitor can actually answer. Option B is correct. State is local
+// and resets via the "Try again" button. No network, no persistence - this is
+// a taste of the lesson UI, not a real attempt.
+interface DemoOption {
+  key: string;
+  labelKey: string;
+  correct: boolean;
+  whyKey?: string; // why-wrong explanation, shown only when this wrong option was picked
+}
+
+const demoOptions: DemoOption[] = [
+  { key: 'A', labelKey: 'landing.mock_opt_a', correct: false, whyKey: 'landing.mock_why_a' },
+  { key: 'B', labelKey: 'landing.mock_opt_b', correct: true },
+  { key: 'C', labelKey: 'landing.mock_opt_c', correct: false, whyKey: 'landing.mock_why_c' },
+];
+
+const selectedKey = ref<string | null>(null);
+const submitted = ref(false);
+// Demo streak counter - bumps once when the visitor answers correctly, purely
+// for the "this is rewarding" feel. Starts at 6 so a correct answer shows 7.
+const demoStreak = ref(6);
+
+const selectedOption = computed(() =>
+  demoOptions.find((o) => o.key === selectedKey.value) ?? null
+);
+const isCorrect = computed(() => submitted.value && !!selectedOption.value?.correct);
+
+function selectDemo(key: string) {
+  if (submitted.value) return; // locked after submit
+  selectedKey.value = key;
+}
+
+function submitDemo() {
+  if (submitted.value || selectedKey.value === null) return;
+  submitted.value = true;
+  if (selectedOption.value?.correct) demoStreak.value += 1;
+}
+
+function resetDemo() {
+  submitted.value = false;
+  selectedKey.value = null;
+  demoStreak.value = 6;
+}
+
+// Per-option state class for the template. Before submit: just "selected".
+// After submit: the correct option goes green; a wrong picked option goes red;
+// everything else dims.
+function optionStateClass(o: DemoOption): string {
+  if (!submitted.value) return selectedKey.value === o.key ? 'is-selected' : '';
+  if (o.correct) return 'is-correct';
+  if (selectedKey.value === o.key) return 'is-wrong';
+  return 'is-muted';
+}
+
+// ---- Progress ring (hero mock header) ----
+// SVG ring that animates from 0 to its target once the hero scrolls into view.
+// Driven by stroke-dashoffset via a CSS transition (no transform: scale).
+const RING_TARGET = 68; // percent - illustrative "syllabus covered" figure
+const ringCircumference = 2 * Math.PI * 15; // r=15 in the SVG below
+const ringVisible = ref(false);
+const ringOffset = computed(() =>
+  ringVisible.value
+    ? ringCircumference * (1 - RING_TARGET / 100)
+    : ringCircumference
+);
+const heroMock = useTemplateRef<HTMLElement>('heroMock');
+
+// ---- Count-up stats ----
+// Only the first stat is numeric (10). The other two are categorical strings
+// (F1-F3, EN / RU) and render as-is. animatedTen counts 0->10 on scroll-in.
+const animatedTen = ref(0);
+const statsBand = useTemplateRef<HTMLElement>('statsBand');
+
+function runCountUp(target: number, setter: (v: number) => void, durationMs = 900) {
+  const start = performance.now();
+  function frame(now: number) {
+    const p = Math.min(1, (now - start) / durationMs);
+    // easeOutCubic for a natural settle
+    const eased = 1 - Math.pow(1 - p, 3);
+    setter(Math.round(target * eased));
+    if (p < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---- Syllabus heatmap (illustrative) ----
+// A small grid of LO mastery cells, coloured by bucket. Static demo data - it
+// mirrors the real Progress page heatmap visually without claiming real
+// numbers. Each cell gets a topic label + mastery for the hover tooltip.
+interface HeatCell {
+  topicKey: string;
+  mastery: number; // 0-100
+}
+// 24 cells. Spread across buckets so the grid reads as "mixed progress".
+const heatCells: HeatCell[] = [
+  { topicKey: 'landing.heat_topic_1', mastery: 92 },
+  { topicKey: 'landing.heat_topic_2', mastery: 78 },
+  { topicKey: 'landing.heat_topic_3', mastery: 45 },
+  { topicKey: 'landing.heat_topic_4', mastery: 12 },
+  { topicKey: 'landing.heat_topic_5', mastery: 64 },
+  { topicKey: 'landing.heat_topic_6', mastery: 88 },
+  { topicKey: 'landing.heat_topic_7', mastery: 30 },
+  { topicKey: 'landing.heat_topic_8', mastery: 56 },
+  { topicKey: 'landing.heat_topic_1', mastery: 71 },
+  { topicKey: 'landing.heat_topic_2', mastery: 0 },
+  { topicKey: 'landing.heat_topic_3', mastery: 83 },
+  { topicKey: 'landing.heat_topic_4', mastery: 39 },
+  { topicKey: 'landing.heat_topic_5', mastery: 95 },
+  { topicKey: 'landing.heat_topic_6', mastery: 22 },
+  { topicKey: 'landing.heat_topic_7', mastery: 60 },
+  { topicKey: 'landing.heat_topic_8', mastery: 74 },
+  { topicKey: 'landing.heat_topic_1', mastery: 48 },
+  { topicKey: 'landing.heat_topic_2', mastery: 18 },
+  { topicKey: 'landing.heat_topic_3', mastery: 90 },
+  { topicKey: 'landing.heat_topic_4', mastery: 52 },
+  { topicKey: 'landing.heat_topic_5', mastery: 67 },
+  { topicKey: 'landing.heat_topic_6', mastery: 7 },
+  { topicKey: 'landing.heat_topic_7', mastery: 81 },
+  { topicKey: 'landing.heat_topic_8', mastery: 35 },
+];
+
+// Map a mastery value to a bucket class. 5 buckets matching the Progress page
+// language: none / low / mid / high / mastered.
+function heatBucket(m: number): string {
+  if (m <= 0) return 'heat-0';
+  if (m < 34) return 'heat-1';
+  if (m < 67) return 'heat-2';
+  if (m < 90) return 'heat-3';
+  return 'heat-4';
+}
+
+function heatTitle(cell: HeatCell): string {
+  return `${t(cell.topicKey)} - ${cell.mastery}%`;
+}
+
+// ---- Scroll-triggered animation wiring ----
+// One IntersectionObserver covers both the hero (ring) and the stat band
+// (count-up). Each fires once. Falls back to immediately-on if IO is missing.
+let observer: IntersectionObserver | null = null;
+
 onMounted(() => {
   if (auth.isAuthenticated) {
     router.replace({ name: 'dashboard', params: { lang: locale.lang } });
+    return;
   }
+
+  const ring = heroMock.value;
+  const stats = statsBand.value;
+
+  if (typeof IntersectionObserver === 'undefined') {
+    // No IO support - just show end states.
+    ringVisible.value = true;
+    animatedTen.value = 10;
+    return;
+  }
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        if (entry.target === ring) {
+          ringVisible.value = true;
+          observer?.unobserve(entry.target);
+        } else if (entry.target === stats) {
+          runCountUp(10, (v) => (animatedTen.value = v));
+          observer?.unobserve(entry.target);
+        }
+      }
+    },
+    { threshold: 0.35 }
+  );
+
+  if (ring) observer.observe(ring);
+  if (stats) observer.observe(stats);
+});
+
+onBeforeUnmount(() => {
+  observer?.disconnect();
+  observer = null;
 });
 </script>
 
@@ -78,54 +255,84 @@ onMounted(() => {
           <p class="landing-hero-foot dim text-sm">{{ t('landing.hero_foot') }}</p>
         </div>
 
-        <!-- Product mock: a single lesson card showing one answered MCQ. Pure
-             markup + CSS, themed by the same tokens as the real lesson UI.
-             aria-hidden because it's decorative - all real copy is in the
-             left column. -->
-        <div class="landing-hero-mock" aria-hidden="true">
+        <!-- Product demo: one MCQ the visitor can actually answer. ref used by
+             the IntersectionObserver to trigger the ring animation. Not
+             aria-hidden - it's interactive, so it's real content now. -->
+        <div class="landing-hero-mock" ref="heroMock">
           <div class="landing-mock-card">
             <div class="landing-mock-head">
               <span class="landing-mock-topic">{{ t('landing.mock_topic') }}</span>
-              <span class="landing-mock-streak">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2c1.5 3 5 4.5 5 9a5 5 0 0 1-10 0c0-1.5.5-2.5 1-3.5C8 9 9 11 10 11c1 0 1-2 0-4-.8-1.6 0-3.5 2-5Z"
-                    fill="var(--coral)" />
+              <span class="landing-mock-ring" :title="t('landing.mock_ring_label')">
+                <svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="19" cy="19" r="15" fill="none" stroke="var(--border)" stroke-width="3" />
+                  <circle class="landing-mock-ring-fill" cx="19" cy="19" r="15" fill="none" stroke="var(--accent)"
+                    stroke-width="3" stroke-linecap="round"
+                    :stroke-dasharray="ringCircumference" :stroke-dashoffset="ringOffset"
+                    transform="rotate(-90 19 19)" />
                 </svg>
-                7
+                <span class="landing-mock-ring-num mono">{{ ringVisible ? RING_TARGET : 0 }}%</span>
               </span>
             </div>
             <p class="landing-mock-q">{{ t('landing.mock_question') }}</p>
-            <div class="landing-mock-opts">
-              <div class="landing-mock-opt">
-                <span class="landing-mock-key">A</span>
-                <span>{{ t('landing.mock_opt_a') }}</span>
-              </div>
-              <div class="landing-mock-opt is-correct">
-                <span class="landing-mock-key">B</span>
-                <span>{{ t('landing.mock_opt_b') }}</span>
-                <svg class="landing-mock-tick" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
+            <div class="landing-mock-opts" role="group" :aria-label="t('landing.mock_question')">
+              <button v-for="o in demoOptions" :key="o.key" type="button" class="landing-mock-opt"
+                :class="optionStateClass(o)" :disabled="submitted" @click="selectDemo(o.key)">
+                <span class="landing-mock-key">{{ o.key }}</span>
+                <span class="landing-mock-opt-text">{{ t(o.labelKey) }}</span>
+                <svg v-if="submitted && o.correct" class="landing-mock-mark" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M5 13l4 4L19 7" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round"
                     stroke-linejoin="round" />
                 </svg>
-              </div>
-              <div class="landing-mock-opt">
-                <span class="landing-mock-key">C</span>
-                <span>{{ t('landing.mock_opt_c') }}</span>
-              </div>
+                <svg v-else-if="submitted && selectedKey === o.key" class="landing-mock-mark" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" />
+                </svg>
+              </button>
             </div>
-            <div class="landing-mock-feedback">{{ t('landing.mock_feedback') }}</div>
+
+            <!-- Before submit: the submit button (disabled until a pick is made).
+                 After submit: feedback + try-again. -->
+            <button v-if="!submitted" type="button" class="btn btn-primary btn-block landing-mock-submit"
+              :disabled="selectedKey === null" @click="submitDemo">
+              {{ t('landing.mock_submit') }}
+            </button>
+
+            <template v-else>
+              <div class="landing-mock-feedback" :class="isCorrect ? 'is-correct' : 'is-wrong'">
+                <template v-if="isCorrect">{{ t('landing.mock_feedback_correct') }}</template>
+                <template v-else>
+                  {{ t('landing.mock_feedback_wrong') }}
+                  <template v-if="selectedOption?.whyKey"> {{ t(selectedOption.whyKey) }}</template>
+                </template>
+              </div>
+              <div class="landing-mock-after">
+                <span class="landing-mock-streak" v-if="isCorrect">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2c1.5 3 5 4.5 5 9a5 5 0 0 1-10 0c0-1.5.5-2.5 1-3.5C8 9 9 11 10 11c1 0 1-2 0-4-.8-1.6 0-3.5 2-5Z"
+                      fill="var(--coral)" />
+                  </svg>
+                  {{ t('landing.mock_streak', { n: demoStreak }) }}
+                </span>
+                <button type="button" class="btn btn-ghost btn-sm" @click="resetDemo">
+                  {{ t('landing.mock_retry') }}
+                </button>
+              </div>
+            </template>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Stat band: three concrete numbers for credibility. Thin strip between
-         hero and the why block. -->
-    <section class="landing-stats">
+         hero and the why block. The first (numeric) stat counts up on
+         scroll-in; the other two are categorical and render as-is. -->
+    <section class="landing-stats" ref="statsBand">
       <div class="landing-container landing-stats-grid">
         <div class="landing-stat">
-          <div class="landing-stat-value">{{ t('landing.stat_1_value') }}</div>
+          <div class="landing-stat-value">
+            {{ animatedTen }}<span class="landing-stat-unit"> {{ t('landing.stat_1_unit') }}</span>
+          </div>
           <div class="landing-stat-label dim">{{ t('landing.stat_1_label') }}</div>
         </div>
         <div class="landing-stat">
@@ -179,6 +386,35 @@ onMounted(() => {
             <h3>{{ t('landing.why_3_title') }}</h3>
             <p class="dim">{{ t('landing.why_3_body') }}</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Syllabus heatmap (illustrative). A grid of LO mastery cells coloured by
+         bucket, mirroring the real Progress page. Hovering a cell shows its
+         topic + mastery via the native title tooltip. Static demo data. -->
+    <section class="landing-heatmap">
+      <div class="landing-container landing-heatmap-inner">
+        <div class="landing-heatmap-copy">
+          <h2 class="landing-section-title" style="text-align: left; margin-bottom: 14px;">
+            {{ t('landing.heat_title') }}
+          </h2>
+          <p class="dim landing-heatmap-lede">{{ t('landing.heat_lede') }}</p>
+          <div class="landing-heatmap-legend">
+            <span class="landing-heat-legend-item">
+              <span class="landing-heat-swatch heat-1"></span>{{ t('landing.heat_legend_low') }}
+            </span>
+            <span class="landing-heat-legend-item">
+              <span class="landing-heat-swatch heat-2"></span>{{ t('landing.heat_legend_mid') }}
+            </span>
+            <span class="landing-heat-legend-item">
+              <span class="landing-heat-swatch heat-4"></span>{{ t('landing.heat_legend_high') }}
+            </span>
+          </div>
+        </div>
+        <div class="landing-heatmap-grid" role="list" :aria-label="t('landing.heat_title')">
+          <span v-for="(cell, i) in heatCells" :key="i" class="landing-heat-cell" :class="heatBucket(cell.mastery)"
+            role="listitem" :title="heatTitle(cell)" :aria-label="heatTitle(cell)"></span>
         </div>
       </div>
     </section>

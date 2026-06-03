@@ -224,7 +224,7 @@ function onLogoutMobile() {
     <!-- Mobile bar. Hidden above 720px via CSS. Brand on the left, stats pills
          (compact) in the middle so they're still glanceable without opening
          the drawer, hamburger on the right. -->
-    <div class=" ">
+    <div class="app-nav-mobile">
       <RouterLink :to="lp(`/dashboard`)" class="brand app-nav-brand app-nav-mobile-brand">
         <div class="brand-mark"></div>
         <span>Finshark</span>

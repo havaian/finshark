@@ -7,7 +7,7 @@ const route = useRoute();
 
 // Where to go after sign-in completes. Set by router.beforeEach when an
 // unauthenticated user hits a protected route. Stash it in sessionStorage so
-// the /auth/callback page can read it after Google's redirect — query params
+// the /auth/callback page can read it after Google's redirect - query params
 // don't survive the round-trip through Google.
 const NEXT_STORAGE_KEY = 'finshark.post_login_next';
 
@@ -31,7 +31,7 @@ function onGoogleSignIn() {
     <div class="auth-card">
       <h1>{{ t('login.title') }}</h1>
       <p class="dim" style="margin-bottom: 22px;">
-        {{ t('login.title') }} — {{ t('login.google_btn') }}
+        {{ t('login.title') }} - {{ t('login.google_btn') }}
       </p>
 
       <button type="button" class="btn btn-primary btn-block" @click="onGoogleSignIn">

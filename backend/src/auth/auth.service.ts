@@ -42,7 +42,7 @@ export interface AuthResult {
 // ready to go. Admins with 2FA enrolled get `kind: 'two_factor_required'`
 // with a short-lived pending token that the frontend swaps for real tokens
 // at /auth/2fa-verify. The PublicUser is intentionally NOT returned in the
-// pending case — we don't want to leak account existence/details until the
+// pending case - we don't want to leak account existence/details until the
 // second factor clears.
 export type GoogleCallbackResult =
   | { kind: "authenticated"; user: PublicUser; tokens: AuthTokens }
@@ -51,7 +51,7 @@ export type GoogleCallbackResult =
 // Internal state token format: "<random_nonce>.<hmac>". Signed with
 // GOOGLE_OAUTH_STATE_SECRET so we can verify it on the callback without
 // storing anything server-side.
-const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes — plenty for any human flow
+const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes - plenty for any human flow
 
 @Injectable()
 export class AuthService {
@@ -116,7 +116,7 @@ export class AuthService {
     // 2) Exchange the auth code for tokens from Google.
     // Named googleTokens (not just `tokens`) to avoid shadowing the
     // AuthTokens variable declared later in this function for our own
-    // session tokens — those are what we actually return to the caller.
+    // session tokens - those are what we actually return to the caller.
     const client = this.getGoogleClient();
     let googleTokens: { id_token?: string | null };
     try {
@@ -132,7 +132,7 @@ export class AuthService {
     }
 
     // 3) Verify the ID token. google-auth-library handles JWKs, signature,
-    //    issuer, audience, expiry — everything. If anything's off it throws.
+    //    issuer, audience, expiry - everything. If anything's off it throws.
     const clientId = this.config.getOrThrow<string>("GOOGLE_OAUTH_CLIENT_ID");
     let payload: {
       sub?: string;
@@ -159,7 +159,7 @@ export class AuthService {
     if (!google_sub || !email) {
       throw new UnauthorizedException("google profile missing sub or email");
     }
-    // We trust Google's email_verified — they DO verify emails before issuing
+    // We trust Google's email_verified - they DO verify emails before issuing
     // tokens with email_verified: true. Reject anything that isn't verified.
     if (payload.email_verified !== true) {
       throw new UnauthorizedException("google email not verified");
@@ -179,14 +179,14 @@ export class AuthService {
     }
 
     // 4) Look up by google_sub first (the stable identifier).
-    //    If not found, try email — if a row matches by email but doesn't have
+    //    If not found, try email - if a row matches by email but doesn't have
     //    google_sub yet, attach it (auto-link). Otherwise create a fresh user.
     let user = await this.users.findByGoogleSub(google_sub);
     if (!user) {
       const byEmail = await this.users.findByEmail(email);
       if (byEmail) {
         // Auto-link: email matched but no google_sub. In a hard-cutover world
-        // this is rare — it'd only happen if a row was created out-of-band.
+        // this is rare - it'd only happen if a row was created out-of-band.
         // Kept for completeness.
         user = await this.users.attachGoogleSubByEmail({ email, google_sub });
       }
@@ -255,7 +255,7 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
-  // Logout: revoke the presented refresh token. Idempotent — if the token is
+  // Logout: revoke the presented refresh token. Idempotent - if the token is
   // unknown or already revoked, we still return success. Access tokens cannot be
   // revoked server-side, so they expire on their normal short TTL.
   async logout(refresh_token: string): Promise<void> {

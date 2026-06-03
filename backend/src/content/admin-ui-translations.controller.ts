@@ -27,7 +27,7 @@ export class AdminUiTranslationsController {
   }
 
   // POST /api/admin/ui-translations  { key, lang, value }
-  // Upsert — same endpoint for create + update; keeps the admin UI simple.
+  // Upsert - same endpoint for create + update; keeps the admin UI simple.
   @Post()
   @HttpCode(HttpStatus.OK)
   upsert(@Body() dto: UpsertUiTranslationDto) {

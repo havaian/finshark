@@ -34,7 +34,7 @@ export class LearningObjectivesRepository {
 
   // Batch fetch by id, used by the lesson service to assemble per-LO theory
   // bites for a queue without N+1 single-row reads. Order of returned rows
-  // is NOT guaranteed to match the input — caller must re-index by id.
+  // is NOT guaranteed to match the input - caller must re-index by id.
   async findManyByIds(ids: string[]): Promise<LearningObjectiveRow[]> {
     if (ids.length === 0) return [];
     return this.sql<LearningObjectiveRow[]>`

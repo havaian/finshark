@@ -31,7 +31,7 @@ import { useThemeStore } from '../stores/theme.store';
 import { fmtDate } from '../i18n/dates';
 import AppNav from '../components/AppNav.vue';
 
-// Register only the chart.js modules we use — reduces bundle size.
+// Register only the chart.js modules we use - reduces bundle size.
 Chart.register(
   BarController, BarElement,
   LineController, LineElement, PointElement,
@@ -52,7 +52,7 @@ const stats = ref<ProfileStats | null>(null);
 const loading = ref(true);
 const errorMsg = ref<string | null>(null);
 
-// Badges (3.4). Fetched in parallel with profile/stats; failure is non-fatal —
+// Badges (3.4). Fetched in parallel with profile/stats; failure is non-fatal -
 // the page still renders fine without badges (we just hide the section).
 const badges = ref<PublicBadge[]>([]);
 const badgesLoading = ref(true);
@@ -62,7 +62,7 @@ const badgesEarnedCount = computed(() =>
 );
 const badgesTotalCount = computed(() => badges.value.length);
 
-// Achievements — parallel system to badges (multi-level progress vs binary
+// Achievements - parallel system to badges (multi-level progress vs binary
 // earned/not). Fetched alongside; failure non-fatal (section hides). Same
 // loading pattern as badges so they appear in sync.
 const achievements = ref<PublicAchievement[]>([]);
@@ -75,7 +75,7 @@ const achievementsTotalCount = computed(() => achievements.value.length);
 
 // Payments / subscriptions history. Lazy-loaded in parallel with the rest of
 // the profile so a slow billing query doesn't gate the page paint. Failure
-// is non-fatal — the section just shows the empty state ("no subscriptions
+// is non-fatal - the section just shows the empty state ("no subscriptions
 // yet") rather than disappearing, so users who'd been free always know the
 // section exists for promo redemptions.
 const subscriptions = ref<Subscription[]>([]);
@@ -100,11 +100,11 @@ const chartInstances = new Map<string, Chart>();
 
 const accuracyPctDisplay = computed(() => {
   const p = stats.value?.overall.accuracy_pct;
-  if (p === null || p === undefined) return '—';
+  if (p === null || p === undefined) return '-';
   return `${Math.round(p)}%`;
 });
 
-// Joined date — depends on the active locale; using a computed so it auto-
+// Joined date - depends on the active locale; using a computed so it auto-
 // updates when the user toggles language at runtime.
 const joinedDate = computed(() => {
   if (!me.value) return '';
@@ -126,14 +126,14 @@ async function load() {
         badges.value = rows;
       })
       .catch(() => {
-        // Swallow — badge grid will just be empty and hidden.
+        // Swallow - badge grid will just be empty and hidden.
         badges.value = [];
       })
       .finally(() => {
         badgesLoading.value = false;
       });
 
-    // Achievements — same parallel pattern. A failure here only hides the
+    // Achievements - same parallel pattern. A failure here only hides the
     // achievements section; the rest of the profile still renders.
     const achievementsPromise = achievementsApi
       .getMine()
@@ -147,7 +147,7 @@ async function load() {
         achievementsLoading.value = false;
       });
 
-    // Subscriptions history — same lazy / non-fatal pattern.
+    // Subscriptions history - same lazy / non-fatal pattern.
     const subscriptionsPromise = billingApi
       .getMySubscriptions()
       .then((rows) => {
@@ -170,7 +170,7 @@ async function load() {
     // Important: drop the loading guard BEFORE nextTick so the inner
     // template (which is gated on !loading && me && stats) actually mounts
     // the chart canvases. The previous flow only flipped loading to false
-    // in `finally`, AFTER renderCharts() — so every canvas ref was null
+    // in `finally`, AFTER renderCharts() - so every canvas ref was null
     // when we tried to attach a Chart, and the accuracy / difficulty /
     // type charts silently never rendered.
     loading.value = false;
@@ -180,7 +180,7 @@ async function load() {
     // edge so the user lands on today's column. Otherwise the 12-month
     // window opens scrolled to ~12 months ago.
     void scrollHeatmapToLatest();
-    // Don't block the page on these — they show up as soon as they arrive.
+    // Don't block the page on these - they show up as soon as they arrive.
     void badgesPromise;
     void achievementsPromise;
     void subscriptionsPromise;
@@ -201,7 +201,7 @@ watch(
   },
 );
 
-// Reload badges when the UI language changes — the backend localises
+// Reload badges when the UI language changes - the backend localises
 // name/description server-side based on the X-Lang header, so re-fetching is
 // the cheapest way to get translated copy. Charts also re-render so axis
 // labels & legends update. Achievements share the same reload pattern since
@@ -215,7 +215,7 @@ watch(
       const rows = await badgesApi.getMine();
       badges.value = rows;
     } catch {
-      // Keep previous list if fetch fails — better than wiping the section.
+      // Keep previous list if fetch fails - better than wiping the section.
     } finally {
       badgesLoading.value = false;
     }
@@ -392,20 +392,20 @@ function renderCharts() {
   }
 }
 
-// Activity heatmap — handled as plain CSS grid rather than chart.js, because
+// Activity heatmap - handled as plain CSS grid rather than chart.js, because
 // chart.js doesn't have a clean Github-contributions heatmap and this is fast.
 // Window selector lets the user pick 90 / 180 / 365 days; the grid width
-// adjusts (no chunked re-fetch — the backend always returns 365 days of
+// adjusts (no chunked re-fetch - the backend always returns 365 days of
 // activity, we just slice client-side).
 //
 // Layout: month labels run along the top (positioned at the column where each
 // new month begins), weekday labels run down the left edge (Mon/Wed/Fri only
-// — matches GitHub's convention to keep the column tight), and hovering a
+// - matches GitHub's convention to keep the column tight), and hovering a
 // cell pops a small tooltip with the exact date and count.
 interface HeatCell { date: string; count: number; intensity: 0 | 1 | 2 | 3 | 4 }
 interface MonthLabel { col: number; key: string; short: string }
 
-// User-selectable window. 90 days is the default — shows enough recent
+// User-selectable window. 90 days is the default - shows enough recent
 // activity without scrolling, and matches a typical "did I study this term"
 // question. 180 and 365 are escape hatches for longer-term review.
 type HeatmapWindow = 90 | 180 | 365;
@@ -552,7 +552,7 @@ function onCellLeave() {
   hoverPos.value = null;
 }
 
-// Localised weekday labels (Mon, Wed, Fri — matches GitHub). Computed so they
+// Localised weekday labels (Mon, Wed, Fri - matches GitHub). Computed so they
 // update when the language toggles.
 const weekdayLabels = computed(() => ({
   mon: t('profile.heatmap_day_mon'),
@@ -560,7 +560,7 @@ const weekdayLabels = computed(() => ({
   fri: t('profile.heatmap_day_fri'),
 }));
 
-// Pretty date for the tooltip — uses the active UI language (vue-i18n
+// Pretty date for the tooltip - uses the active UI language (vue-i18n
 // locale, not navigator.language). The heatmap-day strings come from the
 // backend as plain YYYY-MM-DD assumed UTC, so we parse with the explicit
 // 'T00:00:00Z' suffix and format in UTC to keep the displayed date matching
@@ -629,7 +629,7 @@ function extractError(e: unknown): string | null {
 }
 
 // Resolve a plan id (e.g. `premium_lifetime`) to a localized human-readable
-// label. The backend stores the raw id on each subscription — the user-facing
+// label. The backend stores the raw id on each subscription - the user-facing
 // payments section was previously printing it directly, which leaked the slug
 // into the UI ("premium_lifetime" instead of "Premium · lifetime"). Falls
 // back to the raw id when no i18n key exists, so unknown plans (future PSPs)
@@ -824,7 +824,7 @@ onMounted(load);
         <!-- Badges (3.4). Renders the full catalog so users see what's available
              alongside what they've earned. Unearned tiles get .locked styling
              (greyscale + opacity). Section hides entirely on fetch failure
-             (badges.length === 0 AND not loading) — graceful degradation. -->
+             (badges.length === 0 AND not loading) - graceful degradation. -->
         <section v-if="badgesLoading || badges.length > 0" class="card badges-section mt-6">
           <header class="badges-section-head">
             <h2>{{ t('profile.badges_section') }}</h2>
@@ -854,7 +854,7 @@ onMounted(load);
           </div>
         </section>
 
-        <!-- Achievements — parallel multi-level progression system. Lives
+        <!-- Achievements - parallel multi-level progression system. Lives
              UNDER badges (binary earned/not) so the eye reads badges first
              as the simpler signal, then drills into the progress bars. Each
              card shows: icon, name, current level name + number, progress

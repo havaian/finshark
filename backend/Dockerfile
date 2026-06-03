@@ -8,7 +8,7 @@
 #   docker build -f backend/Dockerfile -t finshark-backend .
 #
 # Migrations run at container start via `node-pg-migrate up` (see CMD).
-# Idempotent — already-applied migrations are tracked in the pgmigrations table
+# Idempotent - already-applied migrations are tracked in the pgmigrations table
 # and skipped. No external migration tool needed in the image.
 
 # ---------- 1) base: node 24 + pnpm ----------
@@ -64,8 +64,8 @@ WORKDIR /app/backend
 
 EXPOSE 3001
 # Run migrations, then start the API. node-pg-migrate is idempotent and tracks
-# applied migrations in the pgmigrations table — already-applied ones are skipped.
+# applied migrations in the pgmigrations table - already-applied ones are skipped.
 # If migrations fail, the container exits and won't start with a stale schema.
-# main.ts imports dotenv/config — when running in a container we rely on real
+# main.ts imports dotenv/config - when running in a container we rely on real
 # environment variables, not a .env file. dotenv silently no-ops if no file.
 CMD ["sh", "-c", "npx node-pg-migrate up && node dist/main.js"]

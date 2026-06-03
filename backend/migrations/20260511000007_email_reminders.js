@@ -1,6 +1,6 @@
 // backend/migrations/20260511000007_email_reminders.js
 // Adds email_reminders_enabled to users and a dedup table for sent reminders.
-// (user_id, reminder_date) is the natural key — prevents duplicate sends from
+// (user_id, reminder_date) is the natural key - prevents duplicate sends from
 // cron retries or multi-instance deploys.
 
 exports.shorthands = undefined;

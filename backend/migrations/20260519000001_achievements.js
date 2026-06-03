@@ -1,11 +1,11 @@
-// Achievements — a parallel, multi-level progression system that lives ALONGSIDE
+// Achievements - a parallel, multi-level progression system that lives ALONGSIDE
 // the existing binary `badges` system (don't conflate the two).
 //
 // Design:
-//   achievements              — static catalog. `code` is the stable key
+//   achievements              - static catalog. `code` is the stable key
 //                               referenced from src/achievements/achievements.rules.ts
 //                               and from user_achievement_progress.achievement_code.
-//                               `levels` is a jsonb array — each element shaped
+//                               `levels` is a jsonb array - each element shaped
 //                               as { level: int, threshold: int, name_en: text,
 //                               name_ru: text }. We keep levels inline (rather
 //                               than a separate achievement_levels table) because
@@ -13,13 +13,13 @@
 //                               row together with its levels; a join here would
 //                               just add round-trips for no payoff.
 //
-//   user_achievement_progress — one row per (user, achievement). Tracks the
+//   user_achievement_progress - one row per (user, achievement). Tracks the
 //                               raw metric value (e.g. lessons completed),
 //                               the highest level the user has unlocked so far
 //                               (0 = none yet), and a jsonb map of
 //                               { "1": "2026-05-19T...", "2": "..." } recording
 //                               when each level was first crossed. The map is
-//                               additive — never overwritten — so we can show
+//                               additive - never overwritten - so we can show
 //                               "earned Trainee on X date" later.
 //
 // Why a single `current_value` instead of recomputing per-rule on the fly?
@@ -70,7 +70,7 @@ exports.up = (pgm) => {
     current_value: { type: 'integer', notNull: true, default: 0 },
     // Highest unlocked level. 0 means "in catalogue but not unlocked yet".
     current_level: { type: 'integer', notNull: true, default: 0 },
-    // { "1": "ISO8601 timestamp", "2": "...", ... } — earned-at per level.
+    // { "1": "ISO8601 timestamp", "2": "...", ... } - earned-at per level.
     // jsonb (not jsonb[]) because we want key-based lookups / partial updates.
     unlocked_at_per_level: {
       type: 'jsonb',

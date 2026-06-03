@@ -12,7 +12,7 @@ import {
 } from '../../api/email-templates.api';
 
 // Admin email templates page. Two-pane layout: list on the left, editor on
-// the right. Same idiom as the unified content browser — picking a template
+// the right. Same idiom as the unified content browser - picking a template
 // loads it into the editor; saving upserts (the key is the PK, no rename).
 //
 // The editor exposes EN + RU bodies (RU optional with EN fallback), an
@@ -49,7 +49,7 @@ const saving = ref(false);
 const savedFlash = ref(false);
 
 // Test-send state. Bound to the current editor key (or whatever was last
-// saved). Variables are entered as JSON for simplicity — wrong shape
+// saved). Variables are entered as JSON for simplicity - wrong shape
 // surfaces as a 400 from the backend's class-validator.
 const testTo = ref('');
 const testLang = ref<'en' | 'ru'>('en');
@@ -235,7 +235,7 @@ async function onSendBlast() {
   if (selectedKey.value === null || blastSending.value) return;
   blastError.value = null;
   blastResult.value = null;
-  // Quick double-check confirmation — "send to all users" is a heavy action
+  // Quick double-check confirmation - "send to all users" is a heavy action
   // even for a small user base. Doesn't hit the backend until OK.
   const confirmMsg = t('admin.email_templates.blast_confirm', {
     audience: blastAudience.value,
@@ -382,7 +382,7 @@ const previewResolved = computed(() => {
 });
 
 // Seed the preview variables box with a default object whenever the
-// template's declared variable list changes — saves admins from typing the
+// template's declared variable list changes - saves admins from typing the
 // keys by hand. We only auto-seed when the box is still "default-ish" (empty
 // or contains only declared keys), so a mid-edit JSON isn't clobbered. The
 // initial seed and sampleMode-driven reseed go through the same helper.
@@ -410,7 +410,7 @@ watch(
 );
 
 // Toggling the placeholder/realistic mode re-seeds the box. We don't try to
-// preserve manual edits — if the admin is in placeholder mode and customised
+// preserve manual edits - if the admin is in placeholder mode and customised
 // a value, switching to realistic overwrites it. That's the documented
 // trade-off for a single "this is the sample data" box.
 watch(sampleMode, () => regenerateSampleVariables());
@@ -428,14 +428,14 @@ const declaredVariableList = computed<string[]>(() => {
 // Truncate / stringify a sample value for the reference panel. Strings
 // longer than 48 chars are ellipsised so a URL doesn't blow out the row.
 function formatSampleValue(v: string | number | undefined): string {
-  if (v === undefined) return '—';
+  if (v === undefined) return '-';
   const s = String(v);
   return s.length > 48 ? s.slice(0, 47) + '…' : s;
 }
 
 const placeholderHelp = computed(() => {
   // Detect placeholders that are referenced in the body but missing from
-  // the declared variables list. Purely informational — admin can ignore it.
+  // the declared variables list. Purely informational - admin can ignore it.
   const declared = new Set(
     form.value.variablesText
       .split('\n')
@@ -583,7 +583,7 @@ onMounted(load);
 
         <!-- Live preview. Renders subject + text + HTML using client-side
              {{var}} substitution (same shape as the backend). No save / no
-             send — just so the admin can see what the email will look like
+             send - just so the admin can see what the email will look like
              as they edit. The variables JSON box auto-seeds from the
              declared variable list. -->
         <div class="mt-6">

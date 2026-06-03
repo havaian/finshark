@@ -10,7 +10,7 @@ import { AdminSeedController } from "./admin-seed.controller";
 // the hood (matching the pattern in AdminUsersModule).
 //
 // The CLI `npm run db:seed` runner (src/seed/seed.ts) is INDEPENDENT of this
-// module — it spins up its own postgres client and does not boot Nest, so it
+// module - it spins up its own postgres client and does not boot Nest, so it
 // stays fast for CI and one-off runs.
 @Module({
   imports: [AuthModule, UsersModule],

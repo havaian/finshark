@@ -11,7 +11,7 @@ import { EmailTemplatesService } from "./email-templates.service";
 //     this is a one-shot blast keyed to an admin's "send this template to X
 //     users now" decision.
 //   - reminders are dedup'd per (user, date) via reminder_emails_sent;
-//     blasts intentionally don't dedup — an admin sending the same template
+//     blasts intentionally don't dedup - an admin sending the same template
 //     twice in a row should send twice. Use the audience filter to scope
 //     intent.
 //
@@ -38,7 +38,7 @@ export interface BlastInput {
   extra_variables?: Record<string, string | number>;
   // When true, ignore the `email_reminders_enabled` opt-out flag. Reserved
   // for legally-required transactional emails (e.g. account closure,
-  // billing receipts). Default false — operational blasts respect opt-out.
+  // billing receipts). Default false - operational blasts respect opt-out.
   ignore_opt_out?: boolean;
   // Cap per-call to protect against accidental "send to everyone" clicks.
   // The endpoint surfaces this as an error rather than silently truncating.
@@ -105,7 +105,7 @@ export class EmailBlastService {
 
     for (const r of recipients) {
       // Opt-out gate. The reminder cron also enforces this via its own
-      // findReminderRecipients query, but the blast surface is broader —
+      // findReminderRecipients query, but the blast surface is broader -
       // we re-check here so an admin can't accidentally skip the check by
       // selecting audience='all'.
       if (!input.ignore_opt_out && !r.email_reminders_enabled) {
@@ -131,7 +131,7 @@ export class EmailBlastService {
         reminder_hour_local: r.reminder_hour_local,
         app_url: appUrl,
         unsubscribe_url: unsubUrl,
-        // Admin-supplied vars win — they're the "global" customisation for
+        // Admin-supplied vars win - they're the "global" customisation for
         // this blast (e.g. campaign-specific copy slot).
         ...(input.extra_variables ?? {}),
       };
@@ -147,7 +147,7 @@ export class EmailBlastService {
           sent++;
           if (sampleRecipients.length < 10) sampleRecipients.push(r.email);
         } else {
-          // Template missing/inactive — log once and stop. Continuing would
+          // Template missing/inactive - log once and stop. Continuing would
           // just spam the same warning per recipient.
           this.log.error(
             `blast aborted: template "${input.templateKey}" not active`

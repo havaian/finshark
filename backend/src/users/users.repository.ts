@@ -40,7 +40,7 @@ export class UsersRepository {
     return rows[0] ?? null;
   }
 
-  // Google's stable identifier — the primary lookup once a user has logged in once.
+  // Google's stable identifier - the primary lookup once a user has logged in once.
   async findByGoogleSub(google_sub: string): Promise<UserRow | null> {
     const rows = await this.sql<UserRow[]>`
       SELECT ${this.sql.unsafe(USER_COLS)}
@@ -68,7 +68,7 @@ export class UsersRepository {
   // Auto-link: an account exists for this email but has no google_sub yet
   // (e.g. created out-of-band, or pre-migration). Attach Google's sub to it.
   // Returns the updated row; throws if google_sub is already in use by ANOTHER
-  // user (which would mean the same Google account is linked twice — a bug).
+  // user (which would mean the same Google account is linked twice - a bug).
   async attachGoogleSubByEmail(input: {
     email: string;
     google_sub: string;
@@ -87,7 +87,7 @@ export class UsersRepository {
   // and write them here in a single statement.
   //
   // streak_freezes_remaining is included even though most sessions don't move
-  // it — writing the unchanged value is cheap and saves us a conditional
+  // it - writing the unchanged value is cheap and saves us a conditional
   // builder. The nextStreak() helper returns the post-session value either
   // way.
   async applySessionResult(input: {
@@ -111,7 +111,7 @@ export class UsersRepository {
     return rows[0];
   }
 
-  // List all users — for the admin users page.
+  // List all users - for the admin users page.
   // Sorted: admins first, then by created_at desc (newest non-admins on top).
   async findAll(): Promise<UserRow[]> {
     return this.sql<UserRow[]>`

@@ -25,7 +25,7 @@ const LangLayout = defineComponent({
   render: () => h(RouterView),
 });
 
-// Lazy imports — these pages are heavy (chart.js for Profile/Progress) or only
+// Lazy imports - these pages are heavy (chart.js for Profile/Progress) or only
 // reached by a subset of users (admin). Each becomes its own chunk so the
 // initial dashboard load doesn't ship them. Vue Router resolves the promise
 // the first time the route is visited.
@@ -58,10 +58,10 @@ const TwoFactorVerifyPage = () => import("../pages/TwoFactorVerifyPage.vue");
 const TwoFactorSetupPage = () => import("../pages/TwoFactorSetupPage.vue");
 
 // Route meta flags:
-//   requiresAuth          — redirect to /login if not authed
-//   requiresAdmin         — must be admin (implies requiresAuth)
-//   guestOnly             — redirect to /dashboard if already authed (login/register pages)
-//   skipsOnboardingGuard  — exempt from the onboarding-required redirect
+//   requiresAuth          - redirect to /login if not authed
+//   requiresAdmin         - must be admin (implies requiresAuth)
+//   guestOnly             - redirect to /dashboard if already authed (login/register pages)
+//   skipsOnboardingGuard  - exempt from the onboarding-required redirect
 //                           (the wizard itself, logout, unsubscribe-via-token)
 //
 // Localized routes:
@@ -69,19 +69,19 @@ const TwoFactorSetupPage = () => import("../pages/TwoFactorSetupPage.vue");
 //   active language (e.g. /ru/dashboard, /en/profile). Two exceptions live
 //   at the document root because their URLs are fixed by external systems
 //   that can't carry a lang prefix:
-//     - /auth/callback  — registered with Google OAuth as the redirect URI
-//     - /unsubscribe    — emailed to users from the server, no session context
+//     - /auth/callback  - registered with Google OAuth as the redirect URI
+//     - /unsubscribe    - emailed to users from the server, no session context
 //   Bare URLs (e.g. /dashboard, /2fa-verify, /) fall through to the catch-all
 //   at the bottom of this file, which injects the active-lang prefix
 //   (e.g. /en/2fa-verify) while preserving the URL fragment.
 //
 //   The :lang regex (en|ru) means unknown prefixes like /jp/dashboard do NOT
-//   match this branch — they fall through to the * catch-all at the bottom,
+//   match this branch - they fall through to the * catch-all at the bottom,
 //   which redirects to the home page in the default lang. Add new languages
 //   by appending to SUPPORTED_LANGS in i18n/index.ts AND extending the regex
 //   below (kept in sync manually because Vue Router needs a literal).
 const routes: RouteRecordRaw[] = [
-  // External-entry routes (no lang prefix — see comment above).
+  // External-entry routes (no lang prefix - see comment above).
   {
     path: "/auth/callback",
     name: "auth-callback",
@@ -115,7 +115,7 @@ const routes: RouteRecordRaw[] = [
       {
         // The admin 2FA challenge page. Reached via redirect from the Google
         // callback when the user is an admin with totp_secret set. No auth
-        // required (the user isn't authenticated yet — that's the whole point),
+        // required (the user isn't authenticated yet - that's the whole point),
         // but skipsOnboardingGuard so the onboarding redirect doesn't fire.
         path: "2fa-verify",
         name: "two-factor-verify",
@@ -147,7 +147,7 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, titleKey: "page_titles.profile" },
       },
       {
-        // Public profile view — clicking a user on the leaderboard lands here.
+        // Public profile view - clicking a user on the leaderboard lands here.
         // Auth required: the backend endpoint requires auth, so unauthed visitors
         // would hit a wall anyway. requiresAuth bounces them through /login first.
         path: "users/:id",
@@ -183,7 +183,7 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, titleKey: "page_titles.mock_start" },
       },
       {
-        // The breakdown route shares its session_id with the lesson route — same
+        // The breakdown route shares its session_id with the lesson route - same
         // session row in the DB. We use a different path so users can bookmark
         // their result. Navigation between lesson → breakdown is via router.replace.
         path: "mocks/:session_id/breakdown",
@@ -192,7 +192,7 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, titleKey: "page_titles.mock_breakdown" },
       },
       {
-        // Per-question review of a completed mock — distinct from the practice
+        // Per-question review of a completed mock - distinct from the practice
         // lesson the old "Review answers" button kicked off. Bookmarkable by
         // session_id so the user can come back to the walkthrough later.
         path: "mocks/:session_id/review",
@@ -207,14 +207,14 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, titleKey: "page_titles.lesson" },
       },
 
-      // Admin — nested under AdminLayout. The layout provides the sidebar/topbar;
+      // Admin - nested under AdminLayout. The layout provides the sidebar/topbar;
       // each child page renders into its <RouterView/>.
       {
         path: "admin",
         component: AdminLayout,
         meta: { requiresAuth: true, requiresAdmin: true },
         children: [
-          // Default admin landing — overview dashboard with at-a-glance counts.
+          // Default admin landing - overview dashboard with at-a-glance counts.
           // Use a name-based redirect so the :lang param is preserved automatically;
           // a string redirect like '/admin/overview' would lose the lang prefix.
           { path: "", redirect: { name: "admin-overview" } },
@@ -292,13 +292,13 @@ const routes: RouteRecordRaw[] = [
   },
 
   // Catch-all for unmatched URLs. Two cases land here:
-  //   1) Bare app paths like /2fa-verify or /dashboard — no lang prefix.
+  //   1) Bare app paths like /2fa-verify or /dashboard - no lang prefix.
   //      These come from external entry points (the Google OAuth callback
   //      redirects to /2fa-verify#... when 2FA is required). We inject the
   //      preferred lang and preserve the path so the user lands on the right
   //      page. Vue Router merges to.query/to.hash into the redirect target
   //      automatically, so the URL fragment carrying pending_2fa_token survives.
-  //   2) Unknown lang prefixes like /jp/anything — send to home in default lang.
+  //   2) Unknown lang prefixes like /jp/anything - send to home in default lang.
   //
   // Note: route-level `redirect` resolves BEFORE beforeEach guards in vue-router 4,
   // so the bare-URL handling has to live here rather than in the guard.
@@ -359,7 +359,7 @@ router.beforeEach((to) => {
   }
 
   // 2) Sync the locale store with the URL's :lang param. When a user opens
-  // /en/dashboard while their saved preference is 'ru', the URL wins —
+  // /en/dashboard while their saved preference is 'ru', the URL wins -
   // pasting a localized link should switch the app to that lang.
   const urlLang = to.params.lang;
   if (
@@ -375,7 +375,7 @@ router.beforeEach((to) => {
   const auth = useAuthStore();
   // Snapshot the current lang for any name-based redirect below; without it,
   // returning { name: 'login' } would lose the :lang param and Vue Router
-  // would synthesize a URL without one — which the bare-URL guard would
+  // would synthesize a URL without one - which the bare-URL guard would
   // then bounce, causing a redirect loop. Always pass params: { lang }.
   const lang =
     typeof urlLang === "string" &&
@@ -395,7 +395,7 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.requiresAdmin && !auth.user?.is_admin) {
-    // Authed but not admin — bounce to dashboard, no useful page to send to.
+    // Authed but not admin - bounce to dashboard, no useful page to send to.
     return { name: "dashboard", params: { lang } };
   }
 
@@ -403,7 +403,7 @@ router.beforeEach((to) => {
   // also enforces this (AdminWith2faGuard returns 403 { error: "2FA_SETUP_REQUIRED" }),
   // but the client gate makes the redirect feel intentional instead of
   // surfacing a generic API error. We DON'T block /settings/2fa itself
-  // (where the user enrolls) — admins need to be able to reach the
+  // (where the user enrolls) - admins need to be able to reach the
   // enrollment wizard. The query flag `force=1` lets the wizard show
   // a slightly different banner explaining the redirect.
   if (
@@ -427,7 +427,7 @@ router.beforeEach((to) => {
   // the wizard. Routes flagged skipsOnboardingGuard are exempt (the wizard
   // itself, auth callback, unsubscribe). The onboarded_at check uses the
   // auth store; if the store is hydrated from localStorage with a stale
-  // PublicUser that predates the migration, onboarded_at may be undefined —
+  // PublicUser that predates the migration, onboarded_at may be undefined -
   // we treat that as "needs onboarding" so a one-time redirect happens.
   if (
     auth.isAuthenticated &&
@@ -443,12 +443,12 @@ router.beforeEach((to) => {
 // ── Page titles ──────────────────────────────────────────────────────────
 // Set document.title from the route's meta.titleKey. Format: "{page} · Finshark",
 // with the bare "Finshark" used for the landing page (titleKey 'page_titles.home'
-// resolves to the brand alone — no suffix). Routes without a titleKey fall
+// resolves to the brand alone - no suffix). Routes without a titleKey fall
 // back to "Finshark" so we never have a stale title from a previous page.
 //
 // Updated on TWO events:
-//   1) Route change (afterEach) — landing on a new page.
-//   2) Locale change (watch on i18n.global.locale) — same page, new lang.
+//   1) Route change (afterEach) - landing on a new page.
+//   2) Locale change (watch on i18n.global.locale) - same page, new lang.
 //      Without this, switching lang would keep the title in the old language.
 //      Note: the drawer/settings language picker does a full page reload, so
 //      in practice (1) covers this case via the boot path; the watcher exists
@@ -466,7 +466,7 @@ function resolveTitle(titleKey: string | undefined): string {
   // typed as VueI18n by default. Matches the cast pattern in i18n/index.ts.
   const c = i18n.global as unknown as Composer;
   const label = c.t(titleKey);
-  // page_titles.home resolves to "Finshark" intentionally — don't double it up.
+  // page_titles.home resolves to "Finshark" intentionally - don't double it up.
   if (label === BRAND) return BRAND;
   return `${label}${TITLE_SEPARATOR}${BRAND}`;
 }

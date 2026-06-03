@@ -13,13 +13,13 @@ export class BadgesService {
   ) {}
 
   // Called after a lesson session completes (and any other moment a state
-  // change might trigger an earn — e.g. a mock, future). Iterates every rule
+  // change might trigger an earn - e.g. a mock, future). Iterates every rule
   // against the user's current snapshot, inserts new earns idempotently, and
   // returns the catalog codes that were freshly earned this call. The caller
   // includes those codes in the response so the frontend can toast.
   //
   // Failure mode: if context build or any insert throws, we log and return [].
-  // We never want a badge bug to break lesson completion — XP/streak progress
+  // We never want a badge bug to break lesson completion - XP/streak progress
   // is more important than the badge sugar.
   async evaluateAfterSession(user_id: string): Promise<string[]> {
     try {

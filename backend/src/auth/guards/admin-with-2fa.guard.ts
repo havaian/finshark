@@ -17,7 +17,7 @@ import type { RequestWithUser } from "./jwt-auth.guard";
 // the enrollment wizard instead of showing a generic forbidden message.
 //
 // IMPORTANT: do NOT use this guard on the TOTP setup endpoints themselves
-// (/me/2fa/*) — that would be a chicken-and-egg: the admin can't enroll
+// (/me/2fa/*) - that would be a chicken-and-egg: the admin can't enroll
 // because they're not enrolled. The TotpController stays on plain
 // AdminGuard. Every OTHER admin-only controller should switch to this
 // guard so admins are forced through enrollment before they can use

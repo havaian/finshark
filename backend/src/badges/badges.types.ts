@@ -18,7 +18,7 @@ export interface UserBadgeRow {
   earned_at: Date;
 }
 
-// Localized shape sent to the frontend — single language string per copy
+// Localized shape sent to the frontend - single language string per copy
 // field plus the earned flag. `earned_at` is null when the badge is in the
 // catalog but the user hasn't unlocked it yet (greyed-out in UI).
 export interface PublicBadge {

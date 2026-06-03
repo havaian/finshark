@@ -11,7 +11,7 @@ import { useLocalePath } from '../router/useLocalePath';
 import { fmtDate } from '../i18n/dates';
 import AppNav from '../components/AppNav.vue';
 
-// Public profile page — reached by clicking a name on the leaderboard. Shows
+// Public profile page - reached by clicking a name on the leaderboard. Shows
 // the viewed user's identity + progression stats + earned badges only. Never
 // shows email, preferences, or admin flag (none of which are even returned
 // by the backend endpoint).
@@ -75,7 +75,7 @@ function extractError(e: unknown): string | null {
   return null;
 }
 
-// Re-fetch on locale change so badge names/descriptions update — the backend
+// Re-fetch on locale change so badge names/descriptions update - the backend
 // localises them via the X-Lang header which the axios interceptor reads
 // from localStorage on every request.
 watch(() => locale.value, load);
@@ -151,7 +151,7 @@ onMounted(load);
           <div class="stat">
             <div class="stat-lbl">{{ t('public_profile.accuracy') }}</div>
             <div class="stat-val">
-              {{ profile.accuracy_pct === null ? '—' : `${Math.round(profile.accuracy_pct)}%` }}
+              {{ profile.accuracy_pct === null ? '-' : `${Math.round(profile.accuracy_pct)}%` }}
             </div>
           </div>
         </section>
@@ -173,7 +173,7 @@ onMounted(load);
           </div>
         </section>
 
-        <!-- Earned achievements — parallel system. Only shows items at
+        <!-- Earned achievements - parallel system. Only shows items at
              level >= 1 (locked ones are owner-only and would be noise on
              someone else's profile). Each tile shows icon, name, current
              level name (Trainee/Affiliate/Member), and when reached. -->
@@ -227,7 +227,7 @@ onMounted(load);
   }
 }
 
-/* Big avatar — distinct from the small AppNav avatar so the identity card
+/* Big avatar - distinct from the small AppNav avatar so the identity card
    feels like a "profile page" not a nav element. */
 .profile-avatar-big {
   width: 72px;

@@ -18,9 +18,9 @@ import type {
 // (creating papers, reordering LOs) but the daily workflow lives here.
 //
 // URL state:
-//   /admin/content                — empty state (pick an LO from the tree)
-//   /admin/content?lo=<id>        — questions for that LO loaded on the right
-//   /admin/content?lo=<id>&tab=drafts — filter open at "drafts" tab
+//   /admin/content                - empty state (pick an LO from the tree)
+//   /admin/content?lo=<id>        - questions for that LO loaded on the right
+//   /admin/content?lo=<id>&tab=drafts - filter open at "drafts" tab
 //
 // Keeping selection in the URL means refreshes preserve context and admins
 // can bookmark a specific LO.
@@ -36,7 +36,7 @@ const tree = ref<ContentTreePaper[]>([]);
 const treeLoading = ref(false);
 const treeError = ref<string | null>(null);
 // Papers default to expanded on first load (small data, easier to scan).
-// We persist collapsed-paper-ids in component state only (not URL) — refreshes
+// We persist collapsed-paper-ids in component state only (not URL) - refreshes
 // re-expand everything which is fine for small N.
 const collapsedPapers = ref<Set<string>>(new Set());
 
@@ -322,7 +322,7 @@ watch(
 // ---- Navigation helpers ----
 
 function selectLo(loId: string) {
-  // Preserve the current tab if any — switching LOs while on "drafts" keeps you there.
+  // Preserve the current tab if any - switching LOs while on "drafts" keeps you there.
   router.push({ query: { ...route.query, lo: loId } });
 }
 
@@ -364,7 +364,7 @@ const reseedError = ref<string | null>(null);
 const reseedResult = ref<ReseedResult | null>(null);
 
 // The literal an admin has to type into the confirm box. Kept here (not in
-// the locale) on purpose — admins should type the same word regardless of
+// the locale) on purpose - admins should type the same word regardless of
 // their UI language, so the safety net works even if a locale override breaks
 // the prompt copy.
 const RESEED_CONFIRM_LITERAL = 'RESEED';
@@ -377,7 +377,7 @@ function openReseedModal() {
   reseedConfirmText.value = '';
   reseedError.value = null;
   // Keep reseedResult.value so admins can re-read the last summary after
-  // closing & reopening — only cleared on successful new run.
+  // closing & reopening - only cleared on successful new run.
   reseedModalOpen.value = true;
 }
 
@@ -393,7 +393,7 @@ async function runReseed() {
   try {
     const result = await adminApi.systemReseed();
     reseedResult.value = result;
-    // The previously-selected LO id is likely gone now — drop it from the URL
+    // The previously-selected LO id is likely gone now - drop it from the URL
     // and reload the tree so the right pane shows the empty state again.
     if (selectedLoId.value) {
       await router.replace({ query: {} });
@@ -417,7 +417,7 @@ function extractError(e: unknown): string | null {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Structural ops — Add paper / Add LO / Add question / LLM generate
+// Structural ops - Add paper / Add LO / Add question / LLM generate
 // Ported from the legacy AdminPapersPage / AdminLosPage / AdminQuestionsPage
 // so the content browser is the single editor. Old pages can now be removed.
 // ─────────────────────────────────────────────────────────────────────
@@ -427,7 +427,7 @@ const showAddPaper = ref(false);
 const newPaperCode = ref('');
 const newPaperNameEn = ref('');
 const newPaperNameRu = ref('');
-// Defaults to true — same as the DB default. Admin can flip to create a
+// Defaults to true - same as the DB default. Admin can flip to create a
 // premium-only paper from the start.
 const newPaperFreeAccessible = ref(true);
 const addPaperBusy = ref(false);
@@ -621,7 +621,7 @@ const theoryEditError = ref<string | null>(null);
 async function openTheoryEdit() {
   if (!selectedLo.value) return;
   // Fetch the full LO to get current theory text (tree response doesn't
-  // include theory bodies — it only carries `has_theory` flag).
+  // include theory bodies - it only carries `has_theory` flag).
   theoryEditError.value = null;
   theoryEditBusy.value = true;
   try {
@@ -803,11 +803,11 @@ onMounted(reloadTree);
       <header class="content-tree-head">
         <h2>{{ t('admin.content.title') }}</h2>
         <div class="row" style="gap: 8px; align-items: center; flex-wrap: wrap;">
-          <!-- Add paper — moved here from the legacy AdminPapersPage. -->
+          <!-- Add paper - moved here from the legacy AdminPapersPage. -->
           <button type="button" class="btn-link accent" @click="openAddPaper">
             + {{ t('admin.papers.add_btn') }}
           </button>
-          <!-- Drop & reseed: destructive — danger styling. -->
+          <!-- Drop & reseed: destructive - danger styling. -->
           <button type="button" class="btn-link" style="color: var(--danger);" @click="openReseedModal">
             {{ t('admin.content.reseed_btn') }}
           </button>
@@ -922,7 +922,7 @@ onMounted(reloadTree);
             :placeholder="t('admin.content.search_ph')" />
         </div>
 
-        <!-- Batch toolbar — appears when in Drafts tab with selection -->
+        <!-- Batch toolbar - appears when in Drafts tab with selection -->
         <div v-if="statusTab === 'drafts' && selectedIds.size > 0" class="content-batch-bar">
           <span class="text-sm">
             {{ t('admin.content.selected_count', { count: selectedIds.size }) }}
@@ -952,7 +952,7 @@ onMounted(reloadTree);
             }}
           </div>
 
-          <!-- "Select all in view" header — only shown on Drafts tab with results. -->
+          <!-- "Select all in view" header - only shown on Drafts tab with results. -->
           <label v-if="statusTab === 'drafts' && filteredQuestions.length > 0" class="content-select-all">
             <input type="checkbox" :checked="allFilteredSelected" @change="toggleSelectAll" />
             <span class="dim text-xs">{{ t('admin.content.select_all_in_view') }}</span>
@@ -991,7 +991,7 @@ onMounted(reloadTree);
     </section>
 
     <!-- Edit modal -->
-    <!-- Backdrop click closes only when not saving — prevents losing edits to an accidental click.
+    <!-- Backdrop click closes only when not saving - prevents losing edits to an accidental click.
          The same modal is reused for both editing existing questions and
          creating new ones; `creatingQuestion` flag determines mode. -->
     <div v-if="editingQuestion || creatingQuestion" class="modal-backdrop"
@@ -1149,7 +1149,7 @@ onMounted(reloadTree);
 
         <p v-if="reseedError" class="error-text mt-4">{{ reseedError }}</p>
 
-        <!-- Result summary — survives modal close so admins can re-open to re-read. -->
+        <!-- Result summary - survives modal close so admins can re-open to re-read. -->
         <div v-if="reseedResult && !reseedBusy" class="card mt-4" style="background: var(--bg-elev);">
           <div class="text-sm" style="font-weight: 500;">
             {{ t('admin.content.reseed_done') }}

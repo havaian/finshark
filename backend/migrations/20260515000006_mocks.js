@@ -1,4 +1,4 @@
-// Mocks (4.1) — extend lesson_sessions rather than create a new table.
+// Mocks (4.1) - extend lesson_sessions rather than create a new table.
 //
 // Why extend instead of branch:
 //   - 95% of the lesson-session machinery (queue, attempts, completion, XP,
@@ -13,7 +13,7 @@
 //   - mode: enum 'lesson' | 'mock'. Default 'lesson' so historical rows are
 //     correctly classified. NOT NULL.
 //   - time_limit_seconds: how long the user has. NULL for lessons; set for
-//     mocks. Soft limit — frontend enforces UI countdown; backend doesn't
+//     mocks. Soft limit - frontend enforces UI countdown; backend doesn't
 //     auto-fail when the timer hits zero, but does record the started_at so
 //     analytics can spot late finishes.
 //   - paper_id: nullable FK to papers. Mocks are paper-scoped (questions

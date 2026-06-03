@@ -15,7 +15,7 @@ import type {
 //   2. "New code" inline form (toggleable).
 //   3. Redemptions drill-in modal (when admin clicks "Redemptions" on a row).
 //
-// Edit-after-create is intentionally limited to the active flag — same as the
+// Edit-after-create is intentionally limited to the active flag - same as the
 // backend surface. Anything else (window, plan, days) should be a new code.
 
 const { t } = useI18n();
@@ -97,7 +97,7 @@ function resetForm() {
 
 // Stringify a possibly-non-string form value before trimming. `<input
 // type="number">` bound via v-model can return a number (not a string) on
-// some browsers / autofill paths — calling .trim() directly on that crashed
+// some browsers / autofill paths - calling .trim() directly on that crashed
 // with "o.trim is not a function". Coerce here so every other helper can
 // assume a string.
 function asTrimmedString(v: unknown): string {
@@ -136,7 +136,7 @@ async function onCreate() {
   if (createBusy.value) return;
   const code = asTrimmedString(formCode.value);
   if (!code || !formPlanId.value) {
-    // Surface this case explicitly — the disabled-button state can be missed
+    // Surface this case explicitly - the disabled-button state can be missed
     // when an autofill fills in only one of the two fields.
     createError.value = !code
       ? 'Code is required.'
@@ -166,7 +166,7 @@ async function onCreate() {
       valid_until,
       notes: notes === '' ? null : notes,
     });
-    // Newest first — prepend.
+    // Newest first - prepend.
     codes.value = [created, ...codes.value];
     resetForm();
     showCreate.value = false;
@@ -314,7 +314,7 @@ onMounted(load);
         <div class="field" style="flex: 1 1 200px;">
           <label class="field-label">{{ t('admin.promocodes.form_plan_label') }}</label>
           <select v-model="formPlanId">
-            <option value="" disabled>—</option>
+            <option value="" disabled>-</option>
             <option v-for="p in plans" :key="p.id" :value="p.id" :disabled="!p.is_active || p.tier !== 'premium'">
               {{ p.name }}<span v-if="!p.is_active"> (inactive)</span>
             </option>
@@ -387,7 +387,7 @@ onMounted(load);
       </div>
     </div>
 
-    <!-- Redemptions modal — simple inline overlay, same idiom as other admin
+    <!-- Redemptions modal - simple inline overlay, same idiom as other admin
          drill-ins. Backdrop click + Esc close are kept light-weight (click
          only) to match the surrounding pages. -->
     <div v-if="redemptionsModal" class="modal-backdrop" @click.self="closeRedemptions">

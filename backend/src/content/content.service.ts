@@ -96,7 +96,7 @@ export class ContentService {
 
     // Group by paper_id, in encountered order (the query orders by paper code,
     // so this is stable). LOs come pre-sorted by sort_order/code within each
-    // paper. Skip rows where lo_id is null — those represent papers with no
+    // paper. Skip rows where lo_id is null - those represent papers with no
     // LOs yet (LEFT JOIN result).
     const byPaper = new Map<
       string,
@@ -329,7 +329,7 @@ export class ContentService {
       const ok = await this.questions.delete(id);
       if (!ok) throw new NotFoundException("question not found");
     } catch (err) {
-      // attempts.question_id is ON DELETE RESTRICT — if attempts exist, PG throws 23503.
+      // attempts.question_id is ON DELETE RESTRICT - if attempts exist, PG throws 23503.
       // Map to a friendlier 400.
       const code = (err as { code?: string }).code;
       if (code === "23503") {
@@ -357,7 +357,7 @@ export class ContentService {
   }
 
   // Storage invariant: the correct option must have why_wrong_{en,ru} = null.
-  // We don't fail validation if the admin/LLM left text there — we just scrub
+  // We don't fail validation if the admin/LLM left text there - we just scrub
   // it on the way to the DB. This keeps the frontend rule "why_wrong present ⇒
   // wrong option" reliable regardless of input quality.
   private scrubCorrectOptionWhyWrong(
@@ -409,7 +409,7 @@ export class ContentService {
         );
       }
       // Must parse as a finite number. Same parser the grader uses would be
-      // ideal, but a lightweight check here suffices — the grader is more
+      // ideal, but a lightweight check here suffices - the grader is more
       // forgiving than the validator on purpose.
       const n = parseFloat(correct_answer_en.replace(/,/g, ""));
       if (!Number.isFinite(n)) {

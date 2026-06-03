@@ -36,15 +36,15 @@ export function toPublicWhitelistEntry(r: WhitelistRow): PublicWhitelistEntry {
   };
 }
 
-// Loose RFC-compatible validators. We don't try to be exhaustive — Google has
+// Loose RFC-compatible validators. We don't try to be exhaustive - Google has
 // already verified the email by the time we call isAllowed, so the shape check
 // here is just to prevent obviously broken admin input from landing in DB.
 const EMAIL_RE = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
 const DOMAIN_RE = /^@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
 
 // Recognised pattern shapes:
-//   '@example.com'       — any email under that domain
-//   'user@example.com'   — exact email
+//   '@example.com'       - any email under that domain
+//   'user@example.com'   - exact email
 // Anything else is rejected.
 export function classifyPattern(raw: string): "email" | "domain" | null {
   const s = raw.trim().toLowerCase();

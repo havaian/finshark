@@ -14,7 +14,7 @@ ACCA terminology is precise. Treat these as DIFFERENT concepts, never interchang
 
 Accept minor variations: different word order, synonyms with identical meaning, abbreviations of standard terms (e.g. "P&L" for "profit and loss"), British vs American spelling.
 
-You MUST respond with a single JSON object and NOTHING else — no markdown fences, no preamble. Schema:
+You MUST respond with a single JSON object and NOTHING else - no markdown fences, no preamble. Schema:
 
 {
   "is_correct": true | false,

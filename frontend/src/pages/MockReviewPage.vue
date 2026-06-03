@@ -12,7 +12,7 @@ import type { MockAnswers, MockAnswerEntry } from '../types/mocks';
 // Read-only per-question walkthrough of a completed mock. Distinct from the
 // post-mock breakdown (per-LO accuracy summary) and from the practice-lesson
 // review (POST /mocks/:id/review, which spins up a new lesson). This page
-// just renders what happened — prompt, your answer, the correct answer,
+// just renders what happened - prompt, your answer, the correct answer,
 // the explanation, and per-option why-wrong text.
 //
 // Filter chip: by default we show only wrong + unanswered (the things you'd
@@ -65,7 +65,7 @@ const unansweredCount = computed(() => {
 
 // Lookup helper: map a stored option key (e.g. "B") to its display text.
 // Used in the user-answer / correct-answer chips when the answer is an MCQ
-// key — otherwise we render the raw string (number_entry answers etc).
+// key - otherwise we render the raw string (number_entry answers etc).
 function optionTextForKey(entry: MockAnswerEntry, key: string | null): string {
   if (key === null) return '';
   if (!entry.options) return key;
@@ -195,7 +195,7 @@ onMounted(load);
             </div>
           </div>
 
-          <!-- Your answer / correct answer chips for MCQ — text form, since
+          <!-- Your answer / correct answer chips for MCQ - text form, since
                the options block above already shows the colour-coded position.
                For unanswered questions we surface that explicitly. -->
           <div v-if="entry.type === 'mcq'" class="mock-review-answers mt-4">

@@ -26,7 +26,7 @@ export class SubscriptionsRepository {
   // The hot path: find the most generous currently-active subscription for a
   // user. "Active" means status='active' AND (ends_at IS NULL OR ends_at > NOW()).
   // When multiple actives exist (e.g. an admin grant overlapping a paid sub),
-  // we return the one with the latest ends_at — NULL ends_at (lifetime/open-
+  // we return the one with the latest ends_at - NULL ends_at (lifetime/open-
   // ended) sorts last via NULLS LAST, so the open-ended grant wins.
   //
   // Returns null if the user has no active subscription (= free tier).
@@ -53,7 +53,7 @@ export class SubscriptionsRepository {
     return rows[0] ?? null;
   }
 
-  // Subscription history for a single user — admin UI consumes this. Newest
+  // Subscription history for a single user - admin UI consumes this. Newest
   // first; both active and inactive included so admins can see the timeline.
   async findHistoryForUser(userId: string): Promise<SubscriptionRow[]> {
     return this.sql<SubscriptionRow[]>`
@@ -109,7 +109,7 @@ export class SubscriptionsRepository {
   }
 
   // Extend an existing subscription's ends_at by N days. If ends_at is NULL
-  // (open-ended), this is a no-op — extending a lifetime grant is meaningless,
+  // (open-ended), this is a no-op - extending a lifetime grant is meaningless,
   // and we must NOT inadvertently truncate it to a fixed expiry. Returns the
   // updated row.
   //
@@ -149,7 +149,7 @@ export class SubscriptionsRepository {
     return rows[0] ?? null;
   }
 
-  // Mark cancelled. Does NOT remove the row or touch ends_at — the user keeps
+  // Mark cancelled. Does NOT remove the row or touch ends_at - the user keeps
   // their paid time. The cron / entitlement check filters by ends_at > NOW().
   async markCancelled(
     id: string,

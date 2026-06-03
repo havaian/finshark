@@ -10,8 +10,8 @@ export interface SendEmailInput {
 }
 
 // EMAIL_MODE controls behavior:
-//   'smtp' — real send via nodemailer, requires SMTP_HOST + SMTP_PORT (+ optional auth)
-//   'log'  — no send; the email is logged to the backend console. Use in dev / staging.
+//   'smtp' - real send via nodemailer, requires SMTP_HOST + SMTP_PORT (+ optional auth)
+//   'log'  - no send; the email is logged to the backend console. Use in dev / staging.
 // Default is 'log' so a fresh checkout doesn't crash without SMTP config.
 type EmailMode = "smtp" | "log";
 

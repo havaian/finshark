@@ -15,7 +15,7 @@
 //   per-user earned_at timestamps. Document in the team channel before
 //   running. The achievements ladder already credits the same milestones via
 //   the streak_days/xp_earned codes, so users don't lose recognition for
-//   reaching the threshold — only the badge tile disappears.
+//   reaching the threshold - only the badge tile disappears.
 //
 // SEED ALIGNMENT: src/seed/data/badges.ts is updated in the same commit to
 //   drop these codes from the static catalog, so a future reseed will not
@@ -30,7 +30,7 @@ const DROPPED_CODES = [
   'xp_10000',
 ];
 
-// Inlined IN list. node-pg-migrate's pgm.sql() takes a string only — it does
+// Inlined IN list. node-pg-migrate's pgm.sql() takes a string only - it does
 // NOT accept a {text, values} parameterised form. Inlining is safe here
 // because the values are hardcoded constants from this file, not user input,
 // so there's nothing to SQL-inject.
@@ -55,7 +55,7 @@ exports.down = (pgm) => {
   // but having the rows back keeps any historical analytics that reference
   // these codes resolvable.
   //
-  // Per-user earnings cannot be reconstructed — see header.
+  // Per-user earnings cannot be reconstructed - see header.
   pgm.sql(`
     INSERT INTO badges (code, name_en, name_ru, description_en, description_ru, icon, sort_order)
     VALUES

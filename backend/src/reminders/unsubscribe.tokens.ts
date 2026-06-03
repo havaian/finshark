@@ -11,7 +11,7 @@ interface UnsubscribePayload {
 export class UnsubscribeTokens {
   constructor(private readonly config: ConfigService) {}
 
-  // Tokens never expire — unsubscribe should always work, even years later.
+  // Tokens never expire - unsubscribe should always work, even years later.
   sign(user_id: string): string {
     const secret = this.config.getOrThrow<string>("UNSUBSCRIBE_SECRET");
     const payload: UnsubscribePayload = { sub: user_id, purpose: "unsub" };

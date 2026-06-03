@@ -6,7 +6,7 @@ import { PublicProfileService } from "./public-profile.service";
 
 // Public-profile endpoint mounted under /users/:id to keep it separate from
 // /me (which is "things about the current user"). Auth is still required so
-// non-logged-in scrapers can't iterate user ids — it's "public to logged-in
+// non-logged-in scrapers can't iterate user ids - it's "public to logged-in
 // users", not "public to the internet".
 @Controller("users")
 @UseGuards(JwtAuthGuard)

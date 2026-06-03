@@ -9,7 +9,7 @@ import { useLocalePath } from '../router/useLocalePath';
 import AppNav from '../components/AppNav.vue';
 import type { MockBreakdown } from '../types/mocks';
 
-// Mock breakdown — shown after a mock completes. Per-LO accuracy bars + an
+// Mock breakdown - shown after a mock completes. Per-LO accuracy bars + an
 // overall score header + a "Start review session" button that creates a
 // regular lesson from the wrong questions and navigates the user into it.
 
@@ -32,7 +32,7 @@ const overallPct = computed(() => {
   return Math.round((breakdown.value.correct / breakdown.value.total) * 100);
 });
 
-// "Pass mark" gloss — 50% is the ACCA pass mark and a useful psychological
+// "Pass mark" gloss - 50% is the ACCA pass mark and a useful psychological
 // reference. Renders different copy below 50 vs above.
 const passed = computed(() => overallPct.value >= 50);
 
@@ -59,7 +59,7 @@ async function onStartReview() {
   try {
     const result = await mocksApi.startReview(sessionId);
     // Navigate into the new (regular-lesson) session. LessonPage handles it
-    // like any other lesson — including showing theory primers and hearts.
+    // like any other lesson - including showing theory primers and hearts.
     router.push({ name: 'lesson', params: { lang: locale.lang, session_id: result.session_id } });
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to start review session';
@@ -110,7 +110,7 @@ onMounted(load);
         </section>
 
         <!-- Per-LO breakdown. Each row: code · title · count · bar · pct.
-             Sort here would be redundant — the backend orders by LO sort_order. -->
+             Sort here would be redundant - the backend orders by LO sort_order. -->
         <section class="card mt-6">
           <h2>{{ t('mocks.per_lo_title') }}</h2>
           <p v-if="breakdown.per_lo.length === 0" class="dim text-sm mt-2">

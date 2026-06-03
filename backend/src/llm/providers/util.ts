@@ -1,5 +1,5 @@
 // Run a promise with a hard timeout. Throws if not settled in time.
-// We don't cancel the underlying request — fetch in newer Node supports AbortSignal,
+// We don't cancel the underlying request - fetch in newer Node supports AbortSignal,
 // and both providers below pass it. This helper is the belt to that suspenders.
 export async function withTimeout<T>(
   promise: Promise<T>,

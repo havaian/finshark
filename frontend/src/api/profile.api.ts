@@ -79,7 +79,7 @@ export const profileApi = {
     (await api.get<ProfileStats>("/me/stats")).data,
 
   deleteAccount: async (confirm_email: string): Promise<void> => {
-    // Axios delete with body — needs the `data` option, not the 2nd positional.
+    // Axios delete with body - needs the `data` option, not the 2nd positional.
     await api.delete("/me", { data: { confirm_email } });
   },
 };

@@ -1,7 +1,7 @@
 // Mirrors backend/src/content/content.types.ts.
 // Two flavours per entity:
-//  - "Raw" (admin) — both _en and _ru fields. Used in admin editor pages.
-//  - Localized   (public) — single resolved string per field. Used in dashboard, lesson, progress.
+//  - "Raw" (admin) - both _en and _ru fields. Used in admin editor pages.
+//  - Localized   (public) - single resolved string per field. Used in dashboard, lesson, progress.
 
 // short_answer retired (Grading Spec): no faithful ACCA auto-marked format.
 // Mirrors the backend QuestionType, which now permits only these two.
@@ -106,7 +106,7 @@ export interface LearningObjective {
 export interface McqOption {
   key: string;
   text: string;
-  // Resolved per-option "why this is wrong" — null on the correct option, or
+  // Resolved per-option "why this is wrong" - null on the correct option, or
   // when the admin hasn't written one yet.
   why_wrong: string | null;
 }
@@ -140,7 +140,7 @@ export interface UiTranslation {
 
 // ---- Admin content browser ----
 
-// Shape returned by GET /admin/content/tree — papers with nested LO summaries.
+// Shape returned by GET /admin/content/tree - papers with nested LO summaries.
 // Powers the sidebar tree on the unified admin content browser. Includes
 // per-LO question counts so the UI can badge each LO without follow-up calls.
 export interface ContentTreeLo {

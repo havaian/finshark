@@ -24,7 +24,7 @@ export class EmailTemplatesRepository {
   }
 
   // Hot path: render-and-send looks up by key. Returns null when the key
-  // doesn't exist OR the template is inactive — callers fall back to a
+  // doesn't exist OR the template is inactive - callers fall back to a
   // hard-coded default in that case, so a deleted/disabled template can't
   // block a critical email.
   async findActiveByKey(key: string): Promise<EmailTemplateRow | null> {
@@ -49,7 +49,7 @@ export class EmailTemplatesRepository {
   }
 
   // Upsert by key. Used by both create + update on the admin endpoint
-  // (PATCH-style — admin re-submits the full template body). Returns the
+  // (PATCH-style - admin re-submits the full template body). Returns the
   // new row. Variables array is stored as jsonb.
   async upsert(input: {
     key: string;
@@ -106,7 +106,7 @@ export class EmailTemplatesRepository {
     return rows[0] ?? null;
   }
 
-  // Hard delete. Distinct from setActive(false) — used only when an admin
+  // Hard delete. Distinct from setActive(false) - used only when an admin
   // wants the key gone (e.g. a templating mistake). Doesn't cascade to any
   // log table because we don't track email history.
   async deleteByKey(key: string): Promise<boolean> {

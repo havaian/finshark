@@ -3,12 +3,12 @@ import { ConfigService } from "@nestjs/config";
 import { UsersRepository } from "./users.repository";
 
 // On boot, if BOOTSTRAP_ADMIN_EMAIL is set AND a user with that email exists,
-// promote them to admin (idempotent — does nothing if they're already admin).
+// promote them to admin (idempotent - does nothing if they're already admin).
 // If the user doesn't exist yet, we just log and skip; the next boot after they
 // register will pick them up.
 //
 // This is intentionally one-way (only promotes, never demotes). Demoting a
-// bootstrap admin is a separate flow — done from the admin users page by another admin.
+// bootstrap admin is a separate flow - done from the admin users page by another admin.
 @Injectable()
 export class AdminBootstrapService implements OnModuleInit {
   private readonly log = new Logger(AdminBootstrapService.name);
@@ -42,7 +42,7 @@ export class AdminBootstrapService implements OnModuleInit {
       this.log.error(
         `failed to apply BOOTSTRAP_ADMIN_EMAIL: ${(e as Error).message}`
       );
-      // Don't crash startup — admin can be set manually via SQL as fallback.
+      // Don't crash startup - admin can be set manually via SQL as fallback.
     }
   }
 }

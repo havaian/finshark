@@ -26,7 +26,7 @@ import { toPublicUser } from "../users/user.types";
 import { TotpService } from "../totp/totp.service";
 
 // The cookie name we use to round-trip the OAuth state value. The cookie
-// lives only between /auth/google and /auth/google/callback — a few seconds
+// lives only between /auth/google and /auth/google/callback - a few seconds
 // in normal use, up to STATE_TTL_MS in pathological cases.
 const STATE_COOKIE = "finshark_oauth_state";
 
@@ -45,7 +45,7 @@ export class AuthController {
   // GET /api/auth/google
   // Entry point. Redirects to Google's consent screen.
   @Get("google")
-  // Mild throttling — a human only hits this when clicking the button.
+  // Mild throttling - a human only hits this when clicking the button.
   @Throttle({ default: { ttl: 60_000, limit: 20 } })
   startGoogle(@Res() res: Response): void {
     const { url, state } = this.auth.buildGoogleAuthUrl();
@@ -70,7 +70,7 @@ export class AuthController {
   // GET /api/auth/google/callback
   // Google redirects users here with ?code=...&state=...
   // We verify, mint our tokens, and redirect to the frontend callback page
-  // with the tokens in the URL fragment (NOT the query string — fragments are
+  // with the tokens in the URL fragment (NOT the query string - fragments are
   // never sent to servers and stay out of access logs).
   @Get("google/callback")
   @Throttle({ default: { ttl: 60_000, limit: 30 } })
@@ -81,7 +81,7 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response
   ): Promise<void> {
-    // Clear the state cookie regardless of outcome — single-use.
+    // Clear the state cookie regardless of outcome - single-use.
     res.clearCookie(STATE_COOKIE, { path: "/api/auth/google" });
 
     const frontend = this.config.getOrThrow<string>("APP_PUBLIC_URL");
@@ -113,7 +113,7 @@ export class AuthController {
       });
 
       // Two-factor required: redirect to /2fa-verify with the pending token
-      // in the URL fragment. Same fragment-not-query approach as success —
+      // in the URL fragment. Same fragment-not-query approach as success -
       // fragments stay out of server logs.
       if (result.kind === "two_factor_required") {
         const fragment = new URLSearchParams({
@@ -150,7 +150,7 @@ export class AuthController {
   // minted by the Google callback + a 6-digit TOTP code (or a recovery
   // code) and returns full access/refresh tokens on success.
   //
-  // Throttled per IP — tight, because this is the brute-force surface for
+  // Throttled per IP - tight, because this is the brute-force surface for
   // the TOTP/recovery codes. 30/min per IP lets a confused user retry a
   // few times without nagging while blocking automated probing. The
   // per-user lockout in TotpService is the second layer for distributed
@@ -184,7 +184,7 @@ export class AuthController {
     return toPublicUser(user);
   }
 
-  // Tiny cookie parser — avoids pulling in cookie-parser for one cookie.
+  // Tiny cookie parser - avoids pulling in cookie-parser for one cookie.
   // Express headers are already lowercased in Node.
   private readCookie(req: Request, name: string): string | null {
     const raw = req.headers.cookie;

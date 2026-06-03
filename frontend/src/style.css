@@ -2,20 +2,20 @@
  *
  * The actual rules live in src/styles/*.css. This file just sequences the
  * imports in cascade order. Vite inlines @import at build time, so the
- * generated bundle is identical to the previous monolithic style.css —
+ * generated bundle is identical to the previous monolithic style.css -
  * the split is purely for navigability.
  *
  * Order matters: later imports override earlier ones when specificity is
  * equal. Don't reorder unless you know what you're doing.
  *
- *   1) base        — theme tokens, reset, root layout primitives
- *   2) components  — reusable UI (cards, buttons, forms, modals, nav, drawer,
+ *   1) base        - theme tokens, reset, root layout primitives
+ *   2) components  - reusable UI (cards, buttons, forms, modals, nav, drawer,
  *                    admin shell, segmented control, theme toggle, etc.)
- *   3) pages       — page-specific styles (dashboard, lesson, progress,
+ *   3) pages       - page-specific styles (dashboard, lesson, progress,
  *                    profile, admin pages, mocks, leaderboards, landing,
  *                    plus the mobile polish ≤640/≤480 layer that intentionally
  *                    sits at the end of the cascade)
- *   4) utilities   — tiny helper classes; currently empty, reserved for
+ *   4) utilities   - tiny helper classes; currently empty, reserved for
  *                    future overrides that need to win the cascade
  */
 

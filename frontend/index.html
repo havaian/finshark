@@ -31,7 +31,7 @@
           if (raw === 'light' || raw === 'dark') {
             effective = raw;
           } else {
-            // No saved value (or legacy 'system') — resolve from OS once.
+            // No saved value (or legacy 'system') - resolve from OS once.
             var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             effective = prefersDark ? 'dark' : 'light';
           }

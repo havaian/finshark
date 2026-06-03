@@ -33,7 +33,7 @@ import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
 const FREE_MOCKS_PER_MONTH = 1;
 
 // MocksService runs alongside LessonsService and reuses much of its surface
-// area. The mock is just a lesson_session with mode='mock' — the attempt
+// area. The mock is just a lesson_session with mode='mock' - the attempt
 // endpoint, complete endpoint, SRS updates, badge evaluation all flow through
 // the same machinery. The only mock-specific bits live here:
 //   - start: pick N random active questions from a paper, create a session
@@ -48,7 +48,7 @@ export interface StartMockResult {
   // Always 3 for mocks (we don't decrement), but kept in the response shape
   // so the frontend can use the same SessionDetail type as for lessons.
   hearts_remaining: number;
-  // No theory primer in mocks — they're exam-style, not learn-style. Always [].
+  // No theory primer in mocks - they're exam-style, not learn-style. Always [].
   theory_bites: LessonTheoryBite[];
   // Mock-specific extras:
   time_limit_seconds: number | null;
@@ -119,7 +119,7 @@ export class MocksService {
     private readonly lessons: LessonsService
   ) {}
 
-  // POST /mocks — start a new mock for the given paper.
+  // POST /mocks - start a new mock for the given paper.
   async start(
     user_id: string,
     lang: Lang,
@@ -147,7 +147,7 @@ export class MocksService {
       );
       if (mocksThisMonth >= FREE_MOCKS_PER_MONTH) {
         throw new ForbiddenException(
-          `free tier: ${FREE_MOCKS_PER_MONTH} mock per month reached — upgrade or wait until next month`
+          `free tier: ${FREE_MOCKS_PER_MONTH} mock per month reached - upgrade or wait until next month`
         );
       }
     }
@@ -159,7 +159,7 @@ export class MocksService {
 
     if (queue.length === 0) {
       throw new BadRequestException(
-        "no active questions available for this paper — admin must add or activate questions first"
+        "no active questions available for this paper - admin must add or activate questions first"
       );
     }
 
@@ -186,7 +186,7 @@ export class MocksService {
     };
   }
 
-  // GET /mocks/:id/breakdown — per-LO accuracy after a mock completes.
+  // GET /mocks/:id/breakdown - per-LO accuracy after a mock completes.
   // Returns 404 if the session doesn't exist or isn't a mock; 403 if it's
   // someone else's; 400 if it hasn't been completed yet.
   async breakdown(user_id: string, session_id: string): Promise<MockBreakdown> {
@@ -200,7 +200,7 @@ export class MocksService {
       throw new BadRequestException("mock not completed yet");
     if (!session.paper_id)
       throw new BadRequestException(
-        "mock has no paper_id — should not happen given chk_mock_has_paper"
+        "mock has no paper_id - should not happen given chk_mock_has_paper"
       );
 
     // One SQL: attempts + question→lo join + LO title + correct/total per LO.
@@ -262,7 +262,7 @@ export class MocksService {
     };
   }
 
-  // GET /mocks/:id/answers — full per-question review payload. Same access
+  // GET /mocks/:id/answers - full per-question review payload. Same access
   // checks as breakdown(): mock-mode session, completed, owned by user. The
   // response is a flat list ordered by queue position so the frontend can
   // render a stack of "review cards" with the user's answer + the correct
@@ -284,7 +284,7 @@ export class MocksService {
       throw new BadRequestException("mock not completed yet");
     if (!session.paper_id)
       throw new BadRequestException(
-        "mock has no paper_id — should not happen given chk_mock_has_paper"
+        "mock has no paper_id - should not happen given chk_mock_has_paper"
       );
 
     type Row = {
@@ -384,11 +384,11 @@ export class MocksService {
     };
   }
 
-  // POST /mocks/:id/review — create a regular lesson session preloaded with the
+  // POST /mocks/:id/review - create a regular lesson session preloaded with the
   // wrong-answer questions from the mock. The new session is linked back via
   // source_session_id so analytics can pair them.
   //
-  // If the mock had no wrong answers, returns 400 with a friendly message —
+  // If the mock had no wrong answers, returns 400 with a friendly message -
   // the frontend should hide the review button in that case but we double-check.
   async startReview(
     user_id: string,
@@ -429,7 +429,7 @@ export class MocksService {
     });
     if (questionRows.length === 0) {
       throw new BadRequestException(
-        "all wrong-answer questions have been retired — nothing to review"
+        "all wrong-answer questions have been retired - nothing to review"
       );
     }
 
@@ -459,7 +459,7 @@ export class MocksService {
         this.lessons.toLessonQuestion(q, lang)
       ),
       hearts_remaining: review.hearts_remaining,
-      // Review sessions DO get theory bites — they're a learning flow, unlike
+      // Review sessions DO get theory bites - they're a learning flow, unlike
       // the original mock. Reuse the lessons-service helper.
       theory_bites: await this.lessons.buildTheoryBites(questionRows, lang),
       time_limit_seconds: null,

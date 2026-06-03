@@ -405,7 +405,7 @@
 }
 
 /* `.modal-body` is the inner content wrapper used by AdminSubscriptions /
-   AdminPromocodes; no chrome needed but it must NOT be transparent — the
+   AdminPromocodes; no chrome needed but it must NOT be transparent - the
    modal-card backing handles that already, this just keeps the box-model
    consistent. */
 .modal-body {
@@ -442,7 +442,7 @@
 
 /* `.theory-intro` previously needed `position: relative` as the anchor for
    a floating sticky button; that button moved out to `.theory-skip-bar`,
-   so the class itself has no styles left — it stays only as a selector for
+   so the class itself has no styles left - it stays only as a selector for
    future tweaks. */
 
 /* Skip-recap bar. Sticky to the top of the viewport so it stays visible as
@@ -679,7 +679,7 @@
     }
 
     .option-why-wrong {
-        /* On narrow screens, just drop the indent — option keys wrap above anyway. */
+        /* On narrow screens, just drop the indent - option keys wrap above anyway. */
         padding-left: 0;
     }
 
@@ -859,7 +859,7 @@
     padding: 0 5px;
 }
 
-/* Mobile sheet/picker rules removed — the tree now renders inline above the
+/* Mobile sheet/picker rules removed - the tree now renders inline above the
    main column on mobile (full tree visible, same semantics as desktop just
    stacked). Earlier iteration used an off-canvas sheet + "Pick LO" picker
    pill which hid how many papers/LOs existed and added a tap step before
@@ -1076,20 +1076,20 @@
 }
 
 /* Mobile (≤720px): tree stacks above main (single-column grid). Full tree
-   is visible inline — earlier iteration tried an off-canvas sheet but it
+   is visible inline - earlier iteration tried an off-canvas sheet but it
    hid how much content existed, so admins had to tap to see anything. */
 @media (max-width: 720px) {
     .content-browser {
         grid-template-columns: 1fr;
         gap: 12px;
-        /* Drop the fixed viewport-relative height — the page can scroll
+        /* Drop the fixed viewport-relative height - the page can scroll
        naturally now that we're single-column. */
         height: auto;
     }
 
     /* Tree: render inline, no sticky/fixed positioning. Cap the tree height
      so it doesn't push the question list way down the page on long paper
-     lists — admins can scroll within the tree to find their LO. */
+     lists - admins can scroll within the tree to find their LO. */
     .content-tree {
         max-height: 50vh;
         overflow-y: auto;
@@ -1105,7 +1105,7 @@
     }
 
     /* Main panel: drop the card chrome on mobile since we're already
-     inside the admin shell padding — saves horizontal space.
+     inside the admin shell padding - saves horizontal space.
      min-width: 0 is critical: as a grid item, .content-main defaults to
      min-width: auto (= content's intrinsic min size). Long question text
      or wide tables then expand the column past 100%, producing the
@@ -1191,7 +1191,7 @@
      edit/retire/delete links each get a comfortable tap target. */
     .content-question {
         padding: 12px 14px;
-        /* Same min-width:0 trick — without this, long prompt text expands the
+        /* Same min-width:0 trick - without this, long prompt text expands the
        card wider than the parent column. */
         min-width: 0;
     }
@@ -1262,7 +1262,7 @@
     margin: 0 0 12px;
 }
 
-/* Three big stacked cards for bg-level — each shows title + description. */
+/* Three big stacked cards for bg-level - each shows title + description. */
 .onboarding-cards {
     display: flex;
     flex-direction: column;
@@ -1350,7 +1350,7 @@
     color: var(--accent-hot);
 }
 
-/* Toggle row for reminders — checkbox + labelled body. */
+/* Toggle row for reminders - checkbox + labelled body. */
 .onboarding-toggle {
     display: flex;
     align-items: flex-start;
@@ -1386,7 +1386,7 @@
 
 @media (max-width: 640px) {
     .onboarding-skip {
-        /* Tap targets — keep skip available but stop overlapping the title text. */
+        /* Tap targets - keep skip available but stop overlapping the title text. */
         position: static;
         margin-top: 8px;
     }
@@ -1535,7 +1535,7 @@
 }
 
 /* -----------------------------------------------------------
-   37) Badges — profile grid + lesson-finale ribbon
+   37) Badges - profile grid + lesson-finale ribbon
    ----------------------------------------------------------- */
 
 /* --- Profile grid --- */
@@ -1572,7 +1572,7 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     text-align: center;
-    /* No more native title tooltip — description is now always-visible
+    /* No more native title tooltip - description is now always-visible
        inside the tile, so the default cursor is fine. */
 }
 
@@ -1695,7 +1695,7 @@
 }
 
 /* -----------------------------------------------------------
-   37b) Achievements — multi-level progression cards
+   37b) Achievements - multi-level progression cards
    -----------------------------------------------------------
    Separate from badges: each card carries its own progress bar and level
    label (Trainee / Affiliate / Member). Two visual contexts:
@@ -1769,7 +1769,7 @@
 }
 
 /* Progress bar: track + fill. Width animates via CSS transition (NOT scale,
-   per project rule — width transitions are fine). */
+   per project rule - width transitions are fine). */
 .achievement-progress-bar {
     height: 6px;
     background: var(--bg-card);
@@ -1862,7 +1862,7 @@
 }
 
 /* -----------------------------------------------------------
-   38) Mocks — timer pill, start picker, breakdown bars
+   38) Mocks - timer pill, start picker, breakdown bars
    ----------------------------------------------------------- */
 
 /* Timer pill replaces the hearts-row in the lesson topbar when a mock is
@@ -2056,10 +2056,10 @@
 }
 
 /* -----------------------------------------------------------
-   39) Mobile polish — comprehensive ≤640px and ≤480px rules
+   39) Mobile polish - comprehensive ≤640px and ≤480px rules
    ----------------------------------------------------------- */
 
-/* Compact page padding and headers on small screens — the default 48px/24px
+/* Compact page padding and headers on small screens - the default 48px/24px
    eats too much vertical space when the viewport is small. */
 @media (max-width: 640px) {
     .page {
@@ -2107,7 +2107,7 @@
    tunes ≤480px further (single-row brand only + iconified actions). */
 @media (max-width: 480px) {
 
-    /* NOTE: the rules in this block target .app-nav-inner/.app-nav-left/-right —
+    /* NOTE: the rules in this block target .app-nav-inner/.app-nav-left/-right -
      which are now `display: none` at ≤720px (section 15b's mobile bar takes
      over). They're kept as a safety net in case the mobile-bar swap is ever
      reverted, but in practice they don't fire on a phone-sized viewport.
@@ -2175,7 +2175,7 @@
     }
 }
 
-/* Dashboard: stats grid is 3-column by default — too tight on phones.
+/* Dashboard: stats grid is 3-column by default - too tight on phones.
    Stack to a 3-column compact row keeping all metrics visible since they're
    the dashboard's primary signal. */
 @media (max-width: 480px) {
@@ -2216,7 +2216,7 @@
 /* Prominent block-state banner shown on the dashboard when the free user
    has run out of hearts (or hit the daily lesson cap, or the mock-this-
    month cap). Previously this was a `.dim .text-sm` line that disappeared
-   into the surrounding copy — a hard-stop deserves to be loud. */
+   into the surrounding copy - a hard-stop deserves to be loud. */
 .quota-block-banner {
     display: flex;
     align-items: center;
@@ -2347,7 +2347,7 @@
     /* NOTE: .admin-sidebar / .admin-nav-item rules below are dormant at
      ≤480px because section 20b's ≤720px block sets .admin-sidebar to
      display:none and shows the mobile bar + drawer instead. Kept as a
-     safety net for the dual stacking layout — see corresponding note on
+     safety net for the dual stacking layout - see corresponding note on
      the .app-nav-inner ≤480px block. */
     .admin-sidebar {
         padding: 14px;
@@ -2401,7 +2401,7 @@
 }
 
 /* -----------------------------------------------------------
-   40) Landing page (/) — marketing surface for signed-out visitors
+   40) Landing page (/) - marketing surface for signed-out visitors
    -----------------------------------------------------------
    Self-contained: doesn't reuse .page / .container because those impose a
    max-width that's too narrow for hero typography. The landing has its own
@@ -2438,7 +2438,7 @@
     gap: 16px;
 }
 
-/* Hero — generous vertical space, big headline. Uses a subtle radial gradient
+/* Hero - generous vertical space, big headline. Uses a subtle radial gradient
    behind to lift the text off the background without resorting to a hero
    image we'd have to design. */
 .landing-hero {
@@ -2611,7 +2611,7 @@
     font-size: 14px;
 }
 
-/* "Why Finshark" — manifesto block between hero and features. Background
+/* "Why Finshark" - manifesto block between hero and features. Background
    transparent (sits on default --bg), so reads as continuous with hero.
    Three short cards in a row; collapses to a column on narrow screens. */
 .landing-why {
@@ -2637,7 +2637,7 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     background: var(--bg-card);
-    /* Subtle left accent strip — keeps the brand colour present without being
+    /* Subtle left accent strip - keeps the brand colour present without being
      loud. Same colour as .landing-step-num so the page feels unified. */
     border-left: 3px solid var(--accent);
 }
@@ -2654,7 +2654,7 @@
     font-size: 14px;
 }
 
-/* FAQ — native <details>/<summary> accordion. Padding tuned so closed items
+/* FAQ - native <details>/<summary> accordion. Padding tuned so closed items
    read as list rows; open items expand below the chevron without shifting
    the question. */
 .landing-faq {
@@ -2695,7 +2695,7 @@
     display: none;
 }
 
-/* Custom chevron — rotates when open. Using rotation here is fine (it's a
+/* Custom chevron - rotates when open. Using rotation here is fine (it's a
    small indicator, not a content scale). */
 .landing-faq-item>summary::after {
     content: '';
@@ -2828,7 +2828,7 @@
 }
 
 /* -----------------------------------------------------------
-   41) Admin content tree — per-paper / per-LO action buttons
+   41) Admin content tree - per-paper / per-LO action buttons
    ----------------------------------------------------------- */
 
 /* Per-paper action row (Add LO / Delete paper). Sits indented under the paper
@@ -2874,7 +2874,7 @@
 }
 
 /* -----------------------------------------------------------
-   42) Leaderboard — clickable name links
+   42) Leaderboard - clickable name links
    ----------------------------------------------------------- */
 
 /* Inline link styling: inherit colour from the row (so it doesn't stand out
@@ -2890,7 +2890,7 @@
 }
 
 /* -----------------------------------------------------------
-   43) 2FA — recovery code list + audit log
+   43) 2FA - recovery code list + audit log
    -----------------------------------------------------------
    Shared between TwoFactorSetupPage (initial enroll) and the regenerate
    flow in SettingsPage. TwoFactorSetupPage also defines a copy of these
@@ -2927,11 +2927,11 @@
     }
 }
 
-/* Audit log: each entry is a small two-line block — event title on top,
+/* Audit log: each entry is a small two-line block - event title on top,
    timestamp + ip + meta below in dim. We keep them visually quiet because
    the section is informational, not actionable. */
 .tfa-audit-list {
-    /* Container — entries live inside. No padding here; sub-elements own it. */
+    /* Container - entries live inside. No padding here; sub-elements own it. */
 }
 
 .tfa-audit-entries {

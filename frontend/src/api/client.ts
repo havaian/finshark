@@ -27,7 +27,7 @@ api.interceptors.request.use((config) => {
   if (access && config.headers) {
     config.headers.Authorization = `Bearer ${access}`;
   }
-  // X-Lang header — server resolves it through the @Lang decorator.
+  // X-Lang header - server resolves it through the @Lang decorator.
   // We read from localStorage on every request (cheap) so the locale store
   // doesn't need to be imported here, avoiding a circular import.
   const lang = localStorage.getItem(LS_LANG);
@@ -41,7 +41,7 @@ api.interceptors.request.use((config) => {
 //
 // Concurrency note: if 5 requests fire at once and all get 401, we don't want to
 // hit /auth/refresh 5 times. We share a single in-flight refresh promise across
-// callers — first 401 starts it, the others await it.
+// callers - first 401 starts it, the others await it.
 let refreshInflight: Promise<AuthTokens | null> | null = null;
 
 // Subscribers to call when logout happens (so the store can clear itself).
@@ -57,7 +57,7 @@ async function performRefresh(): Promise<AuthTokens | null> {
   if (!refresh) return null;
 
   try {
-    // Use a bare axios call here (not `api`) to skip our own interceptors —
+    // Use a bare axios call here (not `api`) to skip our own interceptors -
     // we don't want this request to recurse into refresh logic.
     const res = await axios.post<AuthTokens>(
       `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
@@ -97,7 +97,7 @@ api.interceptors.response.use(
     const tokens = await refreshInflight;
 
     if (!tokens) {
-      // Refresh failed — clear storage, notify subscribers (the store), and reject.
+      // Refresh failed - clear storage, notify subscribers (the store), and reject.
       localStorage.removeItem(LS_ACCESS);
       localStorage.removeItem(LS_REFRESH);
       for (const h of logoutHandlers) h();

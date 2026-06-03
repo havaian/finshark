@@ -5,7 +5,7 @@ import type {
   SubscriptionUpdate,
 } from "./provider.interface";
 
-// ManualProvider — placeholder before any real PSP is integrated. Always
+// ManualProvider - placeholder before any real PSP is integrated. Always
 // available so DI graph and admin UI work; never produces payments.
 // `source = 'manual'` is also used for admin-issued grants (created directly
 // via SubscriptionsService.grant), so this provider's createCheckout simply
@@ -19,7 +19,7 @@ import type {
 export class ManualProvider implements PaymentProvider {
   readonly id = "manual" as const;
 
-  // Always configured — there's no external dependency to be missing.
+  // Always configured - there's no external dependency to be missing.
   isConfigured(): boolean {
     return true;
   }

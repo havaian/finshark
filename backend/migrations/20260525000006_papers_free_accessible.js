@@ -1,4 +1,4 @@
-// papers.free_accessible — whether a paper is browsable/playable on the free
+// papers.free_accessible - whether a paper is browsable/playable on the free
 // tier. Default TRUE so the migration is non-disruptive: every existing paper
 // stays open until an admin flips the flag. Gates on the app side branch on
 // (entitlement.tier === 'premium' || paper.free_accessible).
@@ -16,7 +16,7 @@ exports.up = (pgm) => {
   });
   // Cheap covering index for the "list of free-accessible papers" admin lookup.
   // Postgres handles single-column index on a boolean column poorly only when
-  // the distribution is skewed enough to make a seq scan cheaper — for ~30
+  // the distribution is skewed enough to make a seq scan cheaper - for ~30
   // rows this is irrelevant either way, but kept for symmetry with the rest
   // of the schema and to telegraph intent.
   pgm.createIndex('papers', 'free_accessible', { name: 'idx_papers_free_accessible' });

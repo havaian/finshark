@@ -37,7 +37,7 @@ export class LlmGradeCacheRepository {
     return rows[0] ?? null;
   }
 
-  // Insert; ON CONFLICT do nothing — first writer wins on race.
+  // Insert; ON CONFLICT do nothing - first writer wins on race.
   async upsert(input: {
     question_id: string;
     normalized_user_answer: string;
@@ -65,7 +65,7 @@ export class LlmGradeCacheRepository {
     `;
   }
 
-  // Daily counter — counts CACHE WRITES (i.e., real LLM calls) by user
+  // Daily counter - counts CACHE WRITES (i.e., real LLM calls) by user
   // by JOINing attempts. Used for the per-user daily cap.
   // Subtle: counts attempts that resulted in a real LLM call (llm_grade_json
   // provider != 'exact_match'). Bounded scan via the user_id+answered_at index.

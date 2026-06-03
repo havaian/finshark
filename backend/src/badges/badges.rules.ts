@@ -15,7 +15,7 @@ export interface BadgeContext {
   // LOs with mastery_score >= 90 in user_question_state, taking the highest
   // mastery_score per LO. Counted at LO granularity, not per question.
   lo_mastered_count: number;
-  // Has the user completed at least one session? Cheap derived flag — true
+  // Has the user completed at least one session? Cheap derived flag - true
   // when we have any attempt rows for them.
   has_any_attempt: boolean;
 }
@@ -77,7 +77,7 @@ type Rule = (ctx: BadgeContext) => boolean;
 // in the catalog will fail the FK at insert time. The sanity check at module
 // init time logs a warning if these drift.
 // Streak / XP threshold rules were removed alongside their catalog rows in
-// migration 20260525000001_drop_duplicate_streak_xp_badges — the streak_days
+// migration 20260525000001_drop_duplicate_streak_xp_badges - the streak_days
 // and xp_earned achievement ladders cover those milestones. Keep this map
 // limited to discovery / event-style badges so the two surfaces don't
 // duplicate each other again.

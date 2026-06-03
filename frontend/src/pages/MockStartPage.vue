@@ -11,7 +11,7 @@ import { useEntitlementStore } from '../stores/entitlement.store';
 import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
 
-// Mock start picker — paper + question count + time limit.
+// Mock start picker - paper + question count + time limit.
 // Submits POST /mocks then navigates to /lesson/:session_id (LessonPage
 // renders mock-mode UI based on the session.mode it gets back from /sessions).
 
@@ -40,7 +40,7 @@ const minutes = ref<number>(60);
 const submitting = ref(false);
 const submitError = ref<string | null>(null);
 
-// Free-tier mock gates. Premium users bypass these — same shape as
+// Free-tier mock gates. Premium users bypass these - same shape as
 // DashboardPage so the chrome stays consistent.
 //   - blockedByPaper: selected paper is premium-only.
 //   - blockedByQuota: monthly mock allowance already used.
@@ -108,12 +108,12 @@ async function onStart() {
       question_count: questionCount.value,
       time_limit_seconds: minutes.value * 60,
     });
-    // LessonPage handles both lesson and mock sessions — it inspects
+    // LessonPage handles both lesson and mock sessions - it inspects
     // session.mode from getSession() and switches UI accordingly.
     router.push({ name: 'lesson', params: { lang: locale.lang, session_id: result.session_id } });
   } catch (e) {
     submitError.value = extractError(e) ?? 'failed to start mock';
-    // 403 ≈ free-tier gate trip — refresh chrome chips so the cap counter
+    // 403 ≈ free-tier gate trip - refresh chrome chips so the cap counter
     // updates to whatever the server thinks the truth is.
     if (e instanceof AxiosError && e.response?.status === 403) {
       void entitlement.fetch();

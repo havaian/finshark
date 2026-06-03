@@ -11,7 +11,7 @@ import type { SeedPaper, SeedQuestion } from "./data/types";
 
 // Source-of-truth for which papers ship in the seed. Kept here so both the
 // CLI script (seed.ts) and the admin "drop & reseed" button hit the same data.
-// F5 exists in /seed/data/f5.ts but is intentionally NOT included — its content
+// F5 exists in /seed/data/f5.ts but is intentionally NOT included - its content
 // is incomplete. Uncomment + import once it's finalised.
 export const SEED_PAPERS: SeedPaper[] = [F1_PAPER, F2_PAPER, F3_PAPER];
 
@@ -23,7 +23,7 @@ export interface ReseedResult {
   questions_inserted: number;
   // Auxiliary content rows wiped alongside papers (the cascade does most of
   // the work; we count things explicitly so the admin UI can show what
-  // happened — useful when staring at a "reseed succeeded" toast).
+  // happened - useful when staring at a "reseed succeeded" toast).
   attempts_deleted: number;
   sessions_deleted: number;
   uqs_deleted: number;
@@ -35,7 +35,7 @@ export interface ReseedResult {
 
 // Encapsulates the seed flow so both the CLI runner and admin controllers can
 // trigger it. Two entry points:
-//   - seedIdempotent(): the original CLI behaviour — skip papers that already
+//   - seedIdempotent(): the original CLI behaviour - skip papers that already
 //     exist; upsert the badges catalog.
 //   - dropAndReseedContent(): wipe ALL content and progress (except the users
 //     rows themselves) and reseed from scratch. Used by the admin button.
@@ -49,7 +49,7 @@ export class SeedService {
 
   // ── Public: idempotent seed (CLI default) ──────────────────────────
   // Upserts the badges catalog and inserts any paper whose code does NOT yet
-  // exist. Existing papers are left alone — merging into an in-place paper
+  // exist. Existing papers are left alone - merging into an in-place paper
   // would risk duplicating questions.
   async seedIdempotent(): Promise<void> {
     await this.upsertBadges(this.sql);
@@ -76,14 +76,14 @@ export class SeedService {
   // Wipes everything related to content and user progress but keeps the
   // `users` rows themselves alive (only progress columns are zeroed). Also
   // keeps:
-  //   - refresh_tokens (active sessions stay alive — user keeps being logged in)
+  //   - refresh_tokens (active sessions stay alive - user keeps being logged in)
   //   - badges catalog (it's a static catalog)
   //   - ui_translations
   //
   // FK order matters: `attempts.question_id` is ON DELETE RESTRICT, and so is
   // `lesson_session_questions.question_id`. So we must delete those rows
   // BEFORE we delete papers (which cascades into questions). Mocks live as
-  // `lesson_sessions` rows with mode='mock' — wiping lesson_sessions covers them.
+  // `lesson_sessions` rows with mode='mock' - wiping lesson_sessions covers them.
   async dropAndReseedContent(): Promise<ReseedResult> {
     return this.sql.begin(async (tx) => {
       // Count what we're about to wipe so the result is informative. We do
@@ -117,14 +117,14 @@ export class SeedService {
       // ── Wipe progress / content ──────────────────────────────────
       // Order chosen so we never violate ON DELETE RESTRICT on questions.
       //
-      // 1) lesson_session_questions: FK to questions (RESTRICT) — must go
+      // 1) lesson_session_questions: FK to questions (RESTRICT) - must go
       //    before questions/papers. (Cascades from lesson_sessions too but
       //    we delete it explicitly so the count is accurate.)
       await tx`DELETE FROM lesson_session_questions`;
-      // 2) attempts: FK to questions (RESTRICT) — same reason.
+      // 2) attempts: FK to questions (RESTRICT) - same reason.
       await tx`DELETE FROM attempts`;
       // 3) Now safe to drop lesson_sessions (FK to papers is SET NULL, FK to
-      //    users is CASCADE — but we keep users, so the row goes by itself).
+      //    users is CASCADE - but we keep users, so the row goes by itself).
       await tx`DELETE FROM lesson_sessions`;
       // 4) user_question_state: FK to questions CASCADE, but deleting it
       //    explicitly is cheaper than reading + cascading every row.
@@ -132,10 +132,10 @@ export class SeedService {
       // 5) mastery_snapshots: standalone history; clear so the chart matches
       //    the wiped progress.
       await tx`DELETE FROM mastery_snapshots`;
-      // 6) user_badges: earned events are progress — wipe. (badges catalog
+      // 6) user_badges: earned events are progress - wipe. (badges catalog
       //    stays.)
       await tx`DELETE FROM user_badges`;
-      // 6b) user_achievement_progress: per-user progress — wipe. (achievements
+      // 6b) user_achievement_progress: per-user progress - wipe. (achievements
       //     catalog stays. user_id is CASCADE from users; we delete explicitly
       //     anyway so the count is correct and decoupled from user deletion.)
       await tx`DELETE FROM user_achievement_progress`;
@@ -144,7 +144,7 @@ export class SeedService {
       // 8) reminder_emails_sent: per-user history of reminders. Not strictly
       //    progress but tied to lessons; clear to avoid weird gaps.
       await tx`DELETE FROM reminder_emails_sent`;
-      // 9) Finally drop papers — cascades into learning_objectives and
+      // 9) Finally drop papers - cascades into learning_objectives and
       //    questions automatically.
       await tx`DELETE FROM papers`;
 
@@ -199,7 +199,7 @@ export class SeedService {
 
   // Upsert the static badges catalog. Returns the row count so callers can
   // include it in their summary. Accepts the root sql or a transaction handle
-  // — postgres.js's TransactionSql is structurally compatible with Sql for
+  // - postgres.js's TransactionSql is structurally compatible with Sql for
   // tagged-template usage.
   private async upsertBadges(
     handle: Sql | postgres.TransactionSql
@@ -221,7 +221,7 @@ export class SeedService {
   }
 
   // Upsert the static achievements catalog. Same pattern as upsertBadges but
-  // also handles the `levels` jsonb column. Never rename a code — it's the
+  // also handles the `levels` jsonb column. Never rename a code - it's the
   // FK target in user_achievement_progress and the key in METRICS_BY_CODE.
   private async upsertAchievements(
     handle: Sql | postgres.TransactionSql
@@ -296,8 +296,8 @@ export class SeedService {
   // Insert a single question. Discriminates on q.type to fill the right shape:
   //   - mcq: options JSONB + correct option key in correct_answer_en
   //   - number_entry: numeric value (string) in correct_answer_en, optional tolerance
-  // (short_answer is retired — see Grading Spec — and no longer a seed type.)
-  // (Identical to the original seed.ts helper — moved here so the admin path
+  // (short_answer is retired - see Grading Spec - and no longer a seed type.)
+  // (Identical to the original seed.ts helper - moved here so the admin path
   // and the CLI path share the exact same insert behaviour.)
   private async insertQuestion(
     tx: postgres.TransactionSql,

@@ -41,7 +41,7 @@ export const F5_PAPER: SeedPaper = {
           explanation_en:
             'The classical "3Vs" are Volume, Velocity, Variety (sometimes extended to Veracity and Value). Visibility is not part of the framework.',
           explanation_ru:
-            "Классические «3V» — объём, скорость, разнообразие (иногда добавляют достоверность и ценность). «Видимость» в эту модель не входит.",
+            "Классические «3V» - объём, скорость, разнообразие (иногда добавляют достоверность и ценность). «Видимость» в эту модель не входит.",
         },
         {
           type: "mcq",
@@ -75,7 +75,7 @@ export const F5_PAPER: SeedPaper = {
           explanation_en:
             "The mnemonic ACCURATE (Accurate, Complete, Cost-effective, Understandable, Relevant, Adaptable/Authoritative, Timely, Easy-to-use) summarises the qualities. Timeliness, accuracy and relevance are the core.",
           explanation_ru:
-            "Мнемоника ACCURATE (точная, полная, экономичная, понятная, релевантная, авторитетная, своевременная, удобная) описывает требуемые свойства. Своевременность, точность и релевантность — основа.",
+            "Мнемоника ACCURATE (точная, полная, экономичная, понятная, релевантная, авторитетная, своевременная, удобная) описывает требуемые свойства. Своевременность, точность и релевантность - основа.",
         },
                 {
           type: "mcq",
@@ -92,27 +92,27 @@ export const F5_PAPER: SeedPaper = {
               key: "B",
               text_en: "Enterprise Reporting Platform",
               text_ru: "Платформа корпоративной отчётности",
-              why_wrong_en: "ERP stands for Enterprise Resource Planning — an integrated operational system, not merely a reporting platform.",
-              why_wrong_ru: "ERP — это планирование ресурсов предприятия, интегрированная операционная система, а не просто платформа отчётности.",
+              why_wrong_en: "ERP stands for Enterprise Resource Planning - an integrated operational system, not merely a reporting platform.",
+              why_wrong_ru: "ERP - это планирование ресурсов предприятия, интегрированная операционная система, а не просто платформа отчётности.",
             },
             {
               key: "C",
               text_en: "External Revenue Projection",
               text_ru: "Прогноз внешней выручки",
               why_wrong_en: "ERP is not a forecasting term; it is an integrated business-management system.",
-              why_wrong_ru: "ERP — не термин прогнозирования, а интегрированная система управления бизнесом.",
+              why_wrong_ru: "ERP - не термин прогнозирования, а интегрированная система управления бизнесом.",
             },
             {
               key: "D",
               text_en: "Efficient Resource Procurement",
               text_ru: "Эффективная закупка ресурсов",
               why_wrong_en: "Procurement is just one area an ERP may cover; the acronym is Enterprise Resource Planning.",
-              why_wrong_ru: "Закупки — лишь одна из областей ERP; аббревиатура означает «планирование ресурсов предприятия».",
+              why_wrong_ru: "Закупки - лишь одна из областей ERP; аббревиатура означает «планирование ресурсов предприятия».",
             },
           ],
           correct_answer_en: "A",
-          explanation_en: "ERP (Enterprise Resource Planning) systems integrate core business processes — finance, HR, manufacturing, supply chain — into a single database, supporting real-time management decision-making.",
-          explanation_ru: "Системы ERP (планирование ресурсов предприятия) объединяют ключевые бизнес-процессы — финансы, HR, производство, цепочку поставок — в единую базу данных, поддерживая принятие управленческих решений в реальном времени.",
+          explanation_en: "ERP (Enterprise Resource Planning) systems integrate core business processes - finance, HR, manufacturing, supply chain - into a single database, supporting real-time management decision-making.",
+          explanation_ru: "Системы ERP (планирование ресурсов предприятия) объединяют ключевые бизнес-процессы - финансы, HR, производство, цепочку поставок - в единую базу данных, поддерживая принятие управленческих решений в реальном времени.",
         },
         {
           type: "mcq",
@@ -143,9 +143,9 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "B",
           explanation_en:
-            "Lean (originally Toyota Production System) classifies seven wastes — overproduction, waiting, transport, processing, inventory, motion, defects — and seeks to eliminate them.",
+            "Lean (originally Toyota Production System) classifies seven wastes - overproduction, waiting, transport, processing, inventory, motion, defects - and seeks to eliminate them.",
           explanation_ru:
-            "Бережливое производство (Toyota Production System) выделяет семь видов потерь — перепроизводство, ожидание, транспортировку, обработку, запасы, движение, дефекты — и стремится их устранить.",
+            "Бережливое производство (Toyota Production System) выделяет семь видов потерь - перепроизводство, ожидание, транспортировку, обработку, запасы, движение, дефекты - и стремится их устранить.",
         },
       ],
     },
@@ -192,9 +192,9 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "B",
           explanation_en:
-            "ABC traces overheads first to activities (e.g. machine set-ups, inspections) and then to products using cost drivers that cause those activities — producing more granular product costs than absorption costing.",
+            "ABC traces overheads first to activities (e.g. machine set-ups, inspections) and then to products using cost drivers that cause those activities - producing more granular product costs than absorption costing.",
           explanation_ru:
-            "ABC сначала относит накладные расходы на виды деятельности (наладки, проверки и т.п.), а затем — на продукты через драйверы затрат, дающие более точные продуктовые затраты, чем абсорбционный метод.",
+            "ABC сначала относит накладные расходы на виды деятельности (наладки, проверки и т.п.), а затем - на продукты через драйверы затрат, дающие более точные продуктовые затраты, чем абсорбционный метод.",
         },
         {
           type: "mcq",
@@ -265,7 +265,7 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "A",
           explanation_en: "TPAR = throughput per bottleneck hour ÷ factory cost per bottleneck hour. A TPAR above 1 means the product earns more throughput than the factory cost it consumes (desirable); below 1 suggests dropping or redesigning the product.",
-          explanation_ru: "TPAR = пропускная способность на час узкого места ÷ заводские затраты на час узкого места. TPAR выше 1 означает, что продукт приносит больше пропускной способности, чем потребляет заводских затрат (желательно); ниже 1 — продукт стоит снять или переработать.",
+          explanation_ru: "TPAR = пропускная способность на час узкого места ÷ заводские затраты на час узкого места. TPAR выше 1 означает, что продукт приносит больше пропускной способности, чем потребляет заводских затрат (желательно); ниже 1 - продукт стоит снять или переработать.",
         },
         {
           type: "mcq",
@@ -308,7 +308,7 @@ export const F5_PAPER: SeedPaper = {
           prompt_en:
             "A product has selling price $50, direct materials $20, and uses 4 minutes of bottleneck time per unit. The factory cost (excluding materials) is $5 per bottleneck minute. The Throughput Accounting Ratio is:",
           prompt_ru:
-            "Цена продажи продукта $50, прямые материалы $20, на единицу уходит 4 минуты узкого ресурса. Фабричные затраты (без материалов) — $5 на минуту узкого ресурса. Коэффициент TPAR равен:",
+            "Цена продажи продукта $50, прямые материалы $20, на единицу уходит 4 минуты узкого ресурса. Фабричные затраты (без материалов) - $5 на минуту узкого ресурса. Коэффициент TPAR равен:",
           options: [
             { key: "A", text_en: "1.5", text_ru: "1,5" },
             { key: "B", text_en: "2.0", text_ru: "2,0" },
@@ -365,9 +365,9 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "C",
           explanation_en:
-            "Relevant costs are future, cash and differential. Incremental (extra) costs caused by the decision qualify. Sunk and historical costs do not — they cannot be changed.",
+            "Relevant costs are future, cash and differential. Incremental (extra) costs caused by the decision qualify. Sunk and historical costs do not - they cannot be changed.",
           explanation_ru:
-            "Релевантные затраты — будущие, денежные, отличающиеся. Приростные (дополнительные) затраты, вызванные решением, к ним относятся. Понесённые и исторические — нет, их уже не изменить.",
+            "Релевантные затраты - будущие, денежные, отличающиеся. Приростные (дополнительные) затраты, вызванные решением, к ним относятся. Понесённые и исторические - нет, их уже не изменить.",
         },
                 {
           type: "mcq",
@@ -468,9 +468,9 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "B",
           explanation_en:
-            "Maximin chooses the option whose WORST outcome is best — a defensive, pessimistic stance. Maximax (best-of-best) is risk-seeking; expected value is risk-neutral.",
+            "Maximin chooses the option whose WORST outcome is best - a defensive, pessimistic stance. Maximax (best-of-best) is risk-seeking; expected value is risk-neutral.",
           explanation_ru:
-            "Максимин выбирает вариант, у которого ХУДШИЙ исход наилучший — оборонительная, пессимистичная позиция. Максимакс (лучшее из лучших) — рискующий; ожидаемая ценность — нейтральный.",
+            "Максимин выбирает вариант, у которого ХУДШИЙ исход наилучший - оборонительная, пессимистичная позиция. Максимакс (лучшее из лучших) - рискующий; ожидаемая ценность - нейтральный.",
         },
         {
           type: "mcq",
@@ -482,19 +482,19 @@ export const F5_PAPER: SeedPaper = {
           options: [
             {
               key: "A",
-              text_en: "No — total cost $65,000 exceeds revenue $50,000",
-              text_ru: "Нет — общие затраты $65 000 превышают выручку $50 000",
+              text_en: "No - total cost $65,000 exceeds revenue $50,000",
+              text_ru: "Нет - общие затраты $65 000 превышают выручку $50 000",
             },
             {
               key: "B",
-              text_en: "Yes — additional $25,000 cost yields $50,000 revenue",
+              text_en: "Yes - additional $25,000 cost yields $50,000 revenue",
               text_ru:
-                "Да — дополнительные $25 000 затрат принесут выручку $50 000",
+                "Да - дополнительные $25 000 затрат принесут выручку $50 000",
             },
             {
               key: "C",
-              text_en: "No — there is no profit on a total-cost basis",
-              text_ru: "Нет — на основе полных затрат прибыли нет",
+              text_en: "No - there is no profit on a total-cost basis",
+              text_ru: "Нет - на основе полных затрат прибыли нет",
             },
             {
               key: "D",
@@ -504,9 +504,9 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "B",
           explanation_en:
-            "The $40,000 already spent is a sunk cost — irrelevant. Relevant analysis compares $25,000 incremental cost with $50,000 incremental revenue: a $25,000 incremental gain.",
+            "The $40,000 already spent is a sunk cost - irrelevant. Relevant analysis compares $25,000 incremental cost with $50,000 incremental revenue: a $25,000 incremental gain.",
           explanation_ru:
-            "$40 000 уже потрачены — это понесённые (sunk) затраты, в анализе игнорируются. Релевантно сравнить $25 000 приростных затрат с $50 000 приростной выручки: приростная выгода $25 000.",
+            "$40 000 уже потрачены - это понесённые (sunk) затраты, в анализе игнорируются. Релевантно сравнить $25 000 приростных затрат с $50 000 приростной выручки: приростная выгода $25 000.",
         },
         {
           type: "number_entry",
@@ -528,7 +528,7 @@ export const F5_PAPER: SeedPaper = {
           prompt_en:
             "A company sells 12,000 units per year. Break-even is 9,000 units. What is the margin of safety as a percentage of budgeted sales? Enter the percentage (e.g. 25 for 25%).",
           prompt_ru:
-            "Компания продаёт 12 000 единиц в год. Точка безубыточности — 9 000 единиц. Каков запас финансовой прочности в процентах от планового объёма? Введите процент (например, 25 — для 25%).",
+            "Компания продаёт 12 000 единиц в год. Точка безубыточности - 9 000 единиц. Каков запас финансовой прочности в процентах от планового объёма? Введите процент (например, 25 - для 25%).",
           correct_answer_en: "25",
           explanation_en:
             "Margin of safety = (budgeted − break-even) / budgeted × 100 = (12,000 − 9,000) / 12,000 × 100 = 25%.",
@@ -579,9 +579,9 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "B",
           explanation_en:
-            "A flexible budget restates the original budget for the actual activity level achieved — so variances reflect efficiency rather than activity differences.",
+            "A flexible budget restates the original budget for the actual activity level achieved - so variances reflect efficiency rather than activity differences.",
           explanation_ru:
-            "Гибкий бюджет пересчитывает исходный бюджет под фактический объём деятельности — так отклонения отражают эффективность, а не разницу в активности.",
+            "Гибкий бюджет пересчитывает исходный бюджет под фактический объём деятельности - так отклонения отражают эффективность, а не разницу в активности.",
         },
         {
           type: "mcq",
@@ -616,7 +616,7 @@ export const F5_PAPER: SeedPaper = {
           explanation_en:
             "ZBB challenges the assumption that prior-year spending is the starting point. Each decision package is justified afresh, controlling cost creep at the price of being labour-intensive.",
           explanation_ru:
-            "ZBB отвергает предпосылку, что прошлогодние расходы — отправная точка. Каждый «пакет решений» обосновывается заново: ограничивает рост затрат ценой высокой трудоёмкости.",
+            "ZBB отвергает предпосылку, что прошлогодние расходы - отправная точка. Каждый «пакет решений» обосновывается заново: ограничивает рост затрат ценой высокой трудоёмкости.",
         },
                 {
           type: "mcq",
@@ -633,8 +633,8 @@ export const F5_PAPER: SeedPaper = {
               key: "B",
               text_en: "A budget that is fixed for the whole year and never changed",
               text_ru: "Бюджет, фиксируемый на весь год и не изменяемый",
-              why_wrong_en: "That describes a traditional fixed annual budget — the opposite of a rolling budget, which is continually extended.",
-              why_wrong_ru: "Это описание традиционного фиксированного годового бюджета — противоположность скользящему, который постоянно продлевается.",
+              why_wrong_en: "That describes a traditional fixed annual budget - the opposite of a rolling budget, which is continually extended.",
+              why_wrong_ru: "Это описание традиционного фиксированного годового бюджета - противоположность скользящему, который постоянно продлевается.",
             },
             {
               key: "C",
@@ -648,7 +648,7 @@ export const F5_PAPER: SeedPaper = {
               text_en: "A budget built from zero each period",
               text_ru: "Бюджет, составляемый с нуля каждый период",
               why_wrong_en: "Building from zero describes zero-based budgeting, not a rolling budget.",
-              why_wrong_ru: "Составление с нуля — это бюджетирование с нуля, а не скользящий бюджет.",
+              why_wrong_ru: "Составление с нуля - это бюджетирование с нуля, а не скользящий бюджет.",
             },
           ],
           correct_answer_en: "A",
@@ -723,7 +723,7 @@ export const F5_PAPER: SeedPaper = {
           explanation_en:
             "Slack is built in by managers facing performance pressure, distorting both planning and motivation. Combatable by independent benchmarking and zero-based reviews.",
           explanation_ru:
-            "«Зазор» закладывается менеджерами под давлением показателей, искажая и планирование, и мотивацию. Противодействие — независимый бенчмаркинг и пересмотр с нуля.",
+            "«Зазор» закладывается менеджерами под давлением показателей, искажая и планирование, и мотивацию. Противодействие - независимый бенчмаркинг и пересмотр с нуля.",
         },
         {
           type: "number_entry",
@@ -731,7 +731,7 @@ export const F5_PAPER: SeedPaper = {
           prompt_en:
             "Standard material per unit: 3 kg at $8/kg. Actual production used 6,500 kg at a total cost of $54,600 to make 2,000 units. What is the material price variance? Enter a positive number for adverse, negative for favourable (in $).",
           prompt_ru:
-            "Норматив: 3 кг материала по $8/кг на единицу. Фактически на 2 000 единиц израсходовано 6 500 кг общей стоимостью $54 600. Каково отклонение по цене материала? Введите положительное число для неблагоприятного, отрицательное — для благоприятного (в $).",
+            "Норматив: 3 кг материала по $8/кг на единицу. Фактически на 2 000 единиц израсходовано 6 500 кг общей стоимостью $54 600. Каково отклонение по цене материала? Введите положительное число для неблагоприятного, отрицательное - для благоприятного (в $).",
           correct_answer_en: "2600",
           explanation_en:
             "Material price variance = (standard price − actual price) × actual qty. Actual price = $54,600 / 6,500 = $8.40/kg. Variance = ($8 − $8.40) × 6,500 = −$2,600 → $2,600 adverse.",
@@ -745,7 +745,7 @@ export const F5_PAPER: SeedPaper = {
           prompt_en:
             "Standard usage: 3 kg per unit at $8/kg. Actual: 6,500 kg used to produce 2,000 units. What is the material usage variance (in $)? Enter positive for adverse, negative for favourable.",
           prompt_ru:
-            "Норма: 3 кг на единицу по $8/кг. Факт: 6 500 кг на 2 000 единиц. Каково отклонение по использованию материала (в $)? Введите положительное число для неблагоприятного, отрицательное — для благоприятного.",
+            "Норма: 3 кг на единицу по $8/кг. Факт: 6 500 кг на 2 000 единиц. Каково отклонение по использованию материала (в $)? Введите положительное число для неблагоприятного, отрицательное - для благоприятного.",
           correct_answer_en: "4000",
           explanation_en:
             "Standard usage for actual output = 2,000 × 3 kg = 6,000 kg. Variance = (standard qty − actual qty) × standard price = (6,000 − 6,500) × $8 = −$4,000 → $4,000 adverse.",
@@ -839,7 +839,7 @@ export const F5_PAPER: SeedPaper = {
               text_en: "Operating profit divided by capital employed",
               text_ru: "Операционная прибыль ÷ задействованный капитал",
               why_wrong_en: "That is ROCE (a percentage), not RI; RI is an absolute amount after a capital charge.",
-              why_wrong_ru: "Это ROCE (в процентах), а не RI; RI — абсолютная величина после начисления на капитал.",
+              why_wrong_ru: "Это ROCE (в процентах), а не RI; RI - абсолютная величина после начисления на капитал.",
             },
             {
               key: "C",
@@ -858,7 +858,7 @@ export const F5_PAPER: SeedPaper = {
           ],
           correct_answer_en: "A",
           explanation_en: "RI = operating profit − (cost of capital × capital employed). Unlike ROCE, RI is an absolute figure, which avoids the \"small high-percentage division\" problem and aligns better with maximising shareholder value.",
-          explanation_ru: "RI = операционная прибыль − (стоимость капитала × задействованный капитал). В отличие от ROCE, RI — абсолютная величина, что устраняет проблему «маленького подразделения с высоким процентом» и лучше согласуется с максимизацией стоимости для акционеров.",
+          explanation_ru: "RI = операционная прибыль − (стоимость капитала × задействованный капитал). В отличие от ROCE, RI - абсолютная величина, что устраняет проблему «маленького подразделения с высоким процентом» и лучше согласуется с максимизацией стоимости для акционеров.",
         },
         {
           type: "mcq",
@@ -891,7 +891,7 @@ export const F5_PAPER: SeedPaper = {
           explanation_en:
             "Customer satisfaction (e.g. NPS) is qualitative/non-financial. The others are computed from financial statements.",
           explanation_ru:
-            "Удовлетворённость клиентов (например, NPS) — качественный/нефинансовый показатель. Остальные рассчитываются по финансовой отчётности.",
+            "Удовлетворённость клиентов (например, NPS) - качественный/нефинансовый показатель. Остальные рассчитываются по финансовой отчётности.",
         },
         {
           type: "mcq",
@@ -910,7 +910,7 @@ export const F5_PAPER: SeedPaper = {
           explanation_en:
             "Internal transfers cancel out at the group level. Group contribution = external price − external costs = $40 − $10 (A\u2019s cost) − $20 (B\u2019s extra cost) = $10. The $15 transfer is just a paper allocation.",
           explanation_ru:
-            "Внутренние трансферы на уровне группы взаимно сокращаются. Маржа группы = внешняя цена − внешние затраты = $40 − $10 (затраты A) − $20 (доп. затраты B) = $10. Цена $15 — лишь внутренняя оценка.",
+            "Внутренние трансферы на уровне группы взаимно сокращаются. Маржа группы = внешняя цена − внешние затраты = $40 − $10 (затраты A) − $20 (доп. затраты B) = $10. Цена $15 - лишь внутренняя оценка.",
         },
         {
           type: "number_entry",
@@ -932,7 +932,7 @@ export const F5_PAPER: SeedPaper = {
           prompt_en:
             "A division has operating profit of $480,000 on capital employed of $3,000,000. The group's cost of capital is 12%. What is the division's Residual Income (RI) in $?",
           prompt_ru:
-            "У подразделения операционная прибыль $480 000 при используемом капитале $3 000 000. Стоимость капитала группы — 12%. Чему равен остаточный доход (RI) в $?",
+            "У подразделения операционная прибыль $480 000 при используемом капитале $3 000 000. Стоимость капитала группы - 12%. Чему равен остаточный доход (RI) в $?",
           correct_answer_en: "120000",
           explanation_en:
             "Capital charge = $3,000,000 * 12% = $360,000. RI = profit - capital charge = $480,000 - $360,000 = $120,000.",

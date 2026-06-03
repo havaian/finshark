@@ -45,8 +45,8 @@ import { toPublicEmailTemplate } from "./email-templates.types";
 //
 // Mounted under /api/admin/email-templates alongside the other admin
 // surfaces. Stays inside email/ rather than billing/ because the templates
-// are used by anything that sends mail — reminders, billing notifications,
-// future PSP receipts — not billing-specific.
+// are used by anything that sends mail - reminders, billing notifications,
+// future PSP receipts - not billing-specific.
 
 class UpsertEmailTemplateDto {
   // Stable slug. We accept letters/digits/underscores; anything else makes
@@ -153,13 +153,13 @@ class BlastDto {
   lang?: "en" | "ru";
 
   // Admin-supplied extras merged on top of per-user vars. Keys constrained
-  // by EmailBlastService — invalid keys are simply ignored at render time.
+  // by EmailBlastService - invalid keys are simply ignored at render time.
   @IsOptional()
   @IsObject()
   extra_variables?: Record<string, string | number>;
 
   // Reserved for legally-required transactional emails (account close,
-  // billing receipts). Default false — most blasts respect opt-out.
+  // billing receipts). Default false - most blasts respect opt-out.
   @IsOptional()
   @IsBoolean()
   ignore_opt_out?: boolean;
@@ -242,7 +242,7 @@ export class AdminEmailTemplatesController {
     const lang = dto.lang ?? "en";
     const variables = dto.variables ?? {};
     // We call sendByTemplate which honours is_active=true. Inactive
-    // templates can't be tested — the admin should enable, test, and
+    // templates can't be tested - the admin should enable, test, and
     // disable if they want to dry-run a paused one. Keeps the active flag
     // a clean kill-switch with no side channel.
     const rendered = await this.templates.render(key, lang, variables);
@@ -254,7 +254,7 @@ export class AdminEmailTemplatesController {
     });
     if (!sent) {
       throw new NotFoundException(
-        `template "${key}" is inactive — enable it to send a test`
+        `template "${key}" is inactive - enable it to send a test`
       );
     }
     return {
@@ -269,7 +269,7 @@ export class AdminEmailTemplatesController {
   // 'free', 'reminders_enabled', or a list of user_ids). Renders each
   // recipient with their personalised variables (display_name, streak,
   // unsubscribe_url, etc.) and sends through the standard EmailService.
-  // The blast is synchronous within the request — for very large lists
+  // The blast is synchronous within the request - for very large lists
   // the throttle stretches the response time, but the result payload
   // gives the admin a clear sent/failed/skipped breakdown.
   @Post(":key/blast")

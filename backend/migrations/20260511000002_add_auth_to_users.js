@@ -2,7 +2,7 @@
 // Adds password/profile/streak columns to users and the refresh_tokens table.
 // (password_hash is later dropped by the google_auth migration. Kept here so
 // migrating from scratch produces the same intermediate schema as the original
-// SQL series — easier to reason about if you ever roll back partially.)
+// SQL series - easier to reason about if you ever roll back partially.)
 
 exports.shorthands = undefined;
 

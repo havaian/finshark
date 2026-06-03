@@ -26,7 +26,7 @@ import type {
 } from "./totp.types";
 
 // otplib defaults: 30s step, SHA-1, 6 digits, window=0. We bump window to
-// ±1 step (so 30s clock skew on the phone is forgiven). Don't bump higher —
+// ±1 step (so 30s clock skew on the phone is forgiven). Don't bump higher -
 // each extra step is one more code an attacker has a 1-in-1M shot at.
 authenticator.options = { window: 1 };
 
@@ -60,7 +60,7 @@ const PENDING_2FA_TTL_SECONDS = 5 * 60;
 // might accidentally land on this codepath.
 const PENDING_2FA_TYP = "pending_2fa";
 
-// Per-user lockout — caps the total attack rate against ONE account
+// Per-user lockout - caps the total attack rate against ONE account
 // regardless of source IP. The ThrottlerModule guards the same endpoint
 // per-IP; this is the second layer for distributed brute-force.
 //
@@ -89,29 +89,29 @@ export class TotpService {
 
   // Step 1: generate a secret + QR. Doesn't write anything; the secret is
   // returned to the caller and round-tripped via the otpauth URI / QR.
-  // Persistence happens in setup-verify only — so an aborted setup doesn't
+  // Persistence happens in setup-verify only - so an aborted setup doesn't
   // leave a dangling secret on the user row.
   //
   // We embed the secret directly in the otpauth URI rather than persisting
   // it pre-verify because: (a) the user might never finish; (b) if they did
   // half the flow on two browsers we'd have a race on which secret "wins".
   // Trade-off: a setup-begin can be replayed by an attacker who's already
-  // stolen the user's session — but the same attacker can also just call
+  // stolen the user's session - but the same attacker can also just call
   // setup-verify and finish enrollment. The session itself is the soft spot,
   // not this flow.
   async setupBegin(user_id: string): Promise<TotpSetupBeginResult> {
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
     if (!user.is_admin) {
-      // Defence-in-depth — the controller also guards by AdminGuard, but
+      // Defence-in-depth - the controller also guards by AdminGuard, but
       // checking here keeps the service self-protective if it's ever
       // wired into a non-admin route.
       throw new ForbiddenException("2FA is admin-only");
     }
     if (user.totp_secret) {
-      // Already enrolled. Force disable-first rather than silently rotating —
+      // Already enrolled. Force disable-first rather than silently rotating -
       // a user who already has 2FA and gets here might be mid-attack.
-      throw new BadRequestException("2FA already enabled — disable first");
+      throw new BadRequestException("2FA already enabled - disable first");
     }
 
     const secret_b32 = authenticator.generateSecret();
@@ -129,7 +129,7 @@ export class TotpService {
   }
 
   // Step 2: verify the first code, persist the secret, generate recovery
-  // codes (returned ONCE — frontend MUST show them and the user MUST save
+  // codes (returned ONCE - frontend MUST show them and the user MUST save
   // them). The plaintext codes never leave this method's return value.
   async setupVerify(opts: {
     user_id: string;
@@ -141,19 +141,19 @@ export class TotpService {
     if (!user) throw new NotFoundException("user not found");
     if (!user.is_admin) throw new ForbiddenException("2FA is admin-only");
     if (user.totp_secret) {
-      throw new BadRequestException("2FA already enabled — disable first");
+      throw new BadRequestException("2FA already enabled - disable first");
     }
 
     if (!this.verifyTotpCode(opts.secret_b32, opts.code)) {
       // Setup-verify is pre-enrollment, so it doesn't count toward the
-      // lockout window (the user has no enrolled secret yet — there's
+      // lockout window (the user has no enrolled secret yet - there's
       // nothing to brute-force). Just fail.
       throw new UnauthorizedException("invalid 2FA code");
     }
 
     // Generate recovery codes, hash them, persist hashes + the secret in
-    // the same logical transaction (two calls — enroll() and
-    // replaceRecoveryCodes() — but if either fails the admin can re-run
+    // the same logical transaction (two calls - enroll() and
+    // replaceRecoveryCodes() - but if either fails the admin can re-run
     // setup since totp_secret is still NULL at that point).
     const plaintextCodes = this.generateRecoveryCodes();
     const hashes = plaintextCodes.map((c) => this.hashRecoveryCode(c));
@@ -173,7 +173,7 @@ export class TotpService {
   }
 
   // Disable. Requires the user to pass a current 6-digit code as proof of
-  // possession — without this, an attacker who hijacked a session could
+  // possession - without this, an attacker who hijacked a session could
   // strip the second factor. Recovery codes ALSO work here: if the user
   // lost their phone, they can disable from a backup. Same code path as
   // login verification.
@@ -188,7 +188,7 @@ export class TotpService {
       throw new BadRequestException("2FA not enabled");
     }
 
-    // Lockout applies here too — disable is just as sensitive as a login
+    // Lockout applies here too - disable is just as sensitive as a login
     // verify (an attacker stripping the factor is exactly the threat).
     await this.enforceLockout(opts.user_id, opts.ip);
 
@@ -210,7 +210,7 @@ export class TotpService {
     return { ok: true };
   }
 
-  // Regenerate recovery codes — invalidates the previous set and returns
+  // Regenerate recovery codes - invalidates the previous set and returns
   // a fresh batch of 10. Requires a current code as proof of possession
   // (same threat model as disable). Useful when:
   //   - The user used most of their codes and wants a fresh set.
@@ -263,7 +263,7 @@ export class TotpService {
     return { ok: true, recovery_codes: plaintextCodes };
   }
 
-  // Read-only status — used by Settings to render the enable/disable
+  // Read-only status - used by Settings to render the enable/disable
   // affordance. Doesn't leak secret or recovery state.
   async status(user_id: string): Promise<TotpStatusResult> {
     const user = await this.users.findById(user_id);
@@ -277,13 +277,13 @@ export class TotpService {
   }
 
   // Audit-log read for the current user. Used by a "2FA history" UI surface
-  // (not yet built — endpoint exists so admins have visibility into their
+  // (not yet built - endpoint exists so admins have visibility into their
   // own account's security events). Returns most-recent-first.
   async getAuditLog(user_id: string) {
     return this.totp.listAuditEvents({ user_id, limit: 50 });
   }
 
-  // Count of unused recovery codes — surfaced in Settings so the user knows
+  // Count of unused recovery codes - surfaced in Settings so the user knows
   // when they're running low and should regenerate.
   async getRemainingRecoveryCodes(user_id: string): Promise<number> {
     return this.totp.countUnusedRecoveryCodes(user_id);
@@ -303,7 +303,7 @@ export class TotpService {
   }
 
   // Mint a short-lived pending-2FA JWT carrying the user id. This is what
-  // the frontend gets back from the Google callback when 2FA is required —
+  // the frontend gets back from the Google callback when 2FA is required -
   // they hold this while the user types the 6-digit code, then POST it back
   // to /auth/2fa-verify with the code.
   //
@@ -328,11 +328,11 @@ export class TotpService {
     if (!user) throw new UnauthorizedException("invalid 2FA challenge");
     if (!user.totp_secret) {
       // The pending token was issued for a user who has since disabled 2FA.
-      // Don't silently succeed — fail closed; they should re-do Google.
+      // Don't silently succeed - fail closed; they should re-do Google.
       throw new UnauthorizedException("2FA not enabled");
     }
 
-    // Per-user lockout — runs BEFORE we even attempt validation so a
+    // Per-user lockout - runs BEFORE we even attempt validation so a
     // locked-out account can't burn cycles checking. The same 401 surface
     // as a wrong code (don't leak whether lockout vs invalid input).
     await this.enforceLockout(user.id, opts.ip);
@@ -346,7 +346,7 @@ export class TotpService {
     );
     if (!ok) throw new UnauthorizedException("invalid 2FA code");
 
-    // Success — clear the failure budget so a future fat-finger doesn't
+    // Success - clear the failure budget so a future fat-finger doesn't
     // hit the lockout immediately.
     await this.totp.clearFailedAttempts(user.id).catch(() => {});
 
@@ -359,11 +359,11 @@ export class TotpService {
   // ── Internals ─────────────────────────────────────────────────────────
 
   // Check per-user lockout. If the user has too many recent failures,
-  // emit a 'locked_out' audit row (once per breach — we don't spam audit
+  // emit a 'locked_out' audit row (once per breach - we don't spam audit
   // every probe) and throw the same 401 we'd throw for a bad code. The
   // attacker learns nothing about why we refused.
   //
-  // We DON'T persist a "locked_until" timestamp — the lockout is implicit
+  // We DON'T persist a "locked_until" timestamp - the lockout is implicit
   // in the count over the sliding window. As old rows age out of the
   // window, the user becomes unlocked naturally.
   private async enforceLockout(
@@ -418,7 +418,7 @@ export class TotpService {
     const cleanedDigits = (raw ?? "").replace(/\s+/g, "");
     if (/^\d{6}$/.test(cleanedDigits)) {
       if (this.verifyTotpCode(secret_b32, cleanedDigits)) return true;
-      // 6 digits but didn't validate — DON'T fall through to recovery, that
+      // 6 digits but didn't validate - DON'T fall through to recovery, that
       // would let an attacker who guesses six digits also burn a recovery
       // code attempt for free. They're disjoint formats.
       await this.totp.recordFailedAttempt({ user_id, ip }).catch(() => {});
@@ -435,7 +435,7 @@ export class TotpService {
       if (this.verifyRecoveryHash(normalized, row.code_hash)) {
         // Mark this specific row used. If another concurrent request beat
         // us to it (consumeRecoveryCode returns false), the user typed a
-        // valid code but it was just consumed — treat as failure so we
+        // valid code but it was just consumed - treat as failure so we
         // don't double-issue tokens for one code.
         const consumed = await this.totp.consumeRecoveryCode(row.id);
         if (consumed) {
@@ -453,7 +453,7 @@ export class TotpService {
   }
 
   // Thin wrapper around the repository's audit insert. Swallows + logs
-  // errors — audit must NEVER break the operation it's recording. (If the
+  // errors - audit must NEVER break the operation it's recording. (If the
   // audit row fails to write we still want the verify/setup to succeed.)
   private async recordAudit(
     user_id: string,
@@ -506,7 +506,7 @@ export class TotpService {
     const stripped = raw.replace(/[\s-]/g, "").toUpperCase();
     const expectedLen = RECOVERY_CODE_GROUPS * RECOVERY_CODE_GROUP_LEN;
     if (stripped.length !== expectedLen) return null;
-    // Validate every char is in the alphabet — protects against weird
+    // Validate every char is in the alphabet - protects against weird
     // input getting hashed and accidentally colliding.
     for (const ch of stripped) {
       if (!RECOVERY_CODE_ALPHABET.includes(ch)) return null;
@@ -558,7 +558,7 @@ export class TotpService {
     }
   }
 
-  // ── Pending-2FA JWT (tiny, self-contained — no DB) ────────────────────
+  // ── Pending-2FA JWT (tiny, self-contained - no DB) ────────────────────
 
   // We use the symmetric JWT secret already in play (JWT_ACCESS_SECRET) but
   // mark the payload with typ='pending_2fa'. The verify endpoint refuses
@@ -572,7 +572,7 @@ export class TotpService {
 
   // Returns the user_id if the token is valid AND has typ='pending_2fa'.
   // Throws UnauthorizedException otherwise. We deliberately throw the same
-  // error for expired vs typ-mismatch vs bad signature — no oracle for an
+  // error for expired vs typ-mismatch vs bad signature - no oracle for an
   // attacker probing tokens.
   private verifyPending(token: string): string {
     const secret = this.config.getOrThrow<string>("JWT_ACCESS_SECRET");

@@ -17,7 +17,7 @@ app.mount("#app");
 // hot-reloading the SPA already signed in), pull /me/entitlement so chrome
 // chips have data on first paint instead of after the dashboard mounts.
 // Best-effort: 401 is handled by the axios interceptor (refresh + retry or
-// forced-logout). Any other failure falls through silently — the store stays
+// forced-logout). Any other failure falls through silently - the store stays
 // empty and UI components hide their quota chips.
 //
 // The cheap LS_ACCESS check avoids a 401 hit when the user has never signed
@@ -29,7 +29,7 @@ if (localStorage.getItem("finshark.access_token")) {
 // Fetch UI overrides for the current language and merge over the static
 // locale. Overrides live as JSON files on the backend (backend/locales/) and
 // are exposed at GET /api/ui-translations/:lang as a flat {key → value} map.
-// Best-effort: failures fall back silently to the bundled defaults — we don't
+// Best-effort: failures fall back silently to the bundled defaults - we don't
 // want the app to refuse to render if this fetch fails.
 //
 // Runs AFTER mount so the user sees the static-locale UI immediately rather
@@ -40,5 +40,5 @@ api
   .get<Record<string, string>>(`/ui-translations/${initialLang}`)
   .then((res) => applyOverrides(initialLang, res.data))
   .catch(() => {
-    /* silent — static defaults remain in effect */
+    /* silent - static defaults remain in effect */
   });

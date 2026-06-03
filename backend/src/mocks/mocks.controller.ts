@@ -9,7 +9,7 @@ import { StartMockDto } from "./dto/start-mock.dto";
 
 // Mocks live under their own /mocks prefix rather than overloading /lessons,
 // to keep the API surface readable. The actual session lifecycle (attempt,
-// complete) still flows through /lessons/:id endpoints — a mock IS a session
+// complete) still flows through /lessons/:id endpoints - a mock IS a session
 // row, just with mode='mock'. This is just the start + post-completion ops.
 @Controller("mocks")
 @UseGuards(JwtAuthGuard)
@@ -41,7 +41,7 @@ export class MocksController {
 
   // GET /mocks/:id/answers → per-question review payload (prompt, options,
   // correct answer, explanation, user's answer, per-option why-wrong). The
-  // frontend renders this as a stack of read-only review cards — distinct
+  // frontend renders this as a stack of read-only review cards - distinct
   // from POST /:id/review which spins up a re-practice lesson session.
   @Get(":session_id/answers")
   answers(

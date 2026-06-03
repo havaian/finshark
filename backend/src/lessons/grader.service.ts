@@ -3,7 +3,7 @@ import type { QuestionRow, Lang } from "../content/content.types";
 
 export interface GradeResult {
   was_correct: boolean;
-  // Stored in attempts.llm_grade_json. Always null now — grading is fully
+  // Stored in attempts.llm_grade_json. Always null now - grading is fully
   // deterministic (mcq / number_entry) and no LLM is involved in the grading
   // path. The column is retained for historical rows and a possible future
   // authoring-side use; the grader never populates it.
@@ -15,13 +15,13 @@ export interface GradeResult {
 // multiple-response, matching, numeric fill-in-the-blank). Free-text
 // short_answer is not a real auto-marked exam format, so it is being retired
 // from the question bank; the grader no longer has a code path for it. No fuzzy
-// string matching, no synonym sets, and no LLM in the grading path — that is
+// string matching, no synonym sets, and no LLM in the grading path - that is
 // what produced the "Zero based budgeting marked wrong" trust bug.
 
 @Injectable()
 export class GraderService {
   // No dependencies: grading is self-contained and deterministic. The
-  // LlmGraderService is intentionally NOT injected here anymore — it stays
+  // LlmGraderService is intentionally NOT injected here anymore - it stays
   // dormant in the tree (no callers) for a possible future authoring-side use.
 
   // user_id and lang are kept in the signature for caller compatibility and
@@ -39,7 +39,7 @@ export class GraderService {
     if (question.type === "number_entry") {
       const numeric = this.gradeNumber(question, user_answer);
       // Parse failure (gibberish / unparseable input) is simply WRONG. We do
-      // NOT fall through to any LLM or fuzzy path — there is none. Returning
+      // NOT fall through to any LLM or fuzzy path - there is none. Returning
       // incorrect directly keeps grading deterministic and dispute-free.
       if (numeric === null) {
         return { was_correct: false, llm_grade_json: null };
@@ -56,22 +56,22 @@ export class GraderService {
   private gradeMcq(question: QuestionRow, user_answer: string): GradeResult {
     // MCQ correct_answer_en stores the option key (e.g. "A"). The key is the same
     // across languages, so no language switch needed here. Compare case-insensitively
-    // and trim — admins sometimes save "A " with trailing space.
+    // and trim - admins sometimes save "A " with trailing space.
     const expected = question.correct_answer_en.trim().toUpperCase();
     const actual = user_answer.trim().toUpperCase();
     return { was_correct: expected === actual, llm_grade_json: null };
   }
 
   // number_entry grader. Returns null on parse failure (caller falls through
-  // to LLM path). Tolerance is taken from question.acceptable_tolerance —
+  // to LLM path). Tolerance is taken from question.acceptable_tolerance -
   // NULL means exact match required.
   //
   // Normalisation handled:
-  //  - thousands separators ("1,000" → 1000) — strip commas
+  //  - thousands separators ("1,000" → 1000) - strip commas
   //  - leading/trailing whitespace
-  //  - both "." and "," as decimal mark — but only when unambiguous (one of
+  //  - both "." and "," as decimal mark - but only when unambiguous (one of
   //    them present; if both are present, comma is thousands sep and dot is
-  //    decimal — standard English convention.)
+  //    decimal - standard English convention.)
   //  - leading + sign or surrounding parentheses for negatives ("(150)" = -150)
   private gradeNumber(
     question: QuestionRow,
@@ -120,7 +120,7 @@ export class GraderService {
         s = s.replace(/,/g, "");
       }
     } else if (hasComma) {
-      // Only comma — treat as decimal mark (single comma) or thousands sep
+      // Only comma - treat as decimal mark (single comma) or thousands sep
       // (multiple commas / comma not in 3-digits-from-end pattern). Simplest
       // heuristic: if there's exactly one comma followed by 1-2 digits, it's
       // a decimal. Otherwise treat as thousands sep.

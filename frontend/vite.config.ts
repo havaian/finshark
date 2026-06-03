@@ -2,18 +2,18 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
 // Manual chunks:
-//   vendor-chart  — chart.js is large (~150 KB raw) and only loaded by Profile
+//   vendor-chart  - chart.js is large (~150 KB raw) and only loaded by Profile
 //                   and Progress. Splitting it means new users hitting just the
 //                   dashboard / lesson flow never download it.
-//   vendor-vue    — vue, vue-router, vue-i18n, pinia. Stable surface, good cache
+//   vendor-vue    - vue, vue-router, vue-i18n, pinia. Stable surface, good cache
 //                   hit rate across deploys.
-//   vendor-axios  — axios. Used by every api/* file but cheap enough that it
+//   vendor-axios  - axios. Used by every api/* file but cheap enough that it
 //                   wouldn't matter standalone; we group it with vendor-vue's
 //                   "core runtime" feel by leaving it in the main bundle (no
 //                   entry below).
 //
 // Anything not matched falls into the default app chunk. Adding more entries
-// here is safe — if a vendor package is not actually imported, the chunk just
+// here is safe - if a vendor package is not actually imported, the chunk just
 // won't exist.
 
 export default defineConfig({

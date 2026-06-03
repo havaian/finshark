@@ -23,7 +23,7 @@
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  // pgcrypto for gen_random_uuid(). Idempotent — safe if already enabled.
+  // pgcrypto for gen_random_uuid(). Idempotent - safe if already enabled.
   pgm.sql('CREATE EXTENSION IF NOT EXISTS pgcrypto');
 
   // ── ENUMs ─────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ exports.up = (pgm) => {
   pgm.createTable('plans', {
     id: { type: 'text', primaryKey: true },         // 'free' | 'premium_monthly' | etc.
     name: { type: 'text', notNull: true },          // display name
-    tier: { type: 'text', notNull: true },          // 'free' | 'premium' — what gates check
+    tier: { type: 'text', notNull: true },          // 'free' | 'premium' - what gates check
     period_days: { type: 'integer' },               // null = open-ended (lifetime, free)
     price_minor: { type: 'integer' },               // price in minor units; null for non-purchasable
     currency: { type: 'text' },                     // ISO 4217, e.g. 'UZS'
@@ -141,7 +141,7 @@ exports.up = (pgm) => {
   `);
 
   // ── seed plans ────────────────────────────────────────────────────
-  // Prices are placeholders — the real PSP integration will set actual values.
+  // Prices are placeholders - the real PSP integration will set actual values.
   // The 'free' plan exists so subscription rows can reference it explicitly
   // (e.g. a "downgraded to free" event), and so the admin UI can list it.
   pgm.sql(`
@@ -164,5 +164,5 @@ exports.down = (pgm) => {
   pgm.dropType('subscription_event_kind');
   pgm.dropType('subscription_source');
   pgm.dropType('subscription_status');
-  // pgcrypto is left in place — other features may depend on it.
+  // pgcrypto is left in place - other features may depend on it.
 };

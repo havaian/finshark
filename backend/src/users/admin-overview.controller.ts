@@ -5,7 +5,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 
 // At-a-glance counts for the admin landing page. Each metric is a single
-// aggregate — the whole response is one SQL roundtrip via multiple
+// aggregate - the whole response is one SQL roundtrip via multiple
 // subqueries. We keep it scoped to "things the admin checks first": total
 // users, active premium, recent signups, recent activity, content counts.
 //
@@ -17,7 +17,7 @@ interface OverviewResponse {
   users: {
     total: number;
     admins: number;
-    // Users with email_reminders_enabled — we use this as a proxy for the
+    // Users with email_reminders_enabled - we use this as a proxy for the
     // "engaged" cohort.
     reminders_enabled: number;
     // New signups in the last 7 days.
@@ -53,7 +53,7 @@ export class AdminOverviewController {
   @Get()
   async overview(): Promise<OverviewResponse> {
     // Each subquery is independent so the planner can parallelise. We
-    // explicitly cast to int — postgres COUNT(*) is bigint and would
+    // explicitly cast to int - postgres COUNT(*) is bigint and would
     // otherwise be returned as string by postgres.js.
     type Row = {
       users_total: number;

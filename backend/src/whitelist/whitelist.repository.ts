@@ -56,7 +56,7 @@ export class WhitelistRepository {
   }
 
   // Update the note on an existing row. Pattern itself is immutable from the
-  // UI — deleting + re-adding is the correct way to change a pattern, since
+  // UI - deleting + re-adding is the correct way to change a pattern, since
   // changes might invalidate already-logged-in users.
   async updateNote(
     id: string,

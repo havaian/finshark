@@ -36,7 +36,7 @@ export class AdminUsersController {
   }
 
   // Single-user fetch for the admin user-detail page. The shape includes
-  // `created_at` so the page can show "joined …" — the public user shape
+  // `created_at` so the page can show "joined …" - the public user shape
   // strips it because the dashboard / leaderboard don't need it.
   @Get(":id")
   async getOne(@Param("id") id: string) {
@@ -76,13 +76,13 @@ export class AdminUsersController {
     if (dto.is_admin === false) {
       if (current.sub === id) {
         throw new ForbiddenException(
-          "you cannot remove your own admin rights — ask another admin to do it"
+          "you cannot remove your own admin rights - ask another admin to do it"
         );
       }
       const adminCount = await this.users.countAdmins();
       if (adminCount <= 1) {
         throw new BadRequestException(
-          "cannot demote the last remaining admin — promote someone else first"
+          "cannot demote the last remaining admin - promote someone else first"
         );
       }
     }

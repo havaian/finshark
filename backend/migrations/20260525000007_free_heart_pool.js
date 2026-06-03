@@ -7,7 +7,7 @@
 // Columns:
 //   free_hearts_pool         integer NOT NULL DEFAULT 3
 //     Current pool. Always 0..3; refilled to 3 on the first heart-consuming
-//     call of a new local day. Premium users ignore this — their session
+//     call of a new local day. Premium users ignore this - their session
 //     starts at HEARTS_PER_SESSION (3) every time.
 //   free_hearts_pool_date    date    NULL
 //     The user's local date the pool currently corresponds to. NULL = never

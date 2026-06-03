@@ -4,7 +4,7 @@ import { EmailTemplatesRepository } from "./email-templates.repository";
 import type { EmailTemplateRow } from "./email-templates.types";
 import { ConfigService } from "@nestjs/config";
 
-// What gets returned from render() — fully-substituted strings ready to
+// What gets returned from render() - fully-substituted strings ready to
 // hand to EmailService.send(). lang is the resolved language the caller
 // requested (or the EN fallback if RU wasn't set on the template).
 export interface RenderedEmail {
@@ -81,7 +81,7 @@ export class EmailTemplatesService {
     private readonly config: ConfigService
   ) {}
 
-  // Pure render — useful for tests, preview, and the admin "preview" tab
+  // Pure render - useful for tests, preview, and the admin "preview" tab
   // on the edit form. Throws BadRequestException when the key doesn't
   // exist OR the template is disabled. Senders go through sendByTemplate()
   // which handles missing templates by falling back to a caller-provided
@@ -122,7 +122,7 @@ export class EmailTemplatesService {
     const row = await this.repo.findActiveByKey(input.templateKey);
     if (!row) {
       this.log.warn(
-        `template "${input.templateKey}" not available — caller should fall back`
+        `template "${input.templateKey}" not available - caller should fall back`
       );
       return false;
     }

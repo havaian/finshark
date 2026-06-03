@@ -17,7 +17,7 @@ import ThemeSwitch from '../components/ThemeSwitch.vue';
 //   - Unauthed users see the full landing.
 //
 // The CTA buttons link to /login (which still owns the actual Google OAuth
-// trigger). We never call /auth/google from here — keeps the landing layer
+// trigger). We never call /auth/google from here - keeps the landing layer
 // purely informational and means we can plug in a passwords flow later
 // without touching this page.
 //
@@ -39,7 +39,7 @@ onMounted(() => {
 <template>
   <main class="landing">
     <!-- Top bar: brand + theme switch + Sign-in. Mirrors a typical marketing
-         site nav. Sticky like AppNav for the same reason — content scrolls
+         site nav. Sticky like AppNav for the same reason - content scrolls
          under it. -->
     <header class="landing-nav">
       <div class="landing-nav-inner">
@@ -74,7 +74,7 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- "Why Finshark" — brand/manifesto block. Sits between hero and features
+    <!-- "Why Finshark" - brand/manifesto block. Sits between hero and features
          so the reader gets the *why* before the *what*. Three short cards;
          shark metaphor stays controlled (smell/sense, not aggression). -->
     <section class="landing-why">
@@ -98,7 +98,7 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- Features grid: 3 cards. Kept minimal — emoji-style icons (no asset
+    <!-- Features grid: 3 cards. Kept minimal - emoji-style icons (no asset
          pipeline) and one-line headlines. -->
     <section id="features" class="landing-features">
       <div class="landing-container">
@@ -128,7 +128,7 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- How it works — 3 steps, numbered. Minimal copy on each. -->
+    <!-- How it works - 3 steps, numbered. Minimal copy on each. -->
     <section class="landing-steps">
       <div class="landing-container">
         <h2 class="landing-section-title">{{ t('landing.steps_title') }}</h2>
@@ -158,7 +158,7 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- FAQ — native <details>/<summary> for accordion behaviour. No JS,
+    <!-- FAQ - native <details>/<summary> for accordion behaviour. No JS,
          keyboard-accessible by default. Five Qs covering the sceptic's
          questions: not-a-textbook, scope, time, past-exam-Qs, sources. -->
     <section class="landing-faq">

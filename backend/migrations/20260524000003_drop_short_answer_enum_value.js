@@ -1,4 +1,4 @@
-// Retire the short_answer question format — STAGE 2b: drop the enum value.
+// Retire the short_answer question format - STAGE 2b: drop the enum value.
 //
 // CONTEXT: STAGE 2a (20260524000002) converted any remaining short_answer rows
 //   to number_entry, so no row carries 'short_answer' anymore. Now we remove
@@ -8,7 +8,7 @@
 //   Postgres has no "ALTER TYPE ... DROP VALUE". The supported way to remove an
 //   enum value is to build a new enum type with the values you want and migrate
 //   the column onto it. The USING cast below will ERROR if any row still holds
-//   'short_answer' — which is exactly why STAGE 2a must run first. That error,
+//   'short_answer' - which is exactly why STAGE 2a must run first. That error,
 //   if it ever fired, would be a safety feature, not a bug.
 //
 // STEPS (up):
@@ -18,14 +18,14 @@
 //   3. Create the new enum:       question_type = ('mcq','number_entry').
 //   4. Rewrite the column:        ALTER COLUMN type TYPE question_type
 //                                 USING type::text::question_type.
-//      (Defaults: the column has no enum default to worry about — difficulty
-//       has a default, type does not — so no default needs dropping/re-adding.)
+//      (Defaults: the column has no enum default to worry about - difficulty
+//       has a default, type does not - so no default needs dropping/re-adding.)
 //   5. Drop question_type_old.
 //   6. Re-add the CHECK constraint, now covering only mcq + number_entry.
 //
 // TRANSACTION NOTE: unlike ADD VALUE, a full type swap is safe inside a
 //   transaction, so this migration runs transactionally (no disableTransaction).
-//   The new enum value is never used as a literal before commit — the column
+//   The new enum value is never used as a literal before commit - the column
 //   cast goes through ::text, and the CHECK uses ::text comparisons.
 //
 // IMPLICATIONS:

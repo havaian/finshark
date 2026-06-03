@@ -34,7 +34,7 @@ import {
 // Admin surface for subscriptions: read history, grant manually, extend,
 // cancel, revoke. PSP-driven creation (Payme / Click webhooks) lands later
 // as a separate router that reaches into SubscriptionsService.grant directly
-// — it doesn't go through this controller.
+// - it doesn't go through this controller.
 
 class GrantDto {
   @IsString()
@@ -84,7 +84,7 @@ export class AdminSubscriptionsController {
 
   // ── Plans (read-only) ───────────────────────────────────────────────
 
-  // /api/admin/plans — used by the admin UI to populate the plan picker on
+  // /api/admin/plans - used by the admin UI to populate the plan picker on
   // the manual-grant + promocode-create forms. Includes inactive plans so
   // admins can see retired ones, but filtered downstream by the UI when
   // building new grants.
@@ -104,7 +104,7 @@ export class AdminSubscriptionsController {
   }
 
   // Per-user audit log. Useful for "why is this user not premium" debugging
-  // — includes events from subscriptions that have since been cancelled or
+  // - includes events from subscriptions that have since been cancelled or
   // expired, since subscription_events.user_id is set independently of
   // subscription_id.
   @Get("users/:userId/subscription-events")
@@ -171,7 +171,7 @@ export class AdminSubscriptionsController {
     return toPublicSubscription(row);
   }
 
-  // Soft cancel — keeps remaining paid time visible in the audit, but the
+  // Soft cancel - keeps remaining paid time visible in the audit, but the
   // entitlement query treats status='cancelled' as immediately non-active.
   // See SubscriptionsService.cancel for the documented interpretation.
   @Post("subscriptions/:id/cancel")
@@ -189,7 +189,7 @@ export class AdminSubscriptionsController {
     return toPublicSubscription(row);
   }
 
-  // Hard revoke — for refund / abuse. Forces ends_at=NOW().
+  // Hard revoke - for refund / abuse. Forces ends_at=NOW().
   @Post("subscriptions/:id/revoke")
   @HttpCode(HttpStatus.OK)
   async revoke(

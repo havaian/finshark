@@ -25,7 +25,7 @@ export class RemindersController {
     private readonly reminders: RemindersService
   ) {}
 
-  // PUBLIC — no auth, single token URL. Idempotent.
+  // PUBLIC - no auth, single token URL. Idempotent.
   // GET /api/unsubscribe?token=...
   @Get("unsubscribe")
   async unsubscribe(
@@ -40,7 +40,7 @@ export class RemindersController {
     return { ok: true, message: "reminder emails disabled" };
   }
 
-  // AUTHED — flip own preference from the app's UI.
+  // AUTHED - flip own preference from the app's UI.
   // POST /api/me/email-reminders  { enabled: true|false }
   @Post("me/email-reminders")
   @UseGuards(JwtAuthGuard)
@@ -57,7 +57,7 @@ export class RemindersController {
     return { ok: true, user: toPublicUser(updated) };
   }
 
-  // ADMIN — run the cron manually. Lets you verify the pipeline end-to-end
+  // ADMIN - run the cron manually. Lets you verify the pipeline end-to-end
   // without waiting for the scheduled time. Bypasses the per-user reminder-hour
   // filter so a manual click actually sends to everyone eligible right now.
   // POST /api/admin/reminders/run

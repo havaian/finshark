@@ -68,7 +68,7 @@ export class UserQuestionStateRepository {
   // most-overdue from each LO (ties broken by random). Used by the lesson queue
   // builder to avoid serving two questions from the same LO back-to-back. When
   // the user has fewer overdue LOs than the requested limit, this returns
-  // fewer rows than `limit` — the caller is expected to fall back to extras
+  // fewer rows than `limit` - the caller is expected to fall back to extras
   // via findDueQuestionsExtras() when starved.
   //
   // Uses DISTINCT ON (lo_id) which Postgres pairs with a matching ORDER BY
@@ -200,7 +200,7 @@ export class UserQuestionStateRepository {
   // attempts yet (NULL error rate) are treated as mid-bias so brand-new
   // content isn't starved.
   //
-  // The bias is gentle — it's a secondary sort key after the difficulty match,
+  // The bias is gentle - it's a secondary sort key after the difficulty match,
   // so a question matching the user's preferred difficulty always wins over
   // one that doesn't, even if the latter has a higher error rate.
   async findUnseenInLo(input: {

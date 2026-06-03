@@ -2,7 +2,7 @@ import { IsString, MinLength, MaxLength } from "class-validator";
 
 // Payload for POST /auth/2fa-verify. The pending_2fa_token comes from the
 // Google callback redirect (URL fragment); the code is what the user types
-// in — either a 6-digit TOTP or a recovery code. The service distinguishes
+// in - either a 6-digit TOTP or a recovery code. The service distinguishes
 // them by shape, so we don't bother splitting fields.
 export class TwoFactorVerifyDto {
   @IsString()

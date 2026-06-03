@@ -17,7 +17,7 @@ export class LessonSessionsRepository {
   // Defaults: mode='lesson', time_limit_seconds=null, paper_id=null,
   // source_session_id=null. Mock sessions and review-of-mock sessions pass
   // these explicitly. The chk_mock_has_paper CHECK constraint enforces that
-  // mock mode requires paper_id NOT NULL — caller MUST supply it.
+  // mock mode requires paper_id NOT NULL - caller MUST supply it.
   async create(input: {
     user_id: string;
     question_count: number;
@@ -90,7 +90,7 @@ export class LessonSessionsRepository {
   // Override the session's starting hearts. Used by the free-tier gate so a
   // fresh session inherits whatever is left in the user's daily pool
   // (min(pool, 3)) instead of the per-session default. Premium users never
-  // call this — they get the default 3.
+  // call this - they get the default 3.
   async overrideHearts(id: string, hearts: number): Promise<void> {
     await this.sql`
       UPDATE lesson_sessions SET hearts_remaining = ${hearts}
@@ -104,7 +104,7 @@ export class LessonSessionsRepository {
   //
   // "Started" = started_at >= local-midnight-today. Incomplete sessions count
   // (you can't farm starts to dodge the limit). Review sessions from a mock
-  // ALSO count — they're created with mode='lesson'. This is deliberate: a
+  // ALSO count - they're created with mode='lesson'. This is deliberate: a
   // review session is still a lesson interaction. If product wants reviews
   // exempt later, add WHERE source_session_id IS NULL.
   async countLessonsTodayInTimezone(
@@ -126,7 +126,7 @@ export class LessonSessionsRepository {
 
   // Count mock sessions started by this user since the start of the current
   // calendar month in their timezone. Used to enforce the free-tier
-  // "1 mock/month" quota. Status doesn't matter — once you start a mock the
+  // "1 mock/month" quota. Status doesn't matter - once you start a mock the
   // month-quota slot is spent.
   async countMocksThisMonthInTimezone(
     userId: string,

@@ -68,7 +68,7 @@ export class WhitelistService {
   }
 
   // Admin: update note. Pattern itself stays immutable (delete+re-add to
-  // change it — that way audit trail (created_at, created_by_user_id) is
+  // change it - that way audit trail (created_at, created_by_user_id) is
   // accurate, and we don't accidentally widen scope under the same id).
   async updateNote(
     id: string,

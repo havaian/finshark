@@ -25,7 +25,7 @@ const CRON_EXPR = process.env.REMINDER_CRON?.trim() || "0 * * * *";
 
 // Current wall-clock hour (0..23) in the given IANA timezone. Uses
 // Intl.DateTimeFormat so DST and offset edges are handled correctly without
-// us doing any date math. An invalid timezone string would throw — we treat
+// us doing any date math. An invalid timezone string would throw - we treat
 // users with bad timezone data as "skip this hour" rather than crash the cron
 // (the value is validated on write but we don't trust historical rows).
 function currentHourInTimezone(tz: string, now: Date = new Date()): number | null {
@@ -94,7 +94,7 @@ export class RemindersService {
         // Prefer the DB-backed template so admins can tune copy from the
         // admin panel without a redeploy. Two keys correspond to the two
         // copy variants (with/without streak). If the template is missing
-        // or disabled, fall back to the hard-coded body — we'd rather ship
+        // or disabled, fall back to the hard-coded body - we'd rather ship
         // a slightly-stale reminder than skip the user entirely.
         const templateKey =
           u.streak_count >= 2 ? "reminder_daily_streak" : "reminder_daily";
@@ -102,7 +102,7 @@ export class RemindersService {
         const used = await this.templates.sendByTemplate({
           templateKey,
           to: u.email,
-          // We don't track preferred reminder language explicitly yet — the
+          // We don't track preferred reminder language explicitly yet - the
           // template falls back to EN when subject_ru/body_ru are NULL, which
           // is the safe default for a global EN-first product.
           lang: "en",
@@ -120,7 +120,7 @@ export class RemindersService {
         }
         sent++;
       } catch (err) {
-        // Don't try to "un-claim" — better to skip this user today than risk doubles
+        // Don't try to "un-claim" - better to skip this user today than risk doubles
         // if the send actually succeeded but our connection dropped on the response.
         // The next day they'll be eligible again if still inactive.
         failed++;
@@ -187,7 +187,7 @@ export class RemindersService {
       ``,
       `Pick up where you left off: ${appUrl}/dashboard`,
       ``,
-      `— Finshark`,
+      `- Finshark`,
       ``,
       `--`,
       `Don't want these emails? Unsubscribe: ${unsubUrl}`,

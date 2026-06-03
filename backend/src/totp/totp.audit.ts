@@ -21,7 +21,7 @@ export type TotpAuditEvent =
   // A recovery code was consumed during a verify. meta:
   // { remaining: <int>, context: 'login' | 'disable' | 'regenerate' }.
   | "recovery_code_consumed"
-  // Per-user lockout triggered — the verifier refused the request because
+  // Per-user lockout triggered - the verifier refused the request because
   // recent failed attempts exceeded the threshold. meta:
   // { recent_failures: <int>, window_minutes: <int> }.
   | "locked_out";

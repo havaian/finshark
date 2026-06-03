@@ -49,7 +49,7 @@ export class PromocodesRepository {
     return rows[0] ?? null;
   }
 
-  // Redemption path with row-level lock — we read inside the redeem
+  // Redemption path with row-level lock - we read inside the redeem
   // transaction so the redemption_count bump is serialised against concurrent
   // redemptions of the same code. Using FOR UPDATE is fine; promocode
   // contention is naturally low (one code per user per second at peak).
@@ -118,7 +118,7 @@ export class PromocodesRepository {
 
   // Increment redemption_count by 1 in the same transaction as the redemption
   // insert. The DB CHECK constraint chk_promocodes_redemption_count_bounded
-  // enforces the max_redemptions ceiling — if exceeded, this UPDATE throws
+  // enforces the max_redemptions ceiling - if exceeded, this UPDATE throws
   // and the transaction rolls back automatically.
   async incrementRedemptionCount(
     id: string,
@@ -137,7 +137,7 @@ export class PromocodesRepository {
   // surfaces as a thrown error if the user has already redeemed this code
   // under per_user_limit=1; the service catches and maps to 409.
   // subscription_id may be null if the grant flow couldn't link a sub for
-  // some reason (defensive — shouldn't happen in normal flow).
+  // some reason (defensive - shouldn't happen in normal flow).
   async insertRedemption(
     input: {
       promocode_id: string;
@@ -155,7 +155,7 @@ export class PromocodesRepository {
   }
 
   // Per-user redemption count for a single code. Used when per_user_limit > 1
-  // (rare) — the unique index handles the limit=1 case, but anything higher
+  // (rare) - the unique index handles the limit=1 case, but anything higher
   // needs a counting check.
   async countUserRedemptions(
     promocodeId: string,

@@ -33,7 +33,7 @@ export class LlmGraderService {
   constructor(
     private readonly config: ConfigService,
     private readonly cache: LlmGradeCacheRepository,
-    // Provider is optional — when LLM_PROVIDER=none, nothing is registered.
+    // Provider is optional - when LLM_PROVIDER=none, nothing is registered.
     @Optional()
     @Inject(LLM_PROVIDER_TOKEN)
     private readonly provider: LlmGradingProvider | null
@@ -135,7 +135,7 @@ export class LlmGraderService {
       return this.exactMatchResult(false, normalized, lang);
     }
 
-    // 6) Persist to cache (best-effort — failures shouldn't break the user-facing flow).
+    // 6) Persist to cache (best-effort - failures shouldn't break the user-facing flow).
     try {
       await this.cache.upsert({
         question_id: question.id,

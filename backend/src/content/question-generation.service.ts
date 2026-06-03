@@ -19,7 +19,7 @@ import type { McqOption, QuestionRow } from "./content.types";
 // this is a defence-in-depth constant the service re-checks.
 //
 // RATE_LIMIT_PER_HOUR: per-admin generation calls in a rolling 60-minute window.
-// In-memory bucket — fine for a single-instance deployment, which is what we run.
+// In-memory bucket - fine for a single-instance deployment, which is what we run.
 // If we ever scale horizontally, move this to Redis or DB.
 const MAX_PER_CALL = 10;
 const RATE_LIMIT_PER_HOUR = 20;
@@ -32,7 +32,7 @@ const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
 const DEFAULT_TIMEOUT_MS = 90_000;
 
 // Shape we expect back from the LLM (mirrors SeedQuestion but parsed at runtime).
-// Validation lives in validateLlmQuestion below — we don't trust the model to
+// Validation lives in validateLlmQuestion below - we don't trust the model to
 // produce exact JSON without checking.
 interface LlmGeneratedQuestion {
   type: "mcq" | "number_entry";
@@ -43,7 +43,7 @@ interface LlmGeneratedQuestion {
     key: string;
     text_en: string;
     text_ru: string;
-    // Per-option "why this is wrong" — required by the prompt for wrong
+    // Per-option "why this is wrong" - required by the prompt for wrong
     // options on MCQ. Null/absent on the correct option. We allow either
     // absent or null at parse time and normalise downstream.
     why_wrong_en?: string | null;
@@ -109,7 +109,7 @@ export class QuestionGenerationService {
       .slice(0, 50) // hard cap to keep prompt size bounded
       .map((q) => q.prompt_en);
 
-    // Build the prompt. Static hints first, admin override after — order matters
+    // Build the prompt. Static hints first, admin override after - order matters
     // since the admin's freeform text is meant to refine or constrain the defaults.
     const staticHints = getTopicHints(paper.code, lo.code);
     const fullHints = [staticHints, args.hints.trim()]
@@ -129,13 +129,13 @@ export class QuestionGenerationService {
       count: args.count,
     });
 
-    // Call the LLM. Single attempt — we don't retry because (a) retries cost
+    // Call the LLM. Single attempt - we don't retry because (a) retries cost
     // money and (b) if the model returns malformed JSON, retrying with the same
     // prompt usually returns the same malformed output. Better to surface the
     // error to the admin so they can adjust hints.
     const rawText = await this.callAnthropic(prompt);
 
-    // Record successful API call against the bucket BEFORE parsing —
+    // Record successful API call against the bucket BEFORE parsing -
     // it cost money whether or not the response parses.
     this.recordRequest(args.admin_user_id);
 
@@ -148,7 +148,7 @@ export class QuestionGenerationService {
 
     // Persist each question as is_active=false. We do this sequentially rather
     // than in a single tx because a bad question in the middle shouldn't roll
-    // back the good ones — admins can delete junk individually.
+    // back the good ones - admins can delete junk individually.
     const inserted: QuestionRow[] = [];
     for (const q of parsed) {
       try {
@@ -226,7 +226,7 @@ export class QuestionGenerationService {
         ? `\nTopic priority hints (what real ACCA exams emphasise for this LO):\n${ctx.hints}\n`
         : "";
 
-    // The instructions ask for raw JSON only — no markdown fences, no preamble.
+    // The instructions ask for raw JSON only - no markdown fences, no preamble.
     // The parser still strips ```json fences defensively because some Anthropic
     // models add them even when told not to.
     const loTitleLine = ctx.lo_title_ru
@@ -248,15 +248,15 @@ export class QuestionGenerationService {
       existingBlock,
       `Generate exactly ${ctx.count} ORIGINAL practice questions for this LO. Requirements:`,
       ``,
-      `1. Mix question types: roughly 80% "mcq", 20% "number_entry". Use "number_entry" for questions whose correct answer is a single numeric value (calculations, variances, balances). Do NOT generate "short_answer" — it is a retired format.`,
+      `1. Mix question types: roughly 80% "mcq", 20% "number_entry". Use "number_entry" for questions whose correct answer is a single numeric value (calculations, variances, balances). Do NOT generate "short_answer" - it is a retired format.`,
       `2. Mix difficulties: roughly 40% "easy", 40% "medium", 20% "hard".`,
       `3. For MCQ: exactly 4 options keyed A, B, C, D. Distractors must be plausible (common student mistakes), not silly. The correct option must be unambiguous.`,
-      `4. For MCQ: EACH WRONG OPTION must include "why_wrong_en" and "why_wrong_ru" — one sentence each explaining the specific misconception the student would have if they picked that option. The CORRECT option must NOT have why_wrong fields (omit them or set to null). These are baked into the content so the student sees them on the feedback screen without an extra AI call.`,
-      `5. (short_answer is retired — never generate it.)`,
+      `4. For MCQ: EACH WRONG OPTION must include "why_wrong_en" and "why_wrong_ru" - one sentence each explaining the specific misconception the student would have if they picked that option. The CORRECT option must NOT have why_wrong fields (omit them or set to null). These are baked into the content so the student sees them on the feedback screen without an extra AI call.`,
+      `5. (short_answer is retired - never generate it.)`,
       `6. For number_entry: "correct_answer_en" must be a string containing the numeric value (e.g. "12500" or "0.85"). DO NOT include units, currency symbols, or commas in correct_answer_en. Omit "options". Omit "correct_answer_ru" (numbers are language-neutral). If the answer is a calculation where small rounding differences should be accepted, include "acceptable_tolerance" as a non-negative number (e.g. 0.5 to accept ±0.5).`,
-      `7. Every question MUST have both English (prompt_en, options[].text_en, etc.) AND Russian (prompt_ru, options[].text_ru, etc.) versions. Russian must read NATURALLY in Russian, not a literal translation of English — write it independently using correct ACCA terminology in Russian (e.g. "маржинальный доход" for contribution, "отклонение по цене материалов" for material price variance).`,
+      `7. Every question MUST have both English (prompt_en, options[].text_en, etc.) AND Russian (prompt_ru, options[].text_ru, etc.) versions. Russian must read NATURALLY in Russian, not a literal translation of English - write it independently using correct ACCA terminology in Russian (e.g. "маржинальный доход" for contribution, "отклонение по цене материалов" for material price variance).`,
       `8. Every question MUST have an explanation in both languages, 1–3 sentences, that teaches the underlying concept.`,
-      `9. Optionally include "concept_bite_en" and "concept_bite_ru" — a one-sentence concept reminder that would appear BEFORE the question to prime the student.`,
+      `9. Optionally include "concept_bite_en" and "concept_bite_ru" - a one-sentence concept reminder that would appear BEFORE the question to prime the student.`,
       `10. Do NOT reproduce copyrighted past-paper content. Write originals inspired by exam style.`,
       `11. Do NOT generate questions that duplicate any in the existing question list above.`,
       ``,
@@ -269,7 +269,7 @@ export class QuestionGenerationService {
       `    "prompt_en": "...",`,
       `    "prompt_ru": "...",`,
       `    "options": [`,
-      `      {"key": "A", "text_en": "...", "text_ru": "..."},  // correct — no why_wrong`,
+      `      {"key": "A", "text_en": "...", "text_ru": "..."},  // correct - no why_wrong`,
       `      {"key": "B", "text_en": "...", "text_ru": "...", "why_wrong_en": "...", "why_wrong_ru": "..."},`,
       `      {"key": "C", "text_en": "...", "text_ru": "...", "why_wrong_en": "...", "why_wrong_ru": "..."},`,
       `      {"key": "D", "text_en": "...", "text_ru": "...", "why_wrong_en": "...", "why_wrong_ru": "..."}`,
@@ -376,7 +376,7 @@ export class QuestionGenerationService {
     const m = text.match(fence);
     if (m) text = m[1].trim();
 
-    // Find the first '[' and matching last ']' — defensive in case the model
+    // Find the first '[' and matching last ']' - defensive in case the model
     // adds an explanatory sentence despite instructions.
     const start = text.indexOf("[");
     const end = text.lastIndexOf("]");
@@ -470,7 +470,7 @@ export class QuestionGenerationService {
         // why_wrong validation: correct option must not have it; wrong options
         // should have both EN+RU. We're lenient: missing why_wrong on a wrong
         // option is logged-discarded (the prompt asked for them), but tolerated
-        // — admin can fill them in later. Only fail when types are wrong.
+        // - admin can fill them in later. Only fail when types are wrong.
         if (
           o.why_wrong_en !== undefined &&
           o.why_wrong_en !== null &&
@@ -524,14 +524,14 @@ export class QuestionGenerationService {
   // ---- shape mapping ----
 
   // Convert a validated LLM question into the repo's create() input shape.
-  // Differences are minor — mostly renaming keys + nulling out RU fields where
+  // Differences are minor - mostly renaming keys + nulling out RU fields where
   // appropriate for MCQ (correct_answer_ru is unused for MCQ since the option
   // key is language-neutral). For number_entry, options are null and tolerance
   // (if any) flows through.
   //
   // Defensive normalisation:
   //   - On MCQ, the correct option's why_wrong is forced to null even if the
-  //     LLM emitted text there — UI assumption is "why_wrong present ⇒ wrong".
+  //     LLM emitted text there - UI assumption is "why_wrong present ⇒ wrong".
   //   - Wrong options keep whatever why_wrong the LLM produced (may be null/
   //     undefined if it dropped them; admin fills in via edit later).
   private toCreateInput(lo_id: string, q: LlmGeneratedQuestion) {

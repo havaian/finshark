@@ -42,7 +42,7 @@ export class PublicProfileService {
   ) {}
 
   // Resolve a user by id and return the sanitized public profile.
-  // Throws NotFoundException if the id doesn't match any user — we don't
+  // Throws NotFoundException if the id doesn't match any user - we don't
   // want to silently return empty data, since "missing" and "exists but
   // hidden" should be indistinguishable for callers (here both 404).
   async getById(
@@ -96,7 +96,7 @@ export class PublicProfileService {
     const correct = Number(accuracyRows[0]?.correct ?? 0);
     const accuracy_pct = attempts === 0 ? null : (correct / attempts) * 100;
 
-    // Badges — reuse the existing service, then filter to earned only since
+    // Badges - reuse the existing service, then filter to earned only since
     // unearned badges on someone else's profile is just noise. The service
     // already returns localised name/description per the lang argument.
     const allBadges = await this.badges.getForUser(viewed_user_id, lang);

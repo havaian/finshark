@@ -31,7 +31,7 @@ import {
 //   6. bump promocodes.redemption_count
 //   7. write subscription_events
 // All inside a single transaction. The CHECK on promocodes
-// (redemption_count <= max_redemptions) provides a final hard ceiling — if
+// (redemption_count <= max_redemptions) provides a final hard ceiling - if
 // two redemptions race past the in-app check, the bump in step 6 throws and
 // the tx rolls back.
 
@@ -83,7 +83,7 @@ export class PromocodesService {
     const plan = await this.plans.findById(input.grantPlanId);
     if (!plan) throw new BadRequestException(`unknown plan: ${input.grantPlanId}`);
     if (plan.tier !== "premium") {
-      // Granting "free" via a promocode is nonsense — if we ever support
+      // Granting "free" via a promocode is nonsense - if we ever support
       // it (e.g. a "downgrade" code), revisit this guard.
       throw new BadRequestException("promocodes must grant a premium plan");
     }
@@ -134,13 +134,13 @@ export class PromocodesService {
 
     // Everything inside one transaction so concurrent redemptions of the
     // same code serialise on the FOR UPDATE lock. We capture the result
-    // and then fire the welcome email AFTER commit — see the
+    // and then fire the welcome email AFTER commit - see the
     // notifyPremiumGranted call below for why it lives outside the tx.
     const result = await this.sql.begin(async (tx) => {
       const promo = await this.codes.findByCodeForUpdate(code, tx);
       if (!promo) {
         // Don't disclose whether the code exists but is expired/used vs
-        // never existed — keeps enumeration attacks pointless.
+        // never existed - keeps enumeration attacks pointless.
         throw new NotFoundException("invalid or expired code");
       }
 
@@ -162,13 +162,13 @@ export class PromocodesService {
       // Decide: create new sub vs extend existing.
       // We extend when the user has an active sub on the SAME plan AND that
       // sub has a finite ends_at. Mixed-plan grants always create a new row
-      // — easier to reason about, and the entitlement query picks the
+      // - easier to reason about, and the entitlement query picks the
       // longest-running one.
       const existing = await this.subs.findActiveForUser(input.userId);
 
       const plan = await this.plans.findById(promo.grant_plan_id);
       if (!plan) {
-        // Defensive — promocodes.grant_plan_id has a FK so this shouldn't
+        // Defensive - promocodes.grant_plan_id has a FK so this shouldn't
         // happen unless the plan was deleted out-of-band.
         throw new BadRequestException(
           `promocode references missing plan ${promo.grant_plan_id}`
@@ -270,7 +270,7 @@ export class PromocodesService {
     return result;
   }
 
-  // Pure validation — throws the appropriate exception type so the redeem
+  // Pure validation - throws the appropriate exception type so the redeem
   // path stays linear. Kept private; admin UI uses the row + UI logic to
   // surface the same info.
   private assertRedeemable(promo: PromocodeRow): void {

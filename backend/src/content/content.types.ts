@@ -17,7 +17,7 @@ export type Lang = (typeof SUPPORTED_LANGS)[number];
 // locale, so this only affects anonymous/headerless requests.
 export const DEFAULT_LANG: Lang = "en";
 
-// Raw row shapes — store BOTH languages. _en is required (canonical), _ru is optional.
+// Raw row shapes - store BOTH languages. _en is required (canonical), _ru is optional.
 // Frontend / public-facing layer either picks one (via Accept-Language) and
 // resolves with fallback, or returns both (for the admin editor).
 
@@ -53,7 +53,7 @@ export interface LearningObjectiveRow {
 
 // Inner shape of questions.options JSONB for MCQ.
 export interface McqOption {
-  key: string; // "A" | "B" | ... — admin-defined but app validates
+  key: string; // "A" | "B" | ... - admin-defined but app validates
   text_en: string;
   text_ru: string | null; // optional; falls back to text_en in clients
   // Per-option "why this is wrong" explanations, shown to the user after
@@ -74,7 +74,7 @@ export interface QuestionRow {
 
   options: McqOption[] | null; // only set when type = 'mcq'
 
-  // For MCQ, correct_answer_en holds the option KEY (e.g. "A") — same across
+  // For MCQ, correct_answer_en holds the option KEY (e.g. "A") - same across
   // languages, so correct_answer_ru is always NULL for MCQ.
   // For short_answer, both _en and _ru can hold canonical strings; the grader
   // matches against whichever the user is currently answering in.
@@ -97,14 +97,14 @@ export interface QuestionRow {
 }
 
 // ----------------------------------------------------------------
-// Localized projection — what we return on PUBLIC (non-admin) endpoints.
+// Localized projection - what we return on PUBLIC (non-admin) endpoints.
 // Single resolved string per field, computed from (lang, fallback to _en).
 // ----------------------------------------------------------------
 
 export interface LocalizedMcqOption {
   key: string;
   text: string;
-  // Per-option "why this is wrong" — language-resolved. Null for the correct
+  // Per-option "why this is wrong" - language-resolved. Null for the correct
   // option, or for options where the admin didn't provide an explanation.
   why_wrong: string | null;
 }
@@ -224,7 +224,7 @@ export function toLocalizedQuestion(
           })),
     correct_answer:
       row.type === "mcq"
-        ? row.correct_answer_en // option key — same in every language
+        ? row.correct_answer_en // option key - same in every language
         : pickLocalized(row.correct_answer_en, row.correct_answer_ru, lang),
     explanation: pickLocalized(row.explanation_en, row.explanation_ru, lang),
     concept_bite: pickLocalizedNullable(

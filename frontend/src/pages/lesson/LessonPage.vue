@@ -16,7 +16,7 @@ import type {
 import type { PublicBadge } from '../../types/badges';
 import AppNav from '../../components/AppNav.vue';
 
-// Hearts are 3 per session — must match backend lesson_sessions.hearts_remaining default.
+// Hearts are 3 per session - must match backend lesson_sessions.hearts_remaining default.
 const MAX_HEARTS = 3;
 
 const { t } = useI18n();
@@ -50,7 +50,7 @@ const summary = ref<CompleteLessonResult | null>(null);
 // Snapshot of the user's level RIGHT BEFORE complete() returns so the finale
 // can render a "Level up!" banner when summary.new_level > prevLevel.
 // Captured in onComplete() because we update auth.user.level immediately after
-// the network call — comparing against the live store would always read equal.
+// the network call - comparing against the live store would always read equal.
 const prevLevel = ref<number | null>(null);
 const leveledUp = computed(() => {
   if (!summary.value || prevLevel.value === null) return false;
@@ -67,7 +67,7 @@ const newlyEarnedDetails = ref<PublicBadge[]>([]);
 const theoryBites = ref<LessonTheoryBite[]>([]);
 const theoryDismissed = ref(false);
 
-// Live hearts count — drives the UI between attempts.
+// Live hearts count - drives the UI between attempts.
 const hearts = ref<number>(MAX_HEARTS);
 
 // ─── Mock mode state ────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ const timerDisplay = computed(() => {
   return `${mm}:${ss}`;
 });
 
-// Visually warn when under 5 minutes — turns the timer pill red.
+// Visually warn when under 5 minutes - turns the timer pill red.
 const timerWarning = computed(
   () => isMock.value && timeRemainingSeconds.value <= 300 && timeRemainingSeconds.value > 0,
 );
@@ -104,7 +104,7 @@ function startMockTimer(startedAt: string, limitSeconds: number) {
     const elapsed = Math.floor((Date.now() - startMs) / 1000);
     timeRemainingSeconds.value = Math.max(0, limitSeconds - elapsed);
     if (timeRemainingSeconds.value === 0 && !summary.value) {
-      // Time's up — auto-complete. Backend doesn't enforce the limit, so we
+      // Time's up - auto-complete. Backend doesn't enforce the limit, so we
       // simply finish the session and let the user see the breakdown.
       stopMockTimer();
       void onComplete();
@@ -124,16 +124,16 @@ function stopMockTimer() {
 const current = computed<LessonQuestion | null>(() => queue.value[currentIndex.value] ?? null);
 const isLast = computed(() => currentIndex.value >= queue.value.length - 1);
 
-// Width of the progress bar — answered count / total. Uses currentIndex when not in feedback,
+// Width of the progress bar - answered count / total. Uses currentIndex when not in feedback,
 // currentIndex+1 when feedback is showing (so the bar moves when you submit).
 // When the user has finished the last question (summary fetched or session
-// completed via out-of-hearts), the bar pins to 100% — previously it sat at
+// completed via out-of-hearts), the bar pins to 100% - previously it sat at
 // whatever the last computed value was and visibly wiggled during the
 // transition from "answering last Q" → "fetching summary" → "summary shown".
 const progressPct = computed(() => {
   if (queue.value.length === 0) return 0;
   // Once we're past the last question (or showing the summary / completing),
-  // the bar is done — clamp to 100% and stay there.
+  // the bar is done - clamp to 100% and stay there.
   if (
     summary.value ||
     completing.value ||
@@ -145,12 +145,12 @@ const progressPct = computed(() => {
   return Math.min(100, Math.round((answered / queue.value.length) * 100));
 });
 
-// Render `MAX_HEARTS` heart slots — filled for the first `hearts` of them, hollow for the rest.
+// Render `MAX_HEARTS` heart slots - filled for the first `hearts` of them, hollow for the rest.
 const heartSlots = computed(() =>
   Array.from({ length: MAX_HEARTS }, (_, i) => i < hearts.value),
 );
 
-// Wrong options for the CURRENT MCQ feedback panel — only those with non-null
+// Wrong options for the CURRENT MCQ feedback panel - only those with non-null
 // why_wrong text and that the user didn't select (we show the user's wrong
 // pick more prominently elsewhere). Empty array short-circuits the expander.
 const wrongOptionsForFeedback = computed(() => {
@@ -175,7 +175,7 @@ async function load() {
     timeLimitSeconds.value = detail.time_limit_seconds;
 
     if (detail.completed_at) {
-      // If the session was a mock, jump straight to the breakdown page —
+      // If the session was a mock, jump straight to the breakdown page -
       // no point re-rendering the regular completion summary.
       if (detail.mode === 'mock') {
         await router.replace({
@@ -194,7 +194,7 @@ async function load() {
 
     queue.value = detail.questions;
     hearts.value = detail.hearts_remaining;
-    // Mocks never show the theory primer — even on resume. Backend already
+    // Mocks never show the theory primer - even on resume. Backend already
     // returns theory_bites=[] for mocks, but we belt-and-brace it here.
     theoryBites.value = detail.mode === 'mock' ? [] : (detail.theory_bites ?? []);
     theoryDismissed.value = theoryBites.value.length === 0;
@@ -247,7 +247,7 @@ async function onSubmit() {
     feedback.value = result;
     hearts.value = result.hearts_remaining;
 
-    // Mock mode: exam-style flow — no per-question reveal. We auto-advance
+    // Mock mode: exam-style flow - no per-question reveal. We auto-advance
     // straight to the next question (or finish) so the user never sees the
     // "correct / wrong + explanation" panel mid-exam. The full breakdown
     // (per-LO accuracy + per-question review) is shown on the breakdown
@@ -269,7 +269,7 @@ async function onSubmit() {
 }
 
 async function onNext() {
-  // Capture before clearing — we need to know whether THIS feedback was the out-of-hearts one.
+  // Capture before clearing - we need to know whether THIS feedback was the out-of-hearts one.
   const endedOnThisAttempt = feedback.value?.session_ended_out_of_hearts === true;
 
   feedback.value = null;
@@ -308,7 +308,7 @@ async function onComplete() {
     // Stop the countdown ASAP on completion so the user doesn't see it tick
     // during the navigation transition.
     stopMockTimer();
-    // For mocks, skip the regular finale screen — the breakdown page is more
+    // For mocks, skip the regular finale screen - the breakdown page is more
     // informative (per-LO accuracy + review-wrongs button). We still hit
     // the lessons-complete endpoint above so XP/streak/badges flow through
     // the same machinery as lessons.
@@ -320,7 +320,7 @@ async function onComplete() {
       return;
     }
     // Hydrate the newly-earned badge codes into display objects. Only call
-    // /me/badges when at least one was earned — the common case is zero.
+    // /me/badges when at least one was earned - the common case is zero.
     // Network failure here is non-fatal: badges just don't toast this run.
     if (summary.value.newly_earned_badges.length > 0) {
       try {
@@ -382,7 +382,7 @@ function onStartFromTheory() {
   focusInputForType();
 }
 
-// Compute MCQ option class — selected/correct/wrong/locked.
+// Compute MCQ option class - selected/correct/wrong/locked.
 function optionClass(optKey: string): string {
   if (!feedback.value) {
     return selectedOption.value === optKey ? 'option selected' : 'option';
@@ -414,7 +414,7 @@ onUnmounted(() => {
 
 <template>
   <main class="page lesson-page">
-    <!-- Lesson runner used to render without any chrome — no way to navigate
+    <!-- Lesson runner used to render without any chrome - no way to navigate
          to the dashboard / profile mid-lesson except the quit button. Adding
          AppNav gives the user the same escape hatches as every other authed
          page; the quit-confirm logic still fires when they hit the "Quit"
@@ -426,7 +426,7 @@ onUnmounted(() => {
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
       <p v-if="loading" class="dim text-sm">{{ t('lesson.loading') }}</p>
 
-      <!-- Completion — distinct copy for the out-of-hearts case -->
+      <!-- Completion - distinct copy for the out-of-hearts case -->
       <section v-if="summary" class="card">
         <h1>
           {{ summary.ended_out_of_hearts ? t('lesson.out_of_hearts_title') : t('lesson.complete_title') }}
@@ -445,7 +445,7 @@ onUnmounted(() => {
 
         <!-- Streak-freeze banners. Mutually exclusive at the data layer:
              consume happens on a missed-day session, grant happens on a 14-day
-             milestone — never both in the same call. -->
+             milestone - never both in the same call. -->
         <div v-if="summary.freeze_consumed" class="freeze-banner mt-4">
           <span class="freeze-banner-icon">❄</span>
           <span class="freeze-banner-text">{{ t('lesson.streak_freeze_used', { remaining: summary.new_streak_freezes }) }}</span>
@@ -485,7 +485,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Newly earned badges — single ribbon, one tile per earn. Only
+        <!-- Newly earned badges - single ribbon, one tile per earn. Only
              renders when at least one was earned this session, so the common
              case is invisible. -->
         <div v-if="newlyEarnedDetails.length > 0" class="badge-earned-ribbon">
@@ -505,7 +505,7 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <!-- Theory primer — shown before the question flow when at least one LO
+      <!-- Theory primer - shown before the question flow when at least one LO
            in the queue has theory_en populated. User clicks Start to proceed.
            The Skip recap button sits OUTSIDE the recap card as a sticky bar
            above it. Previously it lived inside the card with `position:
@@ -542,7 +542,7 @@ onUnmounted(() => {
            LAST answer and we're waiting for the complete() roundtrip. Without
            this, the last question would briefly re-render (feedback cleared,
            current question still on screen) before flipping to the summary
-           — confusing UX, and the user could even resubmit. -->
+           - confusing UX, and the user could even resubmit. -->
       <section v-else-if="completing && !summary" class="card lesson-wrapup">
         <div class="lesson-wrapup-spinner" aria-hidden="true">⏳</div>
         <h2>{{ t('lesson.wrapping_up_title') }}</h2>
@@ -590,7 +590,7 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Number entry — for calculation questions where the answer is a
+        <!-- Number entry - for calculation questions where the answer is a
              single numeric value. inputmode=decimal triggers numeric keyboards
              on mobile while still allowing typed characters on desktop. -->
         <div v-else-if="current.type === 'number_entry'" class="mt-4 number-entry">
@@ -630,7 +630,7 @@ onUnmounted(() => {
           </div>
           <div class="feedback-body">{{ feedback.explanation }}</div>
 
-          <!-- "Show explanations" — only on wrong MCQ when at least one
+          <!-- "Show explanations" - only on wrong MCQ when at least one
                wrong option has a baked-in explanation. The toggle uses a
                pill button (not a text link) so it's obvious you can click it,
                with a question-mark icon to reinforce the affordance. -->

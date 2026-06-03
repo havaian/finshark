@@ -1,14 +1,14 @@
-// Badges (3.4) — two-table design:
+// Badges (3.4) - two-table design:
 //
-//   badges       — static catalog. Code is the stable key referenced in code
+//   badges       - static catalog. Code is the stable key referenced in code
 //                  and in user_badges. Display copy is bilingual. icon is a
 //                  short emoji/symbol rendered in the UI (kept as text rather
 //                  than asset paths so we don't depend on a build step). The
 //                  table is seeded from src/seed/data/badges.ts and updates
-//                  there are upserted by the seed runner — no migrations
+//                  there are upserted by the seed runner - no migrations
 //                  needed for copy changes.
 //
-//   user_badges  — earned events. UNIQUE(user_id, badge_code) so a re-run of
+//   user_badges  - earned events. UNIQUE(user_id, badge_code) so a re-run of
 //                  the evaluator can't double-insert. ON DELETE CASCADE from
 //                  users so account deletion sweeps badges automatically.
 //                  badge_code references badges(code) with ON DELETE RESTRICT

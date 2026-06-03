@@ -31,11 +31,11 @@ function toDate(input: string | Date | null | undefined): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// "15 May 2026" / "15 мая 2026 г." — used for "joined" dates and other
+// "15 May 2026" / "15 мая 2026 г." - used for "joined" dates and other
 // long-form date displays where time isn't relevant.
 export function fmtDate(input: string | Date | null | undefined): string {
   const d = toDate(input);
-  if (!d) return "—";
+  if (!d) return "-";
   try {
     return new Intl.DateTimeFormat(intlLocale(), {
       year: "numeric",
@@ -47,12 +47,12 @@ export function fmtDate(input: string | Date | null | undefined): string {
   }
 }
 
-// "15 May 2026, 14:32" / "15 мая 2026 г., 14:32" — date + time, used for
+// "15 May 2026, 14:32" / "15 мая 2026 г., 14:32" - date + time, used for
 // recent-sessions lists. Time uses 24h to avoid AM/PM clutter; this matches
 // the surrounding tabular-numeric typography.
 export function fmtDateTime(input: string | Date | null | undefined): string {
   const d = toDate(input);
-  if (!d) return "—";
+  if (!d) return "-";
   try {
     return new Intl.DateTimeFormat(intlLocale(), {
       year: "numeric",
@@ -67,12 +67,12 @@ export function fmtDateTime(input: string | Date | null | undefined): string {
   }
 }
 
-// "Today" / "Сегодня" or "3 days ago" / "3 дня назад" — relative time for the
+// "Today" / "Сегодня" or "3 days ago" / "3 дня назад" - relative time for the
 // recent-activity feel. Falls back to fmtDate for anything older than 7 days
 // because relative phrasing gets clumsy beyond that.
 export function fmtRelative(input: string | Date | null | undefined): string {
   const d = toDate(input);
-  if (!d) return "—";
+  if (!d) return "-";
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const day = 24 * 60 * 60 * 1000;

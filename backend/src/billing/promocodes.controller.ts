@@ -18,7 +18,7 @@ import {
 
 // User-facing promocode redemption. Bound to /me/promocodes/redeem to mirror
 // the rest of the per-user surface area under /me. We deliberately do NOT
-// expose any other promocode endpoints to non-admins — users can only
+// expose any other promocode endpoints to non-admins - users can only
 // redeem; listing / status checks happen via /me/entitlement after a
 // successful redemption.
 class RedeemDto {

@@ -36,7 +36,7 @@ export function applySm2(
   } else {
     // First-correct interval bumped from textbook SM-2's 1 day to 3 days.
     // Rationale: stock SM-2 puts a just-answered-correctly card back the very
-    // next day, which felt repetitive for users — getting an easy question
+    // next day, which felt repetitive for users - getting an easy question
     // right and seeing it again 24h later is more annoying than useful.
     // 3 days is still inside the typical "consolidation window" so we don't
     // lose retention benefits. Second-correct stays at 6 days (textbook).
@@ -75,7 +75,7 @@ export function applyMastery(
 // Tables below are the per-difficulty values. Easy stays at the historical
 // XP_PER_CORRECT=10 / XP_PER_FIRST_WRONG=2 so existing users don't see a
 // regression on the lessons they're already doing. Medium and hard get
-// proportional bumps. Repeat wrongs continue to award 0 — that's a mastery
+// proportional bumps. Repeat wrongs continue to award 0 - that's a mastery
 // signal handled by the SRS interval, not a learning event.
 //
 // Tuning notes:
@@ -124,7 +124,7 @@ export function xpForAttempt(input: {
 // At streak=1 → +1% (negligible). At streak=50 → +50% (capped). The bonus
 // makes the streak feel valuable for every lesson, not just at milestones,
 // without making it dominate a user's XP total. Cap exists so the curve
-// flattens once the user is reliably daily — past 50 days the marginal
+// flattens once the user is reliably daily - past 50 days the marginal
 // motivation is intrinsic, not extrinsic.
 //
 // Applied AFTER summing per-attempt XP and BEFORE writing to users.xp, so
@@ -187,13 +187,13 @@ export interface NextStreakResult {
 //   diffDays === 2 AND freeze available
 //                          → consume one freeze, treat as if no gap:
 //                              streak += 1. No grant on this path even if
-//                              the resulting streak hits a milestone — we
+//                              the resulting streak hits a milestone - we
 //                              don't want freezes to immediately self-
 //                              replenish on use.
 //   diffDays >= 2 (no freeze available)
 //                          → streak resets to 1. Freezes are NOT touched
 //                              (the user keeps their stockpile across resets
-//                              — losing accumulated saves alongside the
+//                              - losing accumulated saves alongside the
 //                              streak would feel like a double punishment).
 //   No prior activity       → start at 1, no freeze movement.
 //

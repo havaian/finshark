@@ -41,7 +41,7 @@ import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
 
 // Public shape returned in the lesson queue. Note: NO correct_answer or explanation.
 // Those are only revealed in the attempt response, per question, after answering.
-// Fields are LANGUAGE-RESOLVED — frontend receives a single string per field.
+// Fields are LANGUAGE-RESOLVED - frontend receives a single string per field.
 export interface LessonQuestion {
   id: string;
   // short_answer retired: lessons only serve active mcq/number_entry questions.
@@ -58,7 +58,7 @@ export interface LessonQuestion {
 
 // Per-LO theory primer shown at the top of a lesson. One entry per distinct
 // LO in the queue (deduped), in the order the LOs first appear. Frontend can
-// show them as a stack of cards before the question flow starts. Optional —
+// show them as a stack of cards before the question flow starts. Optional -
 // only LOs with theory_en populated appear here.
 export interface LessonTheoryBite {
   lo_id: string;
@@ -81,7 +81,7 @@ export interface AttemptResult {
   mastery_score: number;
   // Mastery delta from this single attempt (+10 correct / -20 wrong, clamped
   // by the [0,100] mastery range). Surfaced so the lesson-feedback UI can
-  // render a "Mastery 64 → 74 (+10)" chip per attempt — landing the
+  // render a "Mastery 64 → 74 (+10)" chip per attempt - landing the
   // learning signal on every question instead of only at the syllabus
   // heat-map. See applyMastery() in srs.ts.
   mastery_delta: number;
@@ -99,7 +99,7 @@ export interface CompleteLessonResult {
   correct_count: number;
   // Total XP awarded for this session, AFTER the streak multiplier is
   // applied. xp_base + xp_streak_bonus = xp_earned. The frontend renders
-  // a "+X XP (incl. +Y streak bonus)" line on the finale screen — that's
+  // a "+X XP (incl. +Y streak bonus)" line on the finale screen - that's
   // why we surface the breakdown rather than just the total.
   xp_earned: number;
   xp_base: number;
@@ -121,7 +121,7 @@ export interface CompleteLessonResult {
   newly_earned_badges: string[];
 }
 
-// Returned by GET /lessons/:id — used to resume in-progress sessions after reload.
+// Returned by GET /lessons/:id - used to resume in-progress sessions after reload.
 // `questions` is the FULL original queue; `answered_question_ids` lets the UI skip ahead.
 export interface SessionDetail {
   session_id: string;
@@ -176,7 +176,7 @@ export class LessonsService {
     lang: Lang,
     opts: { paper_id?: string; size?: number }
   ): Promise<StartLessonResult> {
-    // Free-tier gates. Premium users skip every check below — they get the
+    // Free-tier gates. Premium users skip every check below - they get the
     // pre-billing behavior unchanged.
     //
     // We load the user row once and reuse it. The entitlement query is a
@@ -210,7 +210,7 @@ export class LessonsService {
       );
       if (lessonsToday >= FREE_LESSONS_PER_DAY) {
         throw new ForbiddenException(
-          `free tier: ${FREE_LESSONS_PER_DAY} lessons/day reached — upgrade or come back tomorrow`
+          `free tier: ${FREE_LESSONS_PER_DAY} lessons/day reached - upgrade or come back tomorrow`
         );
       }
 
@@ -221,14 +221,14 @@ export class LessonsService {
       const pool = await this.users.ensureFreeHeartPoolRefilled(user_id);
       if (pool <= 0) {
         throw new ForbiddenException(
-          "you're out of hearts for today — come back tomorrow or upgrade to premium"
+          "you're out of hearts for today - come back tomorrow or upgrade to premium"
         );
       }
     }
 
     // Resolve lesson size precedence: explicit request param > user's saved
     // preference > module default. The settings UI doesn't currently send size
-    // per-call — it just updates the stored preference — but accepting both
+    // per-call - it just updates the stored preference - but accepting both
     // keeps the API flexible (e.g. for future "extra practice" buttons).
     const size = opts.size ?? user.lesson_size ?? DEFAULT_LESSON_SIZE;
 
@@ -236,7 +236,7 @@ export class LessonsService {
 
     if (queue.length === 0) {
       throw new BadRequestException(
-        "no questions available — either the paper has no questions yet, or you have nothing due and no new content to learn"
+        "no questions available - either the paper has no questions yet, or you have nothing due and no new content to learn"
       );
     }
 
@@ -250,7 +250,7 @@ export class LessonsService {
     let heartsForResponse = session.hearts_remaining;
     if (isFree) {
       // ensureFreeHeartPoolRefilled was called above; re-read just the pool
-      // for the clamp (cheap query — same row we already touched).
+      // for the clamp (cheap query - same row we already touched).
       // Avoid a second SELECT by re-deriving: pool was returned by the
       // refill, but it's been consumed by nothing yet, so it's still valid.
       // Re-fetch in case some other request raced; we'd rather take the
@@ -315,7 +315,7 @@ export class LessonsService {
       ended_out_of_hearts: session.ended_out_of_hearts,
       questions: hydrated,
       answered_question_ids: answered,
-      // Skip theory bites for mocks — they're exam-style, no primer. For
+      // Skip theory bites for mocks - they're exam-style, no primer. For
       // lessons (and post-mock review sessions), surface bites as usual.
       theory_bites:
         session.mode === "mock"
@@ -411,13 +411,13 @@ export class LessonsService {
     // it from correct_count after the fact (which wouldn't survive a future change
     // to scoring rules).
     //
-    // Scoring is now difficulty-weighted via xpForAttempt() — see srs.ts for the
+    // Scoring is now difficulty-weighted via xpForAttempt() - see srs.ts for the
     // tables. Hard correct = 14 XP, easy correct = 10 XP, etc. Repeat wrongs
     // still award 0; first-encounter wrongs get partial credit scaled by
     // difficulty (2/3/4). Streak bonus is applied at session-complete, not
     // per-attempt, so the per-attempt response shows the base XP a user can
     // mentally tally.
-    // Mocks award no XP. The exam-style flow is the reward — adding XP per
+    // Mocks award no XP. The exam-style flow is the reward - adding XP per
     // attempt blurred the line between "study to learn" (lessons) and "test
     // yourself" (mocks). Streak still ticks for mock completion (sessions
     // count as activity); only the XP credit is zeroed here.
@@ -508,7 +508,7 @@ export class LessonsService {
 
     // Free-tier pool deduction. Mirrors the session-level decrement above but
     // on users.free_hearts_pool so the cap persists across sessions. Done
-    // OUTSIDE the attempt tx — losing the pool delta is acceptable (worst case
+    // OUTSIDE the attempt tx - losing the pool delta is acceptable (worst case
     // the user gets one bonus heart back tomorrow); losing the attempt isn't.
     //
     // Skipped for: mocks (no heart penalty), correct answers, and premium users.
@@ -522,11 +522,11 @@ export class LessonsService {
     }
 
     // Out-of-hearts auto-end. Runs OUTSIDE the attempt tx so the attempt is
-    // persisted even if the end-session write hits a transient error — we'd
+    // persisted even if the end-session write hits a transient error - we'd
     // rather have an attempt recorded with stale completed_at than lose both.
     // markEndedOutOfHearts is idempotent (returns null if already completed).
     //
-    // Mocks skip this entirely — they end only when the user submits the final
+    // Mocks skip this entirely - they end only when the user submits the final
     // answer or hits the time limit (frontend-driven).
     let sessionEnded = false;
     if (session.mode !== "mock" && newState.hearts_remaining <= 0) {
@@ -625,13 +625,13 @@ export class LessonsService {
     //    because that would discard partial-credit XP and difficulty weighting.
     //
     // 2. Streak XP bonus = multiplier on top of base, gated on the streak
-    //    AFTER applying nextStreak() — so a session that bumps the streak
+    //    AFTER applying nextStreak() - so a session that bumps the streak
     //    1 → 2 uses the new value (2 days × 1% = +2%). This matches the
     //    user expectation that "today's lesson keeps my streak going" should
     //    immediately count in the bonus.
     //
     // Out-of-hearts sessions still get XP/streak for the questions they DID
-    // answer correctly — running out of hearts is a soft fail, not a forfeit.
+    // answer correctly - running out of hearts is a soft fail, not a forfeit.
     const xpBase = await this.attempts.sumXpInSession(session_id);
     const user = await this.users.findById(user_id);
     if (!user) throw new NotFoundException("user not found");
@@ -662,13 +662,13 @@ export class LessonsService {
       last_active_date: today,
     });
 
-    // Evaluate badges AFTER the user row is updated — the rules read from
+    // Evaluate badges AFTER the user row is updated - the rules read from
     // users.xp / users.streak_count, so they need the post-completion values.
     // Failure here is swallowed by BadgesService and returns []; a badge bug
     // never blocks a lesson completion.
     const newlyEarnedBadges = await this.badges.evaluateAfterSession(user_id);
 
-    // Achievements run on the same hook for the same reason — they read
+    // Achievements run on the same hook for the same reason - they read
     // xp / streak / completed-session counts from the post-update state.
     // Failure is swallowed inside AchievementsService and returns []; a
     // bad achievement rule never breaks lesson completion. The unlocks
@@ -701,8 +701,8 @@ export class LessonsService {
   // Queue construction
   // ============================================================
   //
-  // Algorithm (current — revised May 2026):
-  //  1. Diversified due fetch — at most ONE question per LO, oldest-due first.
+  // Algorithm (current - revised May 2026):
+  //  1. Diversified due fetch - at most ONE question per LO, oldest-due first.
   //     This is the key change over textbook SRS: even if 4 questions in the
   //     same LO are all due today, we only pull one of them now. Stops the
   //     "got PESTEL question yesterday, got another PESTEL question today"
@@ -711,12 +711,12 @@ export class LessonsService {
   //  2. Fill remaining slots with NEW questions from weak LOs (lowest avg
   //     mastery first). One question per LO here too. Within each LO,
   //     prefer questions matching the user's difficulty preference AND with
-  //     a high global error rate ("often-wrong weighting" — high error rate
+  //     a high global error rate ("often-wrong weighting" - high error rate
   //     = users get this wrong a lot = worth more exposure).
   //
   //  3. If we STILL don't have `size` questions (i.e. the user has fewer
   //     candidate LOs than the requested lesson size), fall back to "extras"
-  //     — additional due questions from LOs already covered. This is the
+  //     - additional due questions from LOs already covered. This is the
   //     starvation path; without it, a user with content in only 2 LOs would
   //     get a 2-question lesson even when they asked for 5.
   //
@@ -827,7 +827,7 @@ export class LessonsService {
   // Project a raw QuestionRow to the language-resolved client shape.
   // why_wrong on each option is shipped along with the option text so the
   // frontend can render per-option explanations on the feedback screen after
-  // a wrong answer — no extra API call needed.
+  // a wrong answer - no extra API call needed.
   //
   // Public so MocksService can reuse the localization projection for mock
   // sessions without duplicating it.
@@ -890,7 +890,7 @@ export class LessonsService {
       const lo = byId.get(loId);
       if (!lo) continue;
       const theory = pickLocalizedNullable(lo.theory_en, lo.theory_ru, lang);
-      if (!theory) continue; // skip LOs with no theory yet — opt-in per LO
+      if (!theory) continue; // skip LOs with no theory yet - opt-in per LO
       bites.push({
         lo_id: lo.id,
         lo_code: lo.code,

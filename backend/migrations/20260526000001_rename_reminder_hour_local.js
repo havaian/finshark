@@ -2,7 +2,7 @@
 // column was originally added as `reminder_hour_utc` (see
 // 20260513000004_user_preferences.js) when reminders fired at a single
 // global UTC hour. Per-user `timezone` (20260525000003_add_user_timezone.js)
-// makes the UTC interpretation incorrect — a user in Asia/Tashkent who set
+// makes the UTC interpretation incorrect - a user in Asia/Tashkent who set
 // "18:00" expected 18:00 local, not 18:00 UTC (= 23:00 local).
 //
 // We rename the column and its CHECK constraint to match the new semantics.

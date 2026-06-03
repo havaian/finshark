@@ -1,4 +1,4 @@
-// Localization (i18n) — schema additions.
+// Localization (i18n) - schema additions.
 //
 // Two parts:
 //   A) Per-language columns on papers / learning_objectives / questions for UGC.
@@ -7,14 +7,14 @@
 //      is missing. This pattern lets us add more languages later without
 //      backfilling everything at once.
 //
-//   B) ui_translations(key, lang, value) — DB-backed overrides for UI strings.
+//   B) ui_translations(key, lang, value) - DB-backed overrides for UI strings.
 //      The frontend ships static locale files as the source of truth; rows in
 //      this table override individual keys at runtime so admins can fix wording
 //      without a redeploy.
 //
 // MCQ options: questions.options is JSONB. We change the inner shape from
 // {key, text} to {key, text_en, text_ru?}. The application layer is responsible
-// for that shape — the existing CHECK constraint only requires the JSON be an array.
+// for that shape - the existing CHECK constraint only requires the JSON be an array.
 
 exports.shorthands = undefined;
 
@@ -38,7 +38,7 @@ exports.up = (pgm) => {
 
   // questions: prompt + explanation + concept_bite + correct_answer (only short_answer).
   // correct_answer for MCQ is an option KEY (e.g. "A") so it doesn't need translation.
-  // correct_answer for short_answer is the canonical answer text — translated
+  // correct_answer for short_answer is the canonical answer text - translated
   // separately so RU grading can match RU input.
   pgm.renameColumn('questions', 'prompt', 'prompt_en');
   pgm.renameColumn('questions', 'explanation', 'explanation_en');
@@ -54,9 +54,9 @@ exports.up = (pgm) => {
   // ── B) UI translations table ───────────────────────────────
 
   pgm.createTable('ui_translations', {
-    // No surrogate key — natural composite PK on (key, lang).
+    // No surrogate key - natural composite PK on (key, lang).
     key: { type: 'text', notNull: true },           // e.g. 'dashboard.welcome'
-    lang: { type: 'text', notNull: true },           // 'en' | 'ru' — app-validated
+    lang: { type: 'text', notNull: true },           // 'en' | 'ru' - app-validated
     value: { type: 'text', notNull: true },
     created_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
     updated_at: { type: 'timestamptz', notNull: true, default: pgm.func('NOW()') },
@@ -64,7 +64,7 @@ exports.up = (pgm) => {
   pgm.addConstraint('ui_translations', 'ui_translations_pkey', {
     primaryKey: ['key', 'lang'],
   });
-  // Cheap lookup of "all overrides for language X" — used by frontend on app boot.
+  // Cheap lookup of "all overrides for language X" - used by frontend on app boot.
   pgm.createIndex('ui_translations', 'lang', { name: 'idx_ui_translations_lang' });
 
   // The same updated_at trigger that fires on the other tables. The trigger

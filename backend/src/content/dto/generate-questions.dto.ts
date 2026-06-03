@@ -8,7 +8,7 @@ import {
 } from "class-validator";
 
 export class GenerateQuestionsDto {
-  // 3..10 — matches the cost caps documented in the service. Lower bound is
+  // 3..10 - matches the cost caps documented in the service. Lower bound is
   // 3 because anything smaller isn't worth a generation round-trip.
   @IsInt()
   @Min(3)

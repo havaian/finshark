@@ -10,12 +10,12 @@ import type { WhitelistEntry } from '../../types/whitelist';
 //
 // Two pattern types, distinguished visually:
 //   - exact email (user@example.com): pill 'email'
-//   - domain pattern (@example.com): pill 'domain' — pales any email at the domain
+//   - domain pattern (@example.com): pill 'domain' - pales any email at the domain
 //
 // Note is editable in-place via the same pattern as the localisation page
 // (start edit → input → save/cancel). The pattern itself is immutable from
 // the UI; deleting and re-adding is the correct flow if you need to change it
-// (preserves audit semantics — created_by, created_at).
+// (preserves audit semantics - created_by, created_at).
 
 const { t } = useI18n();
 

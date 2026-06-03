@@ -198,7 +198,7 @@ async function onGrant() {
     //   null    → open-ended grant
     //   N>0     → exactly N days
     // The form encodes "open-ended" as the literal string "0" because a
-    // bare empty input means "use plan default" — keeping the two states
+    // bare empty input means "use plan default" - keeping the two states
     // distinguishable via a single text field.
     let daysPayload: number | null | undefined;
     if (daysRaw === '') daysPayload = undefined;
@@ -302,7 +302,7 @@ onMounted(loadUsersAndPlans);
               <div class="field" style="flex: 1 1 200px;">
                 <label class="field-label">{{ t('admin.subscriptions.grant_plan_label') }}</label>
                 <select v-model="grantPlanId">
-                  <option value="" disabled>—</option>
+                  <option value="" disabled>-</option>
                   <option v-for="p in plans" :key="p.id" :value="p.id"
                     :disabled="!p.is_active || p.tier !== 'premium'">
                     {{ p.name }}
@@ -312,7 +312,7 @@ onMounted(loadUsersAndPlans);
               <div class="field" style="flex: 0 0 160px;">
                 <label class="field-label">{{ t('admin.subscriptions.grant_days_label') }}</label>
                 <input v-model="grantDays" type="number" min="0"
-                  :placeholder="plansById.get(grantPlanId)?.period_days?.toString() ?? '—'" />
+                  :placeholder="plansById.get(grantPlanId)?.period_days?.toString() ?? '-'" />
                 <p class="input-help dim text-xs">{{ t('admin.subscriptions.grant_days_help') }}</p>
               </div>
               <div class="field grow" style="flex: 1 1 220px;">

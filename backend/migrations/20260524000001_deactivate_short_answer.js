@@ -1,12 +1,12 @@
-// Retire the short_answer question format from circulation — STAGE 1 of 2.
+// Retire the short_answer question format from circulation - STAGE 1 of 2.
 //
-// WHY (see "Finshark — Spec: Deterministic Short-Answer Grading"):
+// WHY (see "Finshark - Spec: Deterministic Short-Answer Grading"):
 //   short_answer is a free-text auto-marked format that does NOT exist on the
 //   real ACCA exam. ACCA auto-marks only objective formats (MCQ, multiple-
 //   response, matching, numeric fill-in-the-blank); written prose is human-
 //   marked. The format produced the "correct answer marked wrong" trust bug
 //   (e.g. "Zero based budgeting"), and the grader has already been locked to
-//   deterministic types only (mcq, number_entry) — so any short_answer reaching
+//   deterministic types only (mcq, number_entry) - so any short_answer reaching
 //   the grader is now marked incorrect. Leaving these rows ACTIVE would surface
 //   questions that can never be graded correctly.
 //

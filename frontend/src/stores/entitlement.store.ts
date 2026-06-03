@@ -9,7 +9,7 @@ import type { MyEntitlement } from "../types/billing";
 //     completing a lesson, completing a mock)
 //
 // We DON'T persist to localStorage. The tier can flip after an admin grant /
-// revoke / promocode redeem, and the quota counters move with every lesson —
+// revoke / promocode redeem, and the quota counters move with every lesson -
 // a fresh server read is cheaper than reconciling stale state. The store
 // stays empty until the first fetch; consumers should `v-if`-guard on the
 // presence check or `.tier` rather than treating undefined as "free".
@@ -26,7 +26,7 @@ export const useEntitlementStore = defineStore("entitlement", () => {
   const isFree = computed(() => entitlement.value?.tier === "free");
 
   // Helpers the UI can read without null-checking every time. These return
-  // null while the store hasn't fetched yet — the v-if-on-tier pattern
+  // null while the store hasn't fetched yet - the v-if-on-tier pattern
   // covers that case in templates.
   const lessonsRemaining = computed<number | null>(() => {
     const e = entitlement.value;
@@ -60,7 +60,7 @@ export const useEntitlementStore = defineStore("entitlement", () => {
 
   // Patch helper for flows that just performed a state-changing op (e.g.
   // promocode redeem returns the new subscription, lesson complete bumps
-  // used count). Cheaper than a full refetch but optional — callers can
+  // used count). Cheaper than a full refetch but optional - callers can
   // also just await fetch().
   function setEntitlement(next: MyEntitlement) {
     entitlement.value = next;

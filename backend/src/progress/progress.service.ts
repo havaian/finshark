@@ -4,10 +4,10 @@ import { pickLocalized, type Lang } from "../content/content.types";
 
 // Bands shared with the frontend. Keep them here as the single source of truth;
 // the frontend can use the same numbers in CSS classes without re-deriving them.
-//   not_started — no state rows OR avg_mastery is null
-//   weak        — 1..39
-//   learning    — 40..69
-//   strong      — 70..100
+//   not_started - no state rows OR avg_mastery is null
+//   weak        - 1..39
+//   learning    - 40..69
+//   strong      - 70..100
 export type MasteryBand = "not_started" | "weak" | "learning" | "strong";
 
 export function bandFor(avg: number | null): MasteryBand {

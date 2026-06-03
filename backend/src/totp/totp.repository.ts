@@ -5,7 +5,7 @@ import { PG } from "../db/db.module";
 import type { TotpAuditEvent, TotpAuditRow } from "./totp.audit";
 
 // Recovery-code row as returned by SELECT. We only ever read code_hash and
-// flip used_at — the plaintext code never goes through this repository.
+// flip used_at - the plaintext code never goes through this repository.
 export interface TotpRecoveryCodeRow {
   id: string;
   user_id: string;
@@ -80,7 +80,7 @@ export class TotpRepository {
   }
 
   // Mark a specific code as consumed. Idempotent via the used_at IS NULL
-  // guard — re-running with the same id is a no-op. Returns whether a row
+  // guard - re-running with the same id is a no-op. Returns whether a row
   // was actually flipped (for the rare race where two requests both verify
   // the same code; only one wins).
   async consumeRecoveryCode(id: string): Promise<boolean> {
@@ -93,7 +93,7 @@ export class TotpRepository {
     return rows.length > 0;
   }
 
-  // Count unused recovery codes — surfaced in the audit `meta` so we can
+  // Count unused recovery codes - surfaced in the audit `meta` so we can
   // record "user has N codes left" alongside a consumption event, and
   // shown in the Settings UI so the user knows when to regenerate.
   async countUnusedRecoveryCodes(user_id: string): Promise<number> {
@@ -136,7 +136,7 @@ export class TotpRepository {
   }
 
   // Clear all failed attempts for a user. Called after a successful verify
-  // — wiping is cheaper than letting the table grow unbounded waiting for
+  // - wiping is cheaper than letting the table grow unbounded waiting for
   // the window to expire on every row.
   async clearFailedAttempts(user_id: string): Promise<void> {
     await this
@@ -147,7 +147,7 @@ export class TotpRepository {
 
   // Append one audit row. Used by every 2FA state transition. Failures here
   // are swallowed by the caller (audit must never break the operation it's
-  // recording) — but we let the SQL throw so the caller sees a logger.error.
+  // recording) - but we let the SQL throw so the caller sees a logger.error.
   async recordAuditEvent(opts: {
     user_id: string;
     event: TotpAuditEvent;

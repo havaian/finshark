@@ -86,7 +86,7 @@ class SetActiveDto {
 // Mounted under /api/admin/promocodes to sit alongside the other admin
 // endpoints. Edit-after-create is deliberately limited: only the active flag
 // is mutable here. Anything else (window, plan, days) should be done by
-// creating a new code — keeps the redemption audit trail sane.
+// creating a new code - keeps the redemption audit trail sane.
 @Controller("admin/promocodes")
 @UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminPromocodesController {
@@ -123,7 +123,7 @@ export class AdminPromocodesController {
   }
 
   // Toggle is_active. Disabling preserves the row + redemption history;
-  // deletion is intentionally not exposed — once a code has been redeemed it
+  // deletion is intentionally not exposed - once a code has been redeemed it
   // anchors subscription metadata + audit events.
   @Patch(":id/active")
   async setActive(@Param("id") id: string, @Body() dto: SetActiveDto) {
@@ -131,7 +131,7 @@ export class AdminPromocodesController {
     return toPublicPromocode(updated);
   }
 
-  // Per-code redemption list — who used it, when, and which subscription it
+  // Per-code redemption list - who used it, when, and which subscription it
   // anchored. Returns enriched rows (user display_name + email, plan_id) so
   // the admin UI can show a name + link to the user page instead of raw
   // UUIDs. The bare row shape is still used internally by the redeem path;

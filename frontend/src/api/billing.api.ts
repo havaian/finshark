@@ -10,7 +10,7 @@ import type {
 } from "../types/billing";
 
 // User-facing endpoints. The redeem endpoint maps server-side errors to
-// regular axios rejections — the caller is responsible for surfacing them
+// regular axios rejections - the caller is responsible for surfacing them
 // (the redeem widget translates the error message via i18n keys keyed on the
 // HTTP status, falling back to the backend message string).
 export const billingApi = {
@@ -20,7 +20,7 @@ export const billingApi = {
   redeemPromocode: async (code: string): Promise<RedeemResult> =>
     (await api.post<RedeemResult>("/me/promocodes/redeem", { code })).data,
 
-  // History of the current user's own subscriptions — admin grants, promocode
+  // History of the current user's own subscriptions - admin grants, promocode
   // redemptions, future PSP payments. Same shape as the admin per-user
   // endpoint, but limited to the caller's own user_id by the backend.
   getMySubscriptions: async (): Promise<Subscription[]> =>
@@ -78,7 +78,7 @@ export const adminBillingApi = {
       .data,
 
   // Per-user audit log. Includes events for subscriptions that have since
-  // been cancelled or expired — backend keeps them keyed on user_id too.
+  // been cancelled or expired - backend keeps them keyed on user_id too.
   listSubscriptionEventsForUser: async (
     userId: string
   ): Promise<SubscriptionEvent[]> =>

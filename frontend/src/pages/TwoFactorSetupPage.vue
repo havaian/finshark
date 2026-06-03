@@ -11,20 +11,20 @@ import AppNav from '../components/AppNav.vue';
 import type { TotpSetupBeginResult } from '../types/totp';
 
 // Three-step enrollment:
-//   1) scan      — show QR + secret_b32, the user adds it to their
+//   1) scan      - show QR + secret_b32, the user adds it to their
 //                  authenticator app. Continue button → step 2.
-//   2) verify    — user types the 6-digit code their app shows. We POST
+//   2) verify    - user types the 6-digit code their app shows. We POST
 //                  setup-verify; on success we get recovery codes back
 //                  and move to step 3. On failure we stay on step 2 with
 //                  an error.
-//   3) recovery  — show all 10 recovery codes, require the user to tick
+//   3) recovery  - show all 10 recovery codes, require the user to tick
 //                  the "I saved them" checkbox before we let them leave.
 //                  After they confirm we re-fetch /me so the store picks
 //                  up totp_enabled=true and bounce to /settings (or the
-//                  forced redirect target — see `forced` / `nextPath`).
+//                  forced redirect target - see `forced` / `nextPath`).
 //
 // Aborting mid-flow (closing the tab on step 1 or 2) leaves nothing
-// persisted — the secret only gets written on a successful setup-verify.
+// persisted - the secret only gets written on a successful setup-verify.
 //
 // Force-enroll flow:
 //   When an admin without 2FA hits any /admin/* route, the router redirects
@@ -52,12 +52,12 @@ const submitting = ref(false);
 const recoveryCodes = ref<string[]>([]);
 const savedConfirmed = ref(false);
 
-// Admin-only — non-admins shouldn't even reach this route, but if they
+// Admin-only - non-admins shouldn't even reach this route, but if they
 // somehow do (e.g. via direct URL), the API will 403 and we redirect.
 const isAdmin = computed(() => auth.user?.is_admin === true);
 
 // Forced flow: ?force=1 came from the admin route guard. `next` is the URL
-// the admin originally wanted to visit — we send them there after enrollment.
+// the admin originally wanted to visit - we send them there after enrollment.
 // Defensive: only honor `next` if it's a safe relative path (starts with /
 // and doesn't contain protocol). Otherwise drop back to /admin.
 const forced = computed(() => route.query.force === '1');
@@ -75,7 +75,7 @@ async function beginSetup() {
     setupData.value = await totpApi.setupBegin();
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {
-      // Already enabled — the user navigated here in a stale state.
+      // Already enabled - the user navigated here in a stale state.
       errorMsg.value = t('tfa_setup.error_already_enabled');
     } else if (e instanceof AxiosError && e.response?.status === 403) {
       errorMsg.value = t('tfa_setup.error_admin_only');
@@ -112,12 +112,12 @@ async function verify() {
 async function finishAndExit() {
   // Re-fetch /me so the store has totp_enabled=true for the Settings page
   // (and for the admin route guard, which checks auth.user.totp_enabled
-  // — without this fetch the guard would bounce the admin right back here).
+  // - without this fetch the guard would bounce the admin right back here).
   try {
     const me = await authApi.me();
     auth.setUser(me);
   } catch {
-    // Non-fatal — Settings will re-fetch on its own.
+    // Non-fatal - Settings will re-fetch on its own.
   }
   // Forced flow lands the admin on the page they were trying to reach.
   // Normal flow returns to /settings where they came from.
@@ -127,7 +127,7 @@ async function finishAndExit() {
 function copyRecoveryCodes() {
   const text = recoveryCodes.value.join('\n');
   // Clipboard API requires HTTPS or localhost; in plain HTTP this throws,
-  // which we silently swallow — the codes are already visible on screen,
+  // which we silently swallow - the codes are already visible on screen,
   // worst case the user copies manually.
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).catch(() => {
@@ -138,7 +138,7 @@ function copyRecoveryCodes() {
 
 onMounted(() => {
   if (!isAdmin.value) {
-    // Defence-in-depth — router guard should have caught this too.
+    // Defence-in-depth - router guard should have caught this too.
     router.replace(lp('/settings'));
     return;
   }
@@ -187,7 +187,7 @@ onMounted(() => {
           </button>
           <!-- Cancel target depends on flow: a normal admin came from
                /settings and goes back there; a forced admin (?force=1)
-               came from /admin/* but can't go there yet — send them home
+               came from /admin/* but can't go there yet - send them home
                instead so they don't ping-pong against the route guard. -->
           <RouterLink :to="forced ? '/dashboard' : '/settings'" class="btn btn-ghost">
             {{ t('common.cancel') }}
@@ -311,7 +311,7 @@ onMounted(() => {
   }
 }
 
-/* Forced-enroll banner — shown when an admin without 2FA was redirected
+/* Forced-enroll banner - shown when an admin without 2FA was redirected
    here by the route guard. Amber styling (matches our existing pre-warning
    color tokens) signals "you have to do this now" without being as alarming
    as red. */

@@ -26,7 +26,7 @@ import { SubscriptionsService } from "../billing/subscriptions.service";
 import { toPublicSubscription } from "../billing/billing.types";
 
 // Free-tier limits surfaced on /me/entitlement. Mirror the constants in the
-// corresponding service files — kept literal here because the values are part
+// corresponding service files - kept literal here because the values are part
 // of the user-facing contract (and the frontend needs them to render the UI
 // before any quota call happens).
 const FREE_LESSONS_PER_DAY = 3;
@@ -44,7 +44,7 @@ export class ProfileController {
     private readonly subscriptions: SubscriptionsService
   ) {}
 
-  // GET /api/me — full public profile including created_at (joined date).
+  // GET /api/me - full public profile including created_at (joined date).
   // Distinct from /api/auth/me which is the same data: kept both for clarity
   // (auth.me is "verify my session", this is the profile endpoint).
   @Get()
@@ -68,7 +68,7 @@ export class ProfileController {
     return toPublicUser(updated);
   }
 
-  // GET /api/me/stats — everything the profile page's charts need in one call.
+  // GET /api/me/stats - everything the profile page's charts need in one call.
   @Get("stats")
   async getStats(
     @CurrentUser() current: AccessTokenPayload,
@@ -77,7 +77,7 @@ export class ProfileController {
     return this.stats.getForUser(current.sub, lang);
   }
 
-  // GET /api/me/entitlement — tier + quota state for the gating UI.
+  // GET /api/me/entitlement - tier + quota state for the gating UI.
   //
   // The shape covers:
   //   - tier / plan_id / ends_at: from EntitlementsService.
@@ -86,7 +86,7 @@ export class ProfileController {
   //   - hearts.pool / hearts.max: current free heart pool (post-refill) vs cap.
   //
   // For premium users, the limit fields are `null` (unlimited) but `used` is
-  // still computed — the frontend can hide quota chips when limit is null.
+  // still computed - the frontend can hide quota chips when limit is null.
   // We refill the heart pool here too so a fresh app boot for a free user
   // sees today's pool even if they haven't started a lesson yet.
   @Get("entitlement")
@@ -125,7 +125,7 @@ export class ProfileController {
         limit: isFree ? FREE_MOCKS_PER_MONTH : null,
       },
       hearts: {
-        // For premium users, the per-session model is unchanged — there's no
+        // For premium users, the per-session model is unchanged - there's no
         // "pool" to surface. We send null so the frontend can hide the pool
         // chip and just trust session.hearts_remaining like before.
         pool: heartPool,
@@ -134,7 +134,7 @@ export class ProfileController {
     };
   }
 
-  // GET /api/me/subscriptions — user-facing history of their OWN subscriptions
+  // GET /api/me/subscriptions - user-facing history of their OWN subscriptions
   // (admin grants, promocode redemptions, future PSP payments). Same shape as
   // the admin endpoint /admin/users/:id/subscriptions; backend just uses the
   // current user's id and skips the admin guard. Used by the Payments section
@@ -145,7 +145,7 @@ export class ProfileController {
     return rows.map(toPublicSubscription);
   }
 
-  // PATCH /api/me/preferences — update lesson/notification preferences.
+  // PATCH /api/me/preferences - update lesson/notification preferences.
   // Returns the full updated PublicUser so the frontend can refresh state in one call.
   @Patch("preferences")
   async updatePreferences(
@@ -155,7 +155,7 @@ export class ProfileController {
     // The DTO's regex catches obvious shape errors, but only the runtime can
     // tell us whether the IANA name actually exists. We do the canonical
     // check here so a typo like "Asia/Foo" is rejected before the DB write
-    // — otherwise the bad value would propagate to the heart-pool refill
+    // - otherwise the bad value would propagate to the heart-pool refill
     // SQL (`NOW() AT TIME ZONE timezone`) and surface as a 500 there.
     if (dto.timezone !== undefined) {
       try {
@@ -171,7 +171,7 @@ export class ProfileController {
     return toPublicUser(updated);
   }
 
-  // DELETE /api/me — hard delete. Requires the user to retype their own email
+  // DELETE /api/me - hard delete. Requires the user to retype their own email
   // as a safety prompt. Returns 204 on success.
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -190,7 +190,7 @@ export class ProfileController {
     const ok = await this.users.deleteUser(current.sub);
     if (!ok) throw new NotFoundException("user not found");
     // The user's refresh tokens cascade away with the user row. Access tokens
-    // are stateless — they remain valid until they expire (≤15m typically),
+    // are stateless - they remain valid until they expire (≤15m typically),
     // but they reference a user_id that no longer exists, so JwtAuthGuard's
     // re-lookup will fail for any subsequent call.
   }

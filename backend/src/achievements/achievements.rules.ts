@@ -14,7 +14,7 @@ import { PG } from "../db/db.module";
 //   4) Wire the code → field name mapping in METRICS_BY_CODE.
 export interface AchievementMetrics {
   // Total completed lesson_sessions in mode='lesson'. Mocks tracked separately
-  // — so this is just regular learning sessions.
+  // - so this is just regular learning sessions.
   lessons_completed: number;
   // Current streak count on users.streak_count.
   streak_days: number;
@@ -27,7 +27,7 @@ export interface AchievementMetrics {
   // We treat >=50% as "passed" per the seed's threshold semantics.
   mocks_passed: number;
   // Max lessons completed in any single paper. Replaces the old
-  // f1/f2/f3/f5_lessons_completed quartet — see the gamification audit notes.
+  // f1/f2/f3/f5_lessons_completed quartet - see the gamification audit notes.
   // A mixed-paper session counts toward every paper it touched, same as
   // before, so the metric naturally selects the paper the user has dug
   // deepest into. Cross-paper breadth is rewarded by the 'paper_explorer'
@@ -52,7 +52,7 @@ export class AchievementMetricsRepository {
   constructor(@Inject(PG) private readonly sql: Sql) {}
 
   // Single query collecting every metric. Subqueries (rather than one big
-  // JOIN) keep each aggregate independent — the lessons aggregate doesn't
+  // JOIN) keep each aggregate independent - the lessons aggregate doesn't
   // care about the mocks aggregate, etc. All defaults are 0 via COALESCE.
   //
   // perfect_lessons: question_count > 0 guard avoids treating a zero-attempt
@@ -124,7 +124,7 @@ export class AchievementMetricsRepository {
 
     const r = rows[0];
     if (!r) {
-      // User vanished mid-eval — return zero metrics rather than throwing.
+      // User vanished mid-eval - return zero metrics rather than throwing.
       // The evaluator already swallows errors; this just keeps the SQL path
       // clean.
       return {

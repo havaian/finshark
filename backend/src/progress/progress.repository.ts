@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
 
-// Row returned by the heat map query — one per LO, with paper context for grouping.
+// Row returned by the heat map query - one per LO, with paper context for grouping.
 // avg_mastery is NULL when the user has no state rows for any question in the LO.
 //
 // Note: we select BOTH _en and _ru text columns and resolve language in the

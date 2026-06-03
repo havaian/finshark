@@ -41,7 +41,7 @@ export class AdminContentController {
     return this.content.listPapers();
   }
 
-  // Admin content tree — papers with their LOs and per-LO question counts.
+  // Admin content tree - papers with their LOs and per-LO question counts.
   // Used by the unified content browser (/admin/content) to render the sidebar
   // in one network round-trip.
   @Get("content/tree")

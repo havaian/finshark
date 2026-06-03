@@ -1,7 +1,7 @@
 import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class StartLessonDto {
-  // Optional paper filter — without it the queue draws from everything.
+  // Optional paper filter - without it the queue draws from everything.
   @IsOptional()
   @IsString()
   paper_id?: string;

@@ -106,7 +106,7 @@ export class PapersRepository {
       active_count: number;
       draft_count: number;
       // "Retired" = used to be active and then turned off. There's no formal
-      // distinction between "draft" and "retired" at the schema level — both
+      // distinction between "draft" and "retired" at the schema level - both
       // are is_active=false. We currently group all is_active=false as drafts.
       // If we add a review_status column later this can split.
     }>

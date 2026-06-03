@@ -30,7 +30,7 @@ import {
 //
 // Email notifications (premium_granted template) fire AFTER the transaction
 // commits and are best-effort: a failed send logs a warning but does NOT
-// roll back the grant — the user's premium is real even if their email
+// roll back the grant - the user's premium is real even if their email
 // bounced.
 
 @Injectable()
@@ -112,7 +112,7 @@ export class SubscriptionsService {
     });
 
     // Fire-and-forget email AFTER the tx commits so a flaky SMTP doesn't
-    // roll back the grant. Only sends for premium-tier plans — granting a
+    // roll back the grant. Only sends for premium-tier plans - granting a
     // 'free' subscription (e.g. an explicit downgrade record) doesn't
     // warrant a "welcome to premium" email. Errors are logged inside the
     // helper and swallowed here.
@@ -173,7 +173,7 @@ export class SubscriptionsService {
     });
 
     // Same fire-and-forget notification as grant. We reuse the premium_granted
-    // template intentionally — copy reads cleanly for both "you're now
+    // template intentionally - copy reads cleanly for both "you're now
     // premium until X" and "your premium is now active until X". A future
     // dedicated "premium_extended" template can replace this call by key
     // without changing the wiring.
@@ -182,12 +182,12 @@ export class SubscriptionsService {
     return updated;
   }
 
-  // Mark cancelled. User keeps remaining paid time — billing systems should
+  // Mark cancelled. User keeps remaining paid time - billing systems should
   // not yank access already paid for. The entitlement query filters by
   // status='active' so once status flips to 'cancelled', the user immediately
   // drops to free. (Two interpretations exist; this codebase picks "cancel =
   // immediately revoke paid access from the catalog perspective". Switch to
-  // a delayed model later if product wants it — that's a one-line query
+  // a delayed model later if product wants it - that's a one-line query
   // change in subscriptions.repository.findActiveForUser.)
   async cancel(input: {
     subscriptionId: string;
@@ -249,9 +249,9 @@ export class SubscriptionsService {
   //
   // Fires the 'premium_granted' template after a successful grant or extend.
   // Variables fed to the template (declared in the seed):
-  //   display_name   — user's first-line greeting
-  //   period_clause  — "until 15 Jul 2026" OR "for life" (when ends_at = NULL)
-  //   app_url        — APP_PUBLIC_URL, used in the CTA link
+  //   display_name   - user's first-line greeting
+  //   period_clause  - "until 15 Jul 2026" OR "for life" (when ends_at = NULL)
+  //   app_url        - APP_PUBLIC_URL, used in the CTA link
   //
   // All failures are swallowed with a warning log. Reasoning: a successful
   // grant is the contractual state; an email-send failure is operational
@@ -262,7 +262,7 @@ export class SubscriptionsService {
   // Public so PromocodesService.redeem can call it after its own tx
   // commits. Keeping the helper here (instead of duplicating in
   // PromocodesService) means the period-clause formatter has a single
-  // source of truth — important when we eventually replace it with a
+  // source of truth - important when we eventually replace it with a
   // per-user-locale version.
   async notifyPremiumGranted(sub: SubscriptionRow): Promise<void> {
     try {

@@ -1,7 +1,7 @@
-// Promocodes — redeemable codes that grant a subscription (typically premium
+// Promocodes - redeemable codes that grant a subscription (typically premium
 // for N days). Designed to be admin-issued for launch, influencer, and support
 // scenarios. PSP-driven discount coupons (e.g. Stripe Coupons / Payme promos)
-// are NOT modelled here — those live with the PSP and are referenced via
+// are NOT modelled here - those live with the PSP and are referenced via
 // subscriptions.metadata when relevant.
 //
 // Schema notes:
@@ -14,7 +14,7 @@
 //   - max_redemptions NULL = unlimited (e.g. a public launch code).
 //   - per_user_limit = how many times a single user can redeem the same code.
 //     Defaults to 1; promocode_redemptions has a unique (promocode_id, user_id)
-//     index that enforces per_user_limit=1 — higher limits are enforced in the
+//     index that enforces per_user_limit=1 - higher limits are enforced in the
 //     app layer with row counting (rare case; not worth bending the unique).
 //   - valid_from / valid_until bound when redemption is allowed; both NULL
 //     means "always valid while is_active = true".

@@ -38,7 +38,7 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.removeItem(TOKEN_STORAGE_KEYS.refresh);
     // Drop any cached entitlement so the next signed-in user can't briefly
     // see the previous user's premium chip / quota. Imported lazily inside
-    // the function to avoid a Pinia init order surprise — both stores are
+    // the function to avoid a Pinia init order surprise - both stores are
     // registered before any caller invokes clear().
     useEntitlementStore().clear();
   }
@@ -61,24 +61,24 @@ export const useAuthStore = defineStore("auth", () => {
       const u = await authApi.me();
       user.value = u;
       localStorage.setItem(LS_USER, JSON.stringify(u));
-      // Eager fetch — first thing the user sees after sign-in is the
+      // Eager fetch - first thing the user sees after sign-in is the
       // dashboard, which expects chrome chips to be populated.
       void useEntitlementStore().fetch();
     } catch (e) {
-      // /me failed despite fresh tokens — wipe and rethrow so the callback page can show an error.
+      // /me failed despite fresh tokens - wipe and rethrow so the callback page can show an error.
       clear();
       throw e;
     }
   }
 
   function logout() {
-    // Best-effort revoke on the server. We don't await success — if it fails (offline,
+    // Best-effort revoke on the server. We don't await success - if it fails (offline,
     // backend down, token already invalid), we still clear locally. Worst case the
     // refresh token stays alive until its 30d TTL.
     const rt = refreshToken.value;
     if (rt) {
       authApi.logout(rt).catch(() => {
-        /* swallow — local clear is the source of truth for the user */
+        /* swallow - local clear is the source of truth for the user */
       });
     }
     clear();
@@ -87,7 +87,7 @@ export const useAuthStore = defineStore("auth", () => {
   // Re-fetch user profile (useful after page load to validate the stored access token).
   // Also kicks off an entitlement refresh so chrome chips stay in sync with
   // the latest tier / quota state. The entitlement fetch is fire-and-forget
-  // — fetchMe must not fail just because /me/entitlement was slow or 5xx'd.
+  // - fetchMe must not fail just because /me/entitlement was slow or 5xx'd.
   async function fetchMe() {
     const u = await authApi.me();
     user.value = u;
@@ -96,7 +96,7 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   // Same idea as completeGoogleLogin but for the 2FA verify endpoint, which
-  // returns the user object inline — no second /me round-trip needed. Used
+  // returns the user object inline - no second /me round-trip needed. Used
   // by the /2fa-verify page after the user types their 6-digit code.
   function completeTwoFactorLogin(input: {
     access_token: string;
@@ -109,13 +109,13 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem(TOKEN_STORAGE_KEYS.access, input.access_token);
     localStorage.setItem(TOKEN_STORAGE_KEYS.refresh, input.refresh_token);
     localStorage.setItem(LS_USER, JSON.stringify(input.user));
-    // Same eager fetch as completeGoogleLogin — entitlement chips need to
+    // Same eager fetch as completeGoogleLogin - entitlement chips need to
     // be populated on first dashboard paint.
     void useEntitlementStore().fetch();
   }
 
   // Replace the user object in the store + localStorage. Used by flows that
-  // get a fresh PublicUser back without a separate /me fetch — onboarding
+  // get a fresh PublicUser back without a separate /me fetch - onboarding
   // POST returns the updated user, settings updates return the user, etc.
   function setUser(u: PublicUser) {
     user.value = u;

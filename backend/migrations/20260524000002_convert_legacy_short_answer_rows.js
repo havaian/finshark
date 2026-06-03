@@ -1,4 +1,4 @@
-// Retire the short_answer question format — STAGE 2a of the enum drop.
+// Retire the short_answer question format - STAGE 2a of the enum drop.
 //
 // CONTEXT (continues 20260524000001_deactivate_short_answer.js):
 //   All short_answer CONTENT in the seed has been rewritten as mcq/number_entry,
@@ -10,7 +10,7 @@
 // WHY CONVERT INSTEAD OF DELETE:
 //   attempts.question_id and lesson_session_questions.question_id are FKs with
 //   onDelete: 'RESTRICT' (see 20260511000003_content_and_srs.js). Any legacy
-//   short_answer question that a user has ever attempted CANNOT be deleted —
+//   short_answer question that a user has ever attempted CANNOT be deleted -
 //   the RESTRICT FK would abort the migration. Deleting would also destroy
 //   historical attempt/answer records. So we CONVERT the leftover rows to a
 //   surviving enum value instead, preserving all history and FKs intact.
@@ -18,7 +18,7 @@
 // WHAT THIS DOES:
 //   Re-labels any remaining short_answer rows as 'number_entry'. number_entry
 //   is chosen (not mcq) because the chk_question_type_options constraint allows
-//   number_entry to have NULL options — exactly the shape these rows already
+//   number_entry to have NULL options - exactly the shape these rows already
 //   have. mcq would require a non-null options array these rows don't have, so
 //   it would violate the constraint. The rows stay is_active=FALSE (set in
 //   STAGE 1), so this relabelling never surfaces them in lessons or mocks, and
@@ -55,5 +55,5 @@ exports.up = (pgm) => {
 };
 
 exports.down = () => {
-  // Intentional no-op — original type not retained. See header comment.
+  // Intentional no-op - original type not retained. See header comment.
 };

@@ -51,7 +51,7 @@ function readHeader(req: Request, name: string): string | undefined {
   return undefined;
 }
 
-// @Lang() decorator — injects the resolved language as a method parameter.
+// @Lang() decorator - injects the resolved language as a method parameter.
 //   listPapers(@Lang() lang: Lang) { ... }
 export const Lang = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): LangType => {

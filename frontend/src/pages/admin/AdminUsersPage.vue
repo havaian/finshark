@@ -45,11 +45,11 @@ async function toggleAdmin(user: PublicUser) {
   if (busyIds.value.has(user.id)) return;
 
   const next = !user.is_admin;
-  // Confirm demotion explicitly — promoting is one click but demoting is risky.
+  // Confirm demotion explicitly - promoting is one click but demoting is risky.
   if (!next) {
     // Use a plain confirm prompt; localized via t().
     const ok = confirm(
-      `${t('admin.users.remove_admin')} — ${user.display_name} (${user.email})?`,
+      `${t('admin.users.remove_admin')} - ${user.display_name} (${user.email})?`,
     );
     if (!ok) return;
   }

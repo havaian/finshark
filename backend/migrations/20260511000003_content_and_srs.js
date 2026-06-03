@@ -29,7 +29,7 @@ exports.up = (pgm) => {
   });
   pgm.createIndex('learning_objectives', 'paper_id', { name: 'idx_los_paper_id' });
 
-  // ENUMs — node-pg-migrate has pgm.createType for these.
+  // ENUMs - node-pg-migrate has pgm.createType for these.
   pgm.createType('question_difficulty', ['easy', 'medium', 'hard']);
   pgm.createType('question_type', ['mcq', 'short_answer']);
 
@@ -61,7 +61,7 @@ exports.up = (pgm) => {
   pgm.createIndex('questions', ['lo_id', 'is_active', 'difficulty'], { name: 'idx_questions_lo_active_diff' });
 
   // ── Per-user SRS + mastery state ───────────────────────────────────
-  // (user_id, question_id) composite PK — one row per pair, lazy-created.
+  // (user_id, question_id) composite PK - one row per pair, lazy-created.
   pgm.createTable('user_question_state', {
     user_id: { type: 'bigint', notNull: true, references: 'users(id)', onDelete: 'CASCADE' },
     question_id: { type: 'bigint', notNull: true, references: 'questions(id)', onDelete: 'CASCADE' },

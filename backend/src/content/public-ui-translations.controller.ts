@@ -3,7 +3,7 @@ import { Throttle } from "@nestjs/throttler";
 import { UiTranslationsService } from "./ui-translations.service";
 import { SUPPORTED_LANGS, type Lang } from "./content.types";
 
-// Public endpoint — no auth, since UI strings are by definition public.
+// Public endpoint - no auth, since UI strings are by definition public.
 // Frontend calls this once on boot to merge DB overrides onto the static locale.
 // Heavier throttle than default (read-once-per-page-load pattern; small payload).
 @Controller("ui-translations")

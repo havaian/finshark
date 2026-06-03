@@ -10,7 +10,7 @@ import { useLocaleStore } from '../stores/locale.store';
 import type { BgLevel } from '../types/auth';
 import type { Paper } from '../types/content';
 
-// Onboarding wizard. Single-page (no stepper) — four optional questions.
+// Onboarding wizard. Single-page (no stepper) - four optional questions.
 // Skip = empty submit, which the backend handles by stamping onboarded_at only.
 //
 // All fields are optional from the API's perspective. The Continue button is
@@ -34,7 +34,7 @@ const reminders = ref<boolean>(false);
 const submitting = ref(false);
 const errorMsg = ref<string | null>(null);
 
-// Available time budgets — kept small and human (not a slider) so users
+// Available time budgets - kept small and human (not a slider) so users
 // commit to a deliberate value. DB allows 5..60 so this list stays inside.
 const timeBudgetOptions = [5, 10, 15, 20, 30, 45, 60];
 
@@ -59,12 +59,12 @@ async function loadPapers() {
 function buildPayload(): CompleteOnboardingInput {
   const payload: CompleteOnboardingInput = {};
   if (bgLevel.value !== null) payload.bg_level = bgLevel.value;
-  // Always send time_budget — it has a default but the user explicitly chose this.
+  // Always send time_budget - it has a default but the user explicitly chose this.
   // Only skip if literally untouched? We track that with a `touched` flag? Simpler:
   // since the default in the UI is 15 and matches the DB default, sending it is harmless.
   payload.time_budget_minutes = timeBudget.value;
   if (preferredPaperId.value) payload.preferred_paper_id = preferredPaperId.value;
-  // Reminders default is false — only send if user toggled it on, to avoid
+  // Reminders default is false - only send if user toggled it on, to avoid
   // overwriting a user who already had reminders enabled some other way.
   if (reminders.value) payload.email_reminders_enabled = true;
   return payload;
@@ -91,7 +91,7 @@ async function onSkip() {
   submitting.value = true;
   errorMsg.value = null;
   try {
-    // Empty body — backend stamps onboarded_at only, leaves preferences alone.
+    // Empty body - backend stamps onboarded_at only, leaves preferences alone.
     const updated = await onboardingApi.complete({});
     auth.setUser(updated);
     router.replace({ name: 'dashboard', params: { lang: locale.lang } });

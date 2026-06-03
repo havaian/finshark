@@ -8,7 +8,7 @@
 // preferred_difficulty: NULL = "auto" (use the level-based heuristic).
 // Concrete values override the heuristic for new questions pulled from weak LOs.
 //
-// lesson_size: 3..10 — small bounds so we don't burn through the queue or make
+// lesson_size: 3..10 - small bounds so we don't burn through the queue or make
 // lessons too tiny to feel meaningful. Default 5 matches the historical hard-coded value.
 
 exports.shorthands = undefined;

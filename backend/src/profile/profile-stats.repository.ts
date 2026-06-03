@@ -117,7 +117,7 @@ export class ProfileStatsRepository {
   }
 
   // Per-day attempt counts over the last `days` calendar days (UTC).
-  // Days with zero attempts are not in the result — frontend fills in zeros
+  // Days with zero attempts are not in the result - frontend fills in zeros
   // when rendering the heatmap grid.
   async activityHeatmap(
     user_id: string,

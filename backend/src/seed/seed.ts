@@ -3,14 +3,14 @@
 //
 // Loads F1 and F5 seed data and inserts them into the database. Idempotent
 // at the paper level: if a paper with the given code already exists, the
-// entire paper (and its LOs/questions) is skipped — we don't try to merge
+// entire paper (and its LOs/questions) is skipped - we don't try to merge
 // changes into an existing paper since that risks duplicating questions on
 // re-runs. To re-seed, delete the paper row manually first; cascading FKs
 // take its LOs and questions with it.
 //
 // Exit codes:
-//   0 — success (one or more papers seeded, or all already present)
-//   1 — DB connection or insert error
+//   0 - success (one or more papers seeded, or all already present)
+//   1 - DB connection or insert error
 
 import "dotenv/config";
 import postgres from "postgres";
@@ -36,7 +36,7 @@ async function main() {
   try {
     // ── Badges catalog ─────────────────────────────────────────────────
     // Upsert by code: changes to copy/icon/sort_order are picked up on every
-    // run. Never rename a code — it's the FK target in user_badges.
+    // run. Never rename a code - it's the FK target in user_badges.
     for (const b of BADGES) {
       await sql`
         INSERT INTO badges (code, name_en, name_ru, description_en, description_ru, icon, sort_order)
@@ -54,7 +54,7 @@ async function main() {
 
     // ── Achievements catalog ───────────────────────────────────────────
     // Same upsert-by-code pattern as badges, plus the `levels` jsonb column.
-    // Never rename a code — it's the FK target in user_achievement_progress
+    // Never rename a code - it's the FK target in user_achievement_progress
     // and the key in METRICS_BY_CODE in src/achievements/achievements.rules.ts.
     for (const a of ACHIEVEMENTS) {
       const levelsJson = sql.json(a.levels as unknown as postgres.JSONValue);
@@ -92,7 +92,7 @@ async function main() {
 
       console.log(`[insert] paper ${paper.code} (${paper.name_en})`);
       await sql.begin(async (tx) => {
-        // NOTE: papers and learning_objectives tables don't have is_active —
+        // NOTE: papers and learning_objectives tables don't have is_active -
         // only questions do. Don't add it here unless you've also added a
         // migration introducing the column.
         const paperRows = await tx<Array<{ id: string }>>`
@@ -142,7 +142,7 @@ async function main() {
 // Discriminates on q.type to populate the right shape per type:
 //   - mcq: options JSONB + correct option key in correct_answer_en
 //   - number_entry: numeric value (string) in correct_answer_en, optional tolerance
-// (short_answer is retired — see Grading Spec — and no longer a seed type.)
+// (short_answer is retired - see Grading Spec - and no longer a seed type.)
 async function insertQuestion(
   tx: postgres.TransactionSql,
   lo_id: string,

@@ -9,7 +9,7 @@ import { useRoute, useRouter } from 'vue-router';
 import LangPicker from '../../components/LangPicker.vue';
 import ThemeSwitch from '../../components/ThemeSwitch.vue';
 
-// Admin shell — sidebar nav + topbar with a "back to dashboard" exit.
+// Admin shell - sidebar nav + topbar with a "back to dashboard" exit.
 // Nested admin routes render in the <RouterView/> below.
 //
 // Note on "keep the back link too": each admin sub-page still renders its own
@@ -51,12 +51,12 @@ function stripLang(path: string): string {
 }
 
 const navItems = computed<NavItem[]>(() => [
-  // Overview is the new default landing — sits first in the sidebar so it
+  // Overview is the new default landing - sits first in the sidebar so it
   // also reads as "home" within the admin area.
   { to: lp('/admin/overview'), labelKey: 'admin.overview.title', activePrefixes: ['/admin/overview'] },
   { to: lp('/admin/users'), labelKey: 'admin.users.title', activePrefixes: ['/admin/users'] },
   { to: lp('/admin/whitelist'), labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] },
-  // Unified content browser — the only editor for papers/LOs/questions now.
+  // Unified content browser - the only editor for papers/LOs/questions now.
   { to: lp('/admin/content'), labelKey: 'admin.content.title', activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
   { to: lp('/admin/promocodes'), labelKey: 'admin.promocodes.title', activePrefixes: ['/admin/promocodes'] },
   { to: lp('/admin/subscriptions'), labelKey: 'admin.subscriptions.title', activePrefixes: ['/admin/subscriptions'] },
@@ -81,7 +81,7 @@ const drawerOpen = ref(false);
 function openDrawer() { drawerOpen.value = true; }
 function closeDrawer() { drawerOpen.value = false; }
 
-// Close on route change — tapping a section inside the drawer dismisses it.
+// Close on route change - tapping a section inside the drawer dismisses it.
 watch(() => route.fullPath, () => { drawerOpen.value = false; });
 
 // ESC to close.
@@ -208,14 +208,14 @@ function onExitMobile() {
           </div>
 
           <!-- Preferences row in the drawer too, mirroring the desktop sidebar
-               foot. Same pickers — language stays in sync because both use the
+               foot. Same pickers - language stays in sync because both use the
                locale store. -->
           <div class="admin-drawer-prefs">
             <LangPicker />
             <ThemeSwitch />
           </div>
 
-          <!-- "Back to app" pinned to the bottom — equivalent to the desktop
+          <!-- "Back to app" pinned to the bottom - equivalent to the desktop
                sidebar's foot button. -->
           <div class="app-nav-drawer-foot">
             <button class="btn btn-ghost btn-block" @click="onExitMobile">

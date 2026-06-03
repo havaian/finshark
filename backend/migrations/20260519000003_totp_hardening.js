@@ -1,6 +1,6 @@
-// 2FA hardening — two additions on top of 20260519000002_totp_2fa.js:
+// 2FA hardening - two additions on top of 20260519000002_totp_2fa.js:
 //
-//   user_totp_failed_attempts — per-user lockout. We log every failed
+//   user_totp_failed_attempts - per-user lockout. We log every failed
 //     verify attempt with a timestamp. The verifier counts recent failures
 //     in a sliding window and refuses to proceed once a threshold is hit.
 //     Lockout is time-based (not row-counted), so it auto-expires without
@@ -12,9 +12,9 @@
 //     per-user lockout caps the total attack rate against ONE account at
 //     N attempts per window regardless of source IP.
 //
-//   user_totp_audit_log — append-only audit of 2FA state changes
+//   user_totp_audit_log - append-only audit of 2FA state changes
 //     (enrolled, disabled, regenerated codes, recovery code consumed,
-//     locked-out). We don't audit every successful TOTP verify — that
+//     locked-out). We don't audit every successful TOTP verify - that
 //     would be too noisy and the refresh_tokens table already records
 //     login activity. We DO audit security-relevant transitions.
 //
@@ -32,7 +32,7 @@ exports.up = (pgm) => {
       references: 'users(id)',
       onDelete: 'CASCADE',
     },
-    // Source IP, best-effort — extracted via req.ip in the controller. NULL
+    // Source IP, best-effort - extracted via req.ip in the controller. NULL
     // when not available (rare). Stored for forensics, not used in lockout
     // logic (which is per-user, not per-IP).
     ip: { type: 'text', notNull: false },
@@ -55,7 +55,7 @@ exports.up = (pgm) => {
       references: 'users(id)',
       onDelete: 'CASCADE',
     },
-    // Free-form event code — enum-like in practice. Values defined in
+    // Free-form event code - enum-like in practice. Values defined in
     // src/totp/totp.audit.ts as a union type. Kept as text rather than a
     // PG ENUM so adding a new event doesn't require a migration.
     event: { type: 'text', notNull: true },

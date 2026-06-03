@@ -5,7 +5,7 @@ import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { SeedService, type ReseedResult } from "./seed.service";
 
 // Admin-only endpoint that wipes content + progress and reseeds the catalog
-// from the bundled seed data. Destructive — guarded by both JwtAuthGuard and
+// from the bundled seed data. Destructive - guarded by both JwtAuthGuard and
 // AdminWith2faGuard so only 2FA-enrolled admins can hit it, and throttled
 // tighter than the global default to mitigate accidental double-clicks (the
 // frontend also disables the button during the request).
@@ -35,7 +35,7 @@ export class AdminSeedController {
   async reseed(): Promise<ReseedResult> {
     this.log.warn("admin reseed: dropping content + progress and reseeding");
     const result = await this.seed.dropAndReseedContent();
-    this.log.warn(`admin reseed: done — ${JSON.stringify(result)}`);
+    this.log.warn(`admin reseed: done - ${JSON.stringify(result)}`);
     return result;
   }
 }

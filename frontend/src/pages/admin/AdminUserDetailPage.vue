@@ -38,7 +38,7 @@ async function load() {
   loading.value = true;
   errorMsg.value = null;
   try {
-    // Subscriptions failure is non-fatal — the page still renders the user
+    // Subscriptions failure is non-fatal - the page still renders the user
     // panel with an empty subscriptions list if billing is unreachable.
     const [userData, subRows] = await Promise.all([
       adminApi.getUser(userId.value),
@@ -55,7 +55,7 @@ async function load() {
   }
 }
 
-// Re-fetch when the URL param changes — e.g. clicking a link from one user
+// Re-fetch when the URL param changes - e.g. clicking a link from one user
 // to another. Without this, navigating between two detail pages would
 // reuse the stale user blob from the first one.
 watch(userId, () => {
@@ -67,7 +67,7 @@ async function toggleAdmin() {
   const next = !user.value.is_admin;
   if (!next) {
     const ok = confirm(
-      `${t('admin.users.remove_admin')} — ${user.value.display_name} (${user.value.email})?`,
+      `${t('admin.users.remove_admin')} - ${user.value.display_name} (${user.value.email})?`,
     );
     if (!ok) return;
   }
@@ -76,7 +76,7 @@ async function toggleAdmin() {
   try {
     const updated = await adminApi.setUserAdmin(user.value.id, next);
     // Preserve created_at / timezone / last_active_date from the existing
-    // detail blob — setUserAdmin only returns PublicUser. We splice the
+    // detail blob - setUserAdmin only returns PublicUser. We splice the
     // updated fields in rather than re-fetching the whole detail.
     user.value = {
       ...user.value,
@@ -187,7 +187,7 @@ onMounted(load);
           </div>
           <div class="list-row">
             <span class="dim text-sm">{{ t('admin.user_detail.meta_last_active') }}</span>
-            <span>{{ user.last_active_date ? fmtDate(user.last_active_date) : '—' }}</span>
+            <span>{{ user.last_active_date ? fmtDate(user.last_active_date) : '-' }}</span>
           </div>
           <div class="list-row">
             <span class="dim text-sm">{{ t('settings.timezone') }}</span>
@@ -207,12 +207,12 @@ onMounted(load);
               <template v-if="user.email_reminders_enabled">
                 {{ user.reminder_hour_local.toString().padStart(2, '0') }}:00 ({{ user.timezone }})
               </template>
-              <template v-else>—</template>
+              <template v-else>-</template>
             </span>
           </div>
           <div class="list-row">
             <span class="dim text-sm">{{ t('admin.user_detail.meta_tfa') }}</span>
-            <span>{{ user.totp_enabled ? '✓' : '—' }}</span>
+            <span>{{ user.totp_enabled ? '✓' : '-' }}</span>
           </div>
         </div>
       </section>

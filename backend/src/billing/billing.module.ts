@@ -13,7 +13,7 @@ import { SubscriptionEventsRepository } from "./subscription-events.repository";
 import { SubscriptionsRepository } from "./subscriptions.repository";
 import { SubscriptionsService } from "./subscriptions.service";
 
-// BillingModule — owns plans / subscriptions / promocodes + the controllers
+// BillingModule - owns plans / subscriptions / promocodes + the controllers
 // that expose them.
 //   - PromocodesController: user-facing redeem endpoint under /api/me.
 //   - AdminPromocodesController: list/create/disable/redemptions under /api/admin.

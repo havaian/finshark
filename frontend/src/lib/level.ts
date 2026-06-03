@@ -1,5 +1,5 @@
 // Frontend mirror of the level math in backend/src/lessons/srs.ts.
-// Kept in sync by convention — the backend is the source of truth for the
+// Kept in sync by convention - the backend is the source of truth for the
 // stored `level` value, but the UI needs to derive the next-level threshold
 // to render "X / Y XP to level N+1" without an extra round-trip.
 //

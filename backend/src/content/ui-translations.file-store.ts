@@ -12,7 +12,7 @@ import type { Lang } from "./content.types";
 //   - Keeps the schema lean and lets us snapshot/diff overrides in source
 //     control if we want to.
 //   - The "merge over the static locale" workflow on the frontend is
-//     unchanged — same payload shape from the API.
+//     unchanged - same payload shape from the API.
 //
 // File layout:
 //   backend/locales/en.json   { "dashboard.welcome": "Hi", ... }
@@ -21,7 +21,7 @@ import type { Lang } from "./content.types";
 //
 // Concurrency:
 //   Per-language in-memory mutex serialises read-modify-write cycles within
-//   one process. Cross-process safety isn't a concern here — in our deployment
+//   one process. Cross-process safety isn't a concern here - in our deployment
 //   there's exactly one backend instance writing these files (single
 //   container, single Node process). If we ever scale horizontally we'll need
 //   to revisit this (advisory lock + atomic write, or move to a DB-backed
@@ -119,7 +119,7 @@ export class UiTranslationsFileStore {
   // ── Read / write helpers ─────────────────────────────────────────────
 
   // Read the whole map for one language. Missing/empty/invalid file → `{}`.
-  // Invalid JSON is logged but does not throw — we don't want a single bad
+  // Invalid JSON is logged but does not throw - we don't want a single bad
   // edit (e.g. partial write) to bring down the whole locale endpoint.
   private async readMap(lang: Lang): Promise<OverridesMap> {
     const file = await this.fileFor(lang);
@@ -136,7 +136,7 @@ export class UiTranslationsFileStore {
     try {
       const parsed = JSON.parse(trimmed) as unknown;
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        // Filter to (string → string) — drops anything weird that crept in.
+        // Filter to (string → string) - drops anything weird that crept in.
         const out: OverridesMap = {};
         for (const [k, v] of Object.entries(
           parsed as Record<string, unknown>
@@ -145,11 +145,11 @@ export class UiTranslationsFileStore {
         }
         return out;
       }
-      this.log.warn(`${lang}.json is not a JSON object — treating as empty`);
+      this.log.warn(`${lang}.json is not a JSON object - treating as empty`);
       return {};
     } catch (e) {
       this.log.warn(
-        `${lang}.json is invalid JSON — treating as empty: ${
+        `${lang}.json is invalid JSON - treating as empty: ${
           (e as Error).message
         }`
       );

@@ -8,7 +8,7 @@
 //
 // time_budget_minutes: how many minutes per day the user wants to study.
 //   Used by the lesson queue to derive lesson_size if the user didn't override
-//   it. Range 5..60 — outside that is unrealistic for both ends.
+//   it. Range 5..60 - outside that is unrealistic for both ends.
 //
 // preferred_paper_id: their target paper (e.g. the F3 ID). Used to pre-select
 //   the paper picker on the dashboard. NULL = no preference set.
@@ -19,7 +19,7 @@
 //   don't get interrupted on their next login.
 //
 // IMPORTANT: bg_level uses a NEW enum type. Enum extension in Postgres is
-//   forward-only (cannot be removed once added) — same situation as the
+//   forward-only (cannot be removed once added) - same situation as the
 //   question_type enum extension. The down migration drops the enum entirely;
 //   if you've added bg_level values in production this rollback won't be
 //   reversible without a full schema rebuild.
@@ -30,7 +30,7 @@ exports.up = (pgm) => {
   pgm.createType('bg_level', ['beginner', 'intermediate', 'advanced']);
 
   pgm.addColumns('users', {
-    bg_level: { type: 'bg_level' }, // nullable — never set = skipped or pre-onboarding user
+    bg_level: { type: 'bg_level' }, // nullable - never set = skipped or pre-onboarding user
     time_budget_minutes: { type: 'integer', notNull: true, default: 15 },
     preferred_paper_id: {
       type: 'bigint',

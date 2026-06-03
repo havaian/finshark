@@ -3,9 +3,9 @@
 //
 // Achievements differ from badges in three ways:
 //   1) Multi-level. Each achievement has 3 levels (Trainee / Affiliate /
-//      Member — ACCA-themed) with ascending thresholds.
+//      Member - ACCA-themed) with ascending thresholds.
 //   2) Progress is tracked continuously (current_value), not just earned/not.
-//   3) Evaluator pushes a metric value in — see src/achievements/achievements.rules.ts.
+//   3) Evaluator pushes a metric value in - see src/achievements/achievements.rules.ts.
 //
 // Adding a new achievement:
 //   1) Append a record here.
@@ -36,7 +36,7 @@ export interface SeedAchievement {
   levels: SeedAchievementLevel[];
 }
 
-// ACCA-themed level names — same trio across all achievements so the
+// ACCA-themed level names - same trio across all achievements so the
 // progression terminology is consistent.
 const LEVEL_NAMES = {
   trainee: { name_en: "Trainee", name_ru: "Стажёр" },
@@ -101,7 +101,7 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     icon: "💎",
     sort_order: 40,
     // Tier 1 dropped from 5 → 3 so users who run a string of easy/recall
-    // lessons feel the achievement engage. Top end stays steep — 80 perfect
+    // lessons feel the achievement engage. Top end stays steep - 80 perfect
     // lessons is still a real flex.
     levels: [
       { level: 1, threshold: 3, ...LEVEL_NAMES.trainee },
@@ -142,9 +142,9 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     name_en: "Paper specialist",
     name_ru: "Специалист по предмету",
     description_en:
-      "Complete N lessons in your strongest paper. Rewards depth — pick a paper and master it.",
+      "Complete N lessons in your strongest paper. Rewards depth - pick a paper and master it.",
     description_ru:
-      "Завершите N уроков по сильнейшему предмету. Награда за глубину — выберите предмет и освойте его.",
+      "Завершите N уроков по сильнейшему предмету. Награда за глубину - выберите предмет и освойте его.",
     icon: "🎓",
     sort_order: 110,
     levels: [

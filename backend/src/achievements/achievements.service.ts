@@ -15,7 +15,7 @@ import {
   type UserAchievementProgressRow,
 } from "./achievements.types";
 
-// Result of one evaluation pass — what (if anything) the user just unlocked.
+// Result of one evaluation pass - what (if anything) the user just unlocked.
 // The caller (LessonsService.complete) can use this to toast "Level 2 in
 // Lessons completed!" if we ever wire that into the lesson-finale UI.
 export interface AchievementUnlock {
@@ -33,13 +33,13 @@ export class AchievementsService {
     private readonly metricsRepo: AchievementMetricsRepository
   ) {}
 
-  // Called after a lesson session OR mock completes — same hook point as
+  // Called after a lesson session OR mock completes - same hook point as
   // BadgesService.evaluateAfterSession. Iterates the full catalog, recomputes
   // current_value from the metric snapshot, derives current_level, and upserts
   // the progress row. Returns any levels freshly crossed in this pass so the
   // caller can surface them in the response.
   //
-  // Failure mode: any error is swallowed and an empty array is returned —
+  // Failure mode: any error is swallowed and an empty array is returned -
   // we never want an achievement bug to break lesson completion. Mirrors
   // how BadgesService handles failures.
   async evaluateAfterSession(user_id: string): Promise<AchievementUnlock[]> {
@@ -56,7 +56,7 @@ export class AchievementsService {
       for (const row of catalog) {
         const metricKey = METRICS_BY_CODE[row.code];
         if (!metricKey) {
-          // Catalog row without a metric mapping — log once. This means the
+          // Catalog row without a metric mapping - log once. This means the
           // seed introduced a code that nobody hooked into rules.ts. We skip
           // it (don't insert a zero-progress row that would never advance).
           this.logger.warn(
@@ -67,7 +67,7 @@ export class AchievementsService {
         const newValue = (metrics as AchievementMetrics)[metricKey];
 
         // Compute the highest level satisfied by newValue. We iterate the
-        // levels array (already small — 3 entries) and pick the max where
+        // levels array (already small - 3 entries) and pick the max where
         // threshold <= newValue.
         const sortedLevels = [...row.levels].sort((a, b) => a.level - b.level);
         let newLevel = 0;
@@ -80,12 +80,12 @@ export class AchievementsService {
         const prevLevel = prev?.current_level ?? 0;
         const prevUnlocks = prev?.unlocked_at_per_level ?? {};
 
-        // Stamp any newly-unlocked levels with NOW. We do this additively —
+        // Stamp any newly-unlocked levels with NOW. We do this additively -
         // previously-unlocked levels keep their original timestamp even if
         // current_level somehow dropped (which can happen if an admin reseed
         // wipes XP/streak; in that case we want to remember the user DID
         // earn it at some point). The semantics for current_level itself
-        // follow the new value, not the historical max — so the UI shows
+        // follow the new value, not the historical max - so the UI shows
         // their CURRENT progression, not "max ever".
         const nextUnlocks: Record<string, string> = { ...prevUnlocks };
         for (let lvl = prevLevel + 1; lvl <= newLevel; lvl++) {
@@ -102,7 +102,7 @@ export class AchievementsService {
 
         // Optimisation: skip the DB write entirely if nothing changed AND we
         // already have a row. A new user with zero metrics would otherwise
-        // get a row inserted per achievement on every lesson — cheap, but
+        // get a row inserted per achievement on every lesson - cheap, but
         // pointless.
         if (
           prev &&
@@ -174,7 +174,7 @@ export class AchievementsService {
 
   // Drop per-paper achievement rows whose paper isn't in the live catalog.
   // The achievement codes for the per-paper ladders match `{papercode}_lessons_completed`
-  // (lowercased) — e.g. 'f5_lessons_completed' ⇄ 'F5'. If the F5 paper
+  // (lowercased) - e.g. 'f5_lessons_completed' ⇄ 'F5'. If the F5 paper
   // hasn't been seeded, this user can never earn the achievement and
   // showing it as a permanently-locked card is just confusing.
   //

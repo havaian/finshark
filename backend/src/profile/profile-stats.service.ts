@@ -103,7 +103,7 @@ export class ProfileStatsService {
   }
 
   // Daily cron: rebuild today's mastery snapshot per user.
-  // Runs every day at 00:30 UTC. Idempotent — re-running just refreshes today's value.
+  // Runs every day at 00:30 UTC. Idempotent - re-running just refreshes today's value.
   // If this fires multiple times within a day (manual trigger after a deploy),
   // the row for today is overwritten with the current average, which is the desired behaviour.
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: "mastery-snapshots" })

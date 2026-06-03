@@ -4,7 +4,7 @@ import type { McqOption, QuestionDifficulty, QuestionType } from "./content";
 // for ordinary sessions; 'mock' is a CBE-style timed practice with no hearts.
 export type SessionMode = "lesson" | "mock";
 
-// Question shape returned in a lesson queue — no correct_answer or explanation
+// Question shape returned in a lesson queue - no correct_answer or explanation
 // (those come back with each attempt).
 export interface LessonQuestion {
   id: string;
@@ -61,7 +61,7 @@ export interface AttemptResult {
   explanation: string;
   mastery_score: number;
   // Mastery change from this single attempt. +10 for correct, -20 for wrong,
-  // clamped by the [0,100] mastery range — so an attempt near the bounds
+  // clamped by the [0,100] mastery range - so an attempt near the bounds
   // returns a smaller absolute delta. Used by the lesson feedback UI to
   // render a "Mastery 64 → 74 (+10)" chip per attempt.
   mastery_delta: number;

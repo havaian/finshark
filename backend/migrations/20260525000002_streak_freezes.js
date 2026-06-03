@@ -1,6 +1,6 @@
 // Add streak_freezes_remaining to users.
 //
-// CONTEXT: Streaks today are brittle — a single missed day vapourises any
+// CONTEXT: Streaks today are brittle - a single missed day vapourises any
 //   accumulated streak, regardless of how long the run was. For the target
 //   audience (working professionals studying for ACCA) a single business
 //   trip is enough to break weeks of progress, which deflates the mechanic.
@@ -11,13 +11,13 @@
 //   of resetting the streak. Consumption + grant logic lives in srs.ts.
 //
 // SCHEMA: one column. We do NOT track per-event freeze history at the DB
-//   level — the count is the only thing the runtime cares about, and any
+//   level - the count is the only thing the runtime cares about, and any
 //   audit need can be reconstructed from lesson_sessions.completed_at +
 //   last_active_date deltas if it ever matters.
 //
 // DEFAULT: 0. Existing users start with no freezes; they'll earn their
 //   first one the next time they hit a 14-day streak. We deliberately do
-//   NOT seed a starter freeze to all existing users — that would suddenly
+//   NOT seed a starter freeze to all existing users - that would suddenly
 //   change behaviour for users whose streak is mid-flight and could mask a
 //   reset that the user expected to happen.
 //

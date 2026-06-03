@@ -6,12 +6,12 @@ import type { CompleteOnboardingDto } from "./dto/complete-onboarding.dto";
 
 // Onboarding orchestration. Owns the derivation rules from background level
 // + time budget to initial preference values. Once onboarded, the lesson
-// algorithm only sees preferred_difficulty + lesson_size — bg_level itself
+// algorithm only sees preferred_difficulty + lesson_size - bg_level itself
 // is never read again.
 
 // Approximate seconds per question used to derive lesson_size from
 // time_budget_minutes. We pick the middle of MCQ (~20s) and number_entry
-// (~60s) — averages out around 40s. The result is clamped to the DB range
+// (~60s) - averages out around 40s. The result is clamped to the DB range
 // 3..10 so the user can't accidentally end up with a 30-question lesson.
 const SECS_PER_QUESTION = 40;
 
@@ -41,7 +41,7 @@ function deriveLessonSize(time_budget_minutes: number): number {
 export class OnboardingService {
   constructor(private readonly users: UsersRepository) {}
 
-  // GET /onboarding/status — used by frontend guard. Returns whether the user
+  // GET /onboarding/status - used by frontend guard. Returns whether the user
   // still needs to onboard plus the current values (so a re-onboarding flow
   // could pre-fill them, though we don't expose that UI yet).
   async getStatus(userId: string) {
@@ -57,7 +57,7 @@ export class OnboardingService {
     };
   }
 
-  // POST /onboarding/complete — accepts partial or empty body. Empty body =
+  // POST /onboarding/complete - accepts partial or empty body. Empty body =
   // skip path (just stamps onboarded_at = NOW()).
   async complete(userId: string, dto: CompleteOnboardingDto) {
     // Build the patch for the repo. We always derive lesson_size if
@@ -70,7 +70,7 @@ export class OnboardingService {
       patch.bg_level = dto.bg_level;
       // Only set preferred_difficulty from bg_level if the user hasn't already
       // explicitly set it somewhere else. We don't have that info here cheaply,
-      // so we always overwrite during onboarding — this is the user's first
+      // so we always overwrite during onboarding - this is the user's first
       // chance to express a preference, so claiming priority is fine. After
       // onboarding the Settings page can override it.
       patch.preferred_difficulty = defaultDifficultyFor(dto.bg_level);
@@ -89,7 +89,7 @@ export class OnboardingService {
     const updatedCore = await this.users.applyOnboarding(userId, patch);
     if (!updatedCore) throw new NotFoundException("user not found");
 
-    // Handle email reminders separately if provided — that lives on its own
+    // Handle email reminders separately if provided - that lives on its own
     // dedicated setter to keep the existing preferences API consistent.
     let updated = updatedCore;
     if (dto.email_reminders_enabled !== undefined) {

@@ -14,7 +14,7 @@ import { useLocalePath } from '../router/useLocalePath';
 // for real tokens via POST /auth/2fa-verify.
 //
 // If the user reloads or pastes the URL without the fragment (e.g. saved
-// the page mid-flow), we kick them back to /login — there's nothing to
+// the page mid-flow), we kick them back to /login - there's nothing to
 // recover from here.
 
 const { t } = useI18n();
@@ -28,7 +28,7 @@ const submitting = ref(false);
 const errorMsg = ref<string | null>(null);
 // Toggles the input affordance + helper text between "6-digit TOTP" mode
 // and "recovery code" mode. The backend accepts either format
-// transparently, so this is pure UX — it doesn't change the request shape.
+// transparently, so this is pure UX - it doesn't change the request shape.
 const recoveryMode = ref(false);
 
 const canSubmit = computed(
@@ -71,7 +71,7 @@ async function submit() {
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 401) {
       // Either the code was wrong OR the pending token expired (5min TTL).
-      // We can't tell them apart without leaking which — keep generic.
+      // We can't tell them apart without leaking which - keep generic.
       errorMsg.value = t('tfa_verify.error_invalid');
     } else {
       errorMsg.value = t('tfa_verify.error_generic');
@@ -91,7 +91,7 @@ onMounted(() => {
   const frag = parseFragment();
   const token = frag.pending_2fa_token;
   if (!token) {
-    // No challenge to verify against. Bounce to login — they probably
+    // No challenge to verify against. Bounce to login - they probably
     // pasted the URL or reloaded after a long pause.
     router.replace(lp('/login'));
     return;

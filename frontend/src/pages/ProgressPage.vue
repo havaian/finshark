@@ -57,12 +57,12 @@ function bandLabel(b: MasteryBand): string {
 }
 
 function masteryText(lo: ProgressHeatMapLo): string {
-  if (lo.avg_mastery === null) return '—';
+  if (lo.avg_mastery === null) return '-';
   return `${Math.round(lo.avg_mastery)}%`;
 }
 
 function formatDate(iso: string): string {
-  // Localised via Intl.DateTimeFormat — output respects the active UI lang
+  // Localised via Intl.DateTimeFormat - output respects the active UI lang
   // (EN: "15 May 2026, 14:32" / RU: "15 мая 2026 г., 14:32").
   return fmtDateTime(iso);
 }

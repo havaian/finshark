@@ -9,7 +9,7 @@ import { GRADER_SYSTEM_PROMPT, userMessageFor } from "./prompt";
 import { parseVerdict, withTimeout } from "./util";
 
 // Uses OpenAI's Chat Completions endpoint with response_format: json_object.
-// We deliberately use raw fetch instead of the openai SDK — one endpoint, fewer deps.
+// We deliberately use raw fetch instead of the openai SDK - one endpoint, fewer deps.
 @Injectable()
 export class OpenAiGraderProvider implements LlmGradingProvider {
   readonly name = "openai" as const;

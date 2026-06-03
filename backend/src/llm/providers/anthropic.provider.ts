@@ -8,7 +8,7 @@ import type {
 import { GRADER_SYSTEM_PROMPT, userMessageFor } from "./prompt";
 import { parseVerdict, withTimeout } from "./util";
 
-// Uses Anthropic /v1/messages. Same shape considerations as OpenAI provider —
+// Uses Anthropic /v1/messages. Same shape considerations as OpenAI provider -
 // raw fetch keeps the dep list small.
 @Injectable()
 export class AnthropicGraderProvider implements LlmGradingProvider {

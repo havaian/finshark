@@ -58,7 +58,7 @@ async function load() {
     for (const row of rows) {
       // Destructure with an explicit Lang annotation on `lang`. The Volar
       // ts-plugin in the editor sometimes loses the narrow `'en' | 'ru'` type
-      // when `row.lang` is read off a property — annotating it locally makes
+      // when `row.lang` is read off a property - annotating it locally makes
       // the index access on `bucket[lang]` unambiguously typed.
       const { key, lang, value }: { key: string; lang: Lang; value: string } = row;
       const bucket = (next[key] ??= {});
@@ -75,7 +75,7 @@ async function load() {
 function startEdit(key: string, lang: Lang) {
   const slot = `${key}::${lang}`;
   // Pre-fill with current override, or empty if none. Don't pre-fill with the
-  // default — that would prompt the admin to "edit" a string that's actually
+  // default - that would prompt the admin to "edit" a string that's actually
   // identical to the bundled one, just creating noise overrides.
   editing.value[slot] = overrides.value[key]?.[lang] ?? '';
 }
@@ -125,7 +125,7 @@ async function onDelete(key: string, lang: Lang) {
     }
     delete editing.value[slot];
   } catch (e) {
-    // 404 (override didn't exist on server) is fine — treat as success.
+    // 404 (override didn't exist on server) is fine - treat as success.
     if (e instanceof AxiosError && e.response?.status === 404) {
       delete editing.value[slot];
     } else {
@@ -183,12 +183,12 @@ onMounted(load);
         <!-- EN cell -->
         <div class="ui-trans-cell">
           <div class="ui-trans-default dim text-xs">
-            {{ t('admin.localization.default') }}: {{ defaultFor(key, 'en') || '—' }}
+            {{ t('admin.localization.default') }}: {{ defaultFor(key, 'en') || '-' }}
           </div>
           <template v-if="!isEditing(key, 'en')">
             <div class="ui-trans-current">
               <span v-if="overrideFor(key, 'en')">{{ overrideFor(key, 'en') }}</span>
-              <span v-else class="muted">—</span>
+              <span v-else class="muted">-</span>
             </div>
             <div class="ui-trans-actions">
               <button class="btn-link accent" @click="startEdit(key, 'en')">
@@ -215,12 +215,12 @@ onMounted(load);
         <!-- RU cell -->
         <div class="ui-trans-cell">
           <div class="ui-trans-default dim text-xs">
-            {{ t('admin.localization.default') }}: {{ defaultFor(key, 'ru') || '—' }}
+            {{ t('admin.localization.default') }}: {{ defaultFor(key, 'ru') || '-' }}
           </div>
           <template v-if="!isEditing(key, 'ru')">
             <div class="ui-trans-current">
               <span v-if="overrideFor(key, 'ru')">{{ overrideFor(key, 'ru') }}</span>
-              <span v-else class="muted">—</span>
+              <span v-else class="muted">-</span>
             </div>
             <div class="ui-trans-actions">
               <button class="btn-link accent" @click="startEdit(key, 'ru')">

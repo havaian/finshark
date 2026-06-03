@@ -2,11 +2,11 @@
 //
 // Overrides are now stored as JSON files on the backend filesystem
 // (backend/locales/en.json, ru.json). The admin API and public read endpoint
-// keep the same shape — only the storage layer changed.
+// keep the same shape - only the storage layer changed.
 //
 // Migration cost: a no-op for fresh installs, a single DROP for installs that
 // had overrides. Any rows currently in the table are intentionally NOT
-// migrated to the JSON files — admin overrides historically have been used
+// migrated to the JSON files - admin overrides historically have been used
 // only for fixing copy after a release, so the small one-time loss is
 // acceptable. If your installation had important overrides, export them
 // manually before running this migration:
@@ -24,7 +24,7 @@ exports.up = (pgm) => {
   pgm.dropTable('ui_translations', { ifExists: true });
 };
 
-// Rollback recreates the empty table — useful if you `db:down` to a state
+// Rollback recreates the empty table - useful if you `db:down` to a state
 // before this migration and want to re-test the old DB-backed path.
 // Note: it does NOT repopulate rows from the JSON files; you'd need a manual
 // import step for that, mirroring the up() comment above in reverse.

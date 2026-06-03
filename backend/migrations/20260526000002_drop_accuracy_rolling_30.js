@@ -1,6 +1,6 @@
 // Drop the `accuracy_rolling_30` achievement. The progress bar mechanics
 // (current % vs target %) and the hidden 20-attempt activation gate made it
-// confusing — users couldn't tell why their progress was "stuck at 0" or
+// confusing - users couldn't tell why their progress was "stuck at 0" or
 // what they had to do to advance. The `perfect_lessons` achievement already
 // rewards quality, so removing this one isn't a net loss.
 //
@@ -10,7 +10,7 @@
 //   2. Delete the catalog row.
 //
 // Down: re-insert the catalog row verbatim from the original seed shape.
-// Progress is NOT restored — we have no way to recompute the historical
+// Progress is NOT restored - we have no way to recompute the historical
 // values, and the catalog re-insert is enough to make the migration
 // technically reversible (users would start at 0% on rollback).
 

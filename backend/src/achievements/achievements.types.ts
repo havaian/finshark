@@ -15,7 +15,7 @@ export interface AchievementRow {
   description_ru: string | null;
   icon: string;
   sort_order: number;
-  // jsonb column — postgres.js returns it pre-parsed.
+  // jsonb column - postgres.js returns it pre-parsed.
   levels: AchievementLevelRow[];
   created_at: Date;
   updated_at: Date;
@@ -35,7 +35,7 @@ export interface UserAchievementProgressRow {
 
 export type Lang = "en" | "ru";
 
-// What the frontend consumes — localised, with progress-bar fields pre-computed
+// What the frontend consumes - localised, with progress-bar fields pre-computed
 // so the UI doesn't need to think about thresholds.
 export interface PublicAchievementLevel {
   level: number;
@@ -66,7 +66,7 @@ export interface PublicAchievement {
 }
 
 // Earned-only shape for the public profile (someone else's view). Strips
-// progress info — outsiders only see the highest unlocked level + when.
+// progress info - outsiders only see the highest unlocked level + when.
 export interface PublicEarnedAchievement {
   code: string;
   name: string;
@@ -89,7 +89,7 @@ export function toPublicAchievement(
   progress: UserAchievementProgressRow | null,
   lang: Lang
 ): PublicAchievement {
-  // Sort levels ascending by `level` defensively — the seed gives us ascending
+  // Sort levels ascending by `level` defensively - the seed gives us ascending
   // order already, but jsonb makes no ordering guarantees on insertion.
   const sorted = [...row.levels].sort((a, b) => a.level - b.level);
 

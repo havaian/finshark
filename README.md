@@ -14,7 +14,7 @@ finshark/
 └── docker-compose.prod.yml  prod: built images, EXTERNAL postgres
 ```
 
-## Option A — Docker (dev)
+## Option A - Docker (dev)
 
 One command, includes Postgres:
 
@@ -38,7 +38,7 @@ docker compose down -v
 
 The dev compose has placeholder JWT/unsubscribe secrets. They work for dev. Don't ever use them anywhere real.
 
-## Option B — Bare metal (no Docker)
+## Option B - Bare metal (no Docker)
 
 Prereqs: Node 20+, pnpm 9+, Postgres 15.7 (external), dbmate (`brew install dbmate`).
 
@@ -66,7 +66,7 @@ pnpm dev:frontend   # in another
 
 Optional: see `backend/.env.example` for `LLM_PROVIDER`, `EMAIL_MODE` + `SMTP_*`, `REMINDER_CRON`, etc.
 
-## Option C — Docker (prod)
+## Option C - Docker (prod)
 
 Targets external Postgres. You provide a `.env` at repo root with required vars:
 
@@ -113,4 +113,4 @@ pnpm db:new my_migration_name  # create db/migrations/<ts>_my_migration_name.sql
 
 ## Manual cron trigger
 
-`POST /api/admin/reminders/run` (admin auth) — runs the daily-reminder pass immediately. With `EMAIL_MODE=log`, the email body is logged to the backend console.
+`POST /api/admin/reminders/run` (admin auth) - runs the daily-reminder pass immediately. With `EMAIL_MODE=log`, the email body is logged to the backend console.

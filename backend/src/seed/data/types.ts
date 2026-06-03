@@ -1,4 +1,4 @@
-// Shared types for seed content files. These describe the input shape — the
+// Shared types for seed content files. These describe the input shape - the
 // seed runner does the actual DB insert mapping.
 
 export type SeedDifficulty = "easy" | "medium" | "hard";
@@ -10,7 +10,7 @@ export interface SeedMcqOption {
   key: string;
   text_en: string;
   text_ru: string;
-  // Per-option "why this is wrong" — optional during seed authoring, but
+  // Per-option "why this is wrong" - optional during seed authoring, but
   // strongly encouraged for wrong options. The correct option must NOT have
   // these set (validated/scrubbed in the service layer; the seed runner
   // also nulls them out for the correct option as a belt-and-braces).

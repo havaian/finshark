@@ -1,5 +1,5 @@
 /* ============================================================
-   Finshark — global styles
+   Finshark - global styles
    Theme: data-theme="dark" (default) and data-theme="light"
    ============================================================ */
 
@@ -24,7 +24,7 @@
     --text-dim: #a0a0a8;
     --text-mute: #6a6a73;
 
-    /* primary — sage (matches logo). Anchored on #5d9985 (the lighter logo stop)
+    /* primary - sage (matches logo). Anchored on #5d9985 (the lighter logo stop)
      so the accent reads as a confident brand color on the near-black surfaces,
      with --accent-hot for hover and --accent-deep for active. Re-uses the
      existing --sage tokens conceptually (same hue family), but kept under the
@@ -69,7 +69,7 @@
 }
 
 :root[data-theme="light"] {
-    /* Light theme — same palette philosophy reworked for paper.
+    /* Light theme - same palette philosophy reworked for paper.
      The streak still reads warm; the logo still reads sage; primary still purple.
      Backgrounds are warm-tinted off-white, not pure #fff, to soften the screen. */
 
@@ -86,7 +86,7 @@
     --text-mute: #8a877f;
 
     --accent: #2d5e4d;
-    /* deep sage — holds contrast on cream */
+    /* deep sage - holds contrast on cream */
     --accent-hot: #1f4c3c;
     --accent-deep: #15392c;
     --accent-glow: rgba(45, 94, 77, 0.16);

@@ -67,7 +67,7 @@ export interface BlastResult {
 }
 
 // All endpoints below require an authenticated admin. The user's totp_secret
-// must be set (AdminWith2faGuard) — non-2FA admins are bounced to the
+// must be set (AdminWith2faGuard) - non-2FA admins are bounced to the
 // enrollment wizard by the router guard before they get here.
 export const emailTemplatesApi = {
   list: async (): Promise<EmailTemplate[]> =>

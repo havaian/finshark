@@ -103,7 +103,7 @@ export interface PromocodeRedemption {
 
 // Shape returned by GET /api/me/entitlement. Premium users get `limit: null`
 // on each quota; the UI hides quota chips when limit is null. For premium the
-// `hearts.pool` is also null (per-session model — no daily pool to display).
+// `hearts.pool` is also null (per-session model - no daily pool to display).
 export interface MyEntitlement {
   tier: Tier;
   plan_id: string;
@@ -116,7 +116,7 @@ export interface MyEntitlement {
 }
 
 // Result of POST /api/me/promocodes/redeem. is_new_subscription is true when
-// a brand-new sub was created vs an extend on an existing premium row — the
+// a brand-new sub was created vs an extend on an existing premium row - the
 // UI uses this to pick between "welcome" vs "extended" toasts.
 export interface RedeemResult {
   is_new_subscription: boolean;

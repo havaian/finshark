@@ -40,7 +40,7 @@
     border-radius: 5px;
 }
 
-/* Inner square — darker sage, sits inside the cutout */
+/* Inner square - darker sage, sits inside the cutout */
 .brand-mark::before {
     content: "";
     position: absolute;
@@ -87,7 +87,7 @@
     gap: 6px;
 }
 
-/* Streak — subtle warm wash + coral numerals. The warmth lives in the content. */
+/* Streak - subtle warm wash + coral numerals. The warmth lives in the content. */
 .stat-streak {
     background:
         linear-gradient(135deg, var(--coral-wash-1) 0%, var(--coral-wash-2) 100%),
@@ -102,7 +102,7 @@
     font-size: 22px;
 }
 
-/* Level-up banner — accent-tinted strip above the finale stats, only shown
+/* Level-up banner - accent-tinted strip above the finale stats, only shown
    when the session pushed the user across a level boundary. */
 .level-up-banner {
     display: flex;
@@ -126,7 +126,7 @@
     flex: 1 1 auto;
 }
 
-/* Freeze banner — same layout as the level-up banner, cool blue palette to
+/* Freeze banner - same layout as the level-up banner, cool blue palette to
    match the navbar freeze pill so the two surfaces feel like one mechanic. */
 .freeze-banner {
     display: flex;
@@ -187,7 +187,7 @@ textarea {
    we strip the appearance and paint our own chevron via a background-image.
    Padding-right makes room for the chevron + a small gap.
    The SVG is inline (data URI) to avoid an extra request and to swap colour
-   via currentColor — except CSS background-image can't use currentColor, so
+   via currentColor - except CSS background-image can't use currentColor, so
    the stroke is hardcoded to a neutral grey that reads OK on both themes. */
 select {
     appearance: none;
@@ -621,7 +621,7 @@ textarea {
     border-top: none;
 }
 
-/* When .list-row is rendered as a <button> (admin pickers — Subscriptions
+/* When .list-row is rendered as a <button> (admin pickers - Subscriptions
    user search, Email Templates list, etc.) the browser-default button chrome
    leaks through. Reset to a clean transparent surface with hover + active
    states that read consistently in both light and dark themes. */
@@ -1028,7 +1028,7 @@ button.list-row.active {
     gap: 8px;
     margin-top: 14px;
     /* min-width:0 prevents the grid container from forcing its track-min based on
-     intrinsic content width — long LO titles inside .tile-title would otherwise
+     intrinsic content width - long LO titles inside .tile-title would otherwise
      blow the columns wider than the parent .card, causing horizontal overflow. */
     min-width: 0;
 }
@@ -1142,7 +1142,7 @@ button.list-row.active {
     gap: 12px;
 }
 
-/* Standard page header — used after AppNav. h1 + optional subtitle paragraph.
+/* Standard page header - used after AppNav. h1 + optional subtitle paragraph.
    Centralised so every authed page lines up its title vertically. */
 .page-head {
     margin-bottom: 28px;
@@ -1289,7 +1289,7 @@ button.list-row.active {
 }
 
 /* Hover tooltip on stat pills. Uses [data-tip] so we don't fight with the
-   native title attribute (which is slow and ugly). Pure CSS — no JS needed. */
+   native title attribute (which is slow and ugly). Pure CSS - no JS needed. */
 .app-nav-stat[data-tip]::after {
     content: attr(data-tip);
     position: absolute;
@@ -1306,7 +1306,7 @@ button.list-row.active {
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
-    /* No transform: scale (per user preference) — fade in only. */
+    /* No transform: scale (per user preference) - fade in only. */
     transition: opacity 120ms ease;
     z-index: 50;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
@@ -1316,7 +1316,7 @@ button.list-row.active {
     opacity: 1;
 }
 
-/* Admin entry button — vivid neon-violet accent. Stands out so admins can spot
+/* Admin entry button - vivid neon-violet accent. Stands out so admins can spot
    it from any page. Distinct from --accent (brand sage) so it can't be confused
    with a normal action button. */
 .app-nav-admin-btn {
@@ -1377,7 +1377,7 @@ button.list-row.active {
     height: 18px;
 }
 
-/* Drawer settings row uses the same cog icon — inherit drawer link's color
+/* Drawer settings row uses the same cog icon - inherit drawer link's color
    via currentColor and size it to match the row's text. */
 .app-nav-drawer-link-icon {
     width: 18px;
@@ -1398,7 +1398,7 @@ button.list-row.active {
         padding: 10px 14px;
     }
 
-    /* Hide the desktop row entirely on phones — the mobile bar replaces it.
+    /* Hide the desktop row entirely on phones - the mobile bar replaces it.
      The mobile bar is shown by default (see .app-nav-mobile base rule) and
      hidden on desktop via a separate min-width media query, so we don't
      need to flip its display here. */
@@ -1446,7 +1446,7 @@ button.list-row.active {
     color: inherit;
     text-decoration: none;
     font-weight: 600;
-    /* Brand text reads in this bar — only the smallest phones hide it (rule
+    /* Brand text reads in this bar - only the smallest phones hide it (rule
      further down). */
 }
 
@@ -1458,7 +1458,7 @@ button.list-row.active {
     /* Sits between brand and burger so streak/XP are always visible. */
 }
 
-/* Compact stat pill inside the mobile bar — slightly tighter than the
+/* Compact stat pill inside the mobile bar - slightly tighter than the
    desktop pill since space is at a premium. */
 .app-nav-mobile-stats .app-nav-stat {
     padding: 3px 8px;
@@ -1483,26 +1483,26 @@ button.list-row.active {
     background: var(--bg-card);
 }
 
-/* Drawer root — fixed-position layer with backdrop. Always in DOM so we can
+/* Drawer root - fixed-position layer with backdrop. Always in DOM so we can
    transition; .open toggles visibility. */
 .app-nav-drawer-root {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    /* Highest reasonable layer — sits above any modal (z=100), sticky bars,
+    /* Highest reasonable layer - sits above any modal (z=100), sticky bars,
      and the content sheet (z=210) used on the admin content page. The
      drawer is a primary navigation surface; once open, nothing on the
      page should obscure it. */
     pointer-events: none;
     /* Lets clicks pass through while closed so the page underneath is fully
-     usable — only .open re-enables pointer events on the backdrop/panel. */
+     usable - only .open re-enables pointer events on the backdrop/panel. */
     visibility: hidden;
     /* Defensive: even though the panel is offscreen via translateX, hiding
      visibility prevents any focus/scrollbar surprises from the offscreen
      panel. Re-enabled on .open. */
     overflow: hidden;
-    /* CRITICAL: clip the offscreen drawer panel. Without this, the panel —
-     positioned at right:0 then pushed by translateX(100%) — extends the
+    /* CRITICAL: clip the offscreen drawer panel. Without this, the panel -
+     positioned at right:0 then pushed by translateX(100%) - extends the
      document's scrollable rectangle by ~320px to the right, producing a
      spurious horizontal scrollbar on every page. position:fixed on the
      root doesn't shield the body from a transformed descendant's overflow;
@@ -1526,7 +1526,7 @@ button.list-row.active {
     opacity: 1;
 }
 
-/* The panel itself. Slides in from the right via translateX (no scale —
+/* The panel itself. Slides in from the right via translateX (no scale -
    per project convention). 320px is a comfortable width on most phones;
    capped at 88vw so it never covers the whole screen (user can see they
    can tap to dismiss). */
@@ -1535,7 +1535,7 @@ button.list-row.active {
     top: 0;
     right: 0;
     height: 100%;
-    /* Defensive cap so the drawer can never exceed the viewport — keeps the
+    /* Defensive cap so the drawer can never exceed the viewport - keeps the
      internal overflow-y:auto in charge of scrolling tall content instead of
      pushing the drawer below the fold. */
     max-height: 100vh;
@@ -1666,7 +1666,7 @@ button.list-row.active {
 
 .app-nav-drawer-stat-lbl {
     line-height: 1.3;
-    /* Wrap to two lines on narrow phones rather than truncate — the
+    /* Wrap to two lines on narrow phones rather than truncate - the
      description is the whole point of the label. */
 }
 
@@ -1686,7 +1686,7 @@ button.list-row.active {
     text-decoration: none;
     font-size: 15px;
     font-weight: 500;
-    /* Comfortable tap target — minimum 44px tall with this padding. */
+    /* Comfortable tap target - minimum 44px tall with this padding. */
 }
 
 .app-nav-drawer-link:hover,
@@ -1700,7 +1700,7 @@ button.list-row.active {
     color: var(--text);
 }
 
-/* Admin row in the drawer — same accent gradient as the desktop button so
+/* Admin row in the drawer - same accent gradient as the desktop button so
    it's instantly recognisable. */
 .app-nav-drawer-link-admin {
     background: linear-gradient(135deg, #8b5cf6, #a855f7);
@@ -1807,7 +1807,7 @@ button.list-row.active {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-/* Body scroll lock — used by the drawer (and reusable elsewhere). Prevents
+/* Body scroll lock - used by the drawer (and reusable elsewhere). Prevents
    the page underneath from scrolling while the drawer is open. We pin the
    body so iOS doesn't rubber-band the background. */
 .body-scroll-lock {
@@ -2167,7 +2167,7 @@ button.list-row.active {
 }
 
 /* Collapse the sidebar to a thinner column on narrow viewports.
-   Below 720px we just stack it on top — admin work isn't a primary mobile flow. */
+   Below 720px we just stack it on top - admin work isn't a primary mobile flow. */
 @media (max-width: 960px) {
     .admin-shell {
         grid-template-columns: 200px 1fr;
@@ -2184,7 +2184,7 @@ button.list-row.active {
      and replaced by the .admin-mobile-bar at the top of the shell. Drawer
      holds the section nav + user info + "back to app". The mobile bar is
      shown by default (see its base rule below) and hidden on desktop via a
-     separate min-width media query — keeps the cascade order-independent. */
+     separate min-width media query - keeps the cascade order-independent. */
     .admin-shell {
         grid-template-columns: 1fr;
     }
@@ -2193,7 +2193,7 @@ button.list-row.active {
         display: none;
     }
 
-    /* Tighten the page padding on phones — the desktop `36px 32px` ate ~64px
+    /* Tighten the page padding on phones - the desktop `36px 32px` ate ~64px
      of horizontal room which combined with content-tree + content-main was
      enough to push wide questions/inputs past the viewport. The ≤480px
      rule further shrinks this to 12px for very narrow phones. */
@@ -2278,7 +2278,7 @@ button.list-row.active {
     background: var(--bg-card);
 }
 
-/* Admin drawer brand block — sits in the drawer head where AppNav puts the
+/* Admin drawer brand block - sits in the drawer head where AppNav puts the
    profile link. Uses the existing .app-nav-drawer-me-text + ...-me-name +
    ...-me-sub classes so typography matches AppNav's drawer head exactly. */
 .admin-drawer-brand {
@@ -2290,7 +2290,7 @@ button.list-row.active {
     color: inherit;
 }
 
-/* User identity row inside the drawer — same typography as the desktop
+/* User identity row inside the drawer - same typography as the desktop
    sidebar foot's .admin-sidebar-me block. Sits directly above the foot's
    "back to app" button. We use margin-top:auto here so the identity +
    foot stick to the bottom of the drawer; the foot's own margin-top:auto
@@ -2302,7 +2302,7 @@ button.list-row.active {
     border-top: 1px solid var(--border);
 }
 
-/* When admin-drawer-me is present, the foot loses its push — it sits flush
+/* When admin-drawer-me is present, the foot loses its push - it sits flush
    below the identity row. Without this rule both elements would compete for
    the auto-margin gap and the foot would drift. */
 .admin-drawer-me+.app-nav-drawer-foot {

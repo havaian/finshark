@@ -1,4 +1,4 @@
-// Number-entry question type — STAGE 1 of 2.
+// Number-entry question type - STAGE 1 of 2.
 //
 // Postgres won't let you use a newly-added enum value inside the same
 // transaction that added it ("unsafe use of new value ... New enum values
@@ -27,5 +27,5 @@ exports.up.disableTransaction = true;
 
 exports.down = (pgm) => {
   // NOTE: 'number_entry' value remains in the enum (Postgres limitation).
-  // No-op intentionally — see header comment.
+  // No-op intentionally - see header comment.
 };

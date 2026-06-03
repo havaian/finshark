@@ -1,5 +1,5 @@
 # Production-style compose: builds the multi-stage Dockerfiles and runs the
-# resulting images. External Postgres only — no postgres service here.
+# resulting images. External Postgres only - no postgres service here.
 #
 # Usage:
 #   # 1) provide secrets via .env at the repo root (NOT committed)
@@ -13,7 +13,7 @@
 #   docker compose -f docker-compose.prod.yml logs -f backend
 #
 #   # migrations: run automatically at backend container start via node-pg-migrate.
-#   # Idempotent — already-applied migrations are skipped via the pgmigrations table.
+#   # Idempotent - already-applied migrations are skipped via the pgmigrations table.
 #
 # IMPORTANT:
 #   - DATABASE_URL must point to your external Postgres reachable from inside
@@ -38,7 +38,7 @@ services:
     # volume, every `docker compose up --build` would overwrite admin edits with
     # whatever en.json/ru.json shipped in the image. The named volume keeps the
     # edited files on the host. On first run the entrypoint will see the volume
-    # already populated (empty objects after seed) — the app falls back to {}
+    # already populated (empty objects after seed) - the app falls back to {}
     # if a file is missing, so an empty volume is a safe initial state.
     volumes:
       - locales:/app/backend/locales

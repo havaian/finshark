@@ -17,8 +17,8 @@ export class BadgesController {
   constructor(private readonly badges: BadgesService) {}
 
   // Full badge catalog with earned status for the current user. Greyed-out
-  // unearned badges are part of the design — they motivate by showing what's
-  // achievable — so we always return the full list, not just earned ones.
+  // unearned badges are part of the design - they motivate by showing what's
+  // achievable - so we always return the full list, not just earned ones.
   @Get()
   list(@CurrentUser() current: AccessTokenPayload, @Lang() lang: LangType) {
     return this.badges.getForUser(current.sub, lang);

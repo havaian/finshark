@@ -24,7 +24,7 @@ export const authApi = {
     return res.data.user;
   },
 
-  // POST /auth/2fa-verify — final step of the admin 2FA login flow. Takes
+  // POST /auth/2fa-verify - final step of the admin 2FA login flow. Takes
   // the pending token from the Google-callback redirect + a TOTP or
   // recovery code. Returns the same { user, tokens } shape as a normal
   // sign-in, so callers can treat it identically.

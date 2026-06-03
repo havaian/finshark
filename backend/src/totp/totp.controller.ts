@@ -40,26 +40,26 @@ class CodeDto {
 }
 
 // Pulls req.ip from express. Falls back to null if trust-proxy isn't
-// configured and ip ends up undefined — the audit row tolerates null.
+// configured and ip ends up undefined - the audit row tolerates null.
 function extractIp(req: Request): string | null {
   return (req.ip ?? null) || null;
 }
 
 // Mounted at /me/2fa. Every route here requires (1) a logged-in user
-// (JwtAuthGuard) AND (2) admin status (AdminGuard) — non-admins should
+// (JwtAuthGuard) AND (2) admin status (AdminGuard) - non-admins should
 // never see this surface in the first place, but the guard backs it up.
 @Controller("me/2fa")
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class TotpController {
   constructor(private readonly totp: TotpService) {}
 
-  // GET /api/me/2fa — read-only status. Cheap; Settings hits this on mount.
+  // GET /api/me/2fa - read-only status. Cheap; Settings hits this on mount.
   @Get()
   status(@CurrentUser() current: AccessTokenPayload) {
     return this.totp.status(current.sub);
   }
 
-  // GET /api/me/2fa/remaining-codes — count of unused recovery codes.
+  // GET /api/me/2fa/remaining-codes - count of unused recovery codes.
   // Surfaced in Settings so admins know when to regenerate.
   @Get("remaining-codes")
   async remainingCodes(@CurrentUser() current: AccessTokenPayload) {
@@ -68,7 +68,7 @@ export class TotpController {
     };
   }
 
-  // GET /api/me/2fa/audit — recent audit events for the current user. Useful
+  // GET /api/me/2fa/audit - recent audit events for the current user. Useful
   // for "show me when 2FA changed on my account" forensics. Most recent
   // first; capped server-side to a sane page size.
   @Get("audit")
@@ -76,8 +76,8 @@ export class TotpController {
     return this.totp.getAuditLog(current.sub);
   }
 
-  // POST /api/me/2fa/setup-begin — return QR + secret. No state change.
-  // Throttled because rapid repeats just generate throwaway secrets — but
+  // POST /api/me/2fa/setup-begin - return QR + secret. No state change.
+  // Throttled because rapid repeats just generate throwaway secrets - but
   // also no legitimate flow needs more than a couple of calls.
   @Post("setup-begin")
   @HttpCode(HttpStatus.OK)
@@ -86,7 +86,7 @@ export class TotpController {
     return this.totp.setupBegin(current.sub);
   }
 
-  // POST /api/me/2fa/setup-verify — finalises enrollment. Returns recovery
+  // POST /api/me/2fa/setup-verify - finalises enrollment. Returns recovery
   // codes ONCE. The frontend MUST display them; we never re-emit them.
   @Post("setup-verify")
   @HttpCode(HttpStatus.OK)
@@ -104,7 +104,7 @@ export class TotpController {
     });
   }
 
-  // POST /api/me/2fa/regenerate-codes — invalidate the old recovery code
+  // POST /api/me/2fa/regenerate-codes - invalidate the old recovery code
   // batch and return a fresh set. Same proof-of-possession check as disable.
   // Surfaced ONCE; frontend must require the "I saved them" confirmation
   // again, identical to first-time enrollment.
@@ -123,7 +123,7 @@ export class TotpController {
     });
   }
 
-  // DELETE /api/me/2fa — disable. Requires a current TOTP or recovery code
+  // DELETE /api/me/2fa - disable. Requires a current TOTP or recovery code
   // as proof of possession so a hijacked session can't strip the factor.
   @Delete()
   @HttpCode(HttpStatus.OK)

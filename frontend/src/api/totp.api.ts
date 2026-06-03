@@ -7,17 +7,17 @@ import type {
 } from "../types/totp";
 
 export const totpApi = {
-  // GET /me/2fa — current status. Cheap; Settings hits this on mount and
+  // GET /me/2fa - current status. Cheap; Settings hits this on mount and
   // after enable/disable to refresh the UI.
   status: async (): Promise<TotpStatus> =>
     (await api.get<TotpStatus>("/me/2fa")).data,
 
-  // GET /me/2fa/remaining-codes — number of unused recovery codes. Shown
+  // GET /me/2fa/remaining-codes - number of unused recovery codes. Shown
   // in Settings so admins can decide when to regenerate.
   remainingCodes: async (): Promise<{ remaining: number }> =>
     (await api.get<{ remaining: number }>("/me/2fa/remaining-codes")).data,
 
-  // GET /me/2fa/audit — recent 2FA audit events for the current user.
+  // GET /me/2fa/audit - recent 2FA audit events for the current user.
   audit: async (): Promise<TotpAuditEntry[]> =>
     (await api.get<TotpAuditEntry[]>("/me/2fa/audit")).data,
 
@@ -46,7 +46,7 @@ export const totpApi = {
       })
     ).data,
 
-  // DELETE /me/2fa — disable. Requires a TOTP or recovery code as proof
+  // DELETE /me/2fa - disable. Requires a TOTP or recovery code as proof
   // of possession so a stolen session can't strip the factor.
   disable: async (code: string): Promise<{ ok: true }> =>
     (await api.delete<{ ok: true }>("/me/2fa", { data: { code } })).data,

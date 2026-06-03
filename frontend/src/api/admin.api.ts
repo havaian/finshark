@@ -84,7 +84,7 @@ export const adminApi = {
   }): Promise<PaperRaw> =>
     (await api.post<PaperRaw>("/admin/papers", input)).data,
 
-  // Single-paper fetch — needed by the inline edit modal in AdminContentPage
+  // Single-paper fetch - needed by the inline edit modal in AdminContentPage
   // so we know the current free_accessible flag (the content tree doesn't
   // include it, to keep that payload small).
   getPaper: async (id: string): Promise<PaperRaw> =>

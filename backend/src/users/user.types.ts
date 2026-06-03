@@ -10,7 +10,7 @@ export interface UserRow {
   google_sub: string; // Google's stable user identifier (sub claim)
   display_name: string;
   streak_count: number;
-  // See migration 20260525000002 — count of streak freezes the user can
+  // See migration 20260525000002 - count of streak freezes the user can
   // spend to cover a single missed day. Granted at every 14-day streak
   // milestone, capped at MAX_FREEZES (src/lessons/srs.ts).
   streak_freezes_remaining: number;
@@ -20,7 +20,7 @@ export interface UserRow {
   is_admin: boolean;
   email_reminders_enabled: boolean;
   // Hour-of-day (0..23) in the user's `timezone` to send the reminder.
-  // Renamed from reminder_hour_utc in 20260526000001 — see that migration
+  // Renamed from reminder_hour_utc in 20260526000001 - see that migration
   // for the rationale.
   reminder_hour_local: number;
   preferred_difficulty: QuestionDifficulty | null; // null = auto
@@ -30,7 +30,7 @@ export interface UserRow {
   time_budget_minutes: number; // 5..60, defaults 15
   preferred_paper_id: string | null; // FK to papers.id, nullable
   onboarded_at: Date | null; // null = still needs to onboard
-  // Leaderboards (3.3). Opt-in default false — users only appear if they
+  // Leaderboards (3.3). Opt-in default false - users only appear if they
   // explicitly enable this from Settings or onboarding.
   leaderboard_opt_in: boolean;
   // 2FA TOTP (admin-only enforcement). totp_secret stores the base32 secret
@@ -54,7 +54,7 @@ export interface UserRow {
   updated_at: Date;
 }
 
-// Public-safe shape — never expose google_sub (it's stable identifying data).
+// Public-safe shape - never expose google_sub (it's stable identifying data).
 export interface PublicUser {
   id: string;
   email: string;
@@ -67,7 +67,7 @@ export interface PublicUser {
   is_admin: boolean;
   email_reminders_enabled: boolean;
   reminder_hour_local: number;
-  // IANA timezone — exposed to the frontend so Settings can show the picker
+  // IANA timezone - exposed to the frontend so Settings can show the picker
   // and the dashboard can localise dates.
   timezone: string;
   preferred_difficulty: QuestionDifficulty | null;
@@ -77,7 +77,7 @@ export interface PublicUser {
   preferred_paper_id: string | null;
   onboarded_at: string | null; // ISO timestamp or null
   leaderboard_opt_in: boolean;
-  // 2FA enrollment flag. We expose the boolean only — never the secret or
+  // 2FA enrollment flag. We expose the boolean only - never the secret or
   // the enrolled-at timestamp leaks beyond this property. The frontend uses
   // this to render "2FA: on/off" in settings and to decide whether to show
   // the enable vs disable affordance.

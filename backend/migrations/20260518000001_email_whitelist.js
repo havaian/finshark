@@ -1,4 +1,4 @@
-// Email whitelist — only listed addresses (or any address under a listed
+// Email whitelist - only listed addresses (or any address under a listed
 // domain) are allowed to sign in.
 //
 // Table shape:
@@ -19,7 +19,7 @@
 //   gate doesn't immediately lock everyone out the moment whitelist enforcement
 //   ships. ON CONFLICT DO NOTHING in case of any pre-existing rows.
 //
-// citext: emails are stored as citext in users — the whitelist column is
+// citext: emails are stored as citext in users - the whitelist column is
 // regular text and matching is done with explicit LOWER() on the app side,
 // because patterns include both exact emails AND '@domain' entries (and we
 // don't want citext semantics applied to the domain prefix accidentally).
@@ -45,7 +45,7 @@ exports.up = (pgm) => {
     check: `pattern = LOWER(pattern)`,
   });
   // Shape constraint: either an exact email (contains exactly one '@' NOT in
-  // first position) or a domain prefix ('@domain.tld' — starts with '@', has
+  // first position) or a domain prefix ('@domain.tld' - starts with '@', has
   // no other '@'). Belt-and-braces with app validation.
   pgm.addConstraint('email_whitelist', 'chk_pattern_shape', {
     check: `

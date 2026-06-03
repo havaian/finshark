@@ -1,4 +1,4 @@
-// Static EN locale strings. These are the canonical source — DB overrides from
+// Static EN locale strings. These are the canonical source - DB overrides from
 // /api/ui-translations/en take precedence at runtime (merged in main.ts).
 // Keep keys stable; rename = breaking change for any DB overrides referencing them.
 
@@ -23,7 +23,7 @@ export default {
     next: "Next",
     finish: "Finish",
     optional: "optional",
-    none: "—",
+    none: "-",
     close: "Close",
     error_generic: "Something went wrong",
   },
@@ -53,21 +53,21 @@ export default {
     back_to_dashboard: "← Back to dashboard",
     back_to_app: "← Back to app",
     stat_streak_tip:
-      "Daily streak — number of consecutive days with at least one lesson.",
+      "Daily streak - number of consecutive days with at least one lesson.",
     stat_xp_tip:
-      "Experience points — earned for correct answers and completed lessons.",
+      "Experience points - earned for correct answers and completed lessons.",
     stat_level_tip:
       "Level {level} · {intoLevel} / {bandSize} XP toward level {next}",
     stat_level_short: "Lv {level}",
     stat_freeze_tip:
-      "Streak freezes — each covers one missed day. Earn one every 14-day streak (max 2).",
+      "Streak freezes - each covers one missed day. Earn one every 14-day streak (max 2).",
     open_menu: "Open menu",
     menu: "Menu",
     theme: "Theme",
   },
 
   // Document titles, set on every navigation by the router's afterEach hook.
-  // Format: "{page} · Finshark" — except the bare brand for the landing page
+  // Format: "{page} · Finshark" - except the bare brand for the landing page
   // ('home') where the title is just "Finshark" since the landing IS the
   // brand and prefixing would feel tautological.
   page_titles: {
@@ -106,26 +106,26 @@ export default {
   },
 
   landing: {
-    eyebrow: "Finshark — your ACCA hunting partner",
+    eyebrow: "Finshark - your ACCA hunting partner",
     hero_title: "Hunt down your ACCA syllabus, 10 minutes at a time.",
     hero_sub:
-      "Finshark is a finance shark — it smells your weak topics, circles back to them, and won't let go until the exam is yours. Bite-sized daily lessons, adaptive practice, instant explanations.",
+      "Finshark is a finance shark - it smells your weak topics, circles back to them, and won't let go until the exam is yours. Bite-sized daily lessons, adaptive practice, instant explanations.",
     cta_primary: "Start learning",
     cta_secondary: "See how it works",
     hero_foot:
       "Built for ACCA students who study between meetings, on the train, at lunch.",
 
-    // "Why Finshark" — the manifesto block. Keeps the shark metaphor controlled:
+    // "Why Finshark" - the manifesto block. Keeps the shark metaphor controlled:
     // it's a sense-of-smell thing (finds weak spots), not a teeth-and-blood thing.
     why_title: "Why Finshark",
     why_lede:
       "Most ACCA prep treats you like you have unlimited time. You don't. Finshark is built around the 10 minutes you actually have.",
     why_1_title: "A shark, for finance",
     why_1_body:
-      "Finance + shark. Sharks find weakness by smell — Finshark finds yours by data. The topics you keep missing surface again tomorrow, not in three months.",
+      "Finance + shark. Sharks find weakness by smell - Finshark finds yours by data. The topics you keep missing surface again tomorrow, not in three months.",
     why_2_title: "Built around your day, not the syllabus",
     why_2_body:
-      "Textbooks are written start-to-end. Your week isn't. Finshark serves you the next-best 10 minutes whenever you open the app — between meetings, on the train, before bed.",
+      "Textbooks are written start-to-end. Your week isn't. Finshark serves you the next-best 10 minutes whenever you open the app - between meetings, on the train, before bed.",
     why_3_title: "Honest about what you know",
     why_3_body:
       "A heatmap of every syllabus learning objective, coloured by your real mastery. No green check-marks for things you barely scraped through.",
@@ -139,7 +139,7 @@ export default {
       "Spaced repetition surfaces what you got wrong yesterday, so you actually remember it next month.",
     feature_3_title: "Streaks that motivate",
     feature_3_body:
-      "Daily streak, XP, and badges. Skip a day and you start over — the way it works in real life.",
+      "Daily streak, XP, and badges. Skip a day and you start over - the way it works in real life.",
     feature_4_title: "See your weak spots",
     feature_4_body:
       "Syllabus coverage heatmap shows exactly which topics you have nailed and which need work before exam day.",
@@ -147,7 +147,7 @@ export default {
     steps_title: "How it works",
     step_1_title: "Pick a paper",
     step_1_body:
-      "F1, F2, F3 — pick what you are studying. Add more papers as you go.",
+      "F1, F2, F3 - pick what you are studying. Add more papers as you go.",
     step_2_title: "Answer 5 to 10 questions",
     step_2_body:
       "Mix of multiple-choice, short answer, and numeric. Instant feedback and an explanation after every answer.",
@@ -155,7 +155,7 @@ export default {
     step_3_body:
       "Reminders, mock exams, and a syllabus heatmap that grows greener the closer you get to exam-ready.",
 
-    // FAQ — short, defensive section. Answers the questions a sceptical visitor
+    // FAQ - short, defensive section. Answers the questions a sceptical visitor
     // would ask before signing up. Keep each answer to ~2 sentences.
     faq_title: "Questions, before you sign up",
     faq_1_q: "Is Finshark a replacement for Kaplan / BPP textbooks?",
@@ -166,10 +166,10 @@ export default {
       "We start with the Applied Knowledge papers (F1–F3). More papers ship as the question banks are reviewed by ACCA-qualified tutors.",
     faq_3_q: "How long do I need to spend per day?",
     faq_3_a:
-      "Ten minutes is the design target. A daily lesson is 5–10 questions with instant explanations — long enough to learn something, short enough that you actually do it.",
+      "Ten minutes is the design target. A daily lesson is 5–10 questions with instant explanations - long enough to learn something, short enough that you actually do it.",
     faq_4_q: "Do you have past exam questions?",
     faq_4_a:
-      "Yes, where they're publicly available — drawn from the ACCA practice platform and OpenTuition. Each question links back to its learning objective so you know what it's testing.",
+      "Yes, where they're publicly available - drawn from the ACCA practice platform and OpenTuition. Each question links back to its learning objective so you know what it's testing.",
     faq_5_q: "Where do the explanations come from?",
     faq_5_a:
       "Approved study materials (Kaplan, BPP, ACCA study guides), rewritten into plain language. Every explanation cites the learning objective it covers.",
@@ -211,9 +211,9 @@ export default {
     quota_mocks: "{used}/{limit} mocks this month",
     quota_hearts: "{pool}/{max} hearts today",
     quota_upgrade: "Upgrade",
-    quota_lessons_exhausted: "Nice grind today — fresh lessons unlock tomorrow.",
-    quota_hearts_exhausted: "💔 Hearts spent — back at midnight in your timezone.",
-    quota_mocks_exhausted: "You've used this month's mock — see you next month!",
+    quota_lessons_exhausted: "Nice grind today - fresh lessons unlock tomorrow.",
+    quota_hearts_exhausted: "💔 Hearts spent - back at midnight in your timezone.",
+    quota_mocks_exhausted: "You've used this month's mock - see you next month!",
     // Banner copy for the prominent hearts-empty state on the dashboard.
     // Two-line block (title + sub) keeps the call-to-action separable from
     // the situation summary.
@@ -325,14 +325,14 @@ export default {
     complete_streak: "Streak",
     complete_level: "Level",
     complete_back: "Back to dashboard",
-    level_up: "Level up — you're now level {level}!",
+    level_up: "Level up - you're now level {level}!",
     streak_freeze_used:
       "Streak saved by a freeze! ({remaining} freeze(s) left)",
-    streak_freeze_earned: "You earned a streak freeze — now you have {count}.",
+    streak_freeze_earned: "You earned a streak freeze - now you have {count}.",
     loading: "Loading lesson…",
     out_of_hearts_title: "💔 Out of hearts!",
     out_of_hearts_body:
-      "You ran out of hearts this round. Catch your breath — your streak still counts, and a fresh lesson is one click away.",
+      "You ran out of hearts this round. Catch your breath - your streak still counts, and a fresh lesson is one click away.",
     wrapping_up_title: "Wrapping up…",
     wrapping_up_body: "Hang tight, we're saving your progress.",
     hearts_label: "Hearts",
@@ -343,7 +343,7 @@ export default {
   mocks: {
     start_title: "Mock exam",
     start_subtitle:
-      "CBE-style timed practice. No hearts — answer at your own pace until time runs out.",
+      "CBE-style timed practice. No hearts - answer at your own pace until time runs out.",
     paper_label: "Paper",
     no_papers: "No papers available. An admin needs to add at least one.",
     count_label: "Question count",
@@ -364,15 +364,15 @@ export default {
     review_practice_btn: "Practice wrong answers",
     review_practice_wrong_btn: "Practice these in a lesson",
     review_title: "Mock review",
-    review_subtitle: "Walk through your answers — what you got right, what to revisit.",
+    review_subtitle: "Walk through your answers - what you got right, what to revisit.",
     review_back_breakdown: "Back to breakdown",
     review_filter_incorrect: "Needs review ({n})",
     review_filter_all: "All questions ({n})",
     review_score: "Score: {correct} / {total}",
-    review_empty_incorrect: "Nothing to review here — you nailed every question.",
+    review_empty_incorrect: "Nothing to review here - you nailed every question.",
     review_your_answer: "Your answer",
     review_correct_answer: "Correct answer",
-    review_no_answer: "— didn't reach it —",
+    review_no_answer: "- didn't reach it -",
     review_status_correct: "Correct",
     review_status_wrong: "Wrong",
     review_status_unanswered: "Unanswered",
@@ -385,7 +385,7 @@ export default {
     no_papers_yet: "No papers yet. An admin needs to add at least one.",
     no_los_for_paper: "No learning objectives yet for this paper.",
     weak_topics: "Weak topics",
-    no_weak_topics: "No data yet — do a lesson and come back.",
+    no_weak_topics: "No data yet - do a lesson and come back.",
     recent_sessions: "Recent sessions",
     no_sessions: "No sessions yet.",
     band_not_started: "Not started",
@@ -422,10 +422,10 @@ export default {
     chart_difficulty_breakdown: "Questions by difficulty",
     chart_type_breakdown: "Questions by type",
     // Empty states for the three breakdown charts (accuracy-by-paper,
-    // difficulty, type). Distinct from progress.no_weak_topics — these
+    // difficulty, type). Distinct from progress.no_weak_topics - these
     // appear when the user has zero attempts in the relevant slice. Same
     // wording across the three because the call-to-action is identical.
-    chart_no_data: "No data yet — answer a few questions to see this.",
+    chart_no_data: "No data yet - answer a few questions to see this.",
     badges_section: "Badges",
     badges_earned_count: "{earned} of {total} earned",
     badges_loading: "Loading badges…",
@@ -467,7 +467,7 @@ export default {
     no_achievements: "No achievements unlocked yet.",
     achievements_level_short: "lvl {level}",
     viewing_self:
-      "This is your public profile — what others see when they click your name.",
+      "This is your public profile - what others see when they click your name.",
     viewing_self_link: "Open your editable profile →",
   },
 
@@ -562,21 +562,21 @@ export default {
 
   tfa_setup: {
     title: "Enable two-factor authentication",
-    scan_title: "Step 1 — Scan with your authenticator app",
+    scan_title: "Step 1 - Scan with your authenticator app",
     scan_hint:
       "Open Google Authenticator, Authy, 1Password, or any other TOTP app and scan the QR code below. If you can't scan, type the secret into the app manually.",
     qr_alt: "2FA setup QR code",
     secret_label: "Or enter this secret manually:",
     continue: "Continue",
     back: "Back",
-    verify_title: "Step 2 — Enter the code from your app",
+    verify_title: "Step 2 - Enter the code from your app",
     verify_hint:
       "Your authenticator app should now show a 6-digit code that changes every 30 seconds. Type the current code.",
     code_label: "Authentication code",
     enable: "Enable 2FA",
     recovery_title: "Save your recovery codes",
     recovery_hint:
-      "Each code can be used once if you lose access to your authenticator app. Store them somewhere safe — a password manager works well.",
+      "Each code can be used once if you lose access to your authenticator app. Store them somewhere safe - a password manager works well.",
     recovery_warning: "These codes will NOT be shown again.",
     copy_codes: "Copy all to clipboard",
     saved_confirm: "I have saved my recovery codes",
@@ -589,7 +589,7 @@ export default {
     error_generic: "Something went wrong. Please try again.",
     forced_title: "Two-factor authentication is required for admins",
     forced_text:
-      "You need to enable 2FA before you can access the admin panel. Complete the setup below — it takes about a minute.",
+      "You need to enable 2FA before you can access the admin panel. Complete the setup below - it takes about a minute.",
   },
 
   admin: {
@@ -670,7 +670,7 @@ export default {
       llm_count_label: "How many (1-20)",
       llm_hints_label: "Hints (optional)",
       llm_hints_ph:
-        "Constraints, themes, difficulty mix — anything to bias the model",
+        "Constraints, themes, difficulty mix - anything to bias the model",
       llm_running: "Generating…",
       edit_theory: "Edit theory",
       add_theory: "Add theory",
@@ -711,17 +711,17 @@ export default {
       // (e.g. @:common.cancel). Without the wrapping, "user@example.com" makes
       // the parser throw "SyntaxError: 10" at runtime.
       add_pattern_ph: "{'user@example.com'}  or  {'@example.com'}",
-      add_note_ph: "Note (optional) — who/why added",
+      add_note_ph: "Note (optional) - who/why added",
       add_btn: "Add",
       pattern_hint:
         "Exact email ({'user@example.com'}) or domain pattern ({'@example.com'}). Domains start with the at-sign and allow any user at that domain.",
       kind_email: "email",
       kind_domain: "domain",
-      no_note: "—",
+      no_note: "-",
       add_note: "Add note",
       empty: "Whitelist is empty. Nobody can sign in until you add an entry.",
       empty_filtered: "No entries match the filter.",
-      // No apostrophes inside delimited strings here — vue-i18n's tokenizer
+      // No apostrophes inside delimited strings here - vue-i18n's tokenizer
       // doesn't choke on `'` directly, but mixing it with double-quoted
       // strings keeps the source readable. The braces in {pattern} are the
       // normal named-interpolation placeholder.
@@ -749,7 +749,7 @@ export default {
       empty: "No papers yet. Add one above to get started.",
     },
 
-    // Promocodes admin page — list / create / disable / redemption drill-in.
+    // Promocodes admin page - list / create / disable / redemption drill-in.
     promocodes: {
       title: "Promocodes",
       sub: "Redeemable codes that grant premium for a fixed window.",
@@ -799,7 +799,7 @@ export default {
       redemptions_col_sub: "Subscription",
     },
 
-    // Subscriptions admin page — pick a user, see history, grant / extend /
+    // Subscriptions admin page - pick a user, see history, grant / extend /
     // cancel / revoke, plus the event audit log.
     subscriptions: {
       title: "Subscriptions",
@@ -851,7 +851,7 @@ export default {
       cancel_confirm: "Cancel subscription",
       revoke_modal_title: "Revoke subscription",
       revoke_warn:
-        "Hard revoke — ends_at is forced to now. Use for refunds or abuse.",
+        "Hard revoke - ends_at is forced to now. Use for refunds or abuse.",
       revoke_reason_label: "Reason (required for audit)",
       revoke_confirm: "Revoke",
       // Event kinds in the audit log
@@ -880,14 +880,14 @@ export default {
       disable_btn: "Disable",
       delete_confirm: "Delete email template '{key}'? This cannot be undone.",
       key_label: "Key",
-      key_help: "Stable slug referenced from code (e.g. 'reminder_daily'). Cannot be renamed after creation — delete + re-create instead.",
+      key_help: "Stable slug referenced from code (e.g. 'reminder_daily'). Cannot be renamed after creation - delete + re-create instead.",
       subject_en_label: "Subject (English)",
       subject_ru_label: "Subject (Russian, optional)",
-      body_en_label: "Body — text (English)",
-      body_ru_label: "Body — text (Russian, optional)",
-      html_en_label: "Body — HTML (English, optional)",
-      html_ru_label: "Body — HTML (Russian, optional)",
-      variables_label: "Variables — one per line",
+      body_en_label: "Body - text (English)",
+      body_ru_label: "Body - text (Russian, optional)",
+      html_en_label: "Body - HTML (English, optional)",
+      html_ru_label: "Body - HTML (Russian, optional)",
+      variables_label: "Variables - one per line",
       variables_placeholder: "display_name\nstreak\napp_url",
       variables_missing: "Body references variables not in the list: {vars}",
       variables_unused: "Listed but not referenced: {vars}",
@@ -910,7 +910,7 @@ export default {
       preview_sample_mode_realistic: "Realistic",
       preview_reset_btn: "Reset sample data",
       preview_available_vars_label: "Available variables",
-      preview_no_variables: "No variables declared yet — add some in the field above.",
+      preview_no_variables: "No variables declared yet - add some in the field above.",
       blast_title: "Send to audience",
       blast_subtitle: "Render this template per-recipient and send to a filtered audience.",
       blast_audience_label: "Audience",
@@ -950,7 +950,7 @@ export default {
       add_theory_en_ph:
         "Theory bite, 150–300 words (English, optional). Shown as a primer before lessons.",
       add_theory_ru_ph: "Theory bite (Russian, optional)",
-      delete_confirm: 'Delete "{code} — {title}" and ALL its questions?',
+      delete_confirm: 'Delete "{code} - {title}" and ALL its questions?',
       empty: "No LOs yet for this paper.",
       sort_label: "sort",
       back_to_papers: "← Back to papers",

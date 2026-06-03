@@ -12,7 +12,7 @@ const PLAN_COLS = `
 export class PlansRepository {
   constructor(@Inject(PG) private readonly sql: Sql) {}
 
-  // All plans, sort_order ascending — admin UI consumes this directly.
+  // All plans, sort_order ascending - admin UI consumes this directly.
   // includeInactive=false hides disabled plans (catalog for users).
   async findAll(includeInactive = false): Promise<PlanRow[]> {
     if (includeInactive) {

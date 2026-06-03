@@ -2,7 +2,7 @@ import { createI18n, type Composer, type I18nOptions } from "vue-i18n";
 import en from "./en";
 import ru from "./ru";
 
-// Supported languages — must mirror backend src/content/content.types.ts SUPPORTED_LANGS.
+// Supported languages - must mirror backend src/content/content.types.ts SUPPORTED_LANGS.
 export const SUPPORTED_LANGS = ["en", "ru"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
 // Default for new/anonymous users. The ACCA exam itself is in English, so EN

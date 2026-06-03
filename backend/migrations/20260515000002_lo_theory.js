@@ -2,7 +2,7 @@
 // pre-lesson primer and is the foundation for a future read-only study mode
 // where users browse theory independently of question queues.
 //
-// Both columns are NULLABLE — existing LOs have no theory yet; we don't want
+// Both columns are NULLABLE - existing LOs have no theory yet; we don't want
 // to gate seeding on writing 150-300 words per LO upfront. The lesson UI shows
 // the primer only when theory_en is non-null (i.e. opt-in per LO).
 //

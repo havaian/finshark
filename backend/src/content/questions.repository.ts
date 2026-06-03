@@ -59,7 +59,7 @@ export class QuestionsRepository {
     concept_bite_en: string | null;
     concept_bite_ru: string | null;
     acceptable_tolerance?: number | null; // number_entry only
-    is_active?: boolean; // default true — new in question-generator
+    is_active?: boolean; // default true - new in question-generator
   }): Promise<QuestionRow> {
     // postgres.js: passing a JS array as a JSONB param via sql.json.
     // The `as any` is postgres.js's overly strict JSONValue type rejecting typed
@@ -156,7 +156,7 @@ export class QuestionsRepository {
     return rows[0] ?? null;
   }
 
-  // Hard delete — only safe if no attempts reference it.
+  // Hard delete - only safe if no attempts reference it.
   // attempts.question_id has ON DELETE RESTRICT, so this throws if attempts exist.
   // Admin UI should prefer setting is_active=false to retire instead.
   async delete(id: string): Promise<boolean> {
@@ -166,7 +166,7 @@ export class QuestionsRepository {
   }
 
   // Batch set is_active for a set of question IDs. Returns the updated rows.
-  // No transaction needed — single UPDATE is atomic in Postgres.
+  // No transaction needed - single UPDATE is atomic in Postgres.
   // Empty input → returns []. No error on missing IDs (just returns the ones
   // that existed and matched).
   async setActiveMany(
@@ -183,7 +183,7 @@ export class QuestionsRepository {
   }
 
   // Batch hard delete. Wrapped in a transaction so if ANY id has dependent
-  // attempts (RESTRICT FK), the whole batch rolls back — leaving the admin
+  // attempts (RESTRICT FK), the whole batch rolls back - leaving the admin
   // with a clean error rather than a partial delete. Returns the count of
   // rows that actually deleted. The caller is responsible for handling the
   // RESTRICT error (Postgres code 23503) and mapping it to a useful message.
@@ -201,7 +201,7 @@ export class QuestionsRepository {
   // distributed across LOs as evenly as possible.
   //
   // Strategy: window-rank by random per LO so each LO contributes proportionally,
-  // then take the top N globally. Postgres `random()` is fine for this scale —
+  // then take the top N globally. Postgres `random()` is fine for this scale -
   // ~hundreds of questions per paper, not millions. Repeated calls return
   // different selections.
   //

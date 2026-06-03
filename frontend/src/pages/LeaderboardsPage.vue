@@ -43,7 +43,7 @@ async function loadPapers() {
   try {
     papers.value = await lessonsApi.listPapers();
   } catch (_e) {
-    // Non-fatal — paper filter just stays empty. Don't surface the error
+    // Non-fatal - paper filter just stays empty. Don't surface the error
     // because the main leaderboard still loads.
   } finally {
     papersLoading.value = false;
@@ -74,7 +74,7 @@ async function onOptIn() {
   try {
     const updated = await profileApi.updatePreferences({ leaderboard_opt_in: true });
     auth.setUser(updated);
-    // Re-fetch the board — your row should appear once your data is included.
+    // Re-fetch the board - your row should appear once your data is included.
     await loadLeaderboard();
   } catch (e) {
     optInError.value = extractError(e) ?? 'failed to enable leaderboards';
@@ -109,7 +109,7 @@ onMounted(() => {
         <p class="dim">{{ t('leaderboards.subtitle') }}</p>
       </header>
 
-      <!-- Opt-in banner — only shown to users who haven't opted in. -->
+      <!-- Opt-in banner - only shown to users who haven't opted in. -->
       <div v-if="!optedIn" class="leaderboard-optin-banner">
         <div>
           <div class="leaderboard-optin-title">{{ t('leaderboards.optin_title') }}</div>

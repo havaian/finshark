@@ -5,7 +5,7 @@ import { LeaderboardsService } from "./leaderboards.service";
 import { LeaderboardsRepository } from "./leaderboards.repository";
 
 // Leaderboards is read-only and depends only on existing tables (users +
-// attempts + papers/LOs). No imports from other feature modules needed —
+// attempts + papers/LOs). No imports from other feature modules needed -
 // the repo holds the SQL directly rather than reaching into UsersRepository.
 @Module({
   imports: [AuthModule],

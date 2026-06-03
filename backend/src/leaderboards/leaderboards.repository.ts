@@ -5,7 +5,7 @@ import { PG } from "../db/db.module";
 // One row per ranked user. The window query computes XP differently:
 //   - 'week' / 'month': sum attempts.xp_earned where answered_at >= cutoff
 //   - 'all':            users.xp directly (no attempts join)
-// We never return user_id or email — display_name is the only identifying
+// We never return user_id or email - display_name is the only identifying
 // field so the leaderboard reads as a public-style list.
 export interface LeaderboardRow {
   rank: number;
@@ -23,9 +23,9 @@ export class LeaderboardsRepository {
   constructor(@Inject(PG) private readonly sql: Sql) {}
 
   // The query strategy splits cleanly on window:
-  //   'all'              — single users-table SELECT, ORDER BY xp DESC. No
+  //   'all'              - single users-table SELECT, ORDER BY xp DESC. No
   //                        join needed. Fast even at large scale.
-  //   'week' or 'month'  — join users to attempts (with xp_earned > 0 to skip
+  //   'week' or 'month'  - join users to attempts (with xp_earned > 0 to skip
   //                        the historical zero-rows from before this feature
   //                        existed and wrong attempts), filter by answered_at
   //                        cutoff, optionally filter by paper through
@@ -42,7 +42,7 @@ export class LeaderboardsRepository {
     if (opts.window === "all") {
       // Paper filter on the all-time board uses summed xp_earned restricted
       // to that paper. We do this regardless of window to keep semantics
-      // consistent — "all-time XP for paper X". If paper_id is null we just
+      // consistent - "all-time XP for paper X". If paper_id is null we just
       // use users.xp, which covers all papers and works for old data.
       if (opts.paper_id) {
         return this.sumByPaperSql(opts.paper_id, null, limit);
@@ -70,7 +70,7 @@ export class LeaderboardsRepository {
       return rows.map((r, i) => ({ rank: i + 1, ...r }));
     }
 
-    // Window queries — compute the cutoff in app-land so the query stays
+    // Window queries - compute the cutoff in app-land so the query stays
     // portable across timezones. Postgres NOW() is UTC; cutoff is naive
     // ISO timestamp.
     const days = opts.window === "week" ? 7 : 30;

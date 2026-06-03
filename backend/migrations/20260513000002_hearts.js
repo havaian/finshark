@@ -1,11 +1,11 @@
-// Hearts — per-session state. Spec: 3 hearts at start, -1 per wrong,
+// Hearts - per-session state. Spec: 3 hearts at start, -1 per wrong,
 // session auto-ends at 0. We also flag the reason for completion so the
 // frontend can show an "out of hearts" finale instead of the normal one.
 //
 // Defaults: hearts_remaining=3 (matches HEARTS_PER_SESSION in the service),
 // ended_out_of_hearts=false. Both are NOT NULL so we can read without coalescing.
 // Existing rows (already completed sessions) backfill to hearts_remaining=0 and
-// ended_out_of_hearts=false — historical sessions never had hearts to begin with,
+// ended_out_of_hearts=false - historical sessions never had hearts to begin with,
 // so 0 reflects "no hearts available" rather than "lost all hearts".
 
 exports.shorthands = undefined;
@@ -23,7 +23,7 @@ exports.up = (pgm) => {
 
   // Backfill: zero out hearts on already-existing rows. Their sessions are
   // either completed (so hearts don't matter) or in-flight from before this
-  // migration. The latter is the weird case — they'll see "0 hearts left" and
+  // migration. The latter is the weird case - they'll see "0 hearts left" and
   // be forced to end on the next wrong answer. That's an acceptable transition
   // for the tiny dev/staging population.
   pgm.sql(`UPDATE lesson_sessions SET hearts_remaining = 0 WHERE completed_at IS NOT NULL`);

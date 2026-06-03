@@ -69,7 +69,7 @@ async function onStartLesson() {
     errorMsg.value = extractError(e) ?? 'failed to start lesson';
     // 403 from start ≈ free-tier gate trip (lesson cap, heart pool, premium-
     // only paper). Refresh entitlement so the chrome chips reflect the
-    // current state — the server already knows we hit the wall, and the
+    // current state - the server already knows we hit the wall, and the
     // chip update is the affirmative explanation paired with the error.
     if (e instanceof AxiosError && e.response?.status === 403) {
       void entitlement.fetch();
@@ -101,7 +101,7 @@ const blockedByQuota = computed(() => {
 });
 
 // True when the heart pool is specifically empty. Drives the prominent
-// "no hearts left" banner — different surface treatment than the generic
+// "no hearts left" banner - different surface treatment than the generic
 // quotaBlockMsg line below (the latter is a small dim line under the start
 // button which is too easy to miss for the most common free-tier wall).
 const heartsEmpty = computed(() => {
@@ -180,7 +180,7 @@ function extractError(e: unknown): string | null {
         </div>
 
         <!-- Hearts-empty banner. Loud, coloured, visually distinct from the
-             generic "quota reached" suffix line below the start button —
+             generic "quota reached" suffix line below the start button -
              without this the most common free-tier wall (zero hearts) was a
              tiny dim line easy to scroll past. -->
         <div v-if="heartsEmpty" class="quota-block-banner" role="status">
@@ -203,7 +203,7 @@ function extractError(e: unknown): string | null {
           <select v-model="selectedPaperId" class="grow">
             <option value="">{{ t('dashboard.any_paper') }}</option>
             <option v-for="p in papers" :key="p.id" :value="p.id">
-              {{ p.code }} — {{ p.name }}<template v-if="entitlement.isFree && !p.free_accessible"> · {{ t('dashboard.paper_locked_suffix') }}</template>
+              {{ p.code }} - {{ p.name }}<template v-if="entitlement.isFree && !p.free_accessible"> · {{ t('dashboard.paper_locked_suffix') }}</template>
             </option>
           </select>
           <button class="btn btn-primary" :disabled="startDisabled" @click="onStartLesson">
@@ -211,7 +211,7 @@ function extractError(e: unknown): string | null {
           </button>
         </div>
 
-        <!-- Mock CTA — secondary action below the lesson row. Always offered
+        <!-- Mock CTA - secondary action below the lesson row. Always offered
              when papers exist; the mock page handles paper selection itself. -->
         <div v-if="papers.length > 0" class="row mt-4" style="justify-content: flex-end;">
           <RouterLink :to="lp(`/mocks/start`)" class="btn btn-ghost">

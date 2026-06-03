@@ -22,13 +22,13 @@ import LangPicker from './LangPicker.vue';
 // every other path would otherwise also match '/'.
 //
 // Admin entry: when user is admin, the admin button gets a vivid accent
-// styling so it's visible at a glance — moved here from the dashboard's
+// styling so it's visible at a glance - moved here from the dashboard's
 // in-content button so it's discoverable from any page.
 //
 // Mobile (≤720px): the desktop row is hidden via CSS and replaced by a
 // compact top bar (brand + hamburger) plus a right-side slide-in drawer
 // containing every action. Both the desktop row and the mobile bar live
-// in the same template — CSS swaps which is visible — so we keep a single
+// in the same template - CSS swaps which is visible - so we keep a single
 // source of truth for nav items. Drawer state is local to this component;
 // it auto-closes on route changes, ESC, and backdrop click. Body scroll
 // is locked while open so the page underneath doesn't drift on iOS.
@@ -43,7 +43,7 @@ const lp = useLocalePath();
 
 // Drawer-only: which stat tip is expanded (click to reveal). null = none.
 // Tap a stat tile to expand its description; tap again to collapse. Mutually
-// exclusive — opening one collapses the other so the drawer doesn't grow.
+// exclusive - opening one collapses the other so the drawer doesn't grow.
 type StatKey = 'level' | 'streak' | 'xp';
 const expandedStat = ref<StatKey | null>(null);
 function toggleStat(key: StatKey) {
@@ -52,7 +52,7 @@ function toggleStat(key: StatKey) {
 
 // Live level-band progress for the level pill tooltip. Derives from the
 // reactive auth.user.xp so the tooltip stays in sync after a lesson updates
-// xp/level in the store. Returns zeros when there's no user yet — the pill
+// xp/level in the store. Returns zeros when there's no user yet - the pill
 // itself is v-if-gated on auth.user, but computed has to be safe regardless.
 const lvlProgress = computed(() => levelProgress(auth.user?.xp ?? 0));
 
@@ -113,7 +113,7 @@ const drawerOpen = ref(false);
 function openDrawer() { drawerOpen.value = true; }
 function closeDrawer() { drawerOpen.value = false; }
 
-// Close on route change — tapping a link inside the drawer dismisses it.
+// Close on route change - tapping a link inside the drawer dismisses it.
 watch(() => route.fullPath, () => { drawerOpen.value = false; });
 
 // ESC to close. Bound at the window level so focus can be anywhere.
@@ -171,7 +171,7 @@ function onLogoutMobile() {
         <!-- Stats pills: streak + XP. Cheap visibility into progress on every
              page so the user always sees their numbers. Hidden when no user
              yet to avoid layout jitter during fetchMe. Hovering a pill pops a
-             small CSS tooltip explaining what each icon means — useful for new
+             small CSS tooltip explaining what each icon means - useful for new
              users who haven't seen the dashboard yet. -->
         <div v-if="auth.user" class="app-nav-stats">
           <span class="app-nav-stat app-nav-stat-level"
@@ -249,7 +249,7 @@ function onLogoutMobile() {
         </span>
       </div>
 
-      <!-- Lang picker visible on the mobile bar too — same component as desktop. -->
+      <!-- Lang picker visible on the mobile bar too - same component as desktop. -->
       <LangPicker class="app-nav-mobile-lang" />
 
       <button type="button" class="app-nav-burger" :aria-label="t('nav.open_menu')" :aria-expanded="drawerOpen"
@@ -270,7 +270,7 @@ function onLogoutMobile() {
          Teleported to <body> so the drawer escapes the .app-nav stacking
          context (.app-nav has position:sticky + z-index:10 + backdrop-filter,
          each of which creates a stacking context that traps any descendant's
-         z-index — so the drawer's z-index:9999 was being clipped under page
+         z-index - so the drawer's z-index:9999 was being clipped under page
          content like stat tiles and the welcome banner). Mounted at the body
          level the z-index actually competes at the document root. -->
     <Teleport to="body">
@@ -337,7 +337,7 @@ function onLogoutMobile() {
           </button>
         </div>
 
-        <!-- Primary nav links — same items as desktop, full-width rows so they
+        <!-- Primary nav links - same items as desktop, full-width rows so they
              have a comfortable tap target on phones. -->
         <nav class="app-nav-drawer-links">
           <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
@@ -359,11 +359,11 @@ function onLogoutMobile() {
 
         <!-- Footer controls block: theme → settings → sign out.
              Pinned to the bottom of the drawer. Each row uses the same
-             label-on-left / control-on-right pattern. Language is omitted —
+             label-on-left / control-on-right pattern. Language is omitted -
              the navbar's <LangPicker /> is visible on mobile too. -->
         <div class="app-nav-drawer-foot-controls">
           <!-- Theme picker: segmented pill, sun = light, moon = dark. Replaces
-               the single-icon ThemeSwitch in the drawer only — the desktop nav
+               the single-icon ThemeSwitch in the drawer only - the desktop nav
                still uses <ThemeSwitch /> unchanged. Uses useThemeStore directly
                so it stays in sync with the Settings page. -->
           <div class="app-nav-drawer-ctrlrow">

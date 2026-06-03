@@ -1,7 +1,7 @@
-// 2FA TOTP — admin-only second factor on top of Google OAuth.
+// 2FA TOTP - admin-only second factor on top of Google OAuth.
 //
 // Design:
-//   users.totp_secret           — base32-encoded TOTP secret. NULL = not
+//   users.totp_secret           - base32-encoded TOTP secret. NULL = not
 //                                 enrolled. Set during setup-verify, cleared
 //                                 by disable. We store it in plaintext: it's
 //                                 already a shared secret with the user's
@@ -12,19 +12,19 @@
 //                                 column would expose any decryption key
 //                                 living in env/code too).
 //
-//   users.totp_enrolled_at      — timestamp of successful setup-verify. NULL
+//   users.totp_enrolled_at      - timestamp of successful setup-verify. NULL
 //                                 mirrors totp_secret IS NULL. Stored
 //                                 separately for audit ("admin enabled 2FA
 //                                 on date X") and for ordering admin lists.
 //
-//   user_totp_recovery_codes    — separate table because (a) array-of-text
+//   user_totp_recovery_codes    - separate table because (a) array-of-text
 //                                 makes per-code "mark used" updates clumsy
 //                                 with postgres.js, and (b) we want UNIQUE
 //                                 on the hash to make collision detection
 //                                 cheap. One row per code; used_at flips
 //                                 from NULL when consumed. We hash the codes
 //                                 with scrypt (Node built-in, no native dep)
-//                                 — they're low-entropy enough that they
+//                                 - they're low-entropy enough that they
 //                                 need a slow KDF.
 //
 // Enforcement story (lives in auth.service.ts, not this migration):

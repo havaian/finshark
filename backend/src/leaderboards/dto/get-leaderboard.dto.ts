@@ -7,7 +7,7 @@ export class GetLeaderboardDto {
   @IsIn(WINDOWS as unknown as string[])
   window!: "week" | "month" | "all";
 
-  // Optional paper filter — only XP from attempts on this paper's questions
+  // Optional paper filter - only XP from attempts on this paper's questions
   // count toward the score. Pass nothing for "all papers combined".
   @IsOptional()
   @IsString()

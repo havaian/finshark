@@ -39,7 +39,7 @@ RUN pnpm --filter @finshark/frontend build
 FROM nginx:1.27-alpine AS prod
 
 # SPA history-mode fallback: any unknown path serves index.html so client-side
-# routing can take over. /api/* is NOT proxied here — the compose file handles
+# routing can take over. /api/* is NOT proxied here - the compose file handles
 # routing (the frontend container talks to the backend container by service name).
 RUN rm /etc/nginx/conf.d/default.conf
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf

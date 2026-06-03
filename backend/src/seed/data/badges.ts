@@ -22,7 +22,7 @@ export interface SeedBadge {
 }
 
 // Streak / XP threshold badges were removed in migration
-// 20260525000001_drop_duplicate_streak_xp_badges — the streak_days and
+// 20260525000001_drop_duplicate_streak_xp_badges - the streak_days and
 // xp_earned achievement ladders already cover those milestones with the
 // same thresholds. Keep this catalog reserved for discovery / event-style
 // recognition (first lesson, cross-paper learner, LO mastery, etc.).

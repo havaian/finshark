@@ -5,7 +5,7 @@
 // account even if email changes, so it's the right join key. Email is kept on
 // the row (Google gives it to us) but is treated as derived data, not the auth key.
 //
-// Down restores password_hash as NULLABLE — re-adding it NOT NULL would fail on
+// Down restores password_hash as NULLABLE - re-adding it NOT NULL would fail on
 // any existing rows. If you genuinely need to roll back you'll need to populate
 // it out-of-band.
 

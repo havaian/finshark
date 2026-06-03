@@ -1,13 +1,13 @@
 import type { SubscriptionRow, SubscriptionSource } from "../billing.types";
 
-// PaymentProvider — the seam between the billing core (plans / subscriptions /
+// PaymentProvider - the seam between the billing core (plans / subscriptions /
 // promocodes / events) and an external PSP. Concrete providers go in this
 // directory: manual.provider.ts ships now, payme.provider.ts and
 // click.provider.ts come with the integration epic.
 //
 // The interface is deliberately small. Real PSP integrations involve a lot of
 // fiddly state (idempotency keys, signature verification, retry behaviour) but
-// those concerns stay inside each provider — the core sees only:
+// those concerns stay inside each provider - the core sees only:
 //   - createCheckout: start a payment flow, return what the frontend needs to
 //                     redirect/embed
 //   - handleWebhook:  parse a callback, decide what happened, return a
@@ -26,7 +26,7 @@ export type CheckoutHandle =
     }
   | {
       // The provider expects the frontend to render a hosted widget or its
-      // own UI — the payload is whatever the provider's JS SDK needs.
+      // own UI - the payload is whatever the provider's JS SDK needs.
       kind: "embed";
       payload: Record<string, unknown>;
     }
@@ -60,7 +60,7 @@ export interface PaymentProvider {
   // Start a checkout for `planId`. Implementations should:
   //   - generate an idempotency key tied to userId+planId+timestamp
   //   - persist any pre-payment state the provider needs (a 'pending' sub row?
-  //     left to each provider — billing core can stay agnostic)
+  //     left to each provider - billing core can stay agnostic)
   //   - return the handle the frontend should consume
   createCheckout(input: {
     userId: string;
@@ -68,7 +68,7 @@ export interface PaymentProvider {
   }): Promise<CheckoutHandle>;
 
   // Verify + parse a webhook payload (and headers, since most PSPs sign via
-  // headers). Implementations MUST reject unsigned/tampered payloads — return
+  // headers). Implementations MUST reject unsigned/tampered payloads - return
   // SubscriptionUpdate { kind: 'noop' } only when the payload is structurally
   // valid but not actionable. For invalid signatures, throw.
   handleWebhook(input: {

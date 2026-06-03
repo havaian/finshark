@@ -1,4 +1,4 @@
-// users.timezone — IANA timezone name (e.g. 'Asia/Tashkent', 'Europe/London').
+// users.timezone - IANA timezone name (e.g. 'Asia/Tashkent', 'Europe/London').
 // Needed by the billing layer to refill free-tier heart pools at the user's
 // local midnight. reminder_hour_utc remains the reminder preference; this
 // column is the user's actual timezone for all "what is today for this user"
@@ -7,7 +7,7 @@
 // Default 'Asia/Tashkent' matches the UZ-focused launch market. Existing rows
 // are backfilled to the same value; users can change theirs from settings /
 // onboarding later. The CHECK keeps obviously-bogus values out at the DB layer
-// — full IANA validation lives in the app (Intl.DateTimeFormat will throw on
+// - full IANA validation lives in the app (Intl.DateTimeFormat will throw on
 // an invalid name, which is the canonical runtime check).
 
 exports.shorthands = undefined;

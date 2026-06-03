@@ -14,7 +14,7 @@ import {
 const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
 
 export class UpdatePreferencesDto {
-  // Optional everywhere — admin UI sends only the changed field.
+  // Optional everywhere - admin UI sends only the changed field.
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -22,7 +22,7 @@ export class UpdatePreferencesDto {
   reminder_hour_local?: number;
 
   // IANA timezone name (e.g. 'Asia/Tashkent'). Validated structurally here
-  // and definitively by Intl.DateTimeFormat in the service — an invalid name
+  // and definitively by Intl.DateTimeFormat in the service - an invalid name
   // throws there before the DB write.
   @IsOptional()
   @IsString()

@@ -16,7 +16,7 @@ const label = computed(() =>
     <!--
       Sun icon shown in light mode; moon shown in dark mode.
       We show the icon of the CURRENT state, matching mental model of "this is
-      what's active right now" — like a status indicator that's also a toggle.
+      what's active right now" - like a status indicator that's also a toggle.
       24x24 viewBox, sized via CSS.
     -->
     <svg v-if="theme.theme === 'light'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"

@@ -3,7 +3,7 @@ import { IsString, Length, Matches } from 'class-validator';
 export class UpdateDisplayNameDto {
   @IsString()
   @Length(1, 100)
-  // Disallow control chars / leading-trailing whitespace via this regex —
+  // Disallow control chars / leading-trailing whitespace via this regex -
   // class-validator's Length lets you put a 1-char string of " " through;
   // requiring at least one non-whitespace char keeps the value useful.
   @Matches(/\S/, { message: 'display_name must contain a non-whitespace character' })

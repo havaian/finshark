@@ -3,7 +3,7 @@ import { useLocaleStore } from "../stores/locale.store";
 import { SUPPORTED_LANGS, type Lang, DEFAULT_LANG } from "../i18n";
 
 // Helper for building locale-prefixed URLs. All app routes (except the two
-// external entry points — /auth/callback and /unsubscribe) live under a
+// external entry points - /auth/callback and /unsubscribe) live under a
 // /:lang(en|ru) parent, so any literal path used in a RouterLink, router.push,
 // or router.replace must be prefixed with the active lang.
 //
@@ -34,7 +34,7 @@ export function useLocalePath() {
     return locale.lang || DEFAULT_LANG;
   }
 
-  // Prefix a path with the current lang. Idempotent — calling lp('/ru/x')
+  // Prefix a path with the current lang. Idempotent - calling lp('/ru/x')
   // when current is 'ru' still returns '/ru/x', not '/ru/ru/x'. Detection
   // is based on a leading /<lang>/ or exact /<lang> match.
   function lp(path: string): string {

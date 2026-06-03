@@ -1,6 +1,6 @@
 // Mirrors backend src/achievements/achievements.types.ts.
 //
-// PublicAchievement is the full payload for /me/achievements — includes
+// PublicAchievement is the full payload for /me/achievements - includes
 // progress fields so the UI can render progress bars and "next level"
 // labels. Locked achievements (current_level=0) come through with the same
 // shape, just with current_level=0, current_level_name=null, and
@@ -30,7 +30,7 @@ export interface PublicAchievement {
 }
 
 // Earned-only shape returned by GET /users/:id/achievements. Strips
-// progress info — outsiders only see the unlocked-level summary.
+// progress info - outsiders only see the unlocked-level summary.
 export interface PublicEarnedAchievement {
   code: string;
   name: string;

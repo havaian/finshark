@@ -152,7 +152,7 @@ function onLangChange(next: Lang) {
   // in the URL and trigger a full page reload, which is the cleanest way to
   // drop any rendered strings from the previous lang's i18n bundle. The
   // locale store is updated first so anything that reads localStorage on
-  // boot sees the new value. We DON'T call applyOverrides() here — that
+  // boot sees the new value. We DON'T call applyOverrides() here - that
   // happens on boot in main.ts after the reload.
   if (next === locale.lang) return;
   locale.setLang(next);
@@ -272,7 +272,7 @@ async function loadRemainingCodes() {
     const r = await totpApi.remainingCodes();
     remainingCodes.value = r.remaining;
   } catch {
-    // Non-fatal — section will just omit the counter.
+    // Non-fatal - section will just omit the counter.
     remainingCodes.value = null;
   }
 }
@@ -311,7 +311,7 @@ async function confirmRegen() {
     const result = await totpApi.regenerateCodes(regenCode.value.trim());
     regenNewCodes.value = result.recovery_codes;
     regenStep.value = 'show';
-    // Refresh the remaining counter — now 10 fresh codes.
+    // Refresh the remaining counter - now 10 fresh codes.
     await loadRemainingCodes();
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 401) {
@@ -360,7 +360,7 @@ async function toggleAudit() {
   }
 }
 
-// Localise an event code. Falls back to the raw code if no key exists —
+// Localise an event code. Falls back to the raw code if no key exists -
 // keeps the UI useful even if the backend ships a new event before the
 // frontend has a translation for it.
 function localiseAuditEvent(code: string): string {
@@ -396,7 +396,7 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
 // Error path: backend returns 404 (invalid/expired), 403 (already used, or
 // the code expired / hit redemption cap / disabled), or 400 (validation).
 // We map status codes to friendlier i18n keys; otherwise fall back to the
-// raw server message — admins might surface useful detail there.
+// raw server message - admins might surface useful detail there.
 const redeemInput = ref('');
 const redeemBusy = ref(false);
 const redeemError = ref<string | null>(null);
@@ -633,7 +633,7 @@ const premiumEndsLine = computed<string | null>(() => {
         </p>
       </section>
 
-      <!-- Two-factor authentication — admin-only. Section hides entirely
+      <!-- Two-factor authentication - admin-only. Section hides entirely
            for non-admins so it doesn't surface a feature they can't use. -->
       <section v-if="isAdmin" class="card">
         <h2>{{ t('settings.tfa_section') }}</h2>
@@ -686,7 +686,7 @@ const premiumEndsLine = computed<string | null>(() => {
           </div>
         </div>
 
-        <!-- Recovery codes panel — visible only when 2FA is enabled. Shows
+        <!-- Recovery codes panel - visible only when 2FA is enabled. Shows
              remaining count + regenerate flow. We don't show the codes
              themselves; only newly-generated ones are surfaced (once). -->
         <div v-if="twoFactorEnabled && regenStep === 'idle' && !showDisable2faForm" class="tfa-subsection mt-6">
@@ -710,7 +710,7 @@ const premiumEndsLine = computed<string | null>(() => {
           </div>
         </div>
 
-        <!-- Regenerate: step "verify" — ask for current code. -->
+        <!-- Regenerate: step "verify" - ask for current code. -->
         <div v-if="twoFactorEnabled && regenStep === 'verify'" class="tfa-subsection mt-6">
           <div style="font-weight: 500;">{{ t('settings.tfa_regenerate_title') }}</div>
           <p class="dim text-sm mt-2">{{ t('settings.tfa_regenerate_hint') }}</p>
@@ -731,7 +731,7 @@ const premiumEndsLine = computed<string | null>(() => {
           </div>
         </div>
 
-        <!-- Regenerate: step "show" — display new codes ONCE with save confirmation. -->
+        <!-- Regenerate: step "show" - display new codes ONCE with save confirmation. -->
         <div v-if="twoFactorEnabled && regenStep === 'show'" class="tfa-subsection mt-6">
           <div style="font-weight: 500;">{{ t('settings.tfa_regenerate_show_title') }}</div>
           <p class="error-text mt-2">{{ t('tfa_setup.recovery_warning') }}</p>
@@ -756,7 +756,7 @@ const premiumEndsLine = computed<string | null>(() => {
           </button>
         </div>
 
-        <!-- Audit log — collapsible. Default closed to keep the section
+        <!-- Audit log - collapsible. Default closed to keep the section
              compact; expand-on-click hits the audit endpoint once. -->
         <div v-if="twoFactorEnabled && regenStep === 'idle' && !showDisable2faForm" class="tfa-subsection mt-6">
           <button class="link-subtle" type="button" @click="toggleAudit">

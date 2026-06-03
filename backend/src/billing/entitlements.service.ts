@@ -46,7 +46,7 @@ export class EntitlementsService {
     // ever matters we can cache the tiny plans table in-process.
     const plan = await this.plans.findById(sub.plan_id);
     if (!plan) {
-      // Should never happen — plan_id has a FK constraint. If it does, log
+      // Should never happen - plan_id has a FK constraint. If it does, log
       // loudly and fail back to free so the user isn't stuck in an undefined
       // state. The repair is a DB-level investigation.
       this.log.error(

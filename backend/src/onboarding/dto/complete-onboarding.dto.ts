@@ -8,17 +8,17 @@ import {
   Min,
 } from "class-validator";
 
-// Submission payload from the onboarding wizard. ALL fields are optional —
+// Submission payload from the onboarding wizard. ALL fields are optional -
 // the "skip" path sends an empty body (the service sets onboarded_at=NOW()
 // with defaults). The "complete" path sends as many fields as the user filled
 // in. We don't force them all because the user might pick a paper but not a
 // background level, etc.
 //
-// time_budget_minutes is constrained to 5..60 (matches the DB check) — outside
+// time_budget_minutes is constrained to 5..60 (matches the DB check) - outside
 // that is unrealistic for both ends.
 //
 // preferred_paper_id is a bigint PK serialized as a string by postgres.js, not
-// a UUID. We accept it as a plain @IsString() — IsUUID would reject valid IDs.
+// a UUID. We accept it as a plain @IsString() - IsUUID would reject valid IDs.
 export class CompleteOnboardingDto {
   @IsOptional()
   @IsEnum(["beginner", "intermediate", "advanced"])
@@ -34,7 +34,7 @@ export class CompleteOnboardingDto {
   @IsString()
   preferred_paper_id?: string;
 
-  // If the user toggles reminders during onboarding we accept it here too —
+  // If the user toggles reminders during onboarding we accept it here too -
   // routing it through the existing preferences path on the users controller
   // would mean two API calls instead of one.
   @IsOptional()

@@ -32,7 +32,7 @@ export type SubscriptionEventKind =
   | "webhook"
   | "note";
 
-// ── Row shapes (from postgres.js — bigint comes back as string) ────────────
+// ── Row shapes (from postgres.js - bigint comes back as string) ────────────
 
 export interface PlanRow {
   id: string;            // 'free' | 'premium_monthly' | ...
@@ -124,7 +124,7 @@ export interface RedeemResult {
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 // Compute period end given a start and a number of days. Returns null when
-// `days` is null (open-ended grant — lifetime plan or admin grant w/o expiry).
+// `days` is null (open-ended grant - lifetime plan or admin grant w/o expiry).
 export function periodEnd(start: Date, days: number | null): Date | null {
   if (days === null) return null;
   const ms = days * 24 * 60 * 60 * 1000;
@@ -139,7 +139,7 @@ export function normalisePromocode(raw: string): string {
 
 // ── Public projections (controller responses) ─────────────────────────────
 //
-// Same pattern as users/user.types.ts toPublicUser — flatten Date columns to
+// Same pattern as users/user.types.ts toPublicUser - flatten Date columns to
 // ISO strings so JSON responses are stable across runtimes / serialisers.
 // Promocode `code` is exposed as-is to admins; users only ever see the code
 // they typed in the redeem flow, so no separate "user-safe" projection

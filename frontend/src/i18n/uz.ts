@@ -219,6 +219,31 @@ export default {
     activity_less: "Kam",
     activity_more: "Ko'p",
 
+    // Sinov imtihoni natijalari demosi - haqiqiy ko'rib chiqish ekranidagidek:
+    // ball, to'g'ri/noto'g'ri belgilari bilan savollar ro'yxati va har bir
+    // noto'g'ri javob ostida tushuntirish. Statik misol: uchta savol, ikkitasi
+    // to'g'ri, bittasi noto'g'ri.
+    demo_title: "Xatoyingiz qayerdaligini aniq ko'ring",
+    demo_lede:
+      "Sinov imtihonini tugatganingizda faqat ball emas, ko'proq narsa olasiz. Har bir savol belgilanadi va o'tkazib yuborgan har biriga tushuntirish biriktiriladi - xato takrorlanmasligi uchun.",
+    demo_score_label: "Sizning balingiz",
+    demo_score_value: "8 / 10",
+    demo_correct: "To'g'ri",
+    demo_wrong: "Noto'g'ri",
+    demo_your_answer: "Sizning javobingiz",
+    demo_correct_answer: "To'g'ri javob",
+    demo_show_explanation: "Tushuntirishni ko'rsatish",
+    demo_hide_explanation: "Tushuntirishni yashirish",
+    demo_q1: "Kompaniyaning joriy nisbati 1,8. Bu rentabellik yoki likvidlik o'lchovimi?",
+    demo_q1_your: "Likvidlik",
+    demo_q2: "Qaysi hujjat kompaniyaning moliyaviy holatini ma'lum bir vaqtda qayd etadi?",
+    demo_q2_your: "Daromad to'g'risidagi hisobot",
+    demo_q2_correct: "Moliyaviy holat to'g'risidagi hisobot",
+    demo_q2_explain:
+      "Daromad to'g'risidagi hisobot bir davr mobaynidagi natijalarni ko'rsatadi, bir vaqtni emas. Moliyaviy holat to'g'risidagi hisobot (balans) - bu ma'lum bir sanadagi aktivlar, majburiyatlar va kapitalning tasviri.",
+    demo_q3: "Hisoblash metodi bo'yicha daromad qachon tan olinadi?",
+    demo_q3_your: "U ishlab topilganda",
+
     bottom_cta_title: "Boshlashga tayyormisiz?",
     bottom_cta_sub: "Kirib, bitta darsni sinab ko'ring. Bu taxminan uch daqiqa vaqt oladi.",
   },

@@ -34,14 +34,14 @@ import ThemeSwitch from '../components/ThemeSwitch.vue';
 //   "why this is wrong" lines come from landing.mock_why_*; the correct option
 //   shows landing.mock_feedback_correct.
 //
-// Scroll-triggered animation (all opacity / stroke-dashoffset / count-up - no
+// Scroll-triggered animation (all opacity / stroke-dashoffset - no
 // transform: scale, per project rule):
-//   - heroReady drives the hero progress ring filling its dash offset and the
-//     stat count-up. Set true shortly after mount (the hero is above the fold).
-//   - An IntersectionObserver reveals the syllabus heatmap cells in a staggered
-//     fade the first time the grid scrolls into view (revealHeatmap).
-//   prefers-reduced-motion short-circuits both: everything renders in its final
-//   state with no animation.
+//   - heroReady drives the hero progress ring filling its dash offset. Set
+//     true shortly after mount (the hero is above the fold).
+//   - An IntersectionObserver reveals the lite activity heatmap the first time
+//     it scrolls into view (revealHeatmap).
+//   prefers-reduced-motion short-circuits both: everything renders in its
+//   final state with no animation.
 
 const { t } = useI18n();
 const router = useRouter();
@@ -97,10 +97,6 @@ const prefersReducedMotion =
 const heroReady = ref(false);
 const revealHeatmap = ref(false);
 
-// Count-up for the "minutes a day" figure. Target is 10 to match the copy.
-const STAT_TARGET = 10;
-const statCount = ref(prefersReducedMotion ? STAT_TARGET : 0);
-
 // Progress ring geometry. r=22 circle; circumference drives the dash array.
 // Final fill is ~68% of the syllabus, shown as the dash offset once heroReady.
 const RING_R = 22;
@@ -111,19 +107,130 @@ const ringOffset = computed(() =>
 );
 const ringPctLabel = computed(() => `${Math.round(RING_PCT * 100)}%`);
 
-// ---- Syllabus heatmap (illustrative) ----
-// 40 cells (8 cols x 5 rows) of fixed mastery buckets 0..4. Hand-set so the
-// ramp reads as a believable spread of weak -> mastered topics; not derived
-// from any user data. Used only as a static visual on the landing page.
-const heatCells: number[] = [
-  4, 3, 4, 2, 3, 1, 4, 2,
-  3, 4, 2, 4, 1, 3, 2, 4,
-  2, 3, 4, 3, 4, 2, 3, 1,
-  4, 2, 3, 4, 2, 4, 3, 4,
-  3, 4, 2, 3, 4, 3, 4, 2,
+// ---- Lite activity heatmap (illustrative) ----
+// A small version of the real Profile heatmap (ProfilePage.vue): same column =
+// one week, 7 cells per column (Sun..Sat), intensity 0..4 keyed off a daily
+// question count. The real one fetches 365 days of activity; here we generate
+// ~14 weeks of plausible study counts from a fixed seed so the visual is
+// stable across renders and identical in every language. Not user data.
+//
+// We reuse the real CSS classes (.activity-heatmap / .activity-col /
+// .activity-cell / .intensity-N) and the same intensity thresholds, so this
+// reads as a true lite version rather than a separate widget. Weekday labels
+// (Mon/Wed/Fri) and the tooltip mirror the real component.
+interface LiteCell { date: string; count: number; intensity: 0 | 1 | 2 | 3 | 4 }
+
+const LITE_WEEKS = 14;
+
+// Deterministic pseudo-random in [0,1) from an integer seed. Keeps the
+// generated counts identical on every render without pulling in a dep.
+function seeded(n: number): number {
+  const x = Math.sin(n * 99.13) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+const liteWeeks = computed<LiteCell[][]>(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  // Start on the Sunday on/before (today - (LITE_WEEKS-1) weeks), so the last
+  // column is the current week - same anchoring as the real heatmap.
+  const start = new Date(today);
+  start.setDate(start.getDate() - 7 * (LITE_WEEKS - 1));
+  start.setDate(start.getDate() - start.getDay());
+
+  const cursor = new Date(start);
+  const weeks: LiteCell[][] = [];
+  let i = 0;
+  for (let w = 0; w < LITE_WEEKS; w++) {
+    const week: LiteCell[] = [];
+    for (let d = 0; d < 7; d++) {
+      // Future days (past today) render empty, like the real grid.
+      let count = 0;
+      if (cursor <= today) {
+        const r = seeded(i);
+        // ~30% rest days, the rest spread across 1..18 questions, weighted low.
+        count = r < 0.3 ? 0 : Math.round(1 + Math.pow(r, 1.6) * 17);
+      }
+      const intensity =
+        count === 0 ? 0 :
+          count < 3 ? 1 :
+            count < 8 ? 2 :
+              count < 16 ? 3 : 4;
+      week.push({
+        date: cursor.toISOString().slice(0, 10),
+        count,
+        intensity,
+      });
+      cursor.setDate(cursor.getDate() + 1);
+      i++;
+    }
+    weeks.push(week);
+  }
+  return weeks;
+});
+
+const weekdayLabels = computed(() => ({
+  mon: t('profile.heatmap_day_mon'),
+  wed: t('profile.heatmap_day_wed'),
+  fri: t('profile.heatmap_day_fri'),
+}));
+
+// Tooltip state for the lite heatmap. Mirrors the real component: hovering a
+// cell stores it + a position relative to the wrap; mouseleave clears.
+const hoverCell = ref<LiteCell | null>(null);
+const hoverPos = ref<{ x: number; y: number } | null>(null);
+const liteWrap = ref<HTMLElement | null>(null);
+
+function onCellEnter(cell: LiteCell, ev: MouseEvent) {
+  hoverCell.value = cell;
+  if (!liteWrap.value) return;
+  const wrapRect = liteWrap.value.getBoundingClientRect();
+  const target = ev.currentTarget as HTMLElement;
+  const cellRect = target.getBoundingClientRect();
+  hoverPos.value = {
+    x: cellRect.left - wrapRect.left + cellRect.width / 2,
+    y: cellRect.top - wrapRect.top,
+  };
+}
+
+function onCellLeave() {
+  hoverCell.value = null;
+  hoverPos.value = null;
+}
+
+// ---- Mock-results demo ----
+// A finished mock shown the way the real Mock review screen shows it: a score,
+// a list of answered questions each marked correct/wrong, and a worked
+// explanation revealed under the wrong one. Static illustrative content - the
+// question/answer/explanation text all live in landing.demo_*.
+//
+// Each item references its i18n keys. `correct` drives the mark + colour;
+// `explainKey` (present only on wrong answers) is what expands. Tracking the
+// open item by id lets the user toggle the explanation, matching the real
+// "Show explanations" affordance.
+interface DemoQuestion {
+  id: string;
+  questionKey: string;
+  yourKey: string;
+  correct: boolean;
+  correctKey?: string;
+  explainKey?: string;
+}
+
+const demoQuestions: DemoQuestion[] = [
+  { id: 'q1', questionKey: 'landing.demo_q1', yourKey: 'landing.demo_q1_your', correct: true },
+  {
+    id: 'q2', questionKey: 'landing.demo_q2', yourKey: 'landing.demo_q2_your',
+    correct: false, correctKey: 'landing.demo_q2_correct', explainKey: 'landing.demo_q2_explain',
+  },
+  { id: 'q3', questionKey: 'landing.demo_q3', yourKey: 'landing.demo_q3_your', correct: true },
 ];
 
-let statTimer: number | undefined;
+const openDemo = ref<string | null>(null);
+function toggleDemo(id: string) {
+  openDemo.value = openDemo.value === id ? null : id;
+}
+
 let heatmapObserver: IntersectionObserver | undefined;
 
 onMounted(() => {
@@ -138,26 +245,14 @@ onMounted(() => {
     return;
   }
 
-  // Kick the hero animations just after paint so the ring/stat transition
-  // from their start state rather than snapping.
+  // Kick the hero ring animation just after paint so it transitions from its
+  // start state rather than snapping.
   requestAnimationFrame(() => {
     heroReady.value = true;
   });
 
-  // Count up to the target over ~900ms with an ease-out step.
-  const duration = 900;
-  const start = performance.now();
-  const tick = (now: number) => {
-    const elapsed = now - start;
-    const p = Math.min(elapsed / duration, 1);
-    const eased = 1 - Math.pow(1 - p, 3);
-    statCount.value = Math.round(eased * STAT_TARGET);
-    if (p < 1) statTimer = requestAnimationFrame(tick);
-  };
-  statTimer = requestAnimationFrame(tick);
-
   // Reveal the heatmap the first time it enters the viewport.
-  const grid = document.getElementById('landing-heatmap-grid');
+  const grid = document.getElementById('landing-lite-heatmap');
   if (grid && 'IntersectionObserver' in window) {
     heatmapObserver = new IntersectionObserver(
       (entries) => {
@@ -177,7 +272,6 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (statTimer) cancelAnimationFrame(statTimer);
   heatmapObserver?.disconnect();
 });
 </script>
@@ -349,13 +443,14 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <!-- Syllabus heatmap (illustrative) - two-column block: copy + legend on
-         the left, the mastery grid on the right. Cells are coloured by fixed
-         buckets (heat-0..4) from the script's heatCells array; this is a
-         static visual, not user data. Cells fade in staggered the first time
-         the grid scrolls into view (revealHeatmap), unless reduced-motion is
-         on, in which case they render in place. Copy reuses landing.activity_*
-         and the legend reuses activity_less / activity_more. -->
+    <!-- Activity heatmap (lite) - a small version of the real Profile heatmap.
+         Reuses the .activity-* classes and intensity ramp; data is generated
+         in the script (liteWeeks) as ~14 weeks of plausible study counts, not
+         user data. Two columns: copy + legend on the left, the calendar on the
+         right. Cells fade in together once the block scrolls into view
+         (revealHeatmap), and hovering a cell shows the same date+count tooltip
+         as the real one. --heat-cell / --heat-gap size the grid via the
+         existing CSS. -->
     <section class="landing-heatmap">
       <div class="landing-container landing-heatmap-inner">
         <div class="landing-heatmap-copy">
@@ -365,19 +460,129 @@ onBeforeUnmount(() => {
           <p class="landing-heatmap-lede dim">{{ t('landing.activity_lede') }}</p>
           <div class="landing-heatmap-legend">
             <span class="dim text-sm">{{ t('landing.activity_less') }}</span>
-            <span class="landing-heat-swatch heat-0"></span>
-            <span class="landing-heat-swatch heat-1"></span>
-            <span class="landing-heat-swatch heat-2"></span>
-            <span class="landing-heat-swatch heat-3"></span>
-            <span class="landing-heat-swatch heat-4"></span>
+            <span class="landing-heat-swatch activity-cell intensity-0"></span>
+            <span class="landing-heat-swatch activity-cell intensity-1"></span>
+            <span class="landing-heat-swatch activity-cell intensity-2"></span>
+            <span class="landing-heat-swatch activity-cell intensity-3"></span>
+            <span class="landing-heat-swatch activity-cell intensity-4"></span>
             <span class="dim text-sm">{{ t('landing.activity_more') }}</span>
           </div>
         </div>
-        <div id="landing-heatmap-grid" class="landing-heatmap-grid"
-          :class="{ 'is-revealed': revealHeatmap }" aria-hidden="true">
-          <span v-for="(bucket, i) in heatCells" :key="i"
-            class="landing-heat-cell" :class="`heat-${bucket}`"
-            :style="{ transitionDelay: `${i * 14}ms` }"></span>
+
+        <!-- Heatmap card: weekday gutter (Mon/Wed/Fri) + the week columns.
+             --heat-cell/--heat-gap set the cell size. The whole grid reveals
+             with one fade via .is-revealed on the wrap. -->
+        <div ref="liteWrap" id="landing-lite-heatmap"
+          class="landing-lite-wrap activity-heatmap-wrap"
+          :class="{ 'is-revealed': revealHeatmap }"
+          :style="{ '--heat-cell': '15px', '--heat-gap': '4px' }">
+          <div class="activity-body">
+            <div class="activity-weekdays landing-lite-weekdays">
+              <span class="activity-weekday" :style="{ top: '15px' }">{{ weekdayLabels.mon }}</span>
+              <span class="activity-weekday" :style="{ top: '53px' }">{{ weekdayLabels.wed }}</span>
+              <span class="activity-weekday" :style="{ top: '91px' }">{{ weekdayLabels.fri }}</span>
+            </div>
+            <div class="activity-heatmap landing-lite-grid">
+              <div v-for="(week, wi) in liteWeeks" :key="wi" class="activity-col">
+                <div v-for="cell in week" :key="cell.date"
+                  :class="['activity-cell', `intensity-${cell.intensity}`]"
+                  @mouseenter="onCellEnter(cell, $event)" @mouseleave="onCellLeave"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating tooltip, same shape as the real heatmap's. -->
+          <div v-if="hoverCell && hoverPos" class="activity-tooltip"
+            :style="{ left: hoverPos.x + 'px', top: hoverPos.y + 'px' }">
+            <div class="activity-tooltip-count">
+              <template v-if="hoverCell.count === 0">{{ t('profile.heatmap_tooltip_none') }}</template>
+              <template v-else-if="hoverCell.count === 1">
+                {{ t('profile.heatmap_tooltip_count_one', { count: hoverCell.count }) }}
+              </template>
+              <template v-else>
+                {{ t('profile.heatmap_tooltip_count_other', { count: hoverCell.count }) }}
+              </template>
+            </div>
+            <div class="activity-tooltip-date dim">{{ hoverCell.date }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mock-results demo - a finished mock shown the way the real Mock review
+         screen shows it: a score header, then a list of answered questions
+         each marked correct/wrong. The wrong one expands to a worked
+         explanation (toggled via openDemo). All copy from landing.demo_*;
+         static illustrative content, not a real attempt. -->
+    <section class="landing-demo">
+      <div class="landing-container landing-demo-inner">
+        <div class="landing-demo-copy">
+          <h2 class="landing-section-title" style="text-align: left; margin-bottom: 16px;">
+            {{ t('landing.demo_title') }}
+          </h2>
+          <p class="landing-demo-lede dim">{{ t('landing.demo_lede') }}</p>
+        </div>
+
+        <div class="landing-demo-card">
+          <!-- Score header -->
+          <div class="landing-demo-score">
+            <span class="landing-demo-score-label dim">{{ t('landing.demo_score_label') }}</span>
+            <span class="landing-demo-score-value">{{ t('landing.demo_score_value') }}</span>
+          </div>
+
+          <!-- Question rows -->
+          <ul class="landing-demo-list">
+            <li v-for="q in demoQuestions" :key="q.id" class="landing-demo-item"
+              :class="q.correct ? 'is-correct' : 'is-wrong'">
+              <div class="landing-demo-q">
+                <span class="landing-demo-mark" :class="q.correct ? 'is-correct' : 'is-wrong'"
+                  aria-hidden="true">
+                  <svg v-if="q.correct" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" />
+                  </svg>
+                </span>
+                <span class="landing-demo-q-text">{{ t(q.questionKey) }}</span>
+              </div>
+
+              <!-- Answer lines. Correct: your answer only. Wrong: your answer
+                   (struck/red) + the correct answer. -->
+              <div class="landing-demo-answers">
+                <div class="landing-demo-answer">
+                  <span class="landing-demo-answer-label dim">{{ t('landing.demo_your_answer') }}</span>
+                  <span class="landing-demo-answer-val"
+                    :class="q.correct ? 'is-correct' : 'is-wrong'">{{ t(q.yourKey) }}</span>
+                </div>
+                <div v-if="!q.correct && q.correctKey" class="landing-demo-answer">
+                  <span class="landing-demo-answer-label dim">{{ t('landing.demo_correct_answer') }}</span>
+                  <span class="landing-demo-answer-val is-right">{{ t(q.correctKey) }}</span>
+                </div>
+              </div>
+
+              <!-- Explanation toggle - only on wrong answers. -->
+              <template v-if="!q.correct && q.explainKey">
+                <button type="button" class="landing-demo-explain-btn"
+                  :aria-expanded="openDemo === q.id" @click="toggleDemo(q.id)">
+                  {{ openDemo === q.id ? t('landing.demo_hide_explanation') : t('landing.demo_show_explanation') }}
+                  <svg class="landing-demo-chevron" :class="{ 'is-open': openDemo === q.id }"
+                    width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <p v-if="openDemo === q.id" class="landing-demo-explain dim">
+                  {{ t(q.explainKey) }}
+                </p>
+              </template>
+            </li>
+          </ul>
         </div>
       </div>
     </section>

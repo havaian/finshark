@@ -211,6 +211,34 @@ export default {
     activity_less: "Less",
     activity_more: "More",
 
+    // Mock-results demo section. A finished mock exam shown the way the real
+    // Mock review screen shows it: a score, a list of answered questions with
+    // correct/wrong marks, and a worked explanation revealed under each wrong
+    // one. Static illustrative content - three questions, two right, one wrong.
+    demo_title: "See exactly where you went wrong",
+    demo_lede:
+      "Finish a mock and you get more than a score. Every question is marked, and each one you miss comes with a worked explanation so the mistake does not happen twice.",
+    demo_score_label: "Your score",
+    demo_score_value: "8 / 10",
+    demo_correct: "Correct",
+    demo_wrong: "Wrong",
+    demo_your_answer: "Your answer",
+    demo_correct_answer: "Correct answer",
+    demo_show_explanation: "Show explanation",
+    demo_hide_explanation: "Hide explanation",
+    // Q1 - correct
+    demo_q1: "A company's current ratio is 1.8. Is this a measure of profitability or liquidity?",
+    demo_q1_your: "Liquidity",
+    // Q2 - wrong
+    demo_q2: "Which document records a company's financial position at a single point in time?",
+    demo_q2_your: "Income statement",
+    demo_q2_correct: "Statement of financial position",
+    demo_q2_explain:
+      "The income statement shows performance over a period, not a single point. The statement of financial position (balance sheet) is the snapshot of assets, liabilities, and equity at one date.",
+    // Q3 - correct
+    demo_q3: "Under accrual accounting, when is revenue recognised?",
+    demo_q3_your: "When it is earned",
+
     bottom_cta_title: "Ready to start?",
     bottom_cta_sub: "Sign in and try one lesson. It takes about three minutes.",
   },

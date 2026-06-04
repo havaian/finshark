@@ -285,11 +285,11 @@
 }
 
 .activity-cell.intensity-2 {
-    background: rgba(124, 92, 255, 0.35);
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .activity-cell.intensity-3 {
-    background: rgba(124, 92, 255, 0.6);
+    background: color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 .activity-cell.intensity-4 {
@@ -2936,12 +2936,14 @@
     font-size: 14px;
 }
 
-/* ---- Syllabus heatmap (illustrative) ----
-   Two-column block: copy + legend on the left, the cell grid on the right.
-   Cells are coloured by bucket using existing status tokens. Squared cells,
-   small radius only, no transform: scale on hover (border + slight bg shift). */
+/* ---- Activity heatmap (lite) ----
+   Two-column block: copy + legend on the left, a small version of the real
+   Profile heatmap on the right. The calendar itself reuses the .activity-*
+   classes and intensity ramp from section 5, so this is a true lite version
+   rather than a separate widget. Only the layout shell and the one-shot reveal
+   live here. */
 .landing-heatmap {
-    padding: 40px 0 72px;
+    padding: 40px 0 56px;
 }
 
 .landing-heatmap-inner {
@@ -2964,75 +2966,250 @@
 .landing-heatmap-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
-}
-
-.landing-heat-legend-item {
-    display: inline-flex;
     align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: var(--text-dim);
+    gap: 6px;
 }
 
+/* Legend swatches reuse .activity-cell + .intensity-N for colour, but need a
+   fixed size here (the grid cells are sized by --heat-cell, which isn't set on
+   the legend row). The small left/right margins separate them from the
+   Less/More labels. */
 .landing-heat-swatch {
     width: 14px;
     height: 14px;
-    border-radius: 3px;
+    border-radius: 2px;
     flex-shrink: 0;
+    cursor: default;
 }
 
-.landing-heatmap-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 8px;
-    min-width: 0;
+.landing-heat-swatch:first-of-type {
+    margin-left: 6px;
 }
 
-.landing-heat-cell {
-    aspect-ratio: 1 / 1;
-    border-radius: 4px;
-    border: 1px solid transparent;
-    /* opacity is included so the staggered scroll-in reveal can fade each cell.
-       per-cell transition-delay is set inline from the template. */
+.landing-heat-swatch:last-of-type {
+    margin-right: 6px;
+}
+
+/* Lite heatmap wrap. Centres the calendar in the right column and gives the
+   tooltip a positioning context. The whole grid fades in once .is-revealed is
+   set (when it scrolls into view) - opacity only, no transform: scale.
+   reduced-motion users get .is-revealed immediately from the script. */
+.landing-lite-wrap {
+    display: flex;
+    justify-content: flex-start;
     opacity: 1;
-    transition: border-color 120ms ease, filter 120ms ease, opacity 360ms ease;
+    transition: opacity 420ms ease;
 }
 
-/* Hidden start state for the reveal: cells sit invisible until the grid gains
-   .is-revealed (set when it scrolls into view). No transform: scale - opacity
-   only. reduced-motion users get .is-revealed immediately from the script, so
-   they never see the hidden state for long. */
-.landing-heatmap-grid:not(.is-revealed) .landing-heat-cell {
+.landing-lite-wrap:not(.is-revealed) {
     opacity: 0;
 }
 
-.landing-heat-cell:hover {
-    border-color: var(--text);
-    filter: brightness(1.12);
+/* The lite weekday gutter is shorter than the real one (no month-label row
+   above the grid), so its labels sit slightly higher. */
+.landing-lite-weekdays {
+    padding-top: 0;
 }
 
-/* Buckets: none / low / mid / high / mastered. Built from status tokens with
-   opacity steps so they read as one ramp and adapt to both themes. */
-.heat-0 {
+/* Intensity 0 (no activity). The real component relies on .activity-cell's
+   default --grey-band background for empty days and never adds an explicit
+   intensity-0 class; the lite grid and legend DO use it, so define it here to
+   match that default. */
+.activity-cell.intensity-0 {
     background: var(--grey-band);
-    border-color: var(--border);
 }
 
-.heat-1 {
-    background: color-mix(in srgb, var(--danger) 55%, transparent);
+/* ---- Mock-results demo ----
+   Two-column block: copy on the left, a finished-mock card on the right. The
+   card mirrors the real Mock review screen: a score header, then question rows
+   marked correct/wrong, with an expandable explanation under the wrong one. */
+.landing-demo {
+    padding: 16px 0 72px;
 }
 
-.heat-2 {
-    background: color-mix(in srgb, var(--amber) 60%, transparent);
+.landing-demo-inner {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 48px;
+    align-items: center;
 }
 
-.heat-3 {
-    background: color-mix(in srgb, var(--accent) 70%, transparent);
+.landing-demo-copy {
+    min-width: 0;
 }
 
-.heat-4 {
-    background: var(--success);
+.landing-demo-lede {
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.landing-demo-card {
+    min-width: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.5);
+}
+
+.landing-demo-score {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+
+.landing-demo-score-label {
+    font-size: 13px;
+    letter-spacing: 0.02em;
+}
+
+.landing-demo-score-value {
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+}
+
+.landing-demo-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.landing-demo-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.landing-demo-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.landing-demo-q {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* Square mark holding the tick/cross. Colour by correct/wrong; the SVG inside
+   inherits via currentColor. */
+.landing-demo-mark {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+
+.landing-demo-mark.is-correct {
+    color: var(--success);
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+}
+
+.landing-demo-mark.is-wrong {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+}
+
+.landing-demo-q-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--text);
+}
+
+/* Answer lines sit under the question, indented to align with the text (past
+   the 22px mark + 10px gap). */
+.landing-demo-answers {
+    margin: 10px 0 0 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.landing-demo-answer {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.landing-demo-answer-label {
+    flex-shrink: 0;
+}
+
+.landing-demo-answer-val {
+    color: var(--text);
+}
+
+.landing-demo-answer-val.is-correct {
+    color: var(--success);
+}
+
+/* Wrong pick - red, struck through to read as "this is what you put". */
+.landing-demo-answer-val.is-wrong {
+    color: var(--danger);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
+
+.landing-demo-answer-val.is-right {
+    color: var(--success);
+    font-weight: 500;
+}
+
+/* Explanation toggle - a quiet text button with a chevron that rotates open.
+   Chevron rotation is a transform: rotate (allowed - it's not scale). */
+.landing-demo-explain-btn {
+    margin: 12px 0 0 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.landing-demo-explain-btn:hover {
+    color: var(--accent-hot);
+}
+
+.landing-demo-chevron {
+    transition: transform 160ms ease;
+}
+
+.landing-demo-chevron.is-open {
+    transform: rotate(180deg);
+}
+
+.landing-demo-explain {
+    margin: 10px 0 0 32px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.55;
 }
 
 /* FAQ - native <details>/<summary> accordion. Padding tuned so closed items
@@ -3135,7 +3312,8 @@
         max-width: 480px;
     }
 
-    .landing-heatmap-inner {
+    .landing-heatmap-inner,
+    .landing-demo-inner {
         grid-template-columns: 1fr;
         gap: 28px;
     }
@@ -3176,11 +3354,11 @@
     }
 
     .landing-heatmap {
-        padding: 28px 0 52px;
+        padding: 28px 0 40px;
     }
 
-    .landing-stat-unit {
-        font-size: 15px;
+    .landing-demo {
+        padding: 8px 0 52px;
     }
 
     .landing-section-title {

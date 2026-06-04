@@ -910,6 +910,7 @@
 }
 
 .content-tabs {
+    width: 100%;
     display: flex;
     gap: 4px;
 }
@@ -1432,7 +1433,7 @@
 }
 
 .leaderboard-paper-select {
-    max-width: 280px;
+    max-width: 100%;
     /* Inherits base select styling. */
 }
 

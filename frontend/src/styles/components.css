@@ -67,6 +67,8 @@
     padding: 16px 18px;
     position: relative;
     overflow: hidden;
+    display: grid;
+    grid-template-rows: 50% 50%;
 }
 
 .stat .stat-lbl {

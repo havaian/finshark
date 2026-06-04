@@ -44,7 +44,6 @@ onMounted(load);
   <div class="container-wide">
     <header class="topbar">
       <h1>{{ t('admin.overview.title') }}</h1>
-      <p class="dim text-sm">{{ t('admin.overview.subtitle') }}</p>
     </header>
 
     <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>

@@ -638,7 +638,6 @@ export default {
     panel: "Админ-панель",
     overview: {
       title: "Обзор",
-      subtitle: "Сводка по пользователям, премиум, активности и контенту.",
       users_title: "Пользователи",
       users_link: "Управление пользователями",
       users_total: "Всего",

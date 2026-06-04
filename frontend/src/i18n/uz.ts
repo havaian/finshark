@@ -667,7 +667,6 @@ export default {
     panel: "Admin panel",
     overview: {
       title: "Overview",
-      subtitle: "At-a-glance counts across users, premium, activity, and content.",
       users_title: "Users",
       users_link: "Manage users",
       users_total: "Total",

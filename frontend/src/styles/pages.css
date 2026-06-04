@@ -2993,7 +2993,18 @@
     aspect-ratio: 1 / 1;
     border-radius: 4px;
     border: 1px solid transparent;
-    transition: border-color 120ms ease, filter 120ms ease;
+    /* opacity is included so the staggered scroll-in reveal can fade each cell.
+       per-cell transition-delay is set inline from the template. */
+    opacity: 1;
+    transition: border-color 120ms ease, filter 120ms ease, opacity 360ms ease;
+}
+
+/* Hidden start state for the reveal: cells sit invisible until the grid gains
+   .is-revealed (set when it scrolls into view). No transform: scale - opacity
+   only. reduced-motion users get .is-revealed immediately from the script, so
+   they never see the hidden state for long. */
+.landing-heatmap-grid:not(.is-revealed) .landing-heat-cell {
+    opacity: 0;
 }
 
 .landing-heat-cell:hover {

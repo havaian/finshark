@@ -15,6 +15,7 @@ export interface PaperRaw {
   code: string;
   name_en: string;
   name_ru: string | null;
+  name_uz: string | null;
   // Free-tier access flag. When false, only premium users can start lessons
   // or mocks against this paper. Admin can toggle from the paper edit form
   // in AdminContentPage. See backend migration 20260525000006.
@@ -29,11 +30,14 @@ export interface LearningObjectiveRaw {
   code: string;
   title_en: string;
   title_ru: string | null;
+  title_uz: string | null;
   description_en: string | null;
   description_ru: string | null;
+  description_uz: string | null;
   // Long-form theory (150-300 words, Kaplan-style). Optional per LO.
   theory_en: string | null;
   theory_ru: string | null;
+  theory_uz: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -43,10 +47,12 @@ export interface McqOptionRaw {
   key: string;
   text_en: string;
   text_ru: string | null;
+  text_uz: string | null;
   // Per-option "why this is wrong" explanations, shown after a wrong MCQ answer.
   // Always null on the correct option (storage invariant).
   why_wrong_en: string | null;
   why_wrong_ru: string | null;
+  why_wrong_uz: string | null;
 }
 
 export interface QuestionRaw {
@@ -57,17 +63,21 @@ export interface QuestionRaw {
 
   prompt_en: string;
   prompt_ru: string | null;
+  prompt_uz: string | null;
 
   options: McqOptionRaw[] | null;
 
   correct_answer_en: string;
   correct_answer_ru: string | null;
+  correct_answer_uz: string | null;
 
   explanation_en: string;
   explanation_ru: string | null;
+  explanation_uz: string | null;
 
   concept_bite_en: string | null;
   concept_bite_ru: string | null;
+  concept_bite_uz: string | null;
 
   // number_entry only: absolute ±tolerance; null = exact match.
   acceptable_tolerance: number | null;
@@ -148,6 +158,7 @@ export interface ContentTreeLo {
   code: string;
   title_en: string;
   title_ru: string | null;
+  title_uz: string | null;
   sort_order: number;
   // True when the LO has a non-null theory_en (a primer is available).
   has_theory: boolean;
@@ -160,5 +171,6 @@ export interface ContentTreePaper {
   code: string;
   name_en: string;
   name_ru: string | null;
+  name_uz: string | null;
   learning_objectives: ContentTreeLo[];
 }

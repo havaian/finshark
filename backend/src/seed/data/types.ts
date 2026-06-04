@@ -10,12 +10,15 @@ export interface SeedMcqOption {
   key: string;
   text_en: string;
   text_ru: string;
+  // Optional during incremental localisation rollout; populated per paper.
+  text_uz?: string;
   // Per-option "why this is wrong" - optional during seed authoring, but
   // strongly encouraged for wrong options. The correct option must NOT have
   // these set (validated/scrubbed in the service layer; the seed runner
   // also nulls them out for the correct option as a belt-and-braces).
   why_wrong_en?: string;
   why_wrong_ru?: string;
+  why_wrong_uz?: string;
 }
 
 // Discriminated by `type`. For MCQ, `options` is required and `correct_answer_en`
@@ -28,12 +31,15 @@ export interface SeedMcqQuestion {
   difficulty: SeedDifficulty;
   prompt_en: string;
   prompt_ru: string;
+  prompt_uz?: string;
   options: SeedMcqOption[];
   correct_answer_en: string; // option key, e.g. 'A'
   explanation_en: string;
   explanation_ru: string;
+  explanation_uz?: string;
   concept_bite_en?: string;
   concept_bite_ru?: string;
+  concept_bite_uz?: string;
 }
 
 export interface SeedNumberEntryQuestion {
@@ -41,12 +47,15 @@ export interface SeedNumberEntryQuestion {
   difficulty: SeedDifficulty;
   prompt_en: string;
   prompt_ru: string;
+  prompt_uz?: string;
   correct_answer_en: string; // numeric value as string, no commas/units
   acceptable_tolerance?: number; // optional ±X tolerance; omit for exact match
   explanation_en: string;
   explanation_ru: string;
+  explanation_uz?: string;
   concept_bite_en?: string;
   concept_bite_ru?: string;
+  concept_bite_uz?: string;
 }
 
 export type SeedQuestion = SeedMcqQuestion | SeedNumberEntryQuestion;
@@ -55,14 +64,17 @@ export interface SeedLearningObjective {
   code: string; // e.g. 'A', 'B'
   title_en: string;
   title_ru: string;
+  title_uz?: string;
   description_en: string;
   description_ru: string;
+  description_uz?: string;
   sort_order: number;
   // Optional long-form theory bite per LO (150-300 words). Surfaces as a
   // pre-lesson primer and is the building block for a future read-only study
   // mode. Optional during early seed authoring; populated as content matures.
   theory_en?: string;
   theory_ru?: string;
+  theory_uz?: string;
   questions: SeedQuestion[];
 }
 
@@ -70,5 +82,6 @@ export interface SeedPaper {
   code: string; // e.g. 'F1', 'F5'
   name_en: string;
   name_ru: string;
+  name_uz?: string;
   learning_objectives: SeedLearningObjective[];
 }

@@ -11,16 +11,28 @@
 // inputs return an em-dash placeholder so callers don't need to null-check.
 
 import { i18n } from "./index";
+import { SUPPORTED_LANGS, DEFAULT_LANG, type Lang } from "./index";
 
-function activeLang(): "en" | "ru" {
+// Map each UI language to the BCP-47 tag Intl should use. Uzbek uses the Latin
+// script (uz-Latn), which is the modern standard in Uzbekistan and matches the
+// Latin-script UI strings in uz.ts.
+const INTL_LOCALE: Record<Lang, string> = {
+  en: "en-US",
+  ru: "ru-RU",
+  uz: "uz-Latn",
+};
+
+function activeLang(): Lang {
   // i18n.global.locale.value is a Ref<string> in Composition mode.
   const raw = (i18n.global as unknown as { locale: { value: string } }).locale
     .value;
-  return raw === "en" ? "en" : "ru";
+  return (SUPPORTED_LANGS as readonly string[]).includes(raw)
+    ? (raw as Lang)
+    : DEFAULT_LANG;
 }
 
 function intlLocale(): string {
-  return activeLang() === "ru" ? "ru-RU" : "en-US";
+  return INTL_LOCALE[activeLang()] ?? INTL_LOCALE[DEFAULT_LANG];
 }
 
 // Coerce input to Date or return null for invalid/empty values.

@@ -29,9 +29,14 @@ api.interceptors.request.use((config) => {
   }
   // X-Lang header - server resolves it through the @Lang decorator.
   // We read from localStorage on every request (cheap) so the locale store
-  // doesn't need to be imported here, avoiding a circular import.
+  // doesn't need to be imported here, avoiding a circular import. The valid
+  // set is inlined for the same reason; keep it in sync with SUPPORTED_LANGS
+  // in src/i18n/index.ts. The backend @Lang decorator falls back to its
+  // DEFAULT_LANG for any value it doesn't yet support, so sending a lang the
+  // backend hasn't enabled is safe (it just serves the default).
   const lang = localStorage.getItem(LS_LANG);
-  if (config.headers && (lang === "en" || lang === "ru")) {
+  const VALID_LANGS = ["en", "ru", "uz"];
+  if (config.headers && lang && VALID_LANGS.includes(lang)) {
     config.headers["X-Lang"] = lang;
   }
   return config;

@@ -5,10 +5,13 @@ export interface EmailTemplate {
   key: string;
   subject_en: string;
   subject_ru: string | null;
+  subject_uz: string | null;
   body_en: string;
   body_ru: string | null;
+  body_uz: string | null;
   html_en: string | null;
   html_ru: string | null;
+  html_uz: string | null;
   variables: string[];
   is_active: boolean;
   notes: string | null;
@@ -20,10 +23,13 @@ export interface UpsertEmailTemplateInput {
   key: string;
   subject_en: string;
   subject_ru?: string | null;
+  subject_uz?: string | null;
   body_en: string;
   body_ru?: string | null;
+  body_uz?: string | null;
   html_en?: string | null;
   html_ru?: string | null;
+  html_uz?: string | null;
   variables: string[];
   is_active?: boolean;
   notes?: string | null;
@@ -31,7 +37,7 @@ export interface UpsertEmailTemplateInput {
 
 export interface SendTestInput {
   to: string;
-  lang?: "en" | "ru";
+  lang?: "en" | "ru" | "uz";
   variables?: Record<string, string | number>;
 }
 
@@ -39,7 +45,7 @@ export interface SendTestResult {
   ok: true;
   rendered_subject: string;
   rendered_body: string;
-  resolved_lang: "en" | "ru";
+  resolved_lang: "en" | "ru" | "uz";
 }
 
 export type BlastAudience =
@@ -52,7 +58,7 @@ export type BlastAudience =
 export interface BlastInput {
   audience: BlastAudience;
   user_ids?: string[];
-  lang?: "en" | "ru";
+  lang?: "en" | "ru" | "uz";
   extra_variables?: Record<string, string | number>;
   ignore_opt_out?: boolean;
   max_recipients?: number;

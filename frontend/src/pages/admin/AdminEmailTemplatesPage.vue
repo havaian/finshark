@@ -34,10 +34,13 @@ const form = ref({
   key: '',
   subject_en: '',
   subject_ru: '',
+  subject_uz: '',
   body_en: '',
   body_ru: '',
+  body_uz: '',
   html_en: '',
   html_ru: '',
+  html_uz: '',
   // The form stores variables as a newline-separated string for ergonomics
   // (admins type one per line); we split on save.
   variablesText: '',
@@ -52,7 +55,7 @@ const savedFlash = ref(false);
 // saved). Variables are entered as JSON for simplicity - wrong shape
 // surfaces as a 400 from the backend's class-validator.
 const testTo = ref('');
-const testLang = ref<'en' | 'ru'>('en');
+const testLang = ref<'en' | 'ru' | 'uz'>('en');
 const testVariablesText = ref('{}');
 const testSending = ref(false);
 const testResult = ref<SendTestResult | null>(null);
@@ -82,10 +85,13 @@ function selectKey(key: string) {
     key: row.key,
     subject_en: row.subject_en,
     subject_ru: row.subject_ru ?? '',
+    subject_uz: row.subject_uz ?? '',
     body_en: row.body_en,
     body_ru: row.body_ru ?? '',
+    body_uz: row.body_uz ?? '',
     html_en: row.html_en ?? '',
     html_ru: row.html_ru ?? '',
+    html_uz: row.html_uz ?? '',
     variablesText: row.variables.join('\n'),
     is_active: row.is_active,
     notes: row.notes ?? '',
@@ -104,10 +110,13 @@ function startNew() {
     key: '',
     subject_en: '',
     subject_ru: '',
+    subject_uz: '',
     body_en: '',
     body_ru: '',
+    body_uz: '',
     html_en: '',
     html_ru: '',
+    html_uz: '',
     variablesText: '',
     is_active: true,
     notes: '',
@@ -132,10 +141,13 @@ async function onSave() {
       key: form.value.key.trim(),
       subject_en: form.value.subject_en,
       subject_ru: form.value.subject_ru.trim() || null,
+      subject_uz: form.value.subject_uz.trim() || null,
       body_en: form.value.body_en,
       body_ru: form.value.body_ru.trim() || null,
+      body_uz: form.value.body_uz.trim() || null,
       html_en: form.value.html_en.trim() || null,
       html_ru: form.value.html_ru.trim() || null,
+      html_uz: form.value.html_uz.trim() || null,
       variables,
       is_active: form.value.is_active,
       notes: form.value.notes.trim() || null,
@@ -224,7 +236,7 @@ function extractError(e: unknown): string | null {
 // throttles per-message; the request stays open until the whole audience
 // is processed (or fails) and returns a summary the UI shows inline.
 const blastAudience = ref<BlastAudience>('reminders_enabled');
-const blastLang = ref<'en' | 'ru'>('en');
+const blastLang = ref<'en' | 'ru' | 'uz'>('en');
 const blastIgnoreOptOut = ref(false);
 const blastUserIdsText = ref('');
 const blastSending = ref(false);
@@ -281,7 +293,7 @@ async function onSendBlast() {
 //     `REALISTIC_SAMPLE_DATA` map), and `{name}` for anything we don't have
 //     a sample for. Lets the admin see what the email actually looks like
 //     to a real user.
-const previewLang = ref<'en' | 'ru'>('en');
+const previewLang = ref<'en' | 'ru' | 'uz'>('en');
 type SampleMode = 'placeholder' | 'realistic';
 const sampleMode = ref<SampleMode>('placeholder');
 const previewVariablesText = ref('{}');
@@ -363,21 +375,33 @@ function substitute(template: string, vars: Record<string, string | number>): st
   });
 }
 
-// Resolve EN/RU like the backend does: prefer the selected lang, fall back
-// to EN when the RU slot is empty (matches sendByTemplate's fallback logic).
+// Resolve EN/RU/UZ like the backend does: prefer the selected lang, fall back
+// to EN when that slot is empty (matches sendByTemplate's fallback logic).
 const previewResolved = computed(() => {
   const f = form.value;
-  const wantRu = previewLang.value === 'ru';
-  const subject =
-    wantRu && f.subject_ru.trim() ? f.subject_ru : f.subject_en;
-  const body = wantRu && f.body_ru.trim() ? f.body_ru : f.body_en;
-  const html = wantRu && f.html_ru.trim() ? f.html_ru : f.html_en;
-  const usedRu = wantRu && (f.subject_ru.trim() || f.body_ru.trim() || f.html_ru.trim());
+  const lang = previewLang.value;
+  let subject = f.subject_en;
+  let body = f.body_en;
+  let html = f.html_en;
+  let resolvedLang: 'en' | 'ru' | 'uz' = 'en';
+  if (lang === 'ru') {
+    const used = f.subject_ru.trim() || f.body_ru.trim() || f.html_ru.trim();
+    subject = f.subject_ru.trim() ? f.subject_ru : f.subject_en;
+    body = f.body_ru.trim() ? f.body_ru : f.body_en;
+    html = f.html_ru.trim() ? f.html_ru : f.html_en;
+    resolvedLang = used ? 'ru' : 'en';
+  } else if (lang === 'uz') {
+    const used = f.subject_uz.trim() || f.body_uz.trim() || f.html_uz.trim();
+    subject = f.subject_uz.trim() ? f.subject_uz : f.subject_en;
+    body = f.body_uz.trim() ? f.body_uz : f.body_en;
+    html = f.html_uz.trim() ? f.html_uz : f.html_en;
+    resolvedLang = used ? 'uz' : 'en';
+  }
   return {
     subject: substitute(subject, previewVariables.value),
     body: substitute(body, previewVariables.value),
     html: html ? substitute(html, previewVariables.value) : '',
-    resolved_lang: usedRu ? 'ru' : 'en',
+    resolved_lang: resolvedLang,
   };
 });
 
@@ -444,9 +468,9 @@ const placeholderHelp = computed(() => {
   );
   const re = /\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g;
   const allBodies = [
-    form.value.subject_en, form.value.subject_ru,
-    form.value.body_en, form.value.body_ru,
-    form.value.html_en, form.value.html_ru,
+    form.value.subject_en, form.value.subject_ru, form.value.subject_uz,
+    form.value.body_en, form.value.body_ru, form.value.body_uz,
+    form.value.html_en, form.value.html_ru, form.value.html_uz,
   ].join('\n');
   const found = new Set<string>();
   let m: RegExpExecArray | null;
@@ -528,6 +552,11 @@ onMounted(load);
           </div>
         </div>
 
+        <div class="field mt-4">
+          <label class="field-label">{{ t('admin.email_templates.subject_uz_label') }}</label>
+          <input v-model="form.subject_uz" type="text" maxlength="200" />
+        </div>
+
         <div class="form-grid-2 mt-4">
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.body_en_label') }}</label>
@@ -541,6 +570,12 @@ onMounted(load);
           </div>
         </div>
 
+        <div class="field mt-4">
+          <label class="field-label">{{ t('admin.email_templates.body_uz_label') }}</label>
+          <textarea v-model="form.body_uz" rows="10" maxlength="20000"
+            style="font-family: ui-monospace, monospace;"></textarea>
+        </div>
+
         <div class="form-grid-2 mt-4">
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.html_en_label') }}</label>
@@ -552,6 +587,12 @@ onMounted(load);
             <textarea v-model="form.html_ru" rows="6" maxlength="50000"
               style="font-family: ui-monospace, monospace;"></textarea>
           </div>
+        </div>
+
+        <div class="field mt-4">
+          <label class="field-label">{{ t('admin.email_templates.html_uz_label') }}</label>
+          <textarea v-model="form.html_uz" rows="6" maxlength="50000"
+            style="font-family: ui-monospace, monospace;"></textarea>
         </div>
 
         <div class="field mt-4">
@@ -600,6 +641,7 @@ onMounted(load);
               <select v-model="previewLang">
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
+                <option value="uz">O'zbekcha</option>
               </select>
             </div>
             <div class="field" style="min-width: 220px;">
@@ -690,6 +732,7 @@ onMounted(load);
               <select v-model="testLang">
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
+                <option value="uz">O'zbekcha</option>
               </select>
             </div>
           </div>
@@ -740,6 +783,7 @@ onMounted(load);
                 <select v-model="blastLang">
                   <option value="en">English</option>
                   <option value="ru">Русский</option>
+                <option value="uz">O'zbekcha</option>
                 </select>
               </div>
             </div>

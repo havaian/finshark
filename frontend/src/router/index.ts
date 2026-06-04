@@ -97,7 +97,7 @@ const routes: RouteRecordRaw[] = [
 
   // Localized tree. Everything else hangs off here.
   {
-    path: "/:lang(en|ru)",
+    path: "/:lang(en|ru|uz)",
     component: LangLayout,
     children: [
       {

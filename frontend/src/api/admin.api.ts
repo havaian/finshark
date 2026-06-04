@@ -79,6 +79,7 @@ export const adminApi = {
     code: string;
     name_en: string;
     name_ru?: string | null;
+    name_uz?: string | null;
     // Defaults true on the backend; pass false to create a premium-only paper.
     free_accessible?: boolean;
   }): Promise<PaperRaw> =>
@@ -96,6 +97,7 @@ export const adminApi = {
       code: string;
       name_en: string;
       name_ru: string | null;
+      name_uz: string | null;
       free_accessible: boolean;
     }>
   ): Promise<PaperRaw> =>
@@ -119,10 +121,13 @@ export const adminApi = {
       code: string;
       title_en: string;
       title_ru?: string | null;
+      title_uz?: string | null;
       description_en?: string | null;
       description_ru?: string | null;
+      description_uz?: string | null;
       theory_en?: string | null;
       theory_ru?: string | null;
+      theory_uz?: string | null;
       sort_order?: number;
     }
   ): Promise<LearningObjectiveRaw> =>
@@ -139,10 +144,13 @@ export const adminApi = {
       code: string;
       title_en: string;
       title_ru: string | null;
+      title_uz: string | null;
       description_en: string | null;
       description_ru: string | null;
+      description_uz: string | null;
       theory_en: string | null;
       theory_ru: string | null;
+      theory_uz: string | null;
       sort_order: number;
     }>
   ): Promise<LearningObjectiveRaw> =>
@@ -163,13 +171,17 @@ export const adminApi = {
       difficulty: QuestionDifficulty;
       prompt_en: string;
       prompt_ru?: string | null;
+      prompt_uz?: string | null;
       options: McqOptionRaw[] | null;
       correct_answer_en: string;
       correct_answer_ru?: string | null;
+      correct_answer_uz?: string | null;
       explanation_en: string;
       explanation_ru?: string | null;
+      explanation_uz?: string | null;
       concept_bite_en?: string | null;
       concept_bite_ru?: string | null;
+      concept_bite_uz?: string | null;
       acceptable_tolerance?: number | null;
     }
   ): Promise<QuestionRaw> =>
@@ -182,13 +194,17 @@ export const adminApi = {
       difficulty: QuestionDifficulty;
       prompt_en: string;
       prompt_ru: string | null;
+      prompt_uz: string | null;
       options: McqOptionRaw[] | null;
       correct_answer_en: string;
       correct_answer_ru: string | null;
+      correct_answer_uz: string | null;
       explanation_en: string;
       explanation_ru: string | null;
+      explanation_uz: string | null;
       concept_bite_en: string | null;
       concept_bite_ru: string | null;
+      concept_bite_uz: string | null;
       acceptable_tolerance: number | null;
       is_active: boolean;
     }>

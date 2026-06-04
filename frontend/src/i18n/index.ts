@@ -1,9 +1,10 @@
 import { createI18n, type Composer, type I18nOptions } from "vue-i18n";
 import en from "./en";
 import ru from "./ru";
+import uz from "./uz";
 
 // Supported languages - must mirror backend src/content/content.types.ts SUPPORTED_LANGS.
-export const SUPPORTED_LANGS = ["en", "ru"] as const;
+export const SUPPORTED_LANGS = ["en", "ru", "uz"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
 // Default for new/anonymous users. The ACCA exam itself is in English, so EN
 // is the sensible landing language; existing users keep their saved choice via
@@ -15,7 +16,9 @@ const LS_LANG = "finshark.lang";
 export function readLangFromStorage(): Lang {
   if (typeof localStorage === "undefined") return DEFAULT_LANG;
   const raw = localStorage.getItem(LS_LANG);
-  if (raw === "en" || raw === "ru") return raw;
+  if (raw && (SUPPORTED_LANGS as readonly string[]).includes(raw)) {
+    return raw as Lang;
+  }
   return DEFAULT_LANG;
 }
 export function writeLangToStorage(lang: Lang): void {
@@ -30,7 +33,7 @@ const options: I18nOptions = {
   legacy: false,
   locale: readLangFromStorage(),
   fallbackLocale: "en",
-  messages: { en, ru },
+  messages: { en, ru, uz },
   missingWarn: false,
   fallbackWarn: false,
 };

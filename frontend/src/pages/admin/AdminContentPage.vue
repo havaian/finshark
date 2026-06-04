@@ -178,15 +178,18 @@ const editType = ref<QuestionType>('mcq');
 const editDifficulty = ref<QuestionDifficulty>('easy');
 const editPromptEn = ref('');
 const editPromptRu = ref('');
+const editPromptUz = ref('');
 const editOptions = ref<McqOptionRaw[]>([]);
 const editCorrectEn = ref('');
 const editCorrectRu = ref('');
 const editExplanationEn = ref('');
 const editExplanationRu = ref('');
+const editExplanationUz = ref('');
 const editConceptBiteEn = ref('');
 const editConceptBiteRu = ref('');
+const editConceptBiteUz = ref('');
 const editAcceptableTolerance = ref('');
-const editLang = ref<'en' | 'ru'>('en');
+const editLang = ref<'en' | 'ru' | 'uz'>('en');
 const savingEdit = ref(false);
 
 function openEditModal(q: QuestionRaw) {
@@ -195,21 +198,26 @@ function openEditModal(q: QuestionRaw) {
   editDifficulty.value = q.difficulty;
   editPromptEn.value = q.prompt_en;
   editPromptRu.value = q.prompt_ru ?? '';
+  editPromptUz.value = q.prompt_uz ?? '';
   editOptions.value = q.options
     ? q.options.map((o) => ({
       key: o.key,
       text_en: o.text_en,
       text_ru: o.text_ru ?? '',
+      text_uz: o.text_uz ?? '',
       why_wrong_en: o.why_wrong_en ?? '',
       why_wrong_ru: o.why_wrong_ru ?? '',
+      why_wrong_uz: o.why_wrong_uz ?? '',
     } as McqOptionRaw))
     : [];
   editCorrectEn.value = q.correct_answer_en;
   editCorrectRu.value = q.correct_answer_ru ?? '';
   editExplanationEn.value = q.explanation_en;
   editExplanationRu.value = q.explanation_ru ?? '';
+  editExplanationUz.value = q.explanation_uz ?? '';
   editConceptBiteEn.value = q.concept_bite_en ?? '';
   editConceptBiteRu.value = q.concept_bite_ru ?? '';
+  editConceptBiteUz.value = q.concept_bite_uz ?? '';
   editAcceptableTolerance.value =
     q.acceptable_tolerance !== null && q.acceptable_tolerance !== undefined
       ? String(q.acceptable_tolerance)
@@ -244,8 +252,10 @@ async function saveEdit() {
               key: o.key.trim(),
               text_en: o.text_en.trim(),
               text_ru: blankToNull(o.text_ru ?? ''),
+              text_uz: blankToNull(o.text_uz ?? ''),
               why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
               why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
+              why_wrong_uz: isCorrect ? null : blankToNull(o.why_wrong_uz ?? ''),
             };
           })
         : null;
@@ -262,12 +272,15 @@ async function saveEdit() {
       difficulty: editDifficulty.value,
       prompt_en: editPromptEn.value.trim(),
       prompt_ru: blankToNull(editPromptRu.value),
+      prompt_uz: blankToNull(editPromptUz.value),
       options,
       correct_answer_en: editCorrectEn.value.trim(),
-      // short_answer retired; mcq/number_entry never store correct_answer_ru.
+      // short_answer retired; mcq/number_entry never store correct_answer_ru/_uz.
       correct_answer_ru: null,
+      correct_answer_uz: null,
       explanation_en: editExplanationEn.value.trim(),
       explanation_ru: blankToNull(editExplanationRu.value),
+      explanation_uz: blankToNull(editExplanationUz.value),
       concept_bite_en: blankToNull(editConceptBiteEn.value),
       concept_bite_ru: blankToNull(editConceptBiteRu.value),
       acceptable_tolerance: tolerance,
@@ -427,6 +440,7 @@ const showAddPaper = ref(false);
 const newPaperCode = ref('');
 const newPaperNameEn = ref('');
 const newPaperNameRu = ref('');
+const newPaperNameUz = ref('');
 // Defaults to true - same as the DB default. Admin can flip to create a
 // premium-only paper from the start.
 const newPaperFreeAccessible = ref(true);
@@ -454,6 +468,7 @@ async function submitAddPaper() {
       code: newPaperCode.value.trim(),
       name_en: newPaperNameEn.value.trim(),
       name_ru: newPaperNameRu.value.trim() || null,
+      name_uz: newPaperNameUz.value.trim() || null,
       free_accessible: newPaperFreeAccessible.value,
     });
     await reloadTree();
@@ -475,6 +490,7 @@ const editPaperId = ref<string | null>(null);
 const editPaperCode = ref('');
 const editPaperNameEn = ref('');
 const editPaperNameRu = ref('');
+const editPaperNameUz = ref('');
 const editPaperFreeAccessible = ref(true);
 const editPaperBusy = ref(false);
 const editPaperError = ref<string | null>(null);
@@ -488,6 +504,7 @@ async function openEditPaper(paperId: string) {
     editPaperCode.value = full.code;
     editPaperNameEn.value = full.name_en;
     editPaperNameRu.value = full.name_ru ?? '';
+    editPaperNameUz.value = full.name_uz ?? '';
     editPaperFreeAccessible.value = full.free_accessible;
     showEditPaper.value = true;
   } catch (e) {
@@ -512,6 +529,7 @@ async function submitEditPaper() {
       code: editPaperCode.value.trim(),
       name_en: editPaperNameEn.value.trim(),
       name_ru: editPaperNameRu.value.trim() || null,
+      name_uz: editPaperNameUz.value.trim() || null,
       free_accessible: editPaperFreeAccessible.value,
     });
     await reloadTree();
@@ -547,10 +565,13 @@ const showAddLoForPaper = ref<string | null>(null); // paper id, or null when cl
 const newLoCode = ref('');
 const newLoTitleEn = ref('');
 const newLoTitleRu = ref('');
+const newLoTitleUz = ref('');
 const newLoDescEn = ref('');
 const newLoDescRu = ref('');
+const newLoDescUz = ref('');
 const newLoTheoryEn = ref('');
 const newLoTheoryRu = ref('');
+const newLoTheoryUz = ref('');
 const newLoSort = ref(0);
 const addLoBusy = ref(false);
 const addLoError = ref<string | null>(null);
@@ -559,10 +580,13 @@ function openAddLo(paperId: string) {
   newLoCode.value = '';
   newLoTitleEn.value = '';
   newLoTitleRu.value = '';
+  newLoTitleUz.value = '';
   newLoDescEn.value = '';
   newLoDescRu.value = '';
+  newLoDescUz.value = '';
   newLoTheoryEn.value = '';
   newLoTheoryRu.value = '';
+  newLoTheoryUz.value = '';
   newLoSort.value = 0;
   addLoError.value = null;
   showAddLoForPaper.value = paperId;
@@ -581,10 +605,13 @@ async function submitAddLo() {
       code: newLoCode.value.trim(),
       title_en: newLoTitleEn.value.trim(),
       title_ru: newLoTitleRu.value.trim() || null,
+      title_uz: newLoTitleUz.value.trim() || null,
       description_en: newLoDescEn.value.trim() || null,
       description_ru: newLoDescRu.value.trim() || null,
+      description_uz: newLoDescUz.value.trim() || null,
       theory_en: newLoTheoryEn.value.trim() || null,
       theory_ru: newLoTheoryRu.value.trim() || null,
+      theory_uz: newLoTheoryUz.value.trim() || null,
       sort_order: newLoSort.value,
     });
     await reloadTree();
@@ -615,6 +642,7 @@ async function deleteLo(lo: ContentTreeLo, paperCode: string) {
 const theoryEditOpen = ref(false);
 const theoryEditEn = ref('');
 const theoryEditRu = ref('');
+const theoryEditUz = ref('');
 const theoryEditBusy = ref(false);
 const theoryEditError = ref<string | null>(null);
 
@@ -628,6 +656,7 @@ async function openTheoryEdit() {
     const full = await adminApi.getLo(selectedLo.value.lo.id);
     theoryEditEn.value = full.theory_en ?? '';
     theoryEditRu.value = full.theory_ru ?? '';
+    theoryEditUz.value = full.theory_uz ?? '';
     theoryEditOpen.value = true;
   } catch (e) {
     theoryEditError.value = extractError(e) ?? 'failed to load theory';
@@ -647,6 +676,7 @@ async function saveTheoryEdit() {
     await adminApi.updateLo(selectedLo.value.lo.id, {
       theory_en: theoryEditEn.value.trim() || null,
       theory_ru: theoryEditRu.value.trim() || null,
+      theory_uz: theoryEditUz.value.trim() || null,
     });
     await reloadTree(); // refreshes has_theory flag
     theoryEditOpen.value = false;
@@ -672,18 +702,21 @@ function openCreateQuestion() {
   editDifficulty.value = 'easy';
   editPromptEn.value = '';
   editPromptRu.value = '';
+  editPromptUz.value = '';
   editOptions.value = [
-    { key: 'A', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
-    { key: 'B', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
-    { key: 'C', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
-    { key: 'D', text_en: '', text_ru: '', why_wrong_en: '', why_wrong_ru: '' },
+    { key: 'A', text_en: '', text_ru: '', text_uz: '', why_wrong_en: '', why_wrong_ru: '', why_wrong_uz: '' },
+    { key: 'B', text_en: '', text_ru: '', text_uz: '', why_wrong_en: '', why_wrong_ru: '', why_wrong_uz: '' },
+    { key: 'C', text_en: '', text_ru: '', text_uz: '', why_wrong_en: '', why_wrong_ru: '', why_wrong_uz: '' },
+    { key: 'D', text_en: '', text_ru: '', text_uz: '', why_wrong_en: '', why_wrong_ru: '', why_wrong_uz: '' },
   ];
   editCorrectEn.value = '';
   editCorrectRu.value = '';
   editExplanationEn.value = '';
   editExplanationRu.value = '';
+  editExplanationUz.value = '';
   editConceptBiteEn.value = '';
   editConceptBiteRu.value = '';
+  editConceptBiteUz.value = '';
   editAcceptableTolerance.value = '';
   editLang.value = 'en';
 }
@@ -709,8 +742,10 @@ async function submitCreateQuestion() {
               key: o.key.trim(),
               text_en: o.text_en.trim(),
               text_ru: blankToNull(o.text_ru ?? ''),
+              text_uz: blankToNull(o.text_uz ?? ''),
               why_wrong_en: isCorrect ? null : blankToNull(o.why_wrong_en ?? ''),
               why_wrong_ru: isCorrect ? null : blankToNull(o.why_wrong_ru ?? ''),
+              why_wrong_uz: isCorrect ? null : blankToNull(o.why_wrong_uz ?? ''),
             };
           })
         : null;
@@ -726,14 +761,18 @@ async function submitCreateQuestion() {
       difficulty: editDifficulty.value,
       prompt_en: editPromptEn.value.trim(),
       prompt_ru: blankToNull(editPromptRu.value),
+      prompt_uz: blankToNull(editPromptUz.value),
       options,
       correct_answer_en: editCorrectEn.value.trim(),
-      // short_answer retired; mcq/number_entry never store correct_answer_ru.
+      // short_answer retired; mcq/number_entry never store correct_answer_ru/_uz.
       correct_answer_ru: null,
+      correct_answer_uz: null,
       explanation_en: editExplanationEn.value.trim(),
       explanation_ru: blankToNull(editExplanationRu.value),
+      explanation_uz: blankToNull(editExplanationUz.value),
       concept_bite_en: blankToNull(editConceptBiteEn.value),
       concept_bite_ru: blankToNull(editConceptBiteRu.value),
+      concept_bite_uz: blankToNull(editConceptBiteUz.value),
       acceptable_tolerance: tolerance,
     });
     questions.value = [created, ...questions.value];
@@ -1035,6 +1074,9 @@ onMounted(reloadTree);
           <button type="button" role="tab" :class="['lang-tab', { active: editLang === 'ru' }]"
             @click="editLang = 'ru'">{{
               t('admin.questions.lang_tab_ru') }}</button>
+          <button type="button" role="tab" :class="['lang-tab', { active: editLang === 'uz' }]"
+            @click="editLang = 'uz'">{{
+              t('admin.questions.lang_tab_uz') }}</button>
         </div>
 
         <!-- EN pane -->
@@ -1106,6 +1148,37 @@ onMounted(reloadTree);
           <div class="field mt-2">
             <label class="field-label">{{ t('admin.questions.explanation_ru') }}</label>
             <textarea v-model="editExplanationRu" rows="3" maxlength="4000"></textarea>
+          </div>
+        </div>
+
+        <!-- UZ pane -->
+        <div v-show="editLang === 'uz'">
+          <div class="field mt-2">
+            <label class="field-label">{{ t('admin.questions.concept_bite_uz') }}</label>
+            <textarea v-model="editConceptBiteUz" rows="2" maxlength="4000"></textarea>
+          </div>
+          <div class="field mt-2">
+            <label class="field-label">{{ t('admin.questions.prompt_uz') }}</label>
+            <textarea v-model="editPromptUz" rows="3" maxlength="4000"></textarea>
+          </div>
+          <div v-if="editType === 'mcq'" class="field mt-2">
+            <label class="field-label">{{ t('admin.questions.options') }}</label>
+            <div class="col" style="gap: 12px;">
+              <div v-for="(opt, i) in editOptions" :key="i" class="option-editor-block">
+                <div class="option-editor-row">
+                  <input v-model="opt.key" type="text" class="opt-key-input" maxlength="2" disabled />
+                  <input v-model="opt.text_uz" type="text" class="grow" maxlength="500" />
+                </div>
+                <div v-if="opt.key.trim() !== editCorrectEn.trim()" class="option-why-wrong">
+                  <input v-model="opt.why_wrong_uz" type="text" maxlength="2000"
+                    :placeholder="t('admin.questions.why_wrong_uz_ph')" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field mt-2">
+            <label class="field-label">{{ t('admin.questions.explanation_uz') }}</label>
+            <textarea v-model="editExplanationUz" rows="3" maxlength="4000"></textarea>
           </div>
         </div>
 
@@ -1199,6 +1272,10 @@ onMounted(reloadTree);
           <input v-model="newPaperNameRu" type="text" maxlength="200" />
         </div>
         <div class="field mt-2">
+          <label class="field-label">{{ t('admin.papers.add_name_uz_ph') }}</label>
+          <input v-model="newPaperNameUz" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
           <label class="row" style="gap: 8px; cursor: pointer;">
             <input v-model="newPaperFreeAccessible" type="checkbox" />
             <span>{{ t('admin.papers.free_accessible_label') }}</span>
@@ -1238,6 +1315,10 @@ onMounted(reloadTree);
         <div class="field mt-2">
           <label class="field-label">{{ t('admin.papers.add_name_ru_ph') }}</label>
           <input v-model="editPaperNameRu" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.papers.add_name_uz_ph') }}</label>
+          <input v-model="editPaperNameUz" type="text" maxlength="200" />
         </div>
         <div class="field mt-2">
           <label class="row" style="gap: 8px; cursor: pointer;">
@@ -1288,6 +1369,10 @@ onMounted(reloadTree);
           <input v-model="newLoTitleRu" type="text" maxlength="200" />
         </div>
         <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_title_uz_ph') }}</label>
+          <input v-model="newLoTitleUz" type="text" maxlength="200" />
+        </div>
+        <div class="field mt-2">
           <label class="field-label">{{ t('admin.los.add_description_en_ph') }}</label>
           <textarea v-model="newLoDescEn" rows="2" maxlength="2000"></textarea>
         </div>
@@ -1296,12 +1381,20 @@ onMounted(reloadTree);
           <textarea v-model="newLoDescRu" rows="2" maxlength="2000"></textarea>
         </div>
         <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_description_uz_ph') }}</label>
+          <textarea v-model="newLoDescUz" rows="2" maxlength="2000"></textarea>
+        </div>
+        <div class="field mt-2">
           <label class="field-label">{{ t('admin.los.add_theory_en_ph') }}</label>
           <textarea v-model="newLoTheoryEn" rows="4" maxlength="8000"></textarea>
         </div>
         <div class="field mt-2">
           <label class="field-label">{{ t('admin.los.add_theory_ru_ph') }}</label>
           <textarea v-model="newLoTheoryRu" rows="4" maxlength="8000"></textarea>
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_theory_uz_ph') }}</label>
+          <textarea v-model="newLoTheoryUz" rows="4" maxlength="8000"></textarea>
         </div>
         <p v-if="addLoError" class="error-text">{{ addLoError }}</p>
         <div class="admin-edit-actions mt-4">
@@ -1330,6 +1423,10 @@ onMounted(reloadTree);
         <div class="field mt-2">
           <label class="field-label">{{ t('admin.los.add_theory_ru_ph') }}</label>
           <textarea v-model="theoryEditRu" rows="8" maxlength="8000"></textarea>
+        </div>
+        <div class="field mt-2">
+          <label class="field-label">{{ t('admin.los.add_theory_uz_ph') }}</label>
+          <textarea v-model="theoryEditUz" rows="8" maxlength="8000"></textarea>
         </div>
         <p v-if="theoryEditError" class="error-text">{{ theoryEditError }}</p>
         <div class="admin-edit-actions mt-4">

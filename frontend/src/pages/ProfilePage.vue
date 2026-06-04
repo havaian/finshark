@@ -438,7 +438,12 @@ const heatmapStyleVars = computed<Record<string, string>>(() => ({
 // changes). For 'ru' we use the abbreviated names; 'en' uses 3-char month.
 const monthShort = (date: Date, lang: string): string => {
   try {
-    return new Intl.DateTimeFormat(lang === 'ru' ? 'ru-RU' : 'en-US', {
+    const locales: Record<string, string> = {
+      ru: 'ru-RU',
+      uz: 'uz-Latn',
+      en: 'en-US',
+    };
+    return new Intl.DateTimeFormat(locales[lang] ?? 'en-US', {
       month: 'short',
     }).format(date);
   } catch {
@@ -572,7 +577,12 @@ function fmtTooltipDate(iso: string): string {
   void locale.value;
   try {
     const d = new Date(iso + 'T00:00:00Z');
-    const intlLang = locale.value === 'ru' ? 'ru-RU' : 'en-US';
+    const localeMap: Record<string, string> = {
+      ru: 'ru-RU',
+      uz: 'uz-Latn',
+      en: 'en-US',
+    };
+    const intlLang = localeMap[locale.value] ?? 'en-US';
     return new Intl.DateTimeFormat(intlLang, {
       year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
     }).format(d);

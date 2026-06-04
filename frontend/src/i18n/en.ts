@@ -32,6 +32,7 @@ export default {
   lang: {
     name_en: "English",
     name_ru: "Russian",
+    name_uz: "Uzbek",
     label: "Language",
   },
 
@@ -202,22 +203,13 @@ export default {
     faq_5_a:
       "Approved study materials including Kaplan, BPP, and ACCA study guides, rewritten into plain language. Every explanation cites the learning objective it covers.",
 
-    // Syllabus heatmap section - illustrative grid of topic mastery. Topic
-    // labels are short ACCA-style headers; the grid itself uses demo numbers.
-    heat_title: "See exactly where you stand",
-    heat_lede:
-      "Every syllabus learning objective, coloured by your real mastery. Green is solid, amber needs review, and grey is untouched - so you always know what to study next.",
-    heat_legend_low: "Needs work",
-    heat_legend_mid: "Getting there",
-    heat_legend_high: "Solid",
-    heat_topic_1: "Business organisation",
-    heat_topic_2: "Cost classification",
-    heat_topic_3: "Double entry",
-    heat_topic_4: "Inventory valuation",
-    heat_topic_5: "Budgeting",
-    heat_topic_6: "Variance analysis",
-    heat_topic_7: "Cash flow statements",
-    heat_topic_8: "Ratio analysis",
+    // Study activity calendar section - mirrors the Profile heatmap. Weekday
+    // labels reuse profile.heatmap_day_* so they aren't duplicated here.
+    activity_title: "Watch your consistency build",
+    activity_lede:
+      "Every day you study lights up a square. A few minutes most days beats cramming the week before - and the calendar makes the habit visible.",
+    activity_less: "Less",
+    activity_more: "More",
 
     bottom_cta_title: "Ready to start?",
     bottom_cta_sub: "Sign in and try one lesson. It takes about three minutes.",
@@ -784,6 +776,7 @@ export default {
       add_code_ph: "Code (e.g. F1)",
       add_name_en_ph: "Name (English)",
       add_name_ru_ph: "Name (Russian, optional)",
+      add_name_uz_ph: "Name (Uzbek, optional)",
       // Free-tier access flag on each paper. Default true; admin can flip
       // to lock a paper behind premium. Backend gate enforces; the picker
       // just shows a lock icon for free users.
@@ -929,10 +922,13 @@ export default {
       key_help: "Stable slug referenced from code (e.g. 'reminder_daily'). Cannot be renamed after creation - delete + re-create instead.",
       subject_en_label: "Subject (English)",
       subject_ru_label: "Subject (Russian, optional)",
+      subject_uz_label: "Subject (Uzbek, optional)",
       body_en_label: "Body - text (English)",
       body_ru_label: "Body - text (Russian, optional)",
+      body_uz_label: "Body - text (Uzbek, optional)",
       html_en_label: "Body - HTML (English, optional)",
       html_ru_label: "Body - HTML (Russian, optional)",
+      html_uz_label: "Body - HTML (Uzbek, optional)",
       variables_label: "Variables - one per line",
       variables_placeholder: "display_name\nstreak\napp_url",
       variables_missing: "Body references variables not in the list: {vars}",
@@ -991,11 +987,14 @@ export default {
       add_sort_ph: "Sort",
       add_title_en_ph: "Title (English)",
       add_title_ru_ph: "Title (Russian, optional)",
+      add_title_uz_ph: "Title (Uzbek, optional)",
       add_description_en_ph: "Description (English, optional)",
       add_description_ru_ph: "Description (Russian, optional)",
+      add_description_uz_ph: "Description (Uzbek, optional)",
       add_theory_en_ph:
         "Theory bite, 150–300 words (English, optional). Shown as a primer before lessons.",
       add_theory_ru_ph: "Theory bite (Russian, optional)",
+      add_theory_uz_ph: "Theory bite (Uzbek, optional)",
       delete_confirm: 'Delete "{code} - {title}" and ALL its questions?',
       empty: "No LOs yet for this paper.",
       sort_label: "sort",
@@ -1020,11 +1019,13 @@ export default {
       difficulty_hard: "Hard",
       prompt_en: "Prompt (English)",
       prompt_ru: "Prompt (Russian, optional)",
+      prompt_uz: "Prompt (Uzbek, optional)",
       options: "Options",
       option_text_en_ph: "Option text (English)",
       option_text_ru_ph: "Option text (Russian, optional)",
       why_wrong_en_ph: "Why this option is wrong (English, 1 sentence)",
       why_wrong_ru_ph: "Why this option is wrong (Russian, 1 sentence)",
+      why_wrong_uz_ph: "Why this option is wrong (Uzbek, 1 sentence)",
       why_wrong_field: "Wrong because",
       correct_label_mcq: "Correct option key (e.g. B)",
       correct_label_short_en: "Correct answer (English)",
@@ -1037,8 +1038,10 @@ export default {
       tolerance_field: "tolerance",
       explanation_en: "Explanation (English)",
       explanation_ru: "Explanation (Russian, optional)",
+      explanation_uz: "Explanation (Uzbek, optional)",
       concept_bite_en: "Concept bite (English, optional)",
       concept_bite_ru: "Concept bite (Russian, optional)",
+      concept_bite_uz: "Concept bite (Uzbek, optional)",
       add_btn: "Add question",
       empty: "No questions yet for this LO. Add one above.",
       correct_field: "Correct",
@@ -1050,6 +1053,7 @@ export default {
       delete_confirm: "Delete this question? This is irreversible.",
       lang_tab_en: "EN",
       lang_tab_ru: "RU",
+      lang_tab_uz: "UZ",
       generate_btn: "Generate questions",
       generate_modal_title: "Generate questions with AI",
       generate_info:

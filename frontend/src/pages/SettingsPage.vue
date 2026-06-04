@@ -506,10 +506,8 @@ const premiumEndsLine = computed<string | null>(() => {
         <div class="row mt-4">
           <span class="grow">{{ t('lang.label') }}</span>
           <div class="segmented">
-            <button type="button" :class="{ active: locale.lang === 'ru' }" @click="onLangChange('ru')">{{
-              t('lang.name_ru') }}</button>
-            <button type="button" :class="{ active: locale.lang === 'en' }" @click="onLangChange('en')">{{
-              t('lang.name_en') }}</button>
+            <button v-for="code in SUPPORTED_LANGS" :key="code" type="button"
+              :class="{ active: locale.lang === code }" @click="onLangChange(code)">{{ t(`lang.name_${code}`) }}</button>
           </div>
         </div>
       </section>

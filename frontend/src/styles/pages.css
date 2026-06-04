@@ -3306,10 +3306,6 @@
         max-width: none;
     }
 
-    .landing-hero-mock {
-        justify-content: flex-start;
-    }
-
     .landing-mock-card {
         max-width: 480px;
     }

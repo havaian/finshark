@@ -227,7 +227,7 @@ export default {
     demo_lede:
       "Sinov imtihonini tugatganingizda faqat ball emas, ko'proq narsa olasiz. Har bir savol belgilanadi va o'tkazib yuborgan har biriga tushuntirish biriktiriladi - xato takrorlanmasligi uchun.",
     demo_score_label: "Sizning balingiz",
-    demo_score_value: "8 / 10",
+    demo_score_value: "18 / 20",
     demo_correct: "To'g'ri",
     demo_wrong: "Noto'g'ri",
     demo_your_answer: "Sizning javobingiz",

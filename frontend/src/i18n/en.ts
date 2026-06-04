@@ -219,7 +219,7 @@ export default {
     demo_lede:
       "Finish a mock and you get more than a score. Every question is marked, and each one you miss comes with a worked explanation so the mistake does not happen twice.",
     demo_score_label: "Your score",
-    demo_score_value: "8 / 10",
+    demo_score_value: "18 / 20",
     demo_correct: "Correct",
     demo_wrong: "Wrong",
     demo_your_answer: "Your answer",

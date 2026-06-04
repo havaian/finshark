@@ -2996,7 +2996,7 @@
    reduced-motion users get .is-revealed immediately from the script. */
 .landing-lite-wrap {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     opacity: 1;
     transition: opacity 420ms ease;
 }
@@ -3289,6 +3289,8 @@
 }
 
 .landing-foot {
+    display: flex;
+    justify-content: center !important;
     padding: 28px 0 40px;
     border-top: 1px solid var(--border);
 }

@@ -46,6 +46,18 @@ export class AdminWith2faGuard implements CanActivate {
         message: "2FA enrollment is required before accessing admin features",
       });
     }
+    // Enrolled, but this session hasn't passed the admin-area 2FA challenge.
+    // The adm2fa claim is stamped only by /auth/2fa-elevate (and carried
+    // through refresh). Its absence means "logged in, but not elevated" - the
+    // frontend catches this code and shows the elevation prompt, distinct from
+    // the enrollment redirect above. This is what makes 2FA gate the admin
+    // area instead of login.
+    if (req.user.adm2fa !== true) {
+      throw new ForbiddenException({
+        error: "2FA_ELEVATION_REQUIRED",
+        message: "admin-area access requires a 2FA code this session",
+      });
+    }
     return true;
   }
 }

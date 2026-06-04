@@ -35,4 +35,14 @@ export const authApi = {
     const res = await api.post<AuthResult>("/auth/2fa-verify", input);
     return res.data;
   },
+
+  // POST /auth/2fa-elevate - the admin-area 2FA gate. Caller is already
+  // authenticated (the api client attaches the bearer token); sends a current
+  // TOTP/recovery code and gets back an elevated { user, tokens } pair whose
+  // access token carries the adm2fa claim. Used by the elevation page before
+  // entering /admin/*.
+  async twoFactorElevate(input: { code: string }): Promise<AuthResult> {
+    const res = await api.post<AuthResult>("/auth/2fa-elevate", input);
+    return res.data;
+  },
 };

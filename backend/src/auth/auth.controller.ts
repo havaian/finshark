@@ -20,10 +20,23 @@ import { AuthService, type AccessTokenPayload } from "./auth.service";
 import { RefreshDto } from "./dto/refresh.dto";
 import { TwoFactorVerifyDto } from "./dto/two-factor-verify.dto";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { AdminGuard } from "./guards/admin.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import { UsersRepository } from "../users/users.repository";
 import { toPublicUser } from "../users/user.types";
 import { TotpService } from "../totp/totp.service";
+import { IsString, MinLength, MaxLength } from "class-validator";
+
+// Payload for POST /auth/2fa-elevate. Just the code (TOTP or recovery) - the
+// user id comes from the authenticated access token, not the body, because
+// this endpoint runs behind JwtAuthGuard + AdminGuard. The service tells TOTP
+// from recovery by shape.
+class TwoFactorElevateDto {
+  @IsString()
+  @MinLength(6)
+  @MaxLength(40)
+  code!: string;
+}
 
 // The cookie name we use to round-trip the OAuth state value. The cookie
 // lives only between /auth/google and /auth/google/callback - a few seconds
@@ -161,6 +174,30 @@ export class AuthController {
   twoFactorVerify(@Body() dto: TwoFactorVerifyDto, @Req() req: Request) {
     return this.totp.verifyAndIssueTokens({
       pending_2fa_token: dto.pending_2fa_token,
+      code: dto.code,
+      ip: (req.ip ?? null) || null,
+    });
+  }
+
+  // POST /api/auth/2fa-elevate
+  // The admin-area 2FA gate. The caller is ALREADY authenticated (JwtAuthGuard)
+  // and an admin (AdminGuard); they send a current TOTP/recovery code and get
+  // back a fresh, elevated token pair (adm2fa claim set) that AdminWith2faGuard
+  // will accept. This replaces the old login-time challenge.
+  //
+  // Same tight per-IP throttle as 2fa-verify - it's the brute-force surface for
+  // the codes. The per-user lockout in TotpService is the second layer.
+  @Post("2fa-elevate")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Throttle({ default: { ttl: 60_000, limit: 30 } })
+  twoFactorElevate(
+    @CurrentUser() current: AccessTokenPayload,
+    @Body() dto: TwoFactorElevateDto,
+    @Req() req: Request
+  ) {
+    return this.totp.elevateAdmin2fa({
+      user_id: current.sub,
       code: dto.code,
       ip: (req.ip ?? null) || null,
     });

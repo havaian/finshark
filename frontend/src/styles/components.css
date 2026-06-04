@@ -6,7 +6,33 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 28px;
+    padding: var(--pg-card-pad);
+}
+
+/* A .card that is itself a link (used for the Subscription entry point on the
+   Profile page). Row layout with a CTA on the right; hover lifts the border +
+   bg only, no transform per project convention. */
+.profile-link-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 120ms ease, background 120ms ease;
+}
+
+.profile-link-card:hover {
+    border-color: var(--accent);
+    background: var(--bg-elev);
+}
+
+.profile-link-cta {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
 }
 
 /* -----------------------------------------------------------
@@ -1172,9 +1198,11 @@ button.list-row.active {
     background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
-    /* Pull above .page padding so it reaches the edges. */
-    margin: -48px -24px 32px;
-    padding: 14px 24px;
+    /* Pull above .page padding so it reaches the edges. Horizontal bleed +
+       padding both track --pg-gutter so the nav stays edge-aligned with the
+       page content as the gutter steps down on mobile. */
+    margin: -48px calc(-1 * var(--pg-gutter)) 32px;
+    padding: 14px var(--pg-gutter);
 }
 
 .app-nav-inner {
@@ -1396,8 +1424,8 @@ button.list-row.active {
 
 @media (max-width: 1200px) {
     .app-nav {
-        margin: -48px -16px 24px;
-        padding: 10px 14px;
+        margin: -48px calc(-1 * var(--pg-gutter)) 24px;
+        padding: 10px var(--pg-gutter);
     }
 
     /* Hide the desktop row entirely on phones - the mobile bar replaces it.
@@ -1406,6 +1434,15 @@ button.list-row.active {
      need to flip its display here. */
     .app-nav-inner {
         display: none;
+    }
+}
+
+/* At ≤720px the .page top padding drops to 28px (see base.css token block),
+   so the nav's upward bleed must match - otherwise the -48px margin pulls the
+   sticky nav 20px past the page top and clips it / overlaps content. */
+@media (max-width: 720px) {
+    .app-nav {
+        margin-top: -28px;
     }
 }
 
@@ -1433,8 +1470,13 @@ button.list-row.active {
     width: 100%;
 }
 
-/* Hide the mobile bar on desktop (>720px). */
-@media (min-width: 721px) {
+/* Hide the mobile bar on desktop (>1200px). The desktop row (.app-nav-inner)
+   hides at max-width:1200px, so the mobile bar must START showing at exactly
+   that boundary - otherwise (the old 721px value) the whole 721-1200px range
+   had the desktop row hidden AND the mobile bar still hidden, leaving no nav
+   at all. Both breakpoints are now 1200 so exactly one bar is visible at every
+   width. */
+@media (min-width: 1201px) {
     .app-nav-mobile {
         display: none;
     }

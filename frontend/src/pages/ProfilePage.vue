@@ -22,13 +22,12 @@ import { badgesApi } from '../api/badges.api';
 import type { PublicBadge } from '../types/badges';
 import { achievementsApi } from '../api/achievements.api';
 import type { PublicAchievement } from '../types/achievements';
-import { billingApi } from '../api/billing.api';
-import type { Subscription } from '../types/billing';
 import { useAuthStore } from '../stores/auth.store';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import { useLocaleStore } from '../stores/locale.store';
 import { useThemeStore } from '../stores/theme.store';
 import { fmtDate } from '../i18n/dates';
+import { useLocalePath } from '../router/useLocalePath';
 import AppNav from '../components/AppNav.vue';
 
 // Register only the chart.js modules we use - reduces bundle size.
@@ -46,6 +45,7 @@ const localeStore = useLocaleStore();
 const theme = useThemeStore();
 const router = useRouter();
 const entitlement = useEntitlementStore();
+const lp = useLocalePath();
 
 const me = ref<ProfileMe | null>(null);
 const stats = ref<ProfileStats | null>(null);
@@ -72,14 +72,6 @@ const achievementsUnlockedCount = computed(() =>
   achievements.value.filter((a) => a.current_level > 0).length,
 );
 const achievementsTotalCount = computed(() => achievements.value.length);
-
-// Payments / subscriptions history. Lazy-loaded in parallel with the rest of
-// the profile so a slow billing query doesn't gate the page paint. Failure
-// is non-fatal - the section just shows the empty state ("no subscriptions
-// yet") rather than disappearing, so users who'd been free always know the
-// section exists for promo redemptions.
-const subscriptions = ref<Subscription[]>([]);
-const subscriptionsLoading = ref(true);
 
 // Display name edit state
 const editName = ref(false);
@@ -147,19 +139,6 @@ async function load() {
         achievementsLoading.value = false;
       });
 
-    // Subscriptions history - same lazy / non-fatal pattern.
-    const subscriptionsPromise = billingApi
-      .getMySubscriptions()
-      .then((rows) => {
-        subscriptions.value = rows;
-      })
-      .catch(() => {
-        subscriptions.value = [];
-      })
-      .finally(() => {
-        subscriptionsLoading.value = false;
-      });
-
     const [meData, statsData] = await Promise.all([
       profileApi.getMe(),
       profileApi.getStats(),
@@ -183,7 +162,6 @@ async function load() {
     // Don't block the page on these - they show up as soon as they arrive.
     void badgesPromise;
     void achievementsPromise;
-    void subscriptionsPromise;
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to load profile';
     loading.value = false;
@@ -638,18 +616,6 @@ function extractError(e: unknown): string | null {
   return null;
 }
 
-// Resolve a plan id (e.g. `premium_lifetime`) to a localized human-readable
-// label. The backend stores the raw id on each subscription - the user-facing
-// payments section was previously printing it directly, which leaked the slug
-// into the UI ("premium_lifetime" instead of "Premium · lifetime"). Falls
-// back to the raw id when no i18n key exists, so unknown plans (future PSPs)
-// still render something rather than nothing.
-function planNameFor(planId: string): string {
-  const key = `profile.plan_name_${planId}`;
-  const translated = t(key);
-  return translated === key ? planId : translated;
-}
-
 onMounted(load);
 </script>
 
@@ -928,67 +894,19 @@ onMounted(load);
           </div>
         </section>
 
-        <!-- Payments / subscriptions section. Shown to all users; the empty
-             state ("no subscriptions yet") guides free users toward the redeem
-             flow in Settings rather than hiding the section entirely.
-             Header line summarises current entitlement (premium tier + ends_at,
-             or "Free plan") via the entitlement store so the chip stays in
-             sync with the rest of the chrome. -->
-        <section v-if="subscriptionsLoading || subscriptions.length > 0 || entitlement.entitlement"
-          class="card mt-6">
-          <header class="row" style="justify-content: space-between; align-items: center; gap: 12px;">
-            <h2>{{ t('profile.payments_section') }}</h2>
-            <span v-if="entitlement.isPremium" class="pill pill-accent">{{ t('dashboard.premium_badge') }}</span>
-            <span v-else-if="entitlement.isFree" class="pill pill-grey">{{ t('settings.premium_status_free') }}</span>
-          </header>
-
-          <div v-if="entitlement.entitlement && entitlement.isPremium" class="dim text-sm mt-2">
-            <template v-if="entitlement.entitlement.ends_at">
-              {{ t('settings.premium_ends_at', {
-                date: new Date(entitlement.entitlement.ends_at).toLocaleDateString(),
-              }) }}
-            </template>
-            <template v-else>{{ t('settings.premium_lifetime') }}</template>
+        <!-- Billing moved to its own page (/subscription). Profile just links
+             through now - the full plan status, redeem, and history live there
+             rather than cramped at the bottom of the profile. -->
+        <RouterLink :to="lp('/subscription')" class="card profile-link-card mt-6">
+          <div class="grow">
+            <div style="font-weight: 500;">{{ t('subscription.link_title') }}</div>
+            <div class="dim text-sm" style="margin-top: 2px;">{{ t('subscription.link_sub') }}</div>
           </div>
-
-          <p v-if="subscriptionsLoading" class="dim text-sm mt-4">{{ t('common.loading') }}</p>
-          <p v-else-if="subscriptions.length === 0" class="dim text-sm mt-4">
-            {{ t('profile.payments_empty') }}
-          </p>
-          <div v-else class="list-bordered mt-4">
-            <div v-for="s in subscriptions" :key="s.id" class="list-row">
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div>
-                  <span style="font-weight: 500;">{{ planNameFor(s.plan_id) }}</span>
-                  <span :class="['pill', s.status === 'active' ? 'pill-accent' : 'pill-grey']" style="margin-left: 10px;">
-                    {{ t(`admin.subscriptions.sub_status_${s.status}`) }}
-                  </span>
-                  <span class="dim text-xs" style="margin-left: 8px;">
-                    · {{ t(`admin.subscriptions.sub_source_${s.source}`) }}
-                  </span>
-                </div>
-                <div class="dim text-xs">
-                  {{ t('admin.subscriptions.sub_starts', { date: new Date(s.starts_at).toLocaleDateString() }) }}
-                  <template v-if="s.ends_at">
-                    · {{ t('admin.subscriptions.sub_ends', { date: new Date(s.ends_at).toLocaleDateString() }) }}
-                  </template>
-                  <template v-else>
-                    · {{ t('admin.subscriptions.sub_ends_never') }}
-                  </template>
-                  <template v-if="s.cancelled_at">
-                    · {{ t('admin.subscriptions.sub_cancelled_at', {
-                      date: new Date(s.cancelled_at).toLocaleDateString(),
-                    }) }}
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p class="dim text-xs mt-4">
-            {{ t('profile.payments_redeem_hint') }}
-          </p>
-        </section>
+          <span class="profile-link-cta">
+            <span v-if="entitlement.isPremium" class="pill pill-accent" style="margin-right: 10px;">{{ t('dashboard.premium_badge') }}</span>
+            {{ t('subscription.link_cta') }} →
+          </span>
+        </RouterLink>
 
         <!-- Danger zone -->
         <section class="card danger-zone mt-6">

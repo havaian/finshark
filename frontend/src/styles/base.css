@@ -206,13 +206,26 @@ p {
    3) Layout
    ----------------------------------------------------------- */
 
+/* App-page spacing tokens. Mirror the landing's --lp-* system but for the
+   authed app surface (everything using .page / .card). Defined on :root so
+   both .page padding and the .app-nav negative margins (which must equal the
+   page side-padding to reach the edges) read the same value, and so the card
+   padding steps down in lockstep on mobile. Overridden at the breakpoints in
+   section 3 / the nav block.
+     --pg-gutter   : left/right padding on .page (and the .app-nav bleed)
+     --pg-card-pad : inner padding on .card */
+:root {
+    --pg-gutter: 24px;
+    --pg-card-pad: 28px;
+}
+
 .page {
     min-height: 100vh;
-    padding: 48px 24px;
+    padding: 48px var(--pg-gutter);
 }
 
 .page-tight {
-    padding: 24px 16px;
+    padding: 24px var(--pg-gutter);
 }
 
 .container {
@@ -282,4 +295,28 @@ p {
     height: 1px;
     background: var(--border);
     margin: 32px 0;
+}
+
+/* App-page spacing token step-downs. Same two breakpoints and the same target
+   values as the landing's --lp-* tokens, so .page / .card and the landing
+   surface tighten in lockstep on mobile instead of each page carrying its own
+   ad-hoc padding overrides. .page also drops its big 48px top/bottom on phones
+   where that much vertical air wastes space under the nav. */
+@media (max-width: 720px) {
+    :root {
+        --pg-gutter: 20px;
+        --pg-card-pad: 24px;
+    }
+
+    .page {
+        padding-top: 28px;
+        padding-bottom: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --pg-gutter: 16px;
+        --pg-card-pad: 20px;
+    }
 }

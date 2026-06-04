@@ -17,6 +17,25 @@ function readUserFromStorage(): PublicUser | null {
   }
 }
 
+// Decode the payload segment of a JWT WITHOUT verifying it. We only read it to
+// drive UI gating (is this session admin-elevated?); the server re-checks the
+// signature + claim on every admin request via AdminWith2faGuard, so a forged
+// adm2fa here buys nothing - admin endpoints would still 403. base64url →
+// JSON. Returns {} on any malformed input.
+function decodeJwtPayload(token: string | null): Record<string, unknown> {
+  if (!token) return {};
+  const parts = token.split(".");
+  if (parts.length !== 3) return {};
+  try {
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const pad = b64.length % 4 === 0 ? "" : "=".repeat(4 - (b64.length % 4));
+    const json = atob(b64 + pad);
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
 export const useAuthStore = defineStore("auth", () => {
   // Initialise from storage so a refresh keeps the user logged in.
   const user = ref<PublicUser | null>(readUserFromStorage());
@@ -28,6 +47,14 @@ export const useAuthStore = defineStore("auth", () => {
   );
 
   const isAuthenticated = computed(() => !!user.value && !!accessToken.value);
+
+  // True when the current session's access token carries the adm2fa elevation
+  // claim (set by /auth/2fa-elevate, carried through refresh). The router uses
+  // this to decide whether an enrolled admin must pass the admin-area 2FA
+  // challenge before entering /admin/*. Re-derives whenever accessToken changes.
+  const isAdminElevated = computed(
+    () => decodeJwtPayload(accessToken.value).adm2fa === true
+  );
 
   function clear() {
     user.value = null;
@@ -122,6 +149,23 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem(LS_USER, JSON.stringify(u));
   }
 
+  // Apply the elevated token pair returned by /auth/2fa-elevate. Same storage
+  // mechanics as a login completion (tokens + user), but named for intent: it
+  // upgrades the CURRENT session to admin-elevated. After this, isAdminElevated
+  // flips true (the new access token carries adm2fa) and admin routes open.
+  function applyElevation(input: {
+    access_token: string;
+    refresh_token: string;
+    user: PublicUser;
+  }) {
+    accessToken.value = input.access_token;
+    refreshToken.value = input.refresh_token;
+    user.value = input.user;
+    localStorage.setItem(TOKEN_STORAGE_KEYS.access, input.access_token);
+    localStorage.setItem(TOKEN_STORAGE_KEYS.refresh, input.refresh_token);
+    localStorage.setItem(LS_USER, JSON.stringify(input.user));
+  }
+
   // Wire forced logout from axios interceptor (called when refresh fails).
   onForcedLogout(() => {
     clear();
@@ -132,8 +176,10 @@ export const useAuthStore = defineStore("auth", () => {
     accessToken,
     refreshToken,
     isAuthenticated,
+    isAdminElevated,
     completeGoogleLogin,
     completeTwoFactorLogin,
+    applyElevation,
     logout,
     fetchMe,
     setUser,

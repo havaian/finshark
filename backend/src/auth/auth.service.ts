@@ -23,6 +23,14 @@ import { RefreshTokensRepository } from "./refresh-tokens.repository";
 export interface AccessTokenPayload {
   sub: string; // user id
   email: string;
+  // Admin 2FA elevation marker. Present and true only on tokens minted by the
+  // /auth/2fa-elevate step (an already-authenticated admin who passed a TOTP/
+  // recovery code). Absent on ordinary login tokens. AdminWith2faGuard requires
+  // it before letting an enrolled admin into admin endpoints, so login itself
+  // never demands 2FA - only entering the admin area does. Carried through
+  // refresh (see refresh()) so elevation survives access-token rotation for the
+  // life of the session, per the chosen lifetime model.
+  adm2fa?: boolean;
 }
 
 export interface AuthTokens {
@@ -204,15 +212,12 @@ export class AuthService {
       });
     }
 
-    // 2FA gate. For admins with TOTP enrolled, withhold tokens and return
-    // a pending challenge instead. The frontend swaps the pending token for
-    // real tokens at /auth/2fa-verify after the user enters a 6-digit code
-    // (or recovery code). Non-admins and admins without 2FA get tokens now.
-    if (this.totp.requiresTwoFactor(user)) {
-      const pending_2fa_token = this.totp.mintPending2faToken(user.id);
-      return { kind: "two_factor_required", pending_2fa_token };
-    }
-
+    // 2FA is no longer enforced at login. Previously admins with TOTP enrolled
+    // were withheld tokens here and forced through a challenge before getting
+    // any session - which also blocked them from the ordinary user side. The
+    // second factor now gates ADMIN-AREA access only (see TotpService
+    // .elevateAdmin2fa + AdminWith2faGuard's elevation check), so every user,
+    // admin or not, gets a normal session on login.
     const tokens = await this.issueTokens(user);
     return { kind: "authenticated", user: toPublicUser(user), tokens };
   }
@@ -250,9 +255,17 @@ export class AuthService {
       throw new UnauthorizedException("user no longer exists");
     }
 
+    // Carry the admin-2FA elevation forward across rotation. If the presented
+    // refresh token was elevated (adm2fa===true), the freshly-minted pair stays
+    // elevated; otherwise it stays ordinary. This is what makes elevation last
+    // the whole session rather than expiring on the first access-token refresh.
+    // Defensive: if the user is no longer an admin, drop the claim regardless -
+    // a demoted admin shouldn't keep an elevated session alive.
+    const wasElevated = payload.adm2fa === true && user.is_admin === true;
+
     // Rotate: revoke the old, issue new pair.
     await this.refreshTokens.revokeById(stored.id);
-    return this.issueTokens(user);
+    return this.issueTokens(user, { elevated: wasElevated });
   }
 
   // Logout: revoke the presented refresh token. Idempotent - if the token is
@@ -327,13 +340,22 @@ export class AuthService {
     return true;
   }
 
-  private async issueTokens(user: UserRow): Promise<AuthTokens> {
+  private async issueTokens(
+    user: UserRow,
+    opts?: { elevated?: boolean }
+  ): Promise<AuthTokens> {
     const accessSecret = this.config.getOrThrow<string>("JWT_ACCESS_SECRET");
     const refreshSecret = this.config.getOrThrow<string>("JWT_REFRESH_SECRET");
     const accessTtl = this.config.get<string>("JWT_ACCESS_TTL") ?? "15m";
     const refreshTtl = this.config.get<string>("JWT_REFRESH_TTL") ?? "30d";
 
+    // adm2fa rides BOTH tokens: the access token so AdminWith2faGuard can read
+    // it on each admin request, and the refresh token so a rotation (refresh())
+    // can carry the elevation forward instead of silently dropping the admin
+    // back to un-elevated mid-session. Only set when truthy so ordinary login
+    // tokens stay byte-for-byte as before (no adm2fa key at all).
     const payload: AccessTokenPayload = { sub: user.id, email: user.email };
+    if (opts?.elevated) payload.adm2fa = true;
 
     const access_token = jwt.sign(payload, accessSecret, {
       expiresIn: accessTtl as jwt.SignOptions["expiresIn"],
@@ -358,9 +380,14 @@ export class AuthService {
   // Public wrapper around issueTokens for sibling modules (TotpService) that
   // need to mint tokens after a non-Google verification step. Kept narrow:
   // accepts a full UserRow that the caller already loaded, so we don't
-  // re-hit the DB. Matches the shape used by handleGoogleCallback.
-  async issueTokensForUser(user: UserRow): Promise<AuthTokens> {
-    return this.issueTokens(user);
+  // re-hit the DB. Matches the shape used by handleGoogleCallback. The
+  // optional `elevated` flag stamps the admin-2FA claim (used by the
+  // /auth/2fa-elevate path).
+  async issueTokensForUser(
+    user: UserRow,
+    opts?: { elevated?: boolean }
+  ): Promise<AuthTokens> {
+    return this.issueTokens(user, opts);
   }
 
   // SHA-256 is fine here: refresh tokens are already high-entropy JWTs,

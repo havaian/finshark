@@ -72,6 +72,32 @@ export interface BlastResult {
   sample_recipients: string[];
 }
 
+// One entry in the variable catalogue (GET /variables). desc_key is an i18n
+// key the editor localises; sample is what the preview shows when no real
+// user is selected.
+export interface EmailVariableDef {
+  key: string;
+  desc_key: string;
+  sample: string | number;
+}
+
+export interface PreviewInput {
+  lang?: "en" | "ru" | "uz";
+  // When set, the preview resolves this user's real variable values.
+  user_id?: string;
+  extra_variables?: Record<string, string | number>;
+}
+
+export interface PreviewResult {
+  ok: true;
+  rendered_subject: string;
+  rendered_body: string;
+  resolved_lang: "en" | "ru" | "uz";
+  // The actual variable values that were substituted - so the editor can show
+  // the admin what each {{var}} resolved to.
+  resolved_variables: Record<string, string | number>;
+}
+
 // All endpoints below require an authenticated admin. The user's totp_secret
 // must be set (AdminWith2faGuard) - non-2FA admins are bounced to the
 // enrollment wizard by the router guard before they get here.
@@ -119,6 +145,26 @@ export const emailTemplatesApi = {
     (
       await api.post<BlastResult>(
         `/admin/email-templates/${encodeURIComponent(key)}/blast`,
+        input
+      )
+    ).data,
+
+  // The variable catalogue - which {{placeholders}} are available, with i18n
+  // description keys and sample values. Drives the editor's insert-palette.
+  listVariables: async (): Promise<EmailVariableDef[]> =>
+    (
+      await api.get<{ variables: EmailVariableDef[] }>(
+        "/admin/email-templates/variables"
+      )
+    ).data.variables,
+
+  // Dry-run render (no send). With a user_id, variables resolve from that real
+  // user; otherwise catalogue samples are used. Returns the rendered subject/
+  // body plus the resolved variable values.
+  preview: async (key: string, input: PreviewInput): Promise<PreviewResult> =>
+    (
+      await api.post<PreviewResult>(
+        `/admin/email-templates/${encodeURIComponent(key)}/preview`,
         input
       )
     ).data,

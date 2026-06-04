@@ -8,6 +8,8 @@ import {
   type BlastAudience,
   type BlastResult,
   type EmailTemplate,
+  type EmailVariableDef,
+  type PreviewResult,
   type SendTestResult,
 } from '../../api/email-templates.api';
 
@@ -484,7 +486,127 @@ watch(selectedKey, () => {
   if (auth.user?.email && !testTo.value) testTo.value = auth.user.email;
 });
 
-onMounted(load);
+// ── Variable catalogue (insert palette) ─────────────────────────────────
+// Fetched once from the backend so the list always matches what the server
+// can actually resolve. Each chip inserts {{key}} into the last-focused body
+// field and adds the key to the declared variables list if it isn't there.
+const variableCatalogue = ref<EmailVariableDef[]>([]);
+
+// Which body field the caret was last in, so a palette click inserts there.
+// Defaults to body_en. We track via @focus on each textarea/input in the
+// template. Keyed by the form field name.
+type InsertTarget =
+  | 'subject_en' | 'subject_ru' | 'subject_uz'
+  | 'body_en' | 'body_ru' | 'body_uz'
+  | 'html_en' | 'html_ru' | 'html_uz';
+const lastFocusedField = ref<InsertTarget>('body_en');
+
+function setInsertTarget(field: InsertTarget) {
+  lastFocusedField.value = field;
+}
+
+function insertVariable(key: string) {
+  const token = `{{${key}}}`;
+  // Append to the last-focused field. We append rather than caret-insert to
+  // avoid threading element refs for all nine fields - appending is good
+  // enough for a palette and keeps this simple.
+  form.value[lastFocusedField.value] = `${form.value[lastFocusedField.value] ?? ''}${token}`;
+  // Make sure the key is in the declared allow-list so the saved template
+  // documents it and the client-side preview seeds it.
+  const declared = form.value.variablesText
+    .split('\n')
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+  if (!declared.includes(key)) {
+    declared.push(key);
+    form.value.variablesText = declared.join('\n');
+  }
+}
+
+function variableDescription(def: EmailVariableDef): string {
+  // desc_key is an i18n key; fall back to the raw key if the translation is
+  // missing so the palette never shows a blank.
+  const translated = t(def.desc_key);
+  return translated === def.desc_key ? def.key : translated;
+}
+
+// ── Server-side "preview as user" (dry-run, no send) ─────────────────────
+// Distinct from the client-side preview above: this round-trips to the backend
+// /preview endpoint, which resolves a REAL user's variable values (display_name,
+// streak, plan, etc.) and renders without sending. Lets the admin see exactly
+// what a given recipient would receive.
+const previewUserId = ref('');
+const serverPreviewLoading = ref(false);
+const serverPreviewError = ref<string | null>(null);
+const serverPreviewResult = ref<PreviewResult | null>(null);
+
+async function onServerPreview() {
+  if (selectedKey.value === null || serverPreviewLoading.value) return;
+  serverPreviewLoading.value = true;
+  serverPreviewError.value = null;
+  serverPreviewResult.value = null;
+  try {
+    serverPreviewResult.value = await emailTemplatesApi.preview(selectedKey.value, {
+      lang: previewLang.value,
+      user_id: previewUserId.value.trim() || undefined,
+    });
+  } catch (e) {
+    serverPreviewError.value = extractError(e) ?? t('admin.email_templates.preview_failed');
+  } finally {
+    serverPreviewLoading.value = false;
+  }
+}
+
+// ── Single-user send ─────────────────────────────────────────────────────
+// A friendlier wrapper over the blast 'ids' audience for "just send this to
+// one user so I can see it for real". Takes a single user id, sends, surfaces
+// the same blast result.
+const singleSendUserId = ref('');
+const singleSendLang = ref<'en' | 'ru' | 'uz'>('en');
+const singleSending = ref(false);
+const singleSendResult = ref<BlastResult | null>(null);
+const singleSendError = ref<string | null>(null);
+
+async function onSingleSend() {
+  if (selectedKey.value === null || singleSending.value) return;
+  const id = singleSendUserId.value.trim();
+  if (!id) {
+    singleSendError.value = t('admin.email_templates.single_send_no_id');
+    return;
+  }
+  if (!confirm(t('admin.email_templates.single_send_confirm', { id }))) return;
+  singleSending.value = true;
+  singleSendError.value = null;
+  singleSendResult.value = null;
+  try {
+    singleSendResult.value = await emailTemplatesApi.blast(selectedKey.value, {
+      audience: 'ids',
+      user_ids: [id],
+      lang: singleSendLang.value,
+      // A single targeted send is intentional - bypass the opt-out so a test
+      // to yourself isn't silently skipped when your reminders are off.
+      ignore_opt_out: true,
+    });
+  } catch (e) {
+    singleSendError.value = extractError(e) ?? t('admin.email_templates.single_send_failed');
+  } finally {
+    singleSending.value = false;
+  }
+}
+
+async function loadVariableCatalogue() {
+  try {
+    variableCatalogue.value = await emailTemplatesApi.listVariables();
+  } catch {
+    // Non-fatal: the palette just stays empty; everything else still works.
+    variableCatalogue.value = [];
+  }
+}
+
+onMounted(() => {
+  void load();
+  void loadVariableCatalogue();
+});
 </script>
 
 <template>
@@ -544,55 +666,71 @@ onMounted(load);
         <div class="form-grid-2 mt-4">
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.subject_en_label') }}</label>
-            <input v-model="form.subject_en" type="text" maxlength="200" />
+            <input v-model="form.subject_en" type="text" maxlength="200" @focus="setInsertTarget('subject_en')" />
           </div>
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.subject_ru_label') }}</label>
-            <input v-model="form.subject_ru" type="text" maxlength="200" />
+            <input v-model="form.subject_ru" type="text" maxlength="200" @focus="setInsertTarget('subject_ru')" />
           </div>
         </div>
 
         <div class="field mt-4">
           <label class="field-label">{{ t('admin.email_templates.subject_uz_label') }}</label>
-          <input v-model="form.subject_uz" type="text" maxlength="200" />
+          <input v-model="form.subject_uz" type="text" maxlength="200" @focus="setInsertTarget('subject_uz')" />
         </div>
 
         <div class="form-grid-2 mt-4">
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.body_en_label') }}</label>
-            <textarea v-model="form.body_en" rows="10" maxlength="20000"
+            <textarea v-model="form.body_en" rows="10" maxlength="20000" @focus="setInsertTarget('body_en')"
               style="font-family: ui-monospace, monospace;"></textarea>
           </div>
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.body_ru_label') }}</label>
-            <textarea v-model="form.body_ru" rows="10" maxlength="20000"
+            <textarea v-model="form.body_ru" rows="10" maxlength="20000" @focus="setInsertTarget('body_ru')"
               style="font-family: ui-monospace, monospace;"></textarea>
           </div>
         </div>
 
         <div class="field mt-4">
           <label class="field-label">{{ t('admin.email_templates.body_uz_label') }}</label>
-          <textarea v-model="form.body_uz" rows="10" maxlength="20000"
+          <textarea v-model="form.body_uz" rows="10" maxlength="20000" @focus="setInsertTarget('body_uz')"
             style="font-family: ui-monospace, monospace;"></textarea>
         </div>
 
         <div class="form-grid-2 mt-4">
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.html_en_label') }}</label>
-            <textarea v-model="form.html_en" rows="6" maxlength="50000"
+            <textarea v-model="form.html_en" rows="6" maxlength="50000" @focus="setInsertTarget('html_en')"
               style="font-family: ui-monospace, monospace;"></textarea>
           </div>
           <div class="field">
             <label class="field-label">{{ t('admin.email_templates.html_ru_label') }}</label>
-            <textarea v-model="form.html_ru" rows="6" maxlength="50000"
+            <textarea v-model="form.html_ru" rows="6" maxlength="50000" @focus="setInsertTarget('html_ru')"
               style="font-family: ui-monospace, monospace;"></textarea>
           </div>
         </div>
 
         <div class="field mt-4">
           <label class="field-label">{{ t('admin.email_templates.html_uz_label') }}</label>
-          <textarea v-model="form.html_uz" rows="6" maxlength="50000"
+          <textarea v-model="form.html_uz" rows="6" maxlength="50000" @focus="setInsertTarget('html_uz')"
             style="font-family: ui-monospace, monospace;"></textarea>
+        </div>
+
+        <!-- Variable palette: click a chip to insert {{key}} into the field
+             you last had focus in, and auto-add it to the declared list below.
+             Sourced from the backend catalogue so it always matches what the
+             server can resolve. -->
+        <div v-if="variableCatalogue.length > 0" class="field mt-4">
+          <label class="field-label">{{ t('admin.email_templates.palette_label') }}</label>
+          <p class="dim text-xs mt-1">{{ t('admin.email_templates.palette_help') }}</p>
+          <div class="email-var-palette mt-2">
+            <button v-for="def in variableCatalogue" :key="def.key" type="button"
+              class="email-var-chip" :title="variableDescription(def)" @click="insertVariable(def.key)">
+              <code class="mono">{{ '{' + '{' + def.key + '}' + '}' }}</code>
+              <span class="email-var-chip-desc dim text-xs">{{ variableDescription(def) }}</span>
+            </button>
+          </div>
         </div>
 
         <div class="field mt-4">
@@ -715,6 +853,47 @@ onMounted(load);
                 style="width: 100%; min-height: 320px; margin-top: 8px; border: 1px solid var(--border); background: white; border-radius: 6px;"></iframe>
             </div>
           </div>
+
+          <!-- Preview as a real user (server dry-run). Resolves an actual
+               user's variable values (display_name, streak, plan, …) and
+               renders WITHOUT sending - so the admin sees exactly what that
+               recipient would receive. Only meaningful for a saved template
+               (looked up by key on the server). Leave the user id blank to
+               render with sample values instead. -->
+          <div v-if="editorMode === 'edit'" class="mt-4">
+            <label class="field-label">{{ t('admin.email_templates.preview_as_user_label') }}</label>
+            <p class="dim text-xs mt-1">{{ t('admin.email_templates.preview_as_user_help') }}</p>
+            <div class="row mt-2" style="gap: 8px; align-items: stretch; flex-wrap: wrap;">
+              <input v-model="previewUserId" type="text"
+                :placeholder="t('admin.email_templates.preview_as_user_placeholder')"
+                style="flex: 1 1 280px; font-family: ui-monospace, monospace;" />
+              <button class="btn btn-ghost" :disabled="serverPreviewLoading" @click="onServerPreview">
+                {{ serverPreviewLoading ? t('common.loading') : t('admin.email_templates.preview_as_user_btn') }}
+              </button>
+            </div>
+            <p v-if="serverPreviewError" class="error-text mt-2">{{ serverPreviewError }}</p>
+
+            <div v-if="serverPreviewResult" class="card mt-4" style="background: var(--bg-elev);">
+              <div class="dim text-xs">
+                {{ t('admin.email_templates.test_resolved_lang', { lang: serverPreviewResult.resolved_lang }) }}
+              </div>
+              <div class="mt-2" style="font-weight: 500;">{{ serverPreviewResult.rendered_subject }}</div>
+              <pre class="mt-2"
+                style="white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px;">{{ serverPreviewResult.rendered_body }}</pre>
+              <!-- Show the resolved variable values so the admin can see what
+                   each {{var}} became for this user. -->
+              <div class="mt-4">
+                <div class="dim text-xs">{{ t('admin.email_templates.preview_resolved_vars_label') }}</div>
+                <ul class="email-vars-list mt-2">
+                  <li v-for="(val, key) in serverPreviewResult.resolved_variables" :key="key" class="email-vars-row">
+                    <code class="mono">{{ '{' + '{' + key + '}' + '}' }}</code>
+                    <span class="dim text-xs">→</span>
+                    <span class="text-xs">{{ formatSampleValue(val) }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Test-send subsection. Only meaningful once the template is saved
@@ -757,6 +936,46 @@ onMounted(load);
               <div style="font-weight: 500;">{{ testResult.rendered_subject }}</div>
               <pre class="mt-2"
                 style="white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px;">{{ testResult.rendered_body }}</pre>
+            </div>
+          </div>
+
+          <!-- Send to one real user. Unlike send-test (which goes to an
+               arbitrary address with the variables you type), this sends the
+               template to a specific user by id with THAT user's real
+               variables resolved server-side - i.e. exactly what they'd get in
+               a blast, but to one person, so you can see it for real. -->
+          <div class="mt-6">
+            <h3>{{ t('admin.email_templates.single_send_title') }}</h3>
+            <p class="dim text-sm mt-2">{{ t('admin.email_templates.single_send_subtitle') }}</p>
+            <div class="form-grid-2 mt-4">
+              <div class="field">
+                <label class="field-label">{{ t('admin.email_templates.single_send_id_label') }}</label>
+                <input v-model="singleSendUserId" type="text"
+                  :placeholder="t('admin.email_templates.single_send_id_placeholder')"
+                  style="font-family: ui-monospace, monospace;" />
+              </div>
+              <div class="field">
+                <label class="field-label">{{ t('admin.email_templates.test_lang_label') }}</label>
+                <select v-model="singleSendLang">
+                  <option value="en">English</option>
+                  <option value="ru">Русский</option>
+                  <option value="uz">O'zbekcha</option>
+                </select>
+              </div>
+            </div>
+            <p v-if="singleSendError" class="error-text mt-2">{{ singleSendError }}</p>
+            <div class="row mt-4" style="justify-content: flex-end;">
+              <button class="btn btn-ghost" :disabled="singleSending || !singleSendUserId.trim()" @click="onSingleSend">
+                {{ singleSending ? t('common.saving') : t('admin.email_templates.single_send_btn') }}
+              </button>
+            </div>
+            <div v-if="singleSendResult" class="card mt-4" style="background: var(--bg-elev);">
+              <div class="text-sm">
+                {{ t('admin.email_templates.single_send_result', {
+                  sent: singleSendResult.sent,
+                  failed: singleSendResult.failed,
+                }) }}
+              </div>
             </div>
           </div>
 
@@ -866,5 +1085,40 @@ onMounted(load);
   gap: 8px;
   align-items: baseline;
   flex-wrap: wrap;
+}
+
+/* Insert palette: wrap of clickable chips, each inserting {{key}} into the
+   last-focused body field. Hover lifts border/bg only - no transform. */
+.email-var-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.email-var-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.email-var-chip:hover {
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+.email-var-chip code {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.email-var-chip-desc {
+  max-width: 220px;
 }
 </style>

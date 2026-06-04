@@ -258,12 +258,22 @@
 .activity-heatmap {
     display: flex;
     gap: var(--heat-gap);
+    /* Always take the grid's true width so the parent .activity-scroll can
+       decide whether to scroll. Without this the flex row shrank to fit the
+       container at the 180/365-day windows (many narrow columns), so those
+       never scrolled and the cells squished, while the 90-day window (fewer,
+       wider columns) overflowed and scrolled - the exact inconsistency this
+       fixes. */
+    width: max-content;
 }
 
 .activity-col {
     display: flex;
     flex-direction: column;
     gap: var(--heat-gap);
+    /* Never let a column compress below its cell width - pairs with the
+       max-content above so every window scrolls the same way. */
+    flex-shrink: 0;
 }
 
 .activity-cell {

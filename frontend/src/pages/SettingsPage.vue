@@ -9,8 +9,6 @@ import { useLocaleStore } from '../stores/locale.store';
 import { profileApi, type UpdatePreferencesPayload } from '../api/profile.api';
 import { totpApi } from '../api/totp.api';
 import { authApi } from '../api/auth.api';
-import { billingApi } from '../api/billing.api';
-import { useEntitlementStore } from '../stores/entitlement.store';
 import { SUPPORTED_LANGS, type Lang } from '../i18n';
 import { useLocalePath } from '../router/useLocalePath';
 import AppNav from '../components/AppNav.vue';
@@ -21,7 +19,6 @@ const theme = useThemeStore();
 const locale = useLocaleStore();
 const router = useRouter();
 const lp = useLocalePath();
-const entitlement = useEntitlementStore();
 
 const errorMsg = ref<string | null>(null);
 // Track saving spinner per-field so toggling reminders doesn't grey out the lesson-size dropdown.
@@ -379,100 +376,6 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
     .join(' · ');
 }
 
-// ── Premium / promocode redeem ────────────────────────────────────────
-// The widget is shown to every authed user, free or premium. Already-premium
-// redemption extends the existing subscription instead of charging a new
-// "slot", so blocking the input for premium would be a worse UX than
-// allowing the (rare) extend action.
-//
-// Success path:
-//   1. POST /me/promocodes/redeem returns RedeemResult { is_new_subscription,
-//      subscription, promocode }.
-//   2. We pick the toast text via is_new_subscription + whether the new
-//      subscription has a finite ends_at.
-//   3. Refresh the entitlement store so the chrome chips reflect the new
-//      tier immediately, then briefly show the success message inline.
-//
-// Error path: backend returns 404 (invalid/expired), 403 (already used, or
-// the code expired / hit redemption cap / disabled), or 400 (validation).
-// We map status codes to friendlier i18n keys; otherwise fall back to the
-// raw server message - admins might surface useful detail there.
-const redeemInput = ref('');
-const redeemBusy = ref(false);
-const redeemError = ref<string | null>(null);
-const redeemSuccess = ref<string | null>(null);
-let redeemSuccessTimer: number | null = null;
-
-async function onRedeem() {
-  const code = redeemInput.value.trim();
-  if (!code || redeemBusy.value) return;
-  redeemBusy.value = true;
-  redeemError.value = null;
-  redeemSuccess.value = null;
-  try {
-    const res = await billingApi.redeemPromocode(code);
-    // Pick the success message variant.
-    const endsAt = res.subscription.ends_at;
-    const isLifetime = endsAt === null;
-    const dateStr = endsAt ? new Date(endsAt).toLocaleDateString() : '';
-    let msgKey: string;
-    if (res.is_new_subscription) {
-      msgKey = isLifetime ? 'settings.redeem_success_new_lifetime' : 'settings.redeem_success_new';
-    } else {
-      msgKey = isLifetime ? 'settings.redeem_success_extended_lifetime' : 'settings.redeem_success_extended';
-    }
-    redeemSuccess.value = t(msgKey, { date: dateStr });
-    redeemInput.value = '';
-    // Refresh chrome chips so the new tier shows up everywhere.
-    await entitlement.fetch();
-    // Auto-clear the success line after a few seconds; user has already
-    // seen the toast / chip updates by then.
-    if (redeemSuccessTimer) window.clearTimeout(redeemSuccessTimer);
-    redeemSuccessTimer = window.setTimeout(() => {
-      redeemSuccess.value = null;
-    }, 6000);
-  } catch (e) {
-    redeemError.value = mapRedeemError(e);
-  } finally {
-    redeemBusy.value = false;
-  }
-}
-
-function mapRedeemError(e: unknown): string {
-  if (e instanceof AxiosError) {
-    const status = e.response?.status;
-    if (status === 404) return t('settings.redeem_error_invalid');
-    if (status === 403) return t('settings.redeem_error_already_used');
-    // 400 surfaces the server validation message directly when it's there.
-    const msg = (e.response?.data as { message?: string | string[] })?.message;
-    const flat = Array.isArray(msg) ? msg.join(', ') : msg;
-    if (flat) return flat;
-  }
-  return t('settings.redeem_error_generic');
-}
-
-// Pretty status line shown above the redeem input. Computed off the
-// entitlement store; null until the store has fetched.
-const premiumStatusLine = computed<string | null>(() => {
-  const e = entitlement.entitlement;
-  if (!e) return null;
-  if (e.tier === 'free') return t('settings.premium_status_free');
-  // Localize the plan slug via the dashboard.premium_status map (Free /
-  // Monthly / Yearly / Lifetime). Fall back to the raw slug if the map
-  // doesn't have a key for this plan (future PSP plans, custom slugs).
-  const planKey = `dashboard.premium_status.${e.plan_id}`;
-  const localized = t(planKey);
-  const planLabel = localized === planKey ? e.plan_id : localized;
-  return t('settings.premium_status_premium', { plan: planLabel });
-});
-
-const premiumEndsLine = computed<string | null>(() => {
-  const e = entitlement.entitlement;
-  if (!e || e.tier !== 'premium') return null;
-  if (e.ends_at === null) return t('settings.premium_lifetime');
-  const date = new Date(e.ends_at).toLocaleDateString();
-  return t('settings.premium_ends_at', { date });
-});
 </script>
 
 <template>
@@ -579,36 +482,17 @@ const premiumEndsLine = computed<string | null>(() => {
         </p>
       </section>
 
-      <!-- Premium / promocode redemption. Visible to all users; the redeem
-           widget extends an existing premium sub for already-premium users,
-           so we keep it shown unconditionally. -->
-      <section class="card">
-        <h2>{{ t('settings.premium_section') }}</h2>
-        <p class="dim text-sm mt-2">{{ t('settings.premium_section_sub') }}</p>
-
-        <div v-if="premiumStatusLine" class="mt-4" style="font-weight: 500;">
-          <span v-if="entitlement.isPremium" class="pill pill-accent" style="margin-right: 8px;">{{ t('dashboard.premium_badge') }}</span>
-          {{ premiumStatusLine }}
+      <!-- Subscription & billing now live on their own page (/subscription).
+           The full redeem widget + plan status + history were moved there so
+           they aren't cramped here and are easier to find. This is just a
+           link through to it. -->
+      <RouterLink :to="lp('/subscription')" class="card settings-link-card">
+        <div class="grow">
+          <div style="font-weight: 500;">{{ t('subscription.link_title') }}</div>
+          <div class="dim text-sm" style="margin-top: 2px;">{{ t('subscription.link_sub') }}</div>
         </div>
-        <p v-if="premiumEndsLine" class="dim text-sm mt-1">{{ premiumEndsLine }}</p>
-
-        <div class="mt-6">
-          <label class="field-label">{{ t('settings.redeem_label') }}</label>
-          <div class="row mt-2" style="gap: 8px; align-items: stretch;">
-            <input v-model="redeemInput" type="text" :placeholder="t('settings.redeem_placeholder')"
-              :disabled="redeemBusy" maxlength="64"
-              style="flex: 1 1 220px; font-family: ui-monospace, monospace; letter-spacing: 0.04em; text-transform: lowercase;"
-              @keydown.enter="onRedeem" />
-            <button class="btn btn-primary" :disabled="redeemBusy || !redeemInput.trim()" @click="onRedeem">
-              {{ redeemBusy ? t('settings.redeem_busy') : t('settings.redeem_btn') }}
-            </button>
-          </div>
-          <p v-if="redeemError" class="error-text mt-2">{{ redeemError }}</p>
-          <p v-if="redeemSuccess" class="mt-2" style="color: var(--success, #16a34a);">
-            {{ redeemSuccess }}
-          </p>
-        </div>
-      </section>
+        <span class="settings-link-cta">{{ t('subscription.link_cta') }} →</span>
+      </RouterLink>
 
       <!-- Privacy -->
       <section class="card">
@@ -793,5 +677,29 @@ const premiumEndsLine = computed<string | null>(() => {
 <style>
 .card {
   margin-top: 1em;
+}
+
+/* Clickable card that links to the Subscription page. Same card chrome, laid
+   out as a row with a CTA on the right. Hover lifts the border/bg only - no
+   transform per project convention. */
+.settings-link-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.settings-link-card:hover {
+  border-color: var(--accent);
+  background: var(--bg-elev);
+}
+
+.settings-link-cta {
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
 }
 </style>

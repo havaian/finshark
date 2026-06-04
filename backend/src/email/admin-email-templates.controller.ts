@@ -35,6 +35,7 @@ import { EmailTemplatesRepository } from "./email-templates.repository";
 import { EmailTemplatesService } from "./email-templates.service";
 import {
   EmailBlastService,
+  EMAIL_VARIABLE_CATALOGUE,
   type BlastAudience,
 } from "./email-blast.service";
 import { toPublicEmailTemplate } from "./email-templates.types";
@@ -110,6 +111,24 @@ class UpsertEmailTemplateDto {
 class SetActiveDto {
   @IsBoolean()
   is_active!: boolean;
+}
+
+// Dry-run preview. Renders the template WITHOUT sending. If user_id is given,
+// the template variables are resolved from that real user (so the admin sees
+// exactly what that recipient gets); otherwise the catalogue sample values are
+// used. extra_variables override either source.
+class PreviewDto {
+  @IsOptional()
+  @IsIn(["en", "ru"])
+  lang?: "en" | "ru";
+
+  @IsOptional()
+  @IsUUID()
+  user_id?: string;
+
+  @IsOptional()
+  @IsObject()
+  extra_variables?: Record<string, string | number>;
 }
 
 class SendTestDto {
@@ -188,6 +207,17 @@ export class AdminEmailTemplatesController {
     return rows.map(toPublicEmailTemplate);
   }
 
+  // The variable catalogue: which {{placeholders}} templates may use, each with
+  // an i18n description key and a sample value. The editor renders this as an
+  // insert-palette. Static (no DB) - declared as a route so the frontend has a
+  // single source of truth that always matches what the blast/preview resolve.
+  // Must be declared BEFORE the ":key" route or "variables" would be captured
+  // as a template key.
+  @Get("variables")
+  listVariables() {
+    return { variables: EMAIL_VARIABLE_CATALOGUE };
+  }
+
   @Get(":key")
   async getOne(@Param("key") key: string) {
     const row = await this.repo.findByKey(key);
@@ -262,6 +292,31 @@ export class AdminEmailTemplatesController {
       rendered_subject: rendered.subject,
       rendered_body: rendered.body,
       resolved_lang: rendered.lang,
+    };
+  }
+
+  // Dry-run preview. Renders the template (active OR draft) with a chosen
+  // user's real variables - or catalogue samples when no user is given - and
+  // returns the result WITHOUT sending anything. This is what the admin uses
+  // to see "what would Alex actually receive" before hitting send. Distinct
+  // from send-test, which really delivers.
+  @Post(":key/preview")
+  @HttpCode(HttpStatus.OK)
+  async preview(@Param("key") key: string, @Body() dto: PreviewDto) {
+    const lang = dto.lang ?? "en";
+    const variables = await this.blast.previewVariables({
+      user_id: dto.user_id,
+      extra_variables: dto.extra_variables,
+    });
+    const rendered = await this.templates.renderPreview(key, lang, variables);
+    return {
+      ok: true,
+      rendered_subject: rendered.subject,
+      rendered_body: rendered.body,
+      resolved_lang: rendered.lang,
+      // Echo the resolved variables so the editor can show the admin exactly
+      // which values were substituted (useful when previewing a real user).
+      resolved_variables: variables,
     };
   }
 

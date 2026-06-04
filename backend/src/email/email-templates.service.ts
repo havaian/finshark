@@ -106,6 +106,28 @@ export class EmailTemplatesService {
     };
   }
 
+  // Like render() but resolves the template even when it is INACTIVE. Used by
+  // the admin dry-run preview, where the point is to QA a draft before
+  // enabling it - so the active flag must not gate it. Never sends. Throws
+  // only when the key doesn't exist at all.
+  async renderPreview(
+    key: string,
+    lang: "en" | "ru",
+    variables: Record<string, string | number>
+  ): Promise<RenderedEmail> {
+    const row = await this.repo.findByKey(key);
+    if (!row) {
+      throw new BadRequestException(`email template "${key}" not found`);
+    }
+    const picked = pickLang(row, lang);
+    return {
+      subject: substitute(picked.subject, variables),
+      body: substitute(picked.body, variables),
+      html: picked.html === null ? null : substitute(picked.html, variables),
+      lang: picked.lang,
+    };
+  }
+
   // Hot path. Renders + sends in one call. Returns boolean success so the
   // caller can decide whether to count the send or surface an error. Logs
   // are written via the underlying EmailService.

@@ -33,6 +33,7 @@ const ProfilePage = () => import("../pages/ProfilePage.vue");
 const PublicProfilePage = () => import("../pages/PublicProfilePage.vue");
 const ProgressPage = () => import("../pages/ProgressPage.vue");
 const SettingsPage = () => import("../pages/SettingsPage.vue");
+const SubscriptionPage = () => import("../pages/SubscriptionPage.vue");
 const LeaderboardsPage = () => import("../pages/LeaderboardsPage.vue");
 const MockStartPage = () => import("../pages/MockStartPage.vue");
 const MockBreakdownPage = () => import("../pages/MockBreakdownPage.vue");
@@ -56,6 +57,8 @@ const AdminEmailTemplatesPage = () =>
   import("../pages/admin/AdminEmailTemplatesPage.vue");
 const TwoFactorVerifyPage = () => import("../pages/TwoFactorVerifyPage.vue");
 const TwoFactorSetupPage = () => import("../pages/TwoFactorSetupPage.vue");
+const TwoFactorElevatePage = () =>
+  import("../pages/TwoFactorElevatePage.vue");
 
 // Route meta flags:
 //   requiresAuth          - redirect to /login if not authed
@@ -162,6 +165,14 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, titleKey: "page_titles.settings" },
       },
       {
+        // Dedicated billing surface (current plan, redeem, billing history).
+        // Reached from links in Settings, Profile, and the burger drawer.
+        path: "subscription",
+        name: "subscription",
+        component: SubscriptionPage,
+        meta: { requiresAuth: true, titleKey: "page_titles.subscription" },
+      },
+      {
         // 2FA enrollment flow. Admin-only: requiresAdmin enforces it server-
         // side via the route guard below, on top of the AdminGuard on every
         // /me/2fa/* endpoint. Non-admins reaching this URL get redirected.
@@ -169,6 +180,17 @@ const routes: RouteRecordRaw[] = [
         name: "two-factor-setup",
         component: TwoFactorSetupPage,
         meta: { requiresAuth: true, requiresAdmin: true, titleKey: "page_titles.two_factor_setup" },
+      },
+      {
+        // Admin-area 2FA elevation challenge. An enrolled admin whose session
+        // isn't yet elevated is sent here by the router guard before any
+        // /admin/* route. requiresAdmin keeps non-admins out; the guard's
+        // name-exemption keeps this page from redirecting to itself. On
+        // success it stores the elevated tokens and returns to ?next.
+        path: "admin/verify",
+        name: "two-factor-elevate",
+        component: TwoFactorElevatePage,
+        meta: { requiresAuth: true, requiresAdmin: true, titleKey: "page_titles.two_factor_elevate" },
       },
       {
         path: "leaderboards",
@@ -399,13 +421,15 @@ router.beforeEach((to) => {
     return { name: "dashboard", params: { lang } };
   }
 
-  // Force 2FA enrollment for admins accessing any admin route. The backend
-  // also enforces this (AdminWith2faGuard returns 403 { error: "2FA_SETUP_REQUIRED" }),
-  // but the client gate makes the redirect feel intentional instead of
-  // surfacing a generic API error. We DON'T block /settings/2fa itself
-  // (where the user enrolls) - admins need to be able to reach the
-  // enrollment wizard. The query flag `force=1` lets the wizard show
-  // a slightly different banner explaining the redirect.
+  // Admin-area 2FA, in two stages. The backend enforces both via
+  // AdminWith2faGuard (403 with "2FA_SETUP_REQUIRED" / "2FA_ELEVATION_REQUIRED");
+  // these client gates make the redirects feel intentional instead of surfacing
+  // a raw API error. Login itself NEVER triggers 2FA now - only entering an
+  // admin route does.
+  //
+  // Stage 1 - enrollment. An admin with no TOTP secret must enroll first. We
+  // never block /settings/2fa itself (the wizard) or the elevation page. The
+  // `force=1` flag lets the wizard explain the redirect.
   if (
     to.meta.requiresAdmin &&
     auth.user?.is_admin &&
@@ -416,6 +440,25 @@ router.beforeEach((to) => {
       name: "two-factor-setup",
       params: { lang },
       query: { force: "1", next: to.fullPath },
+    };
+  }
+
+  // Stage 2 - elevation. An enrolled admin whose current session hasn't passed
+  // the admin-area 2FA challenge (access token lacks the adm2fa claim) is sent
+  // to the elevation page. They land back on `next` after entering a code. The
+  // elevation page itself and the enrollment wizard are exempt so we don't loop.
+  if (
+    to.meta.requiresAdmin &&
+    auth.user?.is_admin &&
+    auth.user?.totp_enabled &&
+    !auth.isAdminElevated &&
+    to.name !== "two-factor-elevate" &&
+    to.name !== "two-factor-setup"
+  ) {
+    return {
+      name: "two-factor-elevate",
+      params: { lang },
+      query: { next: to.fullPath },
     };
   }
 

@@ -356,6 +356,59 @@ export class TotpService {
     return { user: toPublicUser(user), tokens };
   }
 
+  // Admin-area elevation. The NEW 2FA gateway (login no longer challenges):
+  // an already-authenticated admin who is about to enter the admin area POSTs
+  // a current TOTP/recovery code here; on success we mint a fresh token pair
+  // carrying the adm2fa elevation claim, which AdminWith2faGuard requires.
+  //
+  // Differs from verifyAndIssueTokens in that there's NO pending token - the
+  // caller is already logged in (JwtAuthGuard + AdminGuard ran), so we trust
+  // the user_id from their access token. Same lockout + verify machinery, same
+  // 401 surface on a bad code; the audit context is 'elevate' and a success
+  // emits an 'admin_elevated' event.
+  async elevateAdmin2fa(opts: {
+    user_id: string;
+    code: string;
+    ip: string | null;
+  }): Promise<{ user: PublicUser; tokens: AuthTokens }> {
+    const user = await this.users.findById(opts.user_id);
+    if (!user) throw new UnauthorizedException("user no longer exists");
+    if (!user.is_admin) {
+      // Non-admins have no admin area to elevate into. Should be unreachable
+      // (AdminGuard gates the route) but fail closed.
+      throw new ForbiddenException("admin only");
+    }
+    if (!user.totp_secret) {
+      // Admin hasn't enrolled yet - elevation is meaningless. The guard returns
+      // 2FA_SETUP_REQUIRED in this case; surfacing a distinct error here lets
+      // the frontend route to enrollment rather than showing a code box.
+      throw new ForbiddenException({
+        error: "2FA_SETUP_REQUIRED",
+        message: "enroll in 2FA before elevating",
+      });
+    }
+
+    // Same per-user lockout as login - runs before validation.
+    await this.enforceLockout(user.id, opts.ip);
+
+    const ok = await this.verifyTotpOrRecovery(
+      user.id,
+      user.totp_secret,
+      opts.code,
+      opts.ip,
+      "elevate"
+    );
+    if (!ok) throw new UnauthorizedException("invalid 2FA code");
+
+    await this.totp.clearFailedAttempts(user.id).catch(() => {});
+    await this.recordAudit(user.id, "admin_elevated", opts.ip);
+
+    // Elevated token pair - this is the only place (besides a refresh of an
+    // already-elevated session) that sets adm2fa.
+    const tokens = await this.auth.issueTokensForUser(user, { elevated: true });
+    return { user: toPublicUser(user), tokens };
+  }
+
   // ── Internals ─────────────────────────────────────────────────────────
 
   // Check per-user lockout. If the user has too many recent failures,
@@ -413,7 +466,7 @@ export class TotpService {
     secret_b32: string,
     raw: string,
     ip: string | null,
-    context: "login" | "disable" | "regenerate"
+    context: "login" | "disable" | "regenerate" | "elevate"
   ): Promise<boolean> {
     const cleanedDigits = (raw ?? "").replace(/\s+/g, "");
     if (/^\d{6}$/.test(cleanedDigits)) {
@@ -462,7 +515,8 @@ export class TotpService {
       | "disabled"
       | "recovery_codes_regenerated"
       | "recovery_code_consumed"
-      | "locked_out",
+      | "locked_out"
+      | "admin_elevated",
     ip: string | null,
     meta?: Record<string, unknown>
   ): Promise<void> {

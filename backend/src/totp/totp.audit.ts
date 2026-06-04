@@ -24,7 +24,12 @@ export type TotpAuditEvent =
   // Per-user lockout triggered - the verifier refused the request because
   // recent failed attempts exceeded the threshold. meta:
   // { recent_failures: <int>, window_minutes: <int> }.
-  | "locked_out";
+  | "locked_out"
+  // An already-authenticated admin passed a TOTP/recovery code at the
+  // /auth/2fa-elevate step to gain admin-area access for the session. This
+  // replaces the old login-time challenge: login no longer demands 2FA;
+  // entering the admin area does. No meta.
+  | "admin_elevated";
 
 // Row shape returned from SELECT * on the audit table.
 export interface TotpAuditRow {

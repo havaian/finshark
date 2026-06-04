@@ -1,8 +1,9 @@
+
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { Cog6ToothIcon } from '@heroicons/vue/24/outline';
+import { Cog6ToothIcon, UserCircleIcon, CreditCardIcon } from '@heroicons/vue/24/outline';
 import { useAuthStore } from '../stores/auth.store';
 import { useLocaleStore } from '../stores/locale.store';
 import { useThemeStore } from '../stores/theme.store';
@@ -99,6 +100,14 @@ function isActive(item: NavItem): boolean {
   if (item.exact) return bare === itemBare;
   return bare === itemBare || bare.startsWith(itemBare + '/');
 }
+
+// Profile isn't part of navItemsSrc (it lives in the drawer header + its own
+// drawer row, not the primary nav), so it needs a standalone active check for
+// the new explicit Profile row in the drawer.
+const isProfileActive = computed(() => {
+  const bare = stripLang(route.path);
+  return bare === '/profile' || bare.startsWith('/profile/');
+});
 
 function onLogout() {
   auth.logout();
@@ -284,7 +293,7 @@ function onLogoutMobile() {
             </span>
             <span class="app-nav-drawer-me-text">
               <span class="app-nav-drawer-me-name">{{ auth.user?.display_name ?? '' }}</span>
-              <span class="app-nav-drawer-me-sub dim text-xs">{{ t('nav.profile') }}</span>
+              <span class="app-nav-drawer-me-sub dim text-xs">{{ t('nav.view_profile') }}</span>
             </span>
           </RouterLink>
           <button type="button" class="app-nav-drawer-close" :aria-label="t('common.close')"
@@ -338,8 +347,17 @@ function onLogoutMobile() {
         </div>
 
         <!-- Primary nav links - same items as desktop, full-width rows so they
-             have a comfortable tap target on phones. -->
+             have a comfortable tap target on phones. Profile leads the list as
+             an explicit, labeled row: the drawer header avatar/name also links
+             to the profile, but that affordance isn't obvious, so this gives a
+             clearly-labeled entry point. -->
         <nav class="app-nav-drawer-links">
+          <RouterLink :to="lp(`/profile`)" class="app-nav-drawer-link"
+            :class="{ active: isProfileActive }" @click="closeDrawer">
+            <UserCircleIcon class="app-nav-drawer-link-icon" aria-hidden="true" />
+            {{ t('nav.profile') }}
+          </RouterLink>
+
           <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
             :class="['app-nav-drawer-link', { active: isActive(item) }]" @click="closeDrawer">
             {{ t(item.labelKey) }}
@@ -407,6 +425,12 @@ function onLogoutMobile() {
           <RouterLink :to="lp(`/settings`)" class="app-nav-drawer-link" @click="closeDrawer">
             <Cog6ToothIcon class="app-nav-drawer-link-icon" aria-hidden="true" />
             {{ t('nav.settings') }}
+          </RouterLink>
+
+          <!-- Subscription / billing - sits with the preferences controls. -->
+          <RouterLink :to="lp(`/subscription`)" class="app-nav-drawer-link" @click="closeDrawer">
+            <CreditCardIcon class="app-nav-drawer-link-icon" aria-hidden="true" />
+            {{ t('nav.subscription') }}
           </RouterLink>
         </div>
 

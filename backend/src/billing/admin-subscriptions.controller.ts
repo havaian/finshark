@@ -6,10 +6,12 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import {
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -21,6 +23,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
+import { EntitlementsService } from "./entitlements.service";
 import { PlansRepository } from "./plans.repository";
 import { SubscriptionEventsRepository } from "./subscription-events.repository";
 import { SubscriptionsRepository } from "./subscriptions.repository";
@@ -72,6 +75,21 @@ class ReasonDto {
   reason?: string;
 }
 
+// Admin plan edit: price and/or active toggle. Both optional so the admin can
+// change just one. price_minor is in MINOR units (e.g. tiyin for UZS), matching
+// the column and the rest of the billing layer. Must be a positive integer -
+// we don't allow setting a premium plan's price to 0 or null via this path.
+class UpdatePlanDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  price_minor?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+}
+
 @Controller("admin")
 @UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminSubscriptionsController {
@@ -79,7 +97,8 @@ export class AdminSubscriptionsController {
     private readonly subs: SubscriptionsService,
     private readonly subsRepo: SubscriptionsRepository,
     private readonly events: SubscriptionEventsRepository,
-    private readonly plans: PlansRepository
+    private readonly plans: PlansRepository,
+    private readonly entitlements: EntitlementsService
   ) {}
 
   // ── Plans (read-only) ───────────────────────────────────────────────
@@ -92,6 +111,32 @@ export class AdminSubscriptionsController {
   async listPlans() {
     const rows = await this.plans.findAll(/* includeInactive */ true);
     return rows.map(toPublicPlan);
+  }
+
+  // /api/admin/plans/:id - edit a plan's price and/or active flag. This is the
+  // "adjustable amount from the admin panel" path: an admin changes
+  // price_minor and the user-facing payment picker + the price snapshotted onto
+  // new payment submissions reflect it immediately. After the write we bust the
+  // entitlement service's plan cache so the change takes effect now, not after
+  // the cache TTL.
+  //
+  // Only premium plans are sensibly editable (the free plan has no price); we
+  // don't hard-block editing 'free' here, but the DTO requires a positive price
+  // so you can't accidentally give the free plan a price without also tripping
+  // the table's price/currency-consistency CHECK (free has NULL currency).
+  // Structural fields (tier, period_days) are intentionally not editable.
+  @Patch("plans/:id")
+  async updatePlan(@Param("id") id: string, @Body() body: UpdatePlanDto) {
+    const updated = await this.plans.update(id, {
+      price_minor: body.price_minor,
+      is_active: body.is_active,
+    });
+    if (!updated) throw new NotFoundException("plan not found");
+    // Take effect immediately for cached readers (entitlement + payment price
+    // snapshot). See EntitlementsService.invalidatePlan for the multi-instance
+    // caveat (TTL covers other instances; payment price is re-read uncached).
+    this.entitlements.invalidatePlan(id);
+    return toPublicPlan(updated);
   }
 
   // ── Subscription read ───────────────────────────────────────────────

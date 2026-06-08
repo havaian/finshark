@@ -23,6 +23,7 @@ import { SeedModule } from "./seed/seed.module";
 import { WhitelistModule } from "./whitelist/whitelist.module";
 import { TotpModule } from "./totp/totp.module";
 import { BillingModule } from "./billing/billing.module";
+import { PaymentsModule } from "./payments/payments.module";
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { BillingModule } from "./billing/billing.module";
     WhitelistModule,
     TotpModule,
     BillingModule,
+    PaymentsModule,
   ],
   providers: [
     // Throttle every controller by default; specific endpoints can override or skip.

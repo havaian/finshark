@@ -60,6 +60,7 @@ const navItems = computed<NavItem[]>(() => [
   { to: lp('/admin/content'), labelKey: 'admin.content.title', activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
   { to: lp('/admin/promocodes'), labelKey: 'admin.promocodes.title', activePrefixes: ['/admin/promocodes'] },
   { to: lp('/admin/subscriptions'), labelKey: 'admin.subscriptions.title', activePrefixes: ['/admin/subscriptions'] },
+  { to: lp('/admin/payments'), labelKey: 'admin.payments.title', activePrefixes: ['/admin/payments'] },
   { to: lp('/admin/email-templates'), labelKey: 'admin.email_templates.title', activePrefixes: ['/admin/email-templates'] },
   { to: lp('/admin/localization'), labelKey: 'admin.localization.title', activePrefixes: ['/admin/localization'] },
 ]);

@@ -40,8 +40,15 @@ services:
     # edited files on the host. On first run the entrypoint will see the volume
     # already populated (empty objects after seed) - the app falls back to {}
     # if a file is missing, so an empty volume is a safe initial state.
+    #
+    # Persist user-uploaded payment slips across rebuilds the same way. The
+    # backend writes slips under ./uploads (cwd is /app/backend per the
+    # Dockerfile WORKDIR), so the volume mounts at /app/backend/uploads. Losing
+    # this volume would orphan the slip_path rows in payment_submissions (the
+    # DB rows survive; the files behind them wouldn't), so it must persist.
     volumes:
       - locales:/app/backend/locales
+      - uploads:/app/backend/uploads
     restart: unless-stopped
 
   frontend:
@@ -62,3 +69,4 @@ services:
 
 volumes:
   locales:
+  uploads:

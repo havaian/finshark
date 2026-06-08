@@ -53,6 +53,8 @@ const AdminPromocodesPage = () =>
   import("../pages/admin/AdminPromocodesPage.vue");
 const AdminSubscriptionsPage = () =>
   import("../pages/admin/AdminSubscriptionsPage.vue");
+const AdminPaymentsPage = () =>
+  import("../pages/admin/AdminPaymentsPage.vue");
 const AdminEmailTemplatesPage = () =>
   import("../pages/admin/AdminEmailTemplatesPage.vue");
 const TwoFactorVerifyPage = () => import("../pages/TwoFactorVerifyPage.vue");
@@ -289,6 +291,12 @@ const routes: RouteRecordRaw[] = [
             name: "admin-subscriptions",
             component: AdminSubscriptionsPage,
             meta: { titleKey: "page_titles.admin_subscriptions" },
+          },
+          {
+            path: "payments",
+            name: "admin-payments",
+            component: AdminPaymentsPage,
+            meta: { titleKey: "page_titles.admin_payments" },
           },
           {
             path: "email-templates",

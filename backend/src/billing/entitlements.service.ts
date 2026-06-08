@@ -63,6 +63,27 @@ export class EntitlementsService {
     return row;
   }
 
+  // Drop a cached plan (or the whole cache when no id is given). Called by the
+  // admin plan-edit path so a price/active change takes effect immediately
+  // rather than waiting out the TTL. Entitlement GATING doesn't depend on
+  // price (tier is what gates check, and tier isn't editable here), but other
+  // readers of the cached PlanRow - the payment flow snapshots price at submit
+  // time - want the fresh value, so we bust on any plan write.
+  //
+  // NOTE: this clears only THIS process's cache. Under multiple backend
+  // instances each has its own in-process cache; the others still expire via
+  // the TTL (<=5 min). For the current single-instance deployment that's moot,
+  // and the payment flow re-reads price through PlansRepository.findById (not
+  // the cache) at submission time regardless, so a stale cache never produces
+  // a wrong charge.
+  invalidatePlan(planId?: string): void {
+    if (planId === undefined) {
+      this.planCache.clear();
+      return;
+    }
+    this.planCache.delete(planId);
+  }
+
   // Single hot-path call. O(1) lookup via idx_subs_user_status_ends.
   async getEntitlement(userId: string): Promise<Entitlement> {
     const sub = await this.subs.findActiveForUser(userId);

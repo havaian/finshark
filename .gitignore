@@ -7,3 +7,8 @@ dist
 .idea
 .vscode
 coverage
+
+# User-uploaded files (payment slips). Persisted via docker volume in prod;
+# never committed.
+uploads/
+backend/uploads/

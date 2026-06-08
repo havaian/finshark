@@ -252,10 +252,10 @@ onMounted(loadPapers);
 }
 
 .mock-format {
-  border: 1px solid var(--border, #d9e0d6);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px;
-  background: var(--surface-2, #f6f8f4);
+  background: var(--bg-elev);
 }
 
 .mock-format-stats {
@@ -275,13 +275,13 @@ onMounted(loadPapers);
 .mock-format-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text, #2f3a2a);
+  color: var(--text);
   line-height: 1.1;
 }
 
 .mock-format-key {
   font-size: 0.75rem;
-  color: var(--text-dim, #6f7a68);
+  color: var(--text-dim);
   margin-top: 2px;
 }
 
@@ -289,7 +289,7 @@ onMounted(loadPapers);
   list-style: none;
   margin: 14px 0 0;
   padding: 14px 0 0;
-  border-top: 1px solid var(--border, #d9e0d6);
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -304,7 +304,7 @@ onMounted(loadPapers);
 
 .mock-format-section-code {
   font-weight: 600;
-  color: var(--text, #2f3a2a);
+  color: var(--text);
   white-space: nowrap;
 }
 
@@ -314,8 +314,8 @@ onMounted(loadPapers);
   font-size: 0.72rem;
   padding: 1px 6px;
   border-radius: 999px;
-  background: var(--surface-3, #e7ece2);
-  color: var(--text-dim, #6f7a68);
+  background: var(--bg-elev-hover);
+  color: var(--text-mute);
 }
 
 @media (max-width: 560px) {

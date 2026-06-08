@@ -468,12 +468,12 @@ onUnmounted(() => {
                  sessions or first lesson) so the stat stays clean for new
                  users. The base/bonus split lets the user see why their
                  streak matters on every lesson, not just at milestones. -->
-            <div v-if="summary.xp_streak_bonus > 0" class="dim text-xs" style="margin-top: 4px;">
+            <!-- <div v-if="summary.xp_streak_bonus > 0" class="dim text-xs" style="margin-top: 4px;">
               {{ t('lesson.complete_xp_streak_bonus', {
                 base: summary.xp_base,
                 bonus: summary.xp_streak_bonus,
               }) }}
-            </div>
+            </div> -->
           </div>
           <div class="stat">
             <div class="stat-lbl">{{ t('lesson.complete_level') }}</div>

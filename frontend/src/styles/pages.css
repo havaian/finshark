@@ -1,3 +1,4 @@
+
 /* -----------------------------------------------------------
    21) Language tabs (used in admin question editor)
    ----------------------------------------------------------- */
@@ -1996,6 +1997,33 @@
     text-transform: uppercase;
     color: var(--text-mute);
     margin-top: 8px;
+}
+
+.mock-overall-passmark {
+    margin-top: 6px;
+}
+
+.mock-section-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mock-section-row {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.mock-section-code {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    min-width: 84px;
 }
 
 .mock-lo-list {

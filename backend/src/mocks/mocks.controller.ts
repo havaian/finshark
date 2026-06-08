@@ -16,7 +16,9 @@ import { StartMockDto } from "./dto/start-mock.dto";
 export class MocksController {
   constructor(private readonly mocks: MocksService) {}
 
-  // POST /mocks → start a new mock session for a paper.
+  // POST /mocks → start a new mock session for a paper. The exam format
+  // (sections, counts, marks, duration) comes from the paper's exam_structure,
+  // not from the request - so the body carries only the paper id.
   @Post()
   start(
     @CurrentUser() current: AccessTokenPayload,
@@ -25,8 +27,6 @@ export class MocksController {
   ) {
     return this.mocks.start(current.sub, lang, {
       paper_id: dto.paper_id,
-      question_count: dto.question_count,
-      time_limit_seconds: dto.time_limit_seconds,
     });
   }
 

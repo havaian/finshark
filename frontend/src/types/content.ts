@@ -89,6 +89,25 @@ export interface QuestionRaw {
 
 // ---- Localized (public) shapes ----
 
+// Mirrors backend content.types ExamSection / ExamStructure. The mock start
+// screen reads this off the paper to show the fixed exam format (e.g.
+// "35 questions, 120 minutes") instead of asking the user to choose.
+export type ExamSectionKind = "ot" | "mtq";
+
+export interface ExamSection {
+  code: string;
+  kind: ExamSectionKind;
+  question_count: number;
+  marks_each?: number;
+  marks_total?: number;
+}
+
+export interface ExamStructure {
+  duration_seconds: number;
+  pass_mark_pct: number;
+  sections: ExamSection[];
+}
+
 export interface Paper {
   id: string;
   code: string;
@@ -97,6 +116,11 @@ export interface Paper {
   // public listing so the picker UI can render a lock badge; backend still
   // enforces the gate on lesson/mock start.
   free_accessible: boolean;
+  // Program this paper belongs to (FK to programs). ACCA today; CFA later.
+  program_id: string;
+  // The fixed mock definition for this paper - sections, marks, duration, pass
+  // mark. The mock start screen derives the exam format from this.
+  exam_structure: ExamStructure;
   created_at: string;
   updated_at: string;
 }

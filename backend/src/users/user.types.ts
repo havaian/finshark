@@ -29,6 +29,10 @@ export interface UserRow {
   bg_level: BgLevel | null; // null = skipped or pre-onboarding
   time_budget_minutes: number; // 5..60, defaults 15
   preferred_paper_id: string | null; // FK to papers.id, nullable
+  // FK to programs.id (migration 20260608000001). Which certification track
+  // the user is studying (ACCA today; CFA later). Backfilled to ACCA for
+  // pre-existing users. Nullable: SET NULL if the program is ever removed.
+  preferred_program_id: string | null;
   onboarded_at: Date | null; // null = still needs to onboard
   // Leaderboards (3.3). Opt-in default false - users only appear if they
   // explicitly enable this from Settings or onboarding.
@@ -75,6 +79,7 @@ export interface PublicUser {
   bg_level: BgLevel | null;
   time_budget_minutes: number;
   preferred_paper_id: string | null;
+  preferred_program_id: string | null;
   onboarded_at: string | null; // ISO timestamp or null
   leaderboard_opt_in: boolean;
   // 2FA enrollment flag. We expose the boolean only - never the secret or
@@ -105,6 +110,7 @@ export function toPublicUser(row: UserRow): PublicUser {
     bg_level: row.bg_level,
     time_budget_minutes: row.time_budget_minutes,
     preferred_paper_id: row.preferred_paper_id,
+    preferred_program_id: row.preferred_program_id,
     onboarded_at: row.onboarded_at ? row.onboarded_at.toISOString() : null,
     leaderboard_opt_in: row.leaderboard_opt_in,
     totp_enabled: row.totp_secret !== null,

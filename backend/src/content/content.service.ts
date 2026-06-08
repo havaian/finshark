@@ -4,14 +4,22 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PapersRepository } from "./papers.repository";
+import { ProgramsRepository } from "./programs.repository";
 import { LearningObjectivesRepository } from "./learning-objectives.repository";
 import { QuestionsRepository } from "./questions.repository";
 import type {
   LearningObjectiveRow,
   McqOption,
   PaperRow,
+  ProgramRow,
   QuestionRow,
   QuestionType,
+  ExamStructure,
+} from "./content.types";
+import {
+  ACCA_APPLIED_KNOWLEDGE_STRUCTURE,
+  DEFAULT_PROGRAM_CODE,
+  validateExamStructure,
 } from "./content.types";
 import type { CreatePaperDto, UpdatePaperDto } from "./dto/paper.dto";
 import type { CreateLoDto, UpdateLoDto } from "./dto/learning-objective.dto";
@@ -29,9 +37,18 @@ import type {
 export class ContentService {
   constructor(
     private readonly papers: PapersRepository,
+    private readonly programs: ProgramsRepository,
     private readonly los: LearningObjectivesRepository,
     private readonly questions: QuestionsRepository
   ) {}
+
+  // ---- programs ----
+
+  // List all certification programs (acca, cfa, ...). Used by the admin paper
+  // editor's program dropdown and by program-aware listing elsewhere.
+  listPrograms(): Promise<ProgramRow[]> {
+    return this.programs.findAll();
+  }
 
   // ---- papers ----
 
@@ -49,17 +66,72 @@ export class ContentService {
     const existing = await this.papers.findByCode(dto.code);
     if (existing)
       throw new BadRequestException(`paper code "${dto.code}" already exists`);
+
+    // Resolve the program (default to ACCA when not specified) to its id, since
+    // papers.program_id is NOT NULL and stores the id, not the code.
+    const programCode = dto.program_code ?? DEFAULT_PROGRAM_CODE;
+    const program = await this.programs.findByCode(programCode);
+    if (!program)
+      throw new BadRequestException(`unknown program code "${programCode}"`);
+
+    // Validate the supplied structure, or fall back to the ACCA Applied
+    // Knowledge default. validateExamStructure enforces the ot/mtq marks rules
+    // and unique section codes; a bad structure is a 400, not a 500.
+    let structure: ExamStructure;
+    try {
+      structure = dto.exam_structure
+        ? validateExamStructure(dto.exam_structure)
+        : ACCA_APPLIED_KNOWLEDGE_STRUCTURE;
+    } catch (e) {
+      throw new BadRequestException(
+        e instanceof Error ? e.message : "invalid exam_structure"
+      );
+    }
+
     return this.papers.create({
       code: dto.code,
       name_en: dto.name_en,
       name_ru: dto.name_ru ?? null,
       free_accessible: dto.free_accessible,
+      program_id: program.id,
+      exam_structure: structure,
     });
   }
 
   async updatePaper(id: string, dto: UpdatePaperDto): Promise<PaperRow> {
     await this.getPaper(id);
-    const updated = await this.papers.update(id, dto);
+
+    // Resolve program_code -> program_id if the caller is moving the paper.
+    let program_id: string | undefined;
+    if (dto.program_code !== undefined) {
+      const program = await this.programs.findByCode(dto.program_code);
+      if (!program)
+        throw new BadRequestException(
+          `unknown program code "${dto.program_code}"`
+        );
+      program_id = program.id;
+    }
+
+    // Validate a replacement structure if one was sent.
+    let exam_structure: ExamStructure | undefined;
+    if (dto.exam_structure !== undefined) {
+      try {
+        exam_structure = validateExamStructure(dto.exam_structure);
+      } catch (e) {
+        throw new BadRequestException(
+          e instanceof Error ? e.message : "invalid exam_structure"
+        );
+      }
+    }
+
+    const updated = await this.papers.update(id, {
+      code: dto.code,
+      name_en: dto.name_en,
+      name_ru: dto.name_ru,
+      free_accessible: dto.free_accessible,
+      program_id,
+      exam_structure,
+    });
     if (!updated) throw new NotFoundException("paper not found after update");
     return updated;
   }

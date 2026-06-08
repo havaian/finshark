@@ -1269,7 +1269,6 @@ button.list-row.active {
     gap: 6px;
     align-items: center;
     padding-right: 4px;
-    border-right: 1px solid var(--border);
     margin-right: 4px;
 }
 

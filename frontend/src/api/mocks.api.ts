@@ -6,12 +6,9 @@ import type {
 } from "../types/mocks";
 
 export const mocksApi = {
-  // POST /mocks → start a new mock session.
-  start: async (input: {
-    paper_id: string;
-    question_count: number;
-    time_limit_seconds?: number;
-  }): Promise<StartMockResult> =>
+  // POST /mocks → start a new mock session. The exam format (questions, marks,
+  // duration) comes from the paper's exam_structure, so only the paper is sent.
+  start: async (input: { paper_id: string }): Promise<StartMockResult> =>
     (await api.post<StartMockResult>("/mocks", input)).data,
 
   // GET /mocks/:id/breakdown → per-LO accuracy + wrong question IDs.

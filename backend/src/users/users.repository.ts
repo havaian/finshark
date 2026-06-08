@@ -9,7 +9,7 @@ const USER_COLS = `
   xp, level,
   last_active_date, is_admin, email_reminders_enabled,
   reminder_hour_local, preferred_difficulty, lesson_size,
-  bg_level, time_budget_minutes, preferred_paper_id, onboarded_at,
+  bg_level, time_budget_minutes, preferred_paper_id, preferred_program_id, onboarded_at,
   leaderboard_opt_in,
   totp_secret, totp_enrolled_at,
   timezone, free_hearts_pool, free_hearts_pool_date,
@@ -193,6 +193,9 @@ export class UsersRepository {
       bg_level?: "beginner" | "intermediate" | "advanced" | null;
       time_budget_minutes?: number;
       preferred_paper_id?: string | null;
+      // Which program the chosen paper belongs to. Pass undefined to leave
+      // alone (existing users keep their backfilled ACCA value).
+      preferred_program_id?: string | null;
       // Derived from bg_level + time_budget by the service. Pass undefined to leave alone.
       preferred_difficulty?: "easy" | "medium" | "hard" | null;
       lesson_size?: number;
@@ -204,6 +207,8 @@ export class UsersRepository {
       sets.time_budget_minutes = input.time_budget_minutes;
     if (input.preferred_paper_id !== undefined)
       sets.preferred_paper_id = input.preferred_paper_id;
+    if (input.preferred_program_id !== undefined)
+      sets.preferred_program_id = input.preferred_program_id;
     if (input.preferred_difficulty !== undefined)
       sets.preferred_difficulty = input.preferred_difficulty;
     if (input.lesson_size !== undefined) sets.lesson_size = input.lesson_size;

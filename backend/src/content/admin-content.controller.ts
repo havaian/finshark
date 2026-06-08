@@ -34,12 +34,16 @@ export class AdminContentController {
     private readonly generator: QuestionGenerationService
   ) {}
 
-  // ---- papers ----
+  // ---- programs ----
 
-  @Get("papers")
-  listPapers() {
-    return this.content.listPapers();
+  // List certification programs (acca, cfa, ...). Feeds the program dropdown
+  // on the paper editor so an admin can assign a paper to a program.
+  @Get("programs")
+  listPrograms() {
+    return this.content.listPrograms();
   }
+
+  // ---- papers ----
 
   // Admin content tree - papers with their LOs and per-LO question counts.
   // Used by the unified content browser (/admin/content) to render the sidebar

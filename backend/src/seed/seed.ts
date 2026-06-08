@@ -20,6 +20,7 @@ import { F3_PAPER } from "./data/f3";
 import { BADGES } from "./data/badges";
 import { ACHIEVEMENTS } from "./data/achievements";
 import type { SeedPaper, SeedQuestion } from "./data/types";
+import { ACCA_APPLIED_KNOWLEDGE_STRUCTURE } from "../content/content.types";
 
 // PAPERS array
 const PAPERS: SeedPaper[] = [F1_PAPER, F2_PAPER, F3_PAPER];
@@ -92,12 +93,28 @@ async function main() {
 
       console.log(`[insert] paper ${paper.code} (${paper.name_en})`);
       await sql.begin(async (tx) => {
+        // Every paper belongs to a program (NOT NULL) and carries an
+        // exam_structure (NOT NULL). The seeded papers are ACCA Applied
+        // Knowledge exams. Resolve (creating if absent) the 'acca' program and
+        // stamp the standard Applied Knowledge structure. Idempotent upsert on
+        // the program code.
+        const progRows = await tx<Array<{ id: string }>>`
+          INSERT INTO programs (code, name_en, name_ru, unit_noun, sort_order)
+          VALUES ('acca', 'ACCA', 'ACCA', 'paper', 0)
+          ON CONFLICT (code) DO UPDATE SET name_en = EXCLUDED.name_en
+          RETURNING id
+        `;
+        const programId = progRows[0].id;
+        const structureJson = tx.json(
+          ACCA_APPLIED_KNOWLEDGE_STRUCTURE as unknown as postgres.JSONValue
+        );
+
         // NOTE: papers and learning_objectives tables don't have is_active -
         // only questions do. Don't add it here unless you've also added a
         // migration introducing the column.
         const paperRows = await tx<Array<{ id: string }>>`
-          INSERT INTO papers (code, name_en, name_ru)
-          VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru})
+          INSERT INTO papers (code, name_en, name_ru, program_id, exam_structure)
+          VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru}, ${programId}, ${structureJson})
           RETURNING id
         `;
         const paperId = paperRows[0].id;

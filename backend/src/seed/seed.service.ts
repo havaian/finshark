@@ -8,6 +8,7 @@ import { F3_PAPER } from "./data/f3";
 import { BADGES } from "./data/badges";
 import { ACHIEVEMENTS } from "./data/achievements";
 import type { SeedPaper, SeedQuestion } from "./data/types";
+import { ACCA_APPLIED_KNOWLEDGE_STRUCTURE } from "../content/content.types";
 
 // Source-of-truth for which papers ship in the seed. Kept here so both the
 // CLI script (seed.ts) and the admin "drop & reseed" button hit the same data.
@@ -251,15 +252,42 @@ export class SeedService {
     return ACHIEVEMENTS.length;
   }
 
+  // Resolve the 'acca' program id, creating the row if it doesn't exist.
+  // Idempotent via ON CONFLICT on the unique code. The migration seeds 'acca'
+  // already, so in a migrated DB this is a plain lookup; the upsert covers a
+  // fresh test DB seeded before/without that migration's data.
+  private async ensureAccaProgram(
+    handle: postgres.TransactionSql
+  ): Promise<string> {
+    const rows = await handle<Array<{ id: string }>>`
+      INSERT INTO programs (code, name_en, name_ru, unit_noun, sort_order)
+      VALUES ('acca', 'ACCA', 'ACCA', 'paper', 0)
+      ON CONFLICT (code) DO UPDATE SET name_en = EXCLUDED.name_en
+      RETURNING id
+    `;
+    return rows[0].id;
+  }
+
   // Insert a paper + its LOs + its questions. Must be called inside a tx.
   // Returns the number of questions inserted (for the reseed summary).
   private async insertPaperWithChildren(
     tx: postgres.TransactionSql,
     paper: SeedPaper
   ): Promise<number> {
+    // Every paper belongs to a program (NOT NULL) and carries an exam_structure
+    // (NOT NULL). The seeded papers are all ACCA Applied Knowledge exams, so we
+    // resolve (creating if missing) the 'acca' program and stamp the standard
+    // Applied Knowledge structure. ensureAccaProgram is idempotent - the
+    // dropAndReseed path wipes papers but NOT programs, and the migration
+    // already seeds 'acca', so normally this just looks it up.
+    const programId = await this.ensureAccaProgram(tx);
+    const structureJson = tx.json(
+      ACCA_APPLIED_KNOWLEDGE_STRUCTURE as unknown as postgres.JSONValue
+    );
+
     const paperRows = await tx<Array<{ id: string }>>`
-      INSERT INTO papers (code, name_en, name_ru)
-      VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru})
+      INSERT INTO papers (code, name_en, name_ru, program_id, exam_structure)
+      VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru}, ${programId}, ${structureJson})
       RETURNING id
     `;
     const paperId = paperRows[0].id;

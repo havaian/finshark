@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { Inject } from "@nestjs/common";
@@ -25,8 +26,15 @@ import type {
   QuestionDifficulty,
   QuestionType,
   McqOption,
+  ExamStructure,
+  ExamSection,
 } from "../content/content.types";
-import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
+import {
+  pickLocalized,
+  pickLocalizedNullable,
+  validateExamStructure,
+  examTotalMarks,
+} from "../content/content.types";
 
 // Free-tier monthly mock quota. Premium = unlimited. Single edit if product
 // later wants 2/month free.
@@ -42,6 +50,25 @@ const FREE_MOCKS_PER_MONTH = 1;
 //   - review: take the wrong-answer question IDs from a completed mock and
 //     create a regular lesson session preloaded with them.
 
+// A built section of a started mock: which queue positions belong to it and
+// the marks rule that applies. The frontend uses this to render section
+// headers ("Section A") and a marks summary; scoring uses it to attribute
+// marks per question.
+export interface StartMockSection {
+  code: string;
+  kind: ExamSection["kind"];
+  // Number of questions actually placed in this section (may be less than the
+  // structure asked for if the paper's pool was short).
+  question_count: number;
+  // Inclusive queue position range [start_position, end_position] this section
+  // occupies, in the flat questions array. end_position < start_position would
+  // mean an empty section (shouldn't happen - empty sections are dropped).
+  start_position: number;
+  end_position: number;
+  marks_each: number | null;
+  marks_total: number | null;
+}
+
 export interface StartMockResult {
   session_id: string;
   questions: LessonQuestion[];
@@ -51,8 +78,14 @@ export interface StartMockResult {
   // No theory primer in mocks - they're exam-style, not learn-style. Always [].
   theory_bites: LessonTheoryBite[];
   // Mock-specific extras:
+  // Fixed by the paper's exam_structure.duration_seconds (no longer user-set).
   time_limit_seconds: number | null;
   paper_id: string;
+  // The exam layout this mock was built to. Lets the frontend show section
+  // headers, total available marks, and the pass threshold.
+  sections: StartMockSection[];
+  total_marks: number;
+  pass_mark_pct: number;
 }
 
 export interface MockBreakdownEntry {
@@ -64,12 +97,40 @@ export interface MockBreakdownEntry {
   accuracy_pct: number; // 0..100, rounded
 }
 
+// Per-section marks summary for a completed mock. marks_available is what the
+// section could award (correct count is scored against this); marks_awarded is
+// what the candidate earned. For ot sections marks come from marks_each; mtq
+// sections are not scored yet (marks_available/awarded both 0) and flagged via
+// `scored: false` so the UI can label them "not marked".
+export interface MockSectionScore {
+  code: string;
+  kind: ExamSection["kind"];
+  scored: boolean;
+  total: number; // questions in the section
+  correct: number; // correct answers in the section
+  marks_available: number;
+  marks_awarded: number;
+}
+
 export interface MockBreakdown {
   session_id: string;
   paper_id: string;
   total: number;
   correct: number;
   per_lo: MockBreakdownEntry[];
+  // Per-section marks. Empty for legacy flat mocks (no section_code stamped) -
+  // those fall back to a single implicit section and rely on per-LO + the
+  // overall marks fields below.
+  per_section: MockSectionScore[];
+  // Overall marks scoring. marks_available is summed across scored sections;
+  // marks_awarded is what the candidate earned; percent is the ratio; passed
+  // compares percent against the paper's pass mark. pass_mark_pct echoes the
+  // threshold used so the UI doesn't need to re-fetch the paper.
+  marks_available: number;
+  marks_awarded: number;
+  percent: number; // 0..100, rounded to 1 dp
+  pass_mark_pct: number;
+  passed: boolean;
   // Question IDs the user got wrong, in queue order. The frontend uses these
   // to feed POST /mocks/:id/review.
   wrong_question_ids: string[];
@@ -107,6 +168,8 @@ export interface MockAnswers {
 
 @Injectable()
 export class MocksService {
+  private readonly log = new Logger(MocksService.name);
+
   constructor(
     @Inject(PG) private readonly sql: Sql,
     private readonly sessions: LessonSessionsRepository,
@@ -120,21 +183,41 @@ export class MocksService {
   ) {}
 
   // POST /mocks - start a new mock for the given paper.
+  //
+  // The exam format comes entirely from the paper's exam_structure: sections,
+  // how many questions each draws, the marks rule, and the duration. We build
+  // the queue section by section (in structure order), never repeating a
+  // question across sections, stamp each queued row with its section code, and
+  // set the session's time limit from the structure's duration.
   async start(
     user_id: string,
     lang: Lang,
     opts: {
       paper_id: string;
-      question_count: number;
-      time_limit_seconds?: number;
     }
   ): Promise<StartMockResult> {
+    const paper = await this.papers.findById(opts.paper_id);
+    if (!paper) throw new NotFoundException("paper not found");
+
+    // Trust-but-verify the stored structure. The DB guarantees it's a JSON
+    // object; this enforces the detailed shape (section kinds, marks rules) so
+    // a hand-edited or legacy row can't make the builder misbehave.
+    let structure: ExamStructure;
+    try {
+      structure = validateExamStructure(paper.exam_structure);
+    } catch (e) {
+      throw new BadRequestException(
+        `paper ${paper.code} has an invalid exam_structure: ${
+          e instanceof Error ? e.message : "unknown error"
+        }`
+      );
+    }
+
     // Free-tier gates. Mocks don't touch hearts, so only paper-access and
     // monthly quota apply. Premium users bypass both.
     const entitlement = await this.entitlements.getEntitlement(user_id);
     if (entitlement.tier === "free") {
-      const paper = await this.papers.findById(opts.paper_id);
-      if (paper && !paper.free_accessible) {
+      if (!paper.free_accessible) {
         throw new ForbiddenException(
           "this paper is available to premium members only"
         );
@@ -152,10 +235,59 @@ export class MocksService {
       }
     }
 
-    const queue = await this.questions.findRandomForMock(
-      opts.paper_id,
-      opts.question_count
-    );
+    // ── Build the queue section by section ────────────────────────────
+    // We accumulate the flat question list plus a parallel section-code array
+    // (one entry per question), and a section layout describing position
+    // ranges + marks rules for the response.
+    const queue: LessonQuestion[] = [];
+    const rawQueueIds: string[] = [];
+    const sectionCodes: string[] = [];
+    const builtSections: StartMockSection[] = [];
+
+    for (const section of structure.sections) {
+      if (section.kind === "mtq") {
+        // MTQ (multi-task / constructed response) is scaffolded but DORMANT:
+        // there's no MTQ question type and no grader yet. Skip it rather than
+        // fabricate objective questions in its place. A paper whose ONLY
+        // section is mtq therefore can't yet produce a playable mock - that's
+        // correct: we don't ship a broken exam. F1-F3 have no mtq sections.
+        this.log.warn(
+          `paper ${paper.code} section ${section.code} is kind 'mtq' - skipped (MTQ not yet implemented)`
+        );
+        continue;
+      }
+
+      // OT section: pull `question_count` active questions from the paper's
+      // pool, excluding anything earlier sections already took.
+      const rows = await this.questions.findRandomForMockExcluding(
+        opts.paper_id,
+        section.question_count,
+        rawQueueIds
+      );
+      if (rows.length === 0) {
+        // Nothing available for this section - skip it (don't emit an empty
+        // section in the layout). If every section ends up empty we fail below.
+        continue;
+      }
+
+      const startPos = queue.length;
+      for (const q of rows) {
+        queue.push(this.lessons.toLessonQuestion(q, lang));
+        rawQueueIds.push(q.id);
+        sectionCodes.push(section.code);
+      }
+      const endPos = queue.length - 1;
+
+      builtSections.push({
+        code: section.code,
+        kind: section.kind,
+        question_count: rows.length,
+        start_position: startPos,
+        end_position: endPos,
+        marks_each: section.marks_each ?? null,
+        marks_total: section.marks_total ?? null,
+      });
+    }
 
     if (queue.length === 0) {
       throw new BadRequestException(
@@ -163,26 +295,42 @@ export class MocksService {
       );
     }
 
+    // Total available marks reflects what was ACTUALLY built (clamped to the
+    // questions present), not the idealised structure - so a short paper
+    // doesn't claim marks it can't award. For OT that's per-section
+    // question_count * marks_each; mtq sections contribute nothing here since
+    // they're skipped.
+    const totalMarks = builtSections.reduce((sum, s) => {
+      if (s.kind === "ot" && s.marks_each !== null) {
+        return sum + s.question_count * s.marks_each;
+      }
+      return sum;
+    }, 0);
+
     const session = await this.sessions.create({
       user_id,
       question_count: queue.length,
       mode: "mock",
       paper_id: opts.paper_id,
-      time_limit_seconds: opts.time_limit_seconds ?? null,
+      time_limit_seconds: structure.duration_seconds,
     });
 
     await this.sessionQuestions.insertMany(
       session.id,
-      queue.map((q) => q.id)
+      rawQueueIds,
+      sectionCodes
     );
 
     return {
       session_id: session.id,
-      questions: queue.map((q) => this.lessons.toLessonQuestion(q, lang)),
+      questions: queue,
       hearts_remaining: session.hearts_remaining,
       theory_bites: [],
       time_limit_seconds: session.time_limit_seconds,
       paper_id: opts.paper_id,
+      sections: builtSections,
+      total_marks: totalMarks,
+      pass_mark_pct: structure.pass_mark_pct,
     };
   }
 
@@ -240,6 +388,27 @@ export class MocksService {
       ORDER BY lsq.position ASC
     `;
 
+    // Per-section correctness, keyed by the section_code stamped on each
+    // queued question at start time. Legacy flat mocks have section_code NULL
+    // for every row - those collapse into a single NULL-keyed bucket which we
+    // handle below as an implicit single section.
+    type SectionRow = {
+      section_code: string | null;
+      total: number;
+      correct: number;
+    };
+    const sectionRows = await this.sql<SectionRow[]>`
+      SELECT
+        lsq.section_code                                       AS section_code,
+        COUNT(*)::int                                          AS total,
+        SUM(CASE WHEN a.was_correct THEN 1 ELSE 0 END)::int    AS correct
+      FROM attempts a
+      JOIN lesson_session_questions lsq
+        ON lsq.session_id = a.session_id AND lsq.question_id = a.question_id
+      WHERE a.session_id = ${session_id}
+      GROUP BY lsq.section_code
+    `;
+
     const per_lo: MockBreakdownEntry[] = rows.map((r) => ({
       lo_id: r.lo_id,
       lo_code: r.lo_code,
@@ -252,12 +421,88 @@ export class MocksService {
     const total = per_lo.reduce((s, e) => s + e.total, 0);
     const correct = per_lo.reduce((s, e) => s + e.correct, 0);
 
+    // Resolve the paper's exam_structure so we know each section's marks rule.
+    // If it's missing/invalid we still return per-LO results, but marks scoring
+    // degrades gracefully to an unmarked single section.
+    const paper = await this.papers.findById(session.paper_id);
+    let structure: ExamStructure | null = null;
+    if (paper) {
+      try {
+        structure = validateExamStructure(paper.exam_structure);
+      } catch {
+        structure = null;
+      }
+    }
+
+    // Build per-section scores. We join the attempt-derived counts
+    // (sectionRows) to the structure's marks rules by section code. A section
+    // present in attempts but not in the structure (or a NULL legacy code) is
+    // scored as an unmarked ot-style bucket using the structure's first ot
+    // marks_each when available, else not marked.
+    const structureByCode = new Map<string, ExamSection>();
+    if (structure) {
+      for (const s of structure.sections) structureByCode.set(s.code, s);
+    }
+
+    const per_section: MockSectionScore[] = sectionRows.map((sr) => {
+      const code = sr.section_code ?? "";
+      const def = sr.section_code ? structureByCode.get(sr.section_code) : undefined;
+
+      // mtq sections are not scored yet.
+      if (def && def.kind === "mtq") {
+        return {
+          code,
+          kind: "mtq",
+          scored: false,
+          total: sr.total,
+          correct: sr.correct,
+          marks_available: 0,
+          marks_awarded: 0,
+        };
+      }
+
+      // ot section (defined) or legacy/implicit section (no def): uniform marks.
+      // For a defined ot section use its marks_each. For a legacy NULL-coded
+      // mock we can't know marks_each, so treat each question as 1 mark - the
+      // percent then equals raw accuracy, which is the only sensible fallback.
+      const marksEach = def?.marks_each ?? 1;
+      return {
+        code: code || "A",
+        kind: "ot",
+        scored: true,
+        total: sr.total,
+        correct: sr.correct,
+        marks_available: sr.total * marksEach,
+        marks_awarded: sr.correct * marksEach,
+      };
+    });
+
+    // Overall marks: sum across scored sections only.
+    const marks_available = per_section
+      .filter((s) => s.scored)
+      .reduce((sum, s) => sum + s.marks_available, 0);
+    const marks_awarded = per_section
+      .filter((s) => s.scored)
+      .reduce((sum, s) => sum + s.marks_awarded, 0);
+    const percent =
+      marks_available > 0
+        ? Math.round((marks_awarded / marks_available) * 1000) / 10
+        : 0;
+    const pass_mark_pct = structure?.pass_mark_pct ?? 50;
+    const passed = marks_available > 0 && percent >= pass_mark_pct;
+
     return {
       session_id,
       paper_id: session.paper_id,
       total,
       correct,
       per_lo,
+      per_section,
+      marks_available,
+      marks_awarded,
+      percent,
+      pass_mark_pct,
+      passed,
       wrong_question_ids: wrongRows.map((r) => r.question_id),
     };
   }
@@ -471,6 +716,12 @@ export class MocksService {
       theory_bites: await this.lessons.buildTheoryBites(questionRows, lang),
       time_limit_seconds: null,
       paper_id: session.paper_id!,
+      // A review session is a lesson flow, not a timed exam: it has no exam
+      // sections and no marks. These fields are part of the shared response
+      // shape, so we return empty/zero values rather than fabricate a structure.
+      sections: [],
+      total_marks: 0,
+      pass_mark_pct: 0,
     };
   }
 }

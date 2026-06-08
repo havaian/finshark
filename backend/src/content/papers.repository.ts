@@ -1,9 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { Sql } from "postgres";
+import type { Sql, JSONValue as PgJson } from "postgres";
 import { PG } from "../db/db.module";
-import type { PaperRow } from "./content.types";
+import type { PaperRow, ExamStructure } from "./content.types";
 
-const COLS = `id, code, name_en, name_ru, free_accessible, created_at, updated_at`;
+const COLS = `id, code, name_en, name_ru, free_accessible, program_id, exam_structure, created_at, updated_at`;
 
 @Injectable()
 export class PapersRepository {
@@ -36,11 +36,21 @@ export class PapersRepository {
     // Default true (matches the DB default) so old admin UIs that don't send
     // this still produce a paper visible to free users.
     free_accessible?: boolean;
+    // NOT NULL in the DB. The service resolves a program_code (defaulting to
+    // 'acca') to this id before calling create, so there's no default here -
+    // the caller must supply it.
+    program_id: string;
+    // NOT NULL in the DB. The service supplies the ACCA Applied Knowledge
+    // default when the caller omits a structure, so this is always set here.
+    exam_structure: ExamStructure;
   }): Promise<PaperRow> {
     const free = input.free_accessible ?? true;
+    const structureJson = this.sql.json(
+      input.exam_structure as unknown as PgJson
+    );
     const rows = await this.sql<PaperRow[]>`
-      INSERT INTO papers (code, name_en, name_ru, free_accessible)
-      VALUES (${input.code}, ${input.name_en}, ${input.name_ru}, ${free})
+      INSERT INTO papers (code, name_en, name_ru, free_accessible, program_id, exam_structure)
+      VALUES (${input.code}, ${input.name_en}, ${input.name_ru}, ${free}, ${input.program_id}, ${structureJson})
       RETURNING ${this.sql.unsafe(COLS)}
     `;
     return rows[0];
@@ -54,17 +64,32 @@ export class PapersRepository {
       name_en?: string;
       name_ru?: string | null;
       free_accessible?: boolean;
+      // Resolved by the service from program_code. Omit to leave unchanged.
+      program_id?: string;
+      // Full replacement of the mock definition. Omit to leave unchanged.
+      exam_structure?: ExamStructure;
     }
   ): Promise<PaperRow | null> {
     // Build a partial UPDATE without an ORM. Empty patch → just return current row.
     // Note: postgres.js sql(record) treats null as NULL, undefined keys are skipped
     // by us here explicitly so the helper sees only the columns we want to set.
-    const sets: Record<string, string | null | boolean> = {};
+    // The value type is intentionally wide: exam_structure is set via
+    // this.sql.json(...) which returns postgres.js's Parameter wrapper (not a
+    // plain JSONValue), so we accept ReturnType<Sql["json"]> alongside scalars.
+    const sets: Record<
+      string,
+      string | null | boolean | ReturnType<Sql["json"]>
+    > = {};
     if (input.code !== undefined) sets.code = input.code;
     if (input.name_en !== undefined) sets.name_en = input.name_en;
     if (input.name_ru !== undefined) sets.name_ru = input.name_ru;
     if (input.free_accessible !== undefined)
       sets.free_accessible = input.free_accessible;
+    if (input.program_id !== undefined) sets.program_id = input.program_id;
+    if (input.exam_structure !== undefined)
+      sets.exam_structure = this.sql.json(
+        input.exam_structure as unknown as PgJson
+      );
 
     if (Object.keys(sets).length === 0) return this.findById(id);
 

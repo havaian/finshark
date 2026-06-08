@@ -4267,17 +4267,17 @@ export const F3_PAPER: SeedPaper = {
           type: "mcq",
           difficulty: "hard",
           prompt_en:
-            "A payables ledger control account shows $30,000 (credit). The list of supplier balances totals $32,500. After investigation: (1) a $1,800 debit balance on one supplier's account (the supplier owes us a refund) was set off against credit balances in error \u2014 it should appear as a debit in receivables, not netted in payables list; (2) a $300 contra entry was made in the control account but not the supplier's individual account. What is the REVISED list of supplier balances after correcting these (in $)?",
+            "A payables ledger control account shows $30,000 (credit). The list of supplier balances totals $32,500. After investigation: (1) a contra entry of $1,500 was recorded in the control account but not in the individual supplier accounts; (2) one supplier's balance was overstated in the list by $1,000 due to a transposition error. What is the REVISED list of supplier balances after correcting these (in $)?",
           prompt_ru:
-            "Контрольный счёт кредиторки $30 000 (кредит). Сумма индивидуальных сальдо $32 500. Расследование: (1) дебетовое сальдо $1 800 одного поставщика (он должен нам возврат) ошибочно зачтено против кредитовых - должно отражаться как дебет в дебиторке, не в списке кредиторки; (2) контра-проводка $300 проведена в контрольном счёте, но не в индивидуальном счёте поставщика. Каков СКОРРЕКТИРОВАННЫЙ список индивидуальных сальдо после исправления (в $)?",
+            "Контрольный счёт кредиторки $30 000 (кредит). Сумма индивидуальных сальдо $32 500. Расследование: (1) контра-проводка $1 500 проведена в контрольном счёте, но не в индивидуальных счетах поставщиков; (2) сальдо одного поставщика в списке завышено на $1 000 из-за ошибки транспозиции. Каков СКОРРЕКТИРОВАННЫЙ список индивидуальных сальдо после исправления (в $)?",
           prompt_uz:
-            "Kreditorlik daftari nazorat hisobi 30 000 dollar (kredit) ko'rsatadi. Yetkazib beruvchi balanslari ro'yxati jami 32 500 dollar. Tekshiruvdan keyin: (1) bitta yetkazib beruvchi hisobidagi 1 800 dollarlik debet balans (yetkazib beruvchi bizga pul qaytarishi kerak) xato bilan kredit balanslarga qarshi hisobga olingan - u kreditorlik ro'yxatida hisobga olinmasligi, balki debitorlikda debet sifatida paydo bo'lishi kerak; (2) nazorat hisobida 300 dollarlik kontra yozuv qilingan, ammo yetkazib beruvchining alohida hisobida emas. Bularni tuzatgandan keyin yetkazib beruvchi balanslarining QAYTA KO'RILGAN ro'yxati qancha (dollarda)?",
+            "Kreditorlik daftari nazorat hisobi 30 000 dollar (kredit) ko'rsatadi. Yetkazib beruvchi balanslari ro'yxati jami 32 500 dollar. Tekshiruvdan keyin: (1) 1 500 dollarlik kontra yozuv nazorat hisobida qayd etilgan, ammo yetkazib beruvchilarning alohida hisoblarida emas; (2) transpozitsiya xatosi tufayli bitta yetkazib beruvchining ro'yxatdagi balansi 1 000 dollarga ortiqcha ko'rsatilgan. Bularni tuzatgandan keyin yetkazib beruvchi balanslarining QAYTA KO'RILGAN ro'yxati qancha (dollarda)?",
           options: [
             {
               key: "A",
-              text_en: "$30,400",
-              text_ru: "$30 400",
-              text_uz: "30 400 dollar",
+              text_en: "$30,000",
+              text_ru: "$30 000",
+              text_uz: "30 000 dollar",
             },
             {
               key: "B",
@@ -4285,11 +4285,11 @@ export const F3_PAPER: SeedPaper = {
               text_ru: "$34 000",
               text_uz: "34 000 dollar",
               why_wrong_en:
-                "Direction of corrections is opposite; recompute treating debit balance as removal and contra as reduction.",
+                "This adds the corrections to the list. Both corrections REDUCE the list: a contra missing from the individual accounts and an overstatement both come off.",
               why_wrong_ru:
-                "Направление корректировок обратное; пересчитайте, учитывая удаление дебетового сальдо и снижение по контра.",
+                "Здесь корректировки прибавлены к списку. Обе корректировки УМЕНЬШАЮТ список: и недостающая контра в индивидуальных счетах, и завышение вычитаются.",
               why_wrong_uz:
-                "Tuzatishlar yo'nalishi qarama-qarshi; debet balansni olib tashlash va kontrani kamaytirish sifatida ko'rib qayta hisoblang.",
+                "Bu yerda tuzatishlar ro'yxatga qo'shilgan. Ikkala tuzatish ham ro'yxatni KAMAYTIRADI: alohida hisoblardagi yetishmayotgan kontra ham, ortiqcha ko'rsatish ham ayriladi.",
             },
             {
               key: "C",
@@ -4304,24 +4304,24 @@ export const F3_PAPER: SeedPaper = {
             },
             {
               key: "D",
-              text_en: "$30,000",
-              text_ru: "$30 000",
-              text_uz: "30 000 dollar",
+              text_en: "$31,000",
+              text_ru: "$31 000",
+              text_uz: "31 000 dollar",
               why_wrong_en:
-                "This is the control balance; the question asks for the LIST after corrections.",
+                "Only the $1,500 contra has been deducted; the $1,000 overstatement must also come off the list.",
               why_wrong_ru:
-                "Это сальдо контрольного счёта; вопрос - про СПИСОК после исправления.",
+                "Вычтена только контра $1 500; завышение $1 000 тоже нужно убрать из списка.",
               why_wrong_uz:
-                "Bu nazorat balansi; savol tuzatishlardan keyingi RO'YXATNI so'raydi.",
+                "Faqat 1 500 dollarlik kontra ayrilgan; 1 000 dollarlik ortiqcha ko'rsatish ham ro'yxatdan chiqarilishi kerak.",
             },
           ],
           correct_answer_en: "A",
           explanation_en:
-            "Walk through carefully. Correction 1: the $1,800 debit balance was netted within the payables list; it should be REMOVED from the list (and shown as receivable elsewhere). Removing a debit balance from a credit-balance list INCREASES the list total: 32,500 + 1,800 = 34,300. Correction 2: the $300 contra was in control but not in the individual account; to align, ADD the contra to the individual account. A contra entry REDUCES payables (it offsets a payable against a corresponding receivable from the same party). Reducing the list by $300: 34,300 \u2212 300 = $34,000. Hmm, that's option B. Let me re-read the question: removed $1,800 debit (which was depressing the list) \u2192 list rises; missing contra entry needed (reduces list) \u2192 list falls. 32,500 + 1,800 \u2212 300 = $34,000. That matches B not A. Reverse-checking against the control: control is $30,000 credit. List should equal control after corrections. $34,000 \u2260 $30,000 \u2014 there's still a $4,000 unidentified gap. The text-book clean answer depends on which corrections fully resolve the difference; with only the two corrections given, the list moves to $34,000, NOT matching control. Marking A is wrong; correct intended answer is B $34,000.",
+            "The list of balances must be corrected to agree with the control account. Both adjustments here are LIST-side and both reduce it. Correction 1: the $1,500 contra is in the control account but missing from the individual supplier accounts, so the list is too high by $1,500 - deduct it. Correction 2: a supplier balance is overstated by $1,000 (transposition), so deduct $1,000. Revised list = 32,500 - 1,500 - 1,000 = $30,000, which now agrees with the $30,000 control balance. The reconciliation is complete with no residual gap.",
           explanation_ru:
-            "Проходим внимательно. Корректировка 1: дебетовое сальдо $1 800 было зачтено внутри списка кредиторки; его нужно УБРАТЬ из списка (и показать как дебиторку отдельно). Удаление дебета из списка с кредитовыми сальдо УВЕЛИЧИВАЕТ итог: 32 500 + 1 800 = 34 300. Корректировка 2: контра в контрольном, но не в индивидуальном; для выравнивания добавляем контра в индивидуальный. Контра УМЕНЬШАЕТ кредиторку: 34 300 − 300 = $34 000. Это совпадает с B, не A. Сверка с контрольным: контрольный $30 000 Cr; список должен равняться контрольному после исправлений. $34 000 \u2260 $30 000 - остаётся пропуск $4 000 на неисправленные ошибки. Учебно-чистый ответ - B $34 000.",
+            "Список сальдо нужно исправить так, чтобы он сошёлся с контрольным счётом. Обе корректировки относятся к СПИСКУ и обе его уменьшают. Корректировка 1: контра $1 500 есть в контрольном счёте, но отсутствует в индивидуальных - список завышен на $1 500, вычитаем. Корректировка 2: сальдо поставщика завышено на $1 000 (транспозиция) - вычитаем $1 000. Скорректированный список = 32 500 − 1 500 − 1 000 = $30 000, что теперь совпадает с контрольным сальдо $30 000. Сверка завершена без остаточного расхождения.",
           explanation_uz:
-            "Diqqat bilan ko'rib chiqing. 1-tuzatish: 1 800 dollarlik debet balans kreditorlik ro'yxati ichida hisobga olingan; u ro'yxatdan OLIB TASHLANISHI kerak (va boshqa joyda debitorlik sifatida ko'rsatilishi). Kredit-balans ro'yxatidan debet balansni olib tashlash ro'yxat jamini OSHIRADI: 32 500 + 1 800 = 34 300. 2-tuzatish: 300 dollarlik kontra nazoratda, ammo alohida hisobda emas edi; tekislash uchun kontrani alohida hisobga QO'SHING. Kontra yozuv kreditorlikni KAMAYTIRADI (u to'lovni xuddi shu tomondan tegishli debitorlikka qarshi hisobga oladi). Ro'yxatni 300 dollar kamaytirish: 34 300 - 300 = 34 000 dollar. Nazoratga qarshi teskari tekshiruv: nazorat 30 000 dollar kredit. Ro'yxat tuzatishlardan keyin nazoratga teng bo'lishi kerak. 34 000 dollar ne 30 000 dollar - hamon 4 000 dollarlik aniqlanmagan bo'shliq bor. Berilgan ikki tuzatish bilan ro'yxat 34 000 dollarga o'tadi, nazoratga mos kelmaydi.",
+            "Balanslar ro'yxati nazorat hisobiga mos kelishi uchun tuzatilishi kerak. Bu yerdagi ikkala tuzatish ham RO'YXAT tomonida bo'lib, ikkalasi ham uni kamaytiradi. 1-tuzatish: 1 500 dollarlik kontra nazorat hisobida bor, ammo alohida hisoblarda yo'q, shuning uchun ro'yxat 1 500 dollarga ortiqcha - ayiramiz. 2-tuzatish: yetkazib beruvchi balansi 1 000 dollarga ortiqcha ko'rsatilgan (transpozitsiya) - 1 000 dollar ayiramiz. Qayta ko'rilgan ro'yxat = 32 500 − 1 500 − 1 000 = 30 000 dollar, bu endi 30 000 dollarlik nazorat balansiga mos keladi. Solishtirish qoldiq bo'shliqsiz yakunlandi.",
         },
         {
           type: "mcq",

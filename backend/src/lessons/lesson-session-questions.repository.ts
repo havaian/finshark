@@ -7,21 +7,33 @@ export class LessonSessionQuestionsRepository {
   constructor(@Inject(PG) private readonly sql: Sql) {}
 
   // Bulk-insert the queue at session creation. Order matters → positions are explicit.
-  async insertMany(session_id: string, question_ids: string[]): Promise<void> {
+  //
+  // section_codes, when provided, must align 1:1 with question_ids by index
+  // and stamps each row's exam section (used by structured mocks for per-section
+  // scoring). When omitted, section_code is left NULL - the case for regular
+  // lessons and review sessions, which have no exam sections.
+  async insertMany(
+    session_id: string,
+    question_ids: string[],
+    section_codes?: Array<string | null>
+  ): Promise<void> {
     if (question_ids.length === 0) return;
     const rows = question_ids.map((qid, i) => ({
       session_id,
       question_id: qid,
       position: i,
+      section_code: section_codes ? section_codes[i] ?? null : null,
     }));
-    // postgres.js helpers: pass an array of objects to `sql(rows, 'session_id', 'question_id', 'position')`
+    // postgres.js helpers: pass an array of objects to
+    // `sql(rows, 'session_id', 'question_id', 'position', 'section_code')`
     // to build a multi-row VALUES list with the named columns.
     await this.sql`
       INSERT INTO lesson_session_questions ${this.sql(
         rows,
         "session_id",
         "question_id",
-        "position"
+        "position",
+        "section_code"
       )}
     `;
   }

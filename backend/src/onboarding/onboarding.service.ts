@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { UsersRepository } from "../users/users.repository";
+import { PapersRepository } from "../content/papers.repository";
 import type { UserRow, BgLevel } from "../users/user.types";
 import { toPublicUser } from "../users/user.types";
 import type { CompleteOnboardingDto } from "./dto/complete-onboarding.dto";
@@ -39,7 +40,10 @@ function deriveLessonSize(time_budget_minutes: number): number {
 
 @Injectable()
 export class OnboardingService {
-  constructor(private readonly users: UsersRepository) {}
+  constructor(
+    private readonly users: UsersRepository,
+    private readonly papers: PapersRepository
+  ) {}
 
   // GET /onboarding/status - used by frontend guard. Returns whether the user
   // still needs to onboard plus the current values (so a re-onboarding flow
@@ -54,6 +58,7 @@ export class OnboardingService {
       bg_level: user.bg_level,
       time_budget_minutes: user.time_budget_minutes,
       preferred_paper_id: user.preferred_paper_id,
+      preferred_program_id: user.preferred_program_id,
     };
   }
 
@@ -83,6 +88,16 @@ export class OnboardingService {
 
     if (dto.preferred_paper_id !== undefined) {
       patch.preferred_paper_id = dto.preferred_paper_id;
+      // Keep preferred_program_id in lockstep with the chosen paper: every
+      // paper belongs to exactly one program, so we derive it rather than ask
+      // the user to pick a program separately (there's only ACCA today). If the
+      // paper id is null (cleared), leave the program untouched - clearing the
+      // paper doesn't necessarily mean abandoning the program.
+      if (dto.preferred_paper_id !== null) {
+        const paper = await this.papers.findById(dto.preferred_paper_id);
+        if (!paper) throw new NotFoundException("preferred paper not found");
+        patch.preferred_program_id = paper.program_id;
+      }
     }
 
     // applyOnboarding always sets onboarded_at = NOW(), even for an empty patch.

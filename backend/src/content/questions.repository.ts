@@ -240,6 +240,47 @@ export class QuestionsRepository {
     `;
   }
 
+  // Like findRandomForMock, but excludes a set of question ids already chosen
+  // for earlier sections of the same mock, so a question never appears twice
+  // in one exam. Used by the section-based mock builder: each section calls
+  // this with the union of ids picked by prior sections. Empty exclude set
+  // behaves exactly like findRandomForMock.
+  async findRandomForMockExcluding(
+    paper_id: string,
+    count: number,
+    exclude_ids: string[]
+  ): Promise<QuestionRow[]> {
+    const safeCount = Math.max(1, Math.min(200, count));
+    if (exclude_ids.length === 0) {
+      return this.findRandomForMock(paper_id, safeCount);
+    }
+    return this.sql<QuestionRow[]>`
+      WITH ranked AS (
+        SELECT
+          q.id, q.lo_id, q.type, q.difficulty,
+          q.prompt_en, q.prompt_ru,
+          q.options,
+          q.correct_answer_en, q.correct_answer_ru,
+          q.explanation_en, q.explanation_ru,
+          q.concept_bite_en, q.concept_bite_ru,
+          q.acceptable_tolerance,
+          q.is_active,
+          q.created_at, q.updated_at,
+          ROW_NUMBER() OVER (PARTITION BY q.lo_id ORDER BY random()) AS lo_rank,
+          random() AS rnd
+        FROM questions q
+        JOIN learning_objectives lo ON lo.id = q.lo_id
+        WHERE lo.paper_id = ${paper_id}
+          AND q.is_active = TRUE
+          AND q.id NOT IN ${this.sql(exclude_ids)}
+      )
+      SELECT ${this.sql.unsafe(COLS)}
+      FROM ranked
+      ORDER BY lo_rank ASC, rnd ASC
+      LIMIT ${safeCount}
+    `;
+  }
+
   // Used by the post-mock review-session flow: fetch the full question rows
   // for the IDs the user got wrong. Filters to active only so we don't preload
   // a retired question into a review session. Empty input → empty output.

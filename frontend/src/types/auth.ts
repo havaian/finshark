@@ -26,6 +26,8 @@ export interface PublicUser {
   bg_level: BgLevel | null;
   time_budget_minutes: number;
   preferred_paper_id: string | null;
+  // Program the user is studying (FK to programs). ACCA today; CFA later.
+  preferred_program_id: string | null;
   onboarded_at: string | null; // ISO timestamp or null (null = still needs to onboard)
   // Leaderboards (3.3). Privacy default false - user must opt in.
   leaderboard_opt_in: boolean;

@@ -250,6 +250,10 @@ onMounted(load);
   margin-top: 4px;
 }
 
+.mock-review-card {
+  margin-top: 1em;
+}
+
 .mock-review-card-head {
   display: flex;
   align-items: center;
@@ -261,7 +265,7 @@ onMounted(load);
   font-weight: 500;
 }
 
-.mock-review-card.mock-review-correct {
+/* .mock-review-card.mock-review-correct {
   border-left: 3px solid var(--success);
 }
 
@@ -271,7 +275,7 @@ onMounted(load);
 
 .mock-review-card.mock-review-unanswered {
   border-left: 3px solid var(--text-mute);
-}
+} */
 
 .mock-review-numeric,
 .mock-review-answers {

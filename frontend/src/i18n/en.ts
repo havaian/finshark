@@ -413,7 +413,7 @@ export default {
   mocks: {
     start_title: "Mock exam",
     start_subtitle:
-      "CBE-style timed practice. No hearts - answer at your own pace until time runs out.",
+      "CBE-style timed practice. No hearts.",
     paper_label: "Paper",
     no_papers: "No papers available. An admin needs to add at least one.",
     format_label: "Exam format",

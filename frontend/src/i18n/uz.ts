@@ -418,7 +418,7 @@ export default {
   mocks: {
     start_title: "Sinov imtihoni",
     start_subtitle:
-      "CBE uslubidagi vaqtli mashq. Yuraksiz - vaqt tugaguncha o'z sur'atingizda javob bering.",
+      "CBE uslubidagi vaqtli mashq. Yuraksiz.",
     paper_label: "Fan",
     no_papers: "Fanlar yo'q. Admin kamida bittasini qo'shishi kerak.",
     count_label: "Savollar soni",

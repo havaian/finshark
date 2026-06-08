@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PlansRepository } from "./plans.repository";
 import { SubscriptionsRepository } from "./subscriptions.repository";
-import type { Entitlement } from "./billing.types";
+import type { Entitlement, PlanRow } from "./billing.types";
 
 // EntitlementService is the single source of truth for "what tier is this
 // user, right now". Everything that gates behaviour on premium status (lessons
@@ -12,14 +12,29 @@ import type { Entitlement } from "./billing.types";
 //   tier='free', planId='free', subscriptionId=null, endsAt=null, source=null.
 // Returned when the user has no currently-active subscription row.
 //
-// Caching: we deliberately do NOT cache here. The subscriptions query is a
-// single indexed lookup, and callers that need request-level memoization can
-// wrap with a per-request store later. Premature caching would risk handing
-// out stale "still premium" answers after a revoke.
+// Caching: the subscriptions lookup is per-user and NOT cached (a revoke must
+// take effect immediately). The plans table, by contrast, is tiny and
+// effectively immutable at runtime - it's only ever written by migrations /
+// seed, never by request handlers (verified: no INSERT/UPDATE/DELETE on plans
+// outside migrations). So we memoize plan lookups in-process behind a short
+// TTL. The TTL is a pure safety valve: any real plan change ships as a
+// migration + redeploy, which clears this cache anyway. This removes one DB
+// round-trip from every premium-user entitlement resolution (lesson start,
+// each wrong attempt, mocks, gated achievements).
+
+const PLAN_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 @Injectable()
 export class EntitlementsService {
   private readonly log = new Logger(EntitlementsService.name);
+
+  // Per-plan-id memo. Value is the row (or null for a genuinely missing id,
+  // cached too so a bad reference doesn't re-hit the DB every call). `expires`
+  // is an epoch-ms stamp; entries past it are re-fetched lazily on read.
+  private planCache = new Map<
+    string,
+    { row: PlanRow | null; expires: number }
+  >();
 
   // Stable baseline for users with no active sub. Shared instance so
   // equality checks (tier === entitlement.tier) stay cheap if a caller
@@ -37,14 +52,25 @@ export class EntitlementsService {
     private readonly plans: PlansRepository
   ) {}
 
+  // Cached plan-by-id lookup. See the caching note above for why this is safe.
+  private async getPlanCached(planId: string): Promise<PlanRow | null> {
+    const now = Date.now();
+    const hit = this.planCache.get(planId);
+    if (hit && hit.expires > now) return hit.row;
+
+    const row = await this.plans.findById(planId);
+    this.planCache.set(planId, { row, expires: now + PLAN_CACHE_TTL_MS });
+    return row;
+  }
+
   // Single hot-path call. O(1) lookup via idx_subs_user_status_ends.
   async getEntitlement(userId: string): Promise<Entitlement> {
     const sub = await this.subs.findActiveForUser(userId);
     if (!sub) return EntitlementsService.FREE_BASELINE;
 
-    // Resolve the plan to learn its tier. Cheap point lookup; if performance
-    // ever matters we can cache the tiny plans table in-process.
-    const plan = await this.plans.findById(sub.plan_id);
+    // Resolve the plan to learn its tier. Served from the in-process cache;
+    // see the caching note on the class.
+    const plan = await this.getPlanCached(sub.plan_id);
     if (!plan) {
       // Should never happen - plan_id has a FK constraint. If it does, log
       // loudly and fail back to free so the user isn't stuck in an undefined

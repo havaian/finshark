@@ -152,7 +152,10 @@ function onLangChange(next: Lang) {
   // boot sees the new value. We DON'T call applyOverrides() here - that
   // happens on boot in main.ts after the reload.
   if (next === locale.lang) return;
-  locale.setLang(next);
+  // setLang updates the ref + persists synchronously; the async chunk-load it
+  // kicks off is discarded because we reload below, and bootstrapLocale redoes
+  // it cleanly on the fresh page. Hence void.
+  void locale.setLang(next);
 
   const url = new URL(window.location.href);
   const segments = url.pathname.split('/');

@@ -313,25 +313,55 @@ export class SeedService {
       `;
       const loId = loRows[0].id;
 
-      for (const q of lo.questions) {
-        await this.insertQuestion(tx, loId, q);
-        questionsCount += 1;
+      // Batch-insert this LO's questions in ONE statement instead of a
+      // per-question round-trip. With ~hundreds of questions per paper, the
+      // old one-INSERT-per-question loop meant hundreds of sequential awaits
+      // per paper; this collapses them to one INSERT per LO. We build a
+      // uniform row object per question (same column set the single-row path
+      // used) and hand the array to postgres.js's tx(rows, ...cols) helper,
+      // which expands it into a multi-row VALUES list.
+      const rows = lo.questions.map((q) => this.toQuestionRow(tx, loId, q));
+      if (rows.length > 0) {
+        await tx`
+          INSERT INTO questions ${tx(
+            rows,
+            "lo_id",
+            "type",
+            "difficulty",
+            "prompt_en",
+            "prompt_ru",
+            "options",
+            "correct_answer_en",
+            "correct_answer_ru",
+            "explanation_en",
+            "explanation_ru",
+            "concept_bite_en",
+            "concept_bite_ru",
+            "acceptable_tolerance",
+            "is_active"
+          )}
+        `;
+        questionsCount += rows.length;
       }
     }
     return questionsCount;
   }
 
-  // Insert a single question. Discriminates on q.type to fill the right shape:
-  //   - mcq: options JSONB + correct option key in correct_answer_en
-  //   - number_entry: numeric value (string) in correct_answer_en, optional tolerance
-  // (short_answer is retired - see Grading Spec - and no longer a seed type.)
-  // (Identical to the original seed.ts helper - moved here so the admin path
-  // and the CLI path share the exact same insert behaviour.)
-  private async insertQuestion(
+  // Normalise one SeedQuestion into the flat row object the batch INSERT
+  // expects. Column set is identical to the previous single-row insertQuestion
+  // (en + ru only; _uz seed fields remain unmapped here exactly as before).
+  // Discriminates on type:
+  //   - mcq: options JSONB (why_wrong scrubbed off the correct option),
+  //          correct_answer_en holds the option key, no tolerance.
+  //   - number_entry: no options, correct_answer_en holds the numeric value
+  //                   string, acceptable_tolerance optional.
+  // correct_answer_ru is always null (MCQ keys are language-neutral; numeric
+  // values are too), matching the original behaviour.
+  private toQuestionRow(
     tx: postgres.TransactionSql,
     lo_id: string,
     q: SeedQuestion
-  ): Promise<void> {
+  ): Record<string, unknown> {
     if (q.type === "mcq") {
       // Belt-and-braces: scrub why_wrong from the correct option so storage
       // invariant holds even if the seed author forgot.
@@ -349,53 +379,39 @@ export class SeedService {
           why_wrong_ru: o.why_wrong_ru ?? null,
         };
       });
-      const optionsJson = tx.json(
-        cleanedOptions as unknown as postgres.JSONValue
-      );
-      await tx`
-        INSERT INTO questions (
-          lo_id, type, difficulty,
-          prompt_en, prompt_ru,
-          options,
-          correct_answer_en, correct_answer_ru,
-          explanation_en, explanation_ru,
-          concept_bite_en, concept_bite_ru,
-          acceptable_tolerance,
-          is_active
-        ) VALUES (
-          ${lo_id}, ${q.type}, ${q.difficulty},
-          ${q.prompt_en}, ${q.prompt_ru},
-          ${optionsJson},
-          ${q.correct_answer_en}, ${null},
-          ${q.explanation_en}, ${q.explanation_ru},
-          ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
-          ${null},
-          TRUE
-        )
-      `;
-    } else {
-      // number_entry
-      await tx`
-        INSERT INTO questions (
-          lo_id, type, difficulty,
-          prompt_en, prompt_ru,
-          options,
-          correct_answer_en, correct_answer_ru,
-          explanation_en, explanation_ru,
-          concept_bite_en, concept_bite_ru,
-          acceptable_tolerance,
-          is_active
-        ) VALUES (
-          ${lo_id}, ${q.type}, ${q.difficulty},
-          ${q.prompt_en}, ${q.prompt_ru},
-          ${null},
-          ${q.correct_answer_en}, ${null},
-          ${q.explanation_en}, ${q.explanation_ru},
-          ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
-          ${q.acceptable_tolerance ?? null},
-          TRUE
-        )
-      `;
+      return {
+        lo_id,
+        type: q.type,
+        difficulty: q.difficulty,
+        prompt_en: q.prompt_en,
+        prompt_ru: q.prompt_ru,
+        options: tx.json(cleanedOptions as unknown as postgres.JSONValue),
+        correct_answer_en: q.correct_answer_en,
+        correct_answer_ru: null,
+        explanation_en: q.explanation_en,
+        explanation_ru: q.explanation_ru,
+        concept_bite_en: q.concept_bite_en ?? null,
+        concept_bite_ru: q.concept_bite_ru ?? null,
+        acceptable_tolerance: null,
+        is_active: true,
+      };
     }
+    // number_entry
+    return {
+      lo_id,
+      type: q.type,
+      difficulty: q.difficulty,
+      prompt_en: q.prompt_en,
+      prompt_ru: q.prompt_ru,
+      options: null,
+      correct_answer_en: q.correct_answer_en,
+      correct_answer_ru: null,
+      explanation_en: q.explanation_en,
+      explanation_ru: q.explanation_ru,
+      concept_bite_en: q.concept_bite_en ?? null,
+      concept_bite_ru: q.concept_bite_ru ?? null,
+      acceptable_tolerance: q.acceptable_tolerance ?? null,
+      is_active: true,
+    };
   }
 }

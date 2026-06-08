@@ -3,14 +3,17 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
+import { Cron } from "@nestjs/schedule";
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
 import { QuestionsRepository } from "../content/questions.repository";
 import { LearningObjectivesRepository } from "../content/learning-objectives.repository";
 import { PapersRepository } from "../content/papers.repository";
 import { UsersRepository } from "../users/users.repository";
+import type { UserRow } from "../users/user.types";
 import { LessonSessionsRepository } from "./lesson-sessions.repository";
 import { LessonSessionQuestionsRepository } from "./lesson-session-questions.repository";
 import { AttemptsRepository } from "./attempts.repository";
@@ -153,6 +156,8 @@ const FREE_LESSONS_PER_DAY = 3;
 
 @Injectable()
 export class LessonsService {
+  private readonly log = new Logger(LessonsService.name);
+
   constructor(
     @Inject(PG) private readonly sql: Sql,
     private readonly users: UsersRepository,
@@ -168,6 +173,30 @@ export class LessonsService {
     private readonly achievements: AchievementsService,
     private readonly entitlements: EntitlementsService
   ) {}
+
+  // Daily refresh of the question_error_rates summary table. The lesson queue
+  // builder reads error rates from that table (via findUnseenInLo) instead of
+  // aggregating the whole attempts table on every weak-LO lookup. Error rates
+  // drift slowly, so once-a-day freshness is plenty.
+  //
+  // Runs at 00:45 UTC - staggered after the mastery-snapshot job (00:30, in
+  // ProfileStatsService) so the two heavy nightly aggregations don't contend.
+  // Failure is logged and swallowed: a stale error-rate table just means the
+  // often-wrong weighting uses yesterday's numbers, which is harmless. The
+  // queue builder also tolerates an entirely empty table (neutral default).
+  @Cron("45 0 * * *", {
+    name: "question-error-rates",
+  })
+  async refreshErrorRatesJob(): Promise<void> {
+    try {
+      const n = await this.uqs.refreshErrorRates();
+      this.log.log(`refreshed error rates for ${n} questions`);
+    } catch (e) {
+      this.log.error(
+        `question error-rate refresh failed: ${(e as Error).message}`
+      );
+    }
+  }
 
   // ---- start ----
 
@@ -186,6 +215,11 @@ export class LessonsService {
 
     const entitlement = await this.entitlements.getEntitlement(user_id);
     const isFree = entitlement.tier === "free";
+
+    // Free-tier heart pool, captured from the refill below so the post-session
+    // hearts clamp can reuse it without a second user SELECT. Stays null for
+    // premium (no pool concept).
+    let freeHeartPool: number | null = null;
 
     if (isFree) {
       // 1. Paper-access gate. If the user picked a paper that's marked
@@ -217,8 +251,11 @@ export class LessonsService {
       // 3. Heart pool. Refill if it's a new local day, then refuse if empty.
       //    The pool IS the session hearts: the new session below is created
       //    with the default 3 by the repo, then we override it to min(pool, 3)
-      //    so the user can't get more hearts than the pool allows.
+      //    so the user can't get more hearts than the pool allows. We keep the
+      //    refilled value around (freeHeartPool) so the clamp below doesn't
+      //    have to re-read the user row.
       const pool = await this.users.ensureFreeHeartPoolRefilled(user_id);
+      freeHeartPool = pool;
       if (pool <= 0) {
         throw new ForbiddenException(
           "you're out of hearts for today - come back tomorrow or upgrade to premium"
@@ -232,7 +269,7 @@ export class LessonsService {
     // keeps the API flexible (e.g. for future "extra practice" buttons).
     const size = opts.size ?? user.lesson_size ?? DEFAULT_LESSON_SIZE;
 
-    const queue = await this.buildQueue(user_id, opts.paper_id ?? null, size);
+    const queue = await this.buildQueue(user, opts.paper_id ?? null, size);
 
     if (queue.length === 0) {
       throw new BadRequestException(
@@ -249,14 +286,11 @@ export class LessonsService {
     // For premium: leave the default 3 untouched.
     let heartsForResponse = session.hearts_remaining;
     if (isFree) {
-      // ensureFreeHeartPoolRefilled was called above; re-read just the pool
-      // for the clamp (cheap query - same row we already touched).
-      // Avoid a second SELECT by re-deriving: pool was returned by the
-      // refill, but it's been consumed by nothing yet, so it's still valid.
-      // Re-fetch in case some other request raced; we'd rather take the
-      // latest authoritative number than trust a stale local.
-      const fresh = await this.users.findById(user_id);
-      const pool = fresh?.free_hearts_pool ?? 0;
+      // Reuse the pool value captured from ensureFreeHeartPoolRefilled above
+      // (same request, refilled microseconds ago) rather than re-SELECTing the
+      // user row. freeHeartPool is guaranteed non-null here because isFree
+      // means we ran the refill branch.
+      const pool = freeHeartPool ?? 0;
       const startingHearts = Math.min(pool, session.hearts_remaining);
       if (startingHearts !== session.hearts_remaining) {
         await this.sessions.overrideHearts(session.id, startingHearts);
@@ -293,10 +327,18 @@ export class LessonsService {
     // Re-hydrate to QuestionRow → LessonQuestion, preserving order. Keep the
     // raw rows around so we can derive theory bites from their lo_id fields
     // (theory is per-LO, not per-question).
+    //
+    // One batched fetch instead of a per-id findById loop. We deliberately do
+    // NOT filter to active-only here: a resume must replay the FULL original
+    // queue even if a question was retired mid-session, otherwise the answered-
+    // question indexing on the frontend skips the wrong slots. Only genuinely
+    // hard-deleted rows (absent from the map) are dropped, matching the old
+    // `if (!q) continue` behaviour.
+    const byId = await this.fetchQuestionsById(queueIds);
     const hydrated: LessonQuestion[] = [];
     const hydratedRows: QuestionRow[] = [];
     for (const qid of queueIds) {
-      const q = await this.questions.findById(qid);
+      const q = byId.get(qid);
       if (!q) continue; // a question was hard-deleted; skip (rare)
       hydratedRows.push(q);
       hydrated.push(this.toLessonQuestion(q, lang));
@@ -662,21 +704,20 @@ export class LessonsService {
       last_active_date: today,
     });
 
-    // Evaluate badges AFTER the user row is updated - the rules read from
-    // users.xp / users.streak_count, so they need the post-completion values.
-    // Failure here is swallowed by BadgesService and returns []; a badge bug
-    // never blocks a lesson completion.
-    const newlyEarnedBadges = await this.badges.evaluateAfterSession(user_id);
-
-    // Achievements run on the same hook for the same reason - they read
-    // xp / streak / completed-session counts from the post-update state.
-    // Failure is swallowed inside AchievementsService and returns []; a
-    // bad achievement rule never breaks lesson completion. The unlocks
-    // payload is not yet surfaced to the frontend (no toast wiring); we
-    // return it so a future UI iteration can show "Level 2 reached!" on
-    // the lesson-finale screen.
-    const newlyUnlockedAchievements =
-      await this.achievements.evaluateAfterSession(user_id);
+    // Evaluate badges AND achievements AFTER the user row is updated - both
+    // read post-completion users.xp / users.streak_count (and completed-session
+    // counts), so they need the updated values. They're independent of each
+    // other and each swallows its own errors internally (returning []), so we
+    // run them concurrently - one failing can't reject the other, and it halves
+    // the post-completion latency on the user's path to the finale screen.
+    //
+    // newlyUnlockedAchievements is not yet surfaced to the frontend (no toast
+    // wiring); we still evaluate it so progress advances, and discard the
+    // return for now. A future UI iteration can show "Level 2 reached!".
+    const [newlyEarnedBadges, newlyUnlockedAchievements] = await Promise.all([
+      this.badges.evaluateAfterSession(user_id),
+      this.achievements.evaluateAfterSession(user_id),
+    ]);
     void newlyUnlockedAchievements;
 
     return {
@@ -722,11 +763,16 @@ export class LessonsService {
   //
   // Difficulty preference: derived from user's saved preference, or, if NULL
   // ("auto"), the level-based heuristic (level 1-2 easy, 3-5 medium, 6+ hard).
+  //
+  // `user` is passed in by the caller (start()) which has already loaded the
+  // row - avoids a redundant findById here on the hot path.
   private async buildQueue(
-    user_id: string,
+    user: UserRow,
     paper_id: string | null,
     size: number
   ): Promise<QuestionRow[]> {
+    const user_id = user.id;
+
     // ----- 1. Diversified due fetch -----
     const dueDiversified = await this.uqs.findDueQuestionsDiversified({
       user_id,
@@ -734,12 +780,17 @@ export class LessonsService {
       limit: size,
     });
 
-    const dueQuestions = await Promise.all(
-      dueDiversified.map((d) => this.questions.findById(d.question_id))
-    );
-    const queue: QuestionRow[] = dueQuestions.filter(
-      (q): q is QuestionRow => !!q && q.is_active
-    );
+    // Batch-fetch the question rows in ONE query, then re-order to match the
+    // diversified result (oldest-due first). findManyByIds doesn't guarantee
+    // input order, so we index by id and walk the original sequence. activeOnly
+    // pushes the is_active filter into SQL so we don't hydrate retired rows.
+    const dueIds = dueDiversified.map((d) => d.question_id);
+    const dueById = await this.fetchQuestionsById(dueIds, { activeOnly: true });
+    const queue: QuestionRow[] = [];
+    for (const id of dueIds) {
+      const q = dueById.get(id);
+      if (q) queue.push(q);
+    }
 
     // Track LOs covered AND question IDs already picked, so subsequent passes
     // can deduplicate. Both are needed because LO-tracking handles "no two from
@@ -750,8 +801,6 @@ export class LessonsService {
     if (queue.length >= size) return queue.slice(0, size);
 
     // ----- 2. Fill from weak LOs (NEW questions, one per LO, error-biased) -----
-    const user = await this.users.findById(user_id);
-    if (!user) throw new NotFoundException("user not found");
     const preferred =
       user.preferred_difficulty ?? this.preferredDifficulty(user.level);
 
@@ -764,11 +813,17 @@ export class LessonsService {
       limit: Math.max(remaining * 3, 8),
     });
 
+    // Gather one candidate id per eligible weak LO first, then hydrate them all
+    // in a single batched query. findUnseenInLo only returns ids+difficulty
+    // (cheap), so the per-LO loop stays one query each; the expensive full-row
+    // fetch is collapsed into one findManyByIds call instead of one per pick.
+    const weakCandidateIds: string[] = [];
+    const weakCoveredLos = new Set<string>(coveredLos);
     for (const lo of weakLos) {
-      if (queue.length >= size) break;
+      if (weakCandidateIds.length >= remaining) break;
       // Topical diversification: skip LOs that already have a question in the
       // queue. We come back to them only via the extras fallback below.
-      if (coveredLos.has(lo.lo_id)) continue;
+      if (weakCoveredLos.has(lo.lo_id)) continue;
 
       const unseen = await this.uqs.findUnseenInLo({
         user_id,
@@ -780,15 +835,30 @@ export class LessonsService {
         error_rate_bias: true,
       });
 
+      // Take the first candidate from this LO that isn't already picked. We
+      // tentatively reserve the LO so two weak LOs can't both contribute the
+      // same (shared) id; final is_active filtering happens after hydration.
       for (const u of unseen) {
         if (pickedIds.has(u.id)) continue;
-        const q = await this.questions.findById(u.id);
-        if (!q || !q.is_active) continue;
-        queue.push(q);
-        coveredLos.add(q.lo_id);
-        pickedIds.add(q.id);
+        if (weakCandidateIds.includes(u.id)) continue;
+        weakCandidateIds.push(u.id);
+        weakCoveredLos.add(lo.lo_id);
         break; // ← one question per LO; on to the next weak LO.
       }
+    }
+
+    const weakById = await this.fetchQuestionsById(weakCandidateIds, {
+      activeOnly: true,
+    });
+    for (const id of weakCandidateIds) {
+      if (queue.length >= size) break;
+      const q = weakById.get(id);
+      if (!q) continue; // retired between the id fetch and now, or inactive
+      if (pickedIds.has(q.id)) continue;
+      if (coveredLos.has(q.lo_id)) continue;
+      queue.push(q);
+      coveredLos.add(q.lo_id);
+      pickedIds.add(q.id);
     }
 
     if (queue.length >= size) return queue.slice(0, size);
@@ -802,18 +872,34 @@ export class LessonsService {
       exclude_ids: Array.from(pickedIds),
       limit: size - queue.length,
     });
-    const extraQuestions = await Promise.all(
-      extras.map((e) => this.questions.findById(e.question_id))
-    );
-    for (const q of extraQuestions) {
+    const extraIds = extras.map((e) => e.question_id);
+    const extraById = await this.fetchQuestionsById(extraIds, {
+      activeOnly: true,
+    });
+    for (const id of extraIds) {
       if (queue.length >= size) break;
-      if (!q || !q.is_active) continue;
+      const q = extraById.get(id);
+      if (!q) continue;
       if (pickedIds.has(q.id)) continue;
       queue.push(q);
       pickedIds.add(q.id);
     }
 
     return queue;
+  }
+
+  // Batch-hydrate question rows by id into a Map keyed by id, preserving
+  // nothing about order (callers re-order from their own id sequence). Empty
+  // input short-circuits to an empty map with no query. Centralised so the
+  // three buildQueue passes and getSession share one batched fetch instead of
+  // looping findById per id (the old N+1).
+  private async fetchQuestionsById(
+    ids: string[],
+    opts?: { activeOnly?: boolean }
+  ): Promise<Map<string, QuestionRow>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.questions.findManyByIds(ids, opts);
+    return new Map(rows.map((r) => [r.id, r]));
   }
 
   // ---- helpers ----

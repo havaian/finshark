@@ -13,10 +13,15 @@ import {
 export const useLocaleStore = defineStore("locale", () => {
   const lang = ref<Lang>(readLangFromStorage());
 
-  function setLang(next: Lang) {
+  // Switch language. Returns the promise from setLanguage so callers that
+  // need the target locale's messages loaded before proceeding (the router's
+  // lang-sync guard) can await it. The ref is updated immediately so the
+  // X-Lang header and reactive bindings reflect the choice without waiting on
+  // the chunk fetch; setLanguage loads the messages then flips vue-i18n's
+  // active locale.
+  function setLang(next: Lang): Promise<void> {
     lang.value = next;
-    // Also update vue-i18n and persist.
-    setLanguage(next);
+    return setLanguage(next);
   }
 
   // Belt-and-suspenders: if the ref is mutated directly elsewhere, keep storage in sync.

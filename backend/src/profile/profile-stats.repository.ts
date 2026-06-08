@@ -24,7 +24,7 @@ export interface DifficultyBreakdownRow {
 }
 
 export interface TypeBreakdownRow {
-  type: "mcq" | "short_answer";
+  type: "mcq" | "number_entry";
   attempts: number;
   correct: number;
 }

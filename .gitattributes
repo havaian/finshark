@@ -1,0 +1,36 @@
+# Normalize line endings to LF on commit for all text files. Prevents the
+# CRLF/LF drift that produced noisy diffs and mixed endings across the repo
+# (some CSS and a couple of .ts/.vue files had shipped with CRLF). Git stores
+# LF and checks out LF on every platform.
+* text=auto eol=lf
+
+# Explicit LF for the source types we author. Redundant with the rule above
+# but makes the intent unambiguous and survives a future change to the default.
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.vue  text eol=lf
+*.css  text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.sql  text eol=lf
+*.sh   text eol=lf
+
+# Treat genuine binaries as binary so Git never touches their bytes.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.pdf   binary

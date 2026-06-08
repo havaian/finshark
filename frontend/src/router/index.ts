@@ -367,7 +367,7 @@ function preferredLang(): Lang {
   }
 }
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   // 1) Bare-URL redirect. If the path has no lang prefix AND isn't one of
   // the explicit bare paths (auth callback, unsubscribe), bounce to the
   // same path under the user's preferred lang. Done first so subsequent
@@ -383,6 +383,12 @@ router.beforeEach((to) => {
   // 2) Sync the locale store with the URL's :lang param. When a user opens
   // /en/dashboard while their saved preference is 'ru', the URL wins -
   // pasting a localized link should switch the app to that lang.
+  //
+  // We AWAIT the switch so the target locale's message chunk is loaded before
+  // the destination component renders. Without the await, a deep-link to a
+  // /ru/... URL would paint a frame of raw i18n keys (or fall back to en)
+  // until the chunk arrived. For the common same-lang navigation this resolves
+  // synchronously (setLang -> already-loaded locale -> no fetch).
   const urlLang = to.params.lang;
   if (
     typeof urlLang === "string" &&
@@ -390,7 +396,7 @@ router.beforeEach((to) => {
   ) {
     const locale = useLocaleStore();
     if (locale.lang !== urlLang) {
-      locale.setLang(urlLang as Lang);
+      await locale.setLang(urlLang as Lang);
     }
   }
 

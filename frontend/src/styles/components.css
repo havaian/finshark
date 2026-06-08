@@ -94,7 +94,7 @@
     position: relative;
     overflow: hidden;
     display: grid;
-    grid-template-rows: 50% 50%;
+    /* grid-template-rows: 50% 50%; */
 }
 
 .stat .stat-lbl {

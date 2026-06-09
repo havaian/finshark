@@ -671,10 +671,12 @@ button.list-row {
 }
 
 button.list-row:hover {
+    padding-left: 1em;
     background: var(--bg-elev);
 }
 
 button.list-row.active {
+    padding-left: 1em;
     background: var(--accent-soft-bg);
     color: var(--text);
     /* Left accent strip so the active row reads at a glance without relying

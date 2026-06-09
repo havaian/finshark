@@ -121,8 +121,11 @@ const submitBusy = ref(false);
 const submitError = ref<string | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
-// Client-side mirror of the backend limits (defence + instant feedback).
-const MAX_SLIP_BYTES = 5 * 1024 * 1024;
+// Client-side mirror of the backend limits (defence + instant feedback). The
+// backend re-validates: 1 MB cap, magic-byte sniff, and single-page-only for
+// PDFs. We can't check PDF page count in the browser, so multi-page PDFs are
+// caught server-side and surfaced via submitError.
+const MAX_SLIP_BYTES = 1 * 1024 * 1024;
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf';
 
 function onFilePick(e: Event) {

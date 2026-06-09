@@ -61,7 +61,7 @@ export default {
     subscription: "Obuna",
     leaderboards: "Reyting",
     mocks: "Sinov imtihoni",
-    admin_panel: "Admin panel",
+    admin_panel: "Admin paneli",
     back_to_dashboard: "← Boshqaruv paneliga",
     back_to_app: "← Ilovaga qaytish",
     stat_streak_tip:
@@ -297,6 +297,9 @@ export default {
     hearts_empty_banner_sub:
       "Ular vaqt mintaqangizda yarim tunda to'ladi. Hozir o'qimoqchimisiz? Premiumda yuraklar cheksiz.",
     premium_badge: "Premium",
+    upsell_title: "Premium bilan hammasini oching",
+    upsell_body: "Cheksiz darslar va jonlar, barcha fanlar va to'liq sinov imtihonlari.",
+    upsell_cta: "Premiumga o'tish",
     // Locked paper picker entry (used by the dashboard + mock-start <option>).
     // We keep the picker showing premium-only papers so free users can see
     // what they'd unlock; the start button surfaces a friendly 403 when they
@@ -312,18 +315,16 @@ export default {
 
   leaderboards: {
     title: "Reyting",
-    subtitle: "Roziligini bergan foydalanuvchilar bo'yicha XP reytingi. Bu yerda ko'rinish uchun rozilik bering.",
-    window_week: "Bu hafta",
-    window_month: "Bu oy",
-    window_all: "Butun davr",
+    subtitle: "Roziligini bergan foydalanuvchilar bo'yicha butun davr XP reytingi. Bu yerda ko'rinish uchun rozilik bering.",
     all_papers: "Barcha fanlar",
     col_rank: "#",
     col_name: "Ism",
     col_level: "Daraja",
     col_xp: "XP",
+    col_paper_xp: "Fan XP",
     col_streak: "Seriya",
     you_badge: "siz",
-    empty: "Bu davr uchun hali reytingda foydalanuvchilar yo'q.",
+    empty: "Hali reytingda foydalanuvchilar yo'q.",
     optin_title: "Reytingda ko'rining",
     optin_body:
       "Ko'rsatiladigan ismingiz, darajangiz, XP va seriyangiz boshqa tizimga kirgan foydalanuvchilarga ko'rinadi. Buni istalgan vaqtda Sozlamalardan o'chirishingiz mumkin.",
@@ -422,11 +423,6 @@ export default {
       "CBE uslubidagi vaqtli mashq. Yuraksiz.",
     paper_label: "Fan",
     no_papers: "Fanlar yo'q. Admin kamida bittasini qo'shishi kerak.",
-    count_label: "Savollar soni",
-    time_label: "Vaqt chegarasi",
-    time_minutes: "{n} daq",
-    time_help:
-      "Vaqt tugaganda sinov avtomatik yuboriladi va siz bo'limlar bo'yicha tahlilni ko'rasiz.",
     format_label: "Imtihon formati",
     format_questions: "Savollar",
     format_marks: "Ballar",
@@ -656,12 +652,12 @@ export default {
     copy: "Nusxa olish",
     copied: "Nusxa olindi",
     upload_slip: "To'lov chekini yuklang",
-    slip_hint: "O'tkazma cheki surati yoki PDF. Eng ko'pi 5 MB.",
+    slip_hint: "O'tkazma cheki surati yoki bir sahifali PDF. Eng ko'pi 1 MB.",
     clear_file: "O'chirish",
     submit: "Tekshiruvga yuborish",
     submitting: "Yuborilmoqda…",
     submit_error_generic: "To'lovni yuborib bo'lmadi. Qayta urinib ko'ring.",
-    slip_too_large: "Bu fayl juda katta. Eng katta hajmi 5 MB.",
+    slip_too_large: "Bu fayl juda katta. Eng katta hajmi 1 MB.",
     review_note: "To'lovingiz qo'lda tekshiriladi, odatda bir kun ichida.",
     status_pending: "Tekshiruvda",
     status_approved: "Tasdiqlangan",
@@ -674,7 +670,7 @@ export default {
     title: "Obuna",
     subtitle: "Tarifingiz, promo-kodlar va to'lovlar tarixi.",
     current_plan: "Joriy tarif",
-    free_hint: "Siz bepul tarifdasiz. Premiumga o'tish uchun quyida kodni faollashtiring.",
+    free_hint: "Siz bepul tarifdasiz. Premiumni ochish uchun karta orqali to'lang yoki quyida kodni faollashtiring.",
     redeem_section: "Kodni faollashtirish",
     redeem_section_sub: "Promo-kodingiz bormi? Premiumni ochish yoki uzaytirish uchun uni kiriting.",
     history_section: "To'lovlar tarixi",

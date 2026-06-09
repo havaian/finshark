@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
-import { leaderboardsApi, type LeaderboardEntry, type LeaderboardWindow } from '../api/leaderboards.api';
+import { leaderboardsApi, type LeaderboardEntry } from '../api/leaderboards.api';
 import { lessonsApi } from '../api/lessons.api';
 import { profileApi } from '../api/profile.api';
 import { useAuthStore } from '../stores/auth.store';
@@ -22,8 +22,12 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const lp = useLocalePath();
 
-const window_ = ref<LeaderboardWindow>('week');
 const paperId = ref<string | null>(null);
+
+// True whenever a specific paper is selected. Drives the column header label:
+// the no-paper board shows cumulative total XP (= dashboard), a paper board
+// shows per-paper XP, which is a different number.
+const paperSelected = computed(() => paperId.value !== null);
 
 const entries = ref<LeaderboardEntry[]>([]);
 const loading = ref(false);
@@ -55,7 +59,6 @@ async function loadLeaderboard() {
   errorMsg.value = null;
   try {
     entries.value = await leaderboardsApi.get({
-      window: window_.value,
       paper_id: paperId.value,
       limit: 50,
     });
@@ -91,8 +94,8 @@ function extractError(e: unknown): string | null {
   return null;
 }
 
-// Reload whenever the filters change.
-watch([window_, paperId], () => loadLeaderboard());
+// Reload whenever the paper filter changes.
+watch(paperId, () => loadLeaderboard());
 
 onMounted(() => {
   loadPapers();
@@ -121,15 +124,9 @@ onMounted(() => {
         </button>
       </div>
 
-      <!-- Filter toolbar: window tabs + paper picker -->
+      <!-- Filter toolbar: paper picker. The board is all-time; selecting a
+           paper switches it to a per-paper ranking (see column header). -->
       <div class="leaderboard-toolbar">
-        <div class="content-tabs">
-          <button v-for="w in (['week', 'month', 'all'] as const)" :key="w" type="button"
-            :class="['content-tab', { active: window_ === w }]" @click="window_ = w">
-            {{ t(`leaderboards.window_${w}`) }}
-          </button>
-        </div>
-
         <select v-model="paperId" class="leaderboard-paper-select">
           <option :value="null">{{ t('leaderboards.all_papers') }}</option>
           <option v-for="p in papers" :key="p.id" :value="p.id">
@@ -153,7 +150,7 @@ onMounted(() => {
             <th class="lb-col-rank">{{ t('leaderboards.col_rank') }}</th>
             <th>{{ t('leaderboards.col_name') }}</th>
             <th class="lb-col-num">{{ t('leaderboards.col_level') }}</th>
-            <th class="lb-col-num">{{ t('leaderboards.col_xp') }}</th>
+            <th class="lb-col-num">{{ paperSelected ? t('leaderboards.col_paper_xp') : t('leaderboards.col_xp') }}</th>
             <th class="lb-col-num">{{ t('leaderboards.col_streak') }}</th>
           </tr>
         </thead>

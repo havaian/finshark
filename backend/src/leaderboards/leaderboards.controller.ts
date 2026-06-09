@@ -14,7 +14,6 @@ export class LeaderboardsController {
   @Get()
   get(@Query() dto: GetLeaderboardDto) {
     return this.leaderboards.get({
-      window: dto.window,
       paper_id: dto.paper_id ?? null,
       limit: dto.limit,
     });

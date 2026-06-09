@@ -292,6 +292,12 @@ export default {
     hearts_empty_banner_sub:
       "They'll refill at midnight in your timezone. Want to study now? Premium has unlimited hearts.",
     premium_badge: "Premium",
+    // Premium upsell card shown to free-tier users on the dashboard. Links to
+    // the subscription page where they can pay by card transfer or redeem a
+    // code.
+    upsell_title: "Unlock everything with Premium",
+    upsell_body: "Unlimited lessons and hearts, every paper, and full mock exams.",
+    upsell_cta: "Go Premium",
     // Locked paper picker entry (used by the dashboard + mock-start <option>).
     // We keep the picker showing premium-only papers so free users can see
     // what they'd unlock; the start button surfaces a friendly 403 when they
@@ -307,18 +313,16 @@ export default {
 
   leaderboards: {
     title: "Leaderboards",
-    subtitle: "XP rankings across opt-in users. Opt in to appear here.",
-    window_week: "This week",
-    window_month: "This month",
-    window_all: "All time",
+    subtitle: "All-time XP rankings across opt-in users. Opt in to appear here.",
     all_papers: "All papers",
     col_rank: "#",
     col_name: "Name",
     col_level: "Level",
     col_xp: "XP",
+    col_paper_xp: "Paper XP",
     col_streak: "Streak",
     you_badge: "you",
-    empty: "No ranked users yet for this window.",
+    empty: "No ranked users yet.",
     optin_title: "Appear on leaderboards",
     optin_body:
       "Your display name, level, XP, and streak will be visible to other signed-in users. You can turn this off any time from Settings.",
@@ -648,12 +652,12 @@ export default {
     copy: "Copy",
     copied: "Copied",
     upload_slip: "Upload payment slip",
-    slip_hint: "A photo or PDF of your transfer receipt. Max 5 MB.",
+    slip_hint: "A photo or single-page PDF of your transfer receipt. Max 1 MB.",
     clear_file: "Remove",
     submit: "Submit for review",
     submitting: "Submitting…",
     submit_error_generic: "Couldn't submit your payment. Please try again.",
-    slip_too_large: "That file is too large. Maximum size is 5 MB.",
+    slip_too_large: "That file is too large. Maximum size is 1 MB.",
     review_note: "Your payment will be reviewed manually, usually within a day.",
     status_pending: "Under review",
     status_approved: "Approved",
@@ -666,7 +670,7 @@ export default {
     title: "Subscription",
     subtitle: "Your plan, promo codes, and billing history.",
     current_plan: "Current plan",
-    free_hint: "You're on the free plan. Redeem a code below to go premium.",
+    free_hint: "You're on the free plan. Pay by card transfer or redeem a code below to unlock premium.",
     redeem_section: "Redeem a code",
     redeem_section_sub: "Have a promo code? Enter it to unlock or extend premium.",
     history_section: "Billing history",

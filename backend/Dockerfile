@@ -56,6 +56,13 @@ COPY --chown=nodeapp:nodeapp --from=build /app/package.json /app/pnpm-workspace.
 COPY --chown=nodeapp:nodeapp --from=build /app/node_modules /app/node_modules
 COPY --chown=nodeapp:nodeapp --from=build /app/backend /app/backend
 
+# Pre-create the uploads root owned by the non-root runtime user. Docker named
+# volumes inherit the ownership/permissions of their mountpoint when first
+# created, so making /uploads nodeapp-owned here lets the container mkdir
+# subdirs (payment-slips/) at runtime without EACCES. UPLOADS_DIR=/uploads is
+# set in docker-compose. Done while still root, before the USER switch below.
+RUN mkdir -p /uploads && chown nodeapp:nodeapp /uploads
+
 # Run as non-roo
 USER nodeapp
 # CWD is the backend dir so `node dist/main.js` and `node-pg-migrate up`

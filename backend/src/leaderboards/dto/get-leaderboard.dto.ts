@@ -1,14 +1,11 @@
 import { Type } from "class-transformer";
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
-
-const WINDOWS = ["week", "month", "all"] as const;
+import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class GetLeaderboardDto {
-  @IsIn(WINDOWS as unknown as string[])
-  window!: "week" | "month" | "all";
-
-  // Optional paper filter - only XP from attempts on this paper's questions
-  // count toward the score. Pass nothing for "all papers combined".
+  // Optional paper filter - when present, the board ranks by per-paper XP
+  // (summed attempts.xp_earned on that paper's questions). When absent, the
+  // board ranks by the user's cumulative users.xp total. Pass nothing for the
+  // all-time cumulative board.
   @IsOptional()
   @IsString()
   paper_id?: string;

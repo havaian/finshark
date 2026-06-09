@@ -690,7 +690,7 @@ onMounted(load);
         </section>
 
         <section class="card mt-6">
-          <header class="row" style="justify-content: space-between; align-items: center; gap: 12px;">
+          <header class="row heatmap-head" style="justify-content: space-between; align-items: center; gap: 12px;">
             <h2>{{ t('profile.chart_activity_heatmap') }}</h2>
             <!-- Window selector. Segmented pill matching the rest of the
                  app's segmented controls. 90 days is the compact default

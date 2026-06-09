@@ -2295,6 +2295,67 @@
     color: var(--text-dim);
 }
 
+/* Premium upsell card on the dashboard (free-tier users only). Whole card is
+   a RouterLink to /subscription. Soft accent fill with a matching accent
+   border (solid colour, not a gradient, so the colored border is fine here).
+   Hover shifts the background only - no transform: scale. */
+.dashboard-upsell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    background: var(--accent-soft-bg);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+    transition: background-color 0.15s ease;
+}
+
+.dashboard-upsell:hover {
+    background: var(--accent-glow);
+}
+
+.dashboard-upsell-body {
+    flex: 1 1 auto;
+    line-height: 1.4;
+    min-width: 0;
+}
+
+.dashboard-upsell-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text);
+}
+
+.dashboard-upsell-sub {
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.dashboard-upsell-btn {
+    flex: 0 0 auto;
+    /* It's a span styled as a button (the parent <a> handles navigation), so
+       neutralise any inherited link underline and keep it from shrinking. */
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* Stack the upsell on narrow viewports so the CTA button sits below the copy
+   at full width instead of squeezing the text into a sliver. */
+@media (max-width: 560px) {
+    .dashboard-upsell {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-upsell-btn {
+        text-align: center;
+    }
+}
+
 /* Profile: 2-column charts grid → single column. The grid is .profile-grid-2;
    keep it 1-col below 640px so doughnut charts have room. */
 @media (max-width: 640px) {
@@ -2306,6 +2367,30 @@
      don't squeeze into a sliver next to a big avatar. */
     .profile-identity {
         flex-wrap: wrap;
+    }
+}
+
+/* Activity heatmap header on mobile: the <h2> + 3-button segmented window
+   picker can't sit side-by-side at narrow widths (the picker is flex:0 0 auto
+   and pushed past the edge by space-between). Let the header wrap and give the
+   picker its own full-width row with the three buttons sharing the space
+   equally, so nothing overflows the card. */
+@media (max-width: 560px) {
+    .heatmap-head {
+        flex-wrap: wrap;
+    }
+
+    .heatmap-head .activity-window-picker {
+        flex: 1 1 100%;
+        display: flex;
+        width: 100%;
+    }
+
+    .heatmap-head .activity-window-picker button {
+        flex: 1 1 0;
+        text-align: center;
+        padding-left: 8px;
+        padding-right: 8px;
     }
 }
 

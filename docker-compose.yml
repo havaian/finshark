@@ -32,6 +32,11 @@ services:
     container_name: finshark-backend
     env_file:
       - ./.env
+    # Infra-level path that must match the volume mount below. Set here (not
+    # only in .env) so it's correct regardless of what the operator's .env says
+    # - the named volume is mounted at /uploads and the app writes there.
+    environment:
+      UPLOADS_DIR: /uploads
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     # Persist admin-edited locale overrides across image rebuilds. Without this
@@ -42,13 +47,16 @@ services:
     # if a file is missing, so an empty volume is a safe initial state.
     #
     # Persist user-uploaded payment slips across rebuilds the same way. The
-    # backend writes slips under ./uploads (cwd is /app/backend per the
-    # Dockerfile WORKDIR), so the volume mounts at /app/backend/uploads. Losing
-    # this volume would orphan the slip_path rows in payment_submissions (the
-    # DB rows survive; the files behind them wouldn't), so it must persist.
+    # backend writes slips under UPLOADS_DIR, which we set to /uploads (a
+    # root-level path outside the app tree) and back with a named volume. The
+    # Dockerfile pre-creates /uploads owned by the non-root `nodeapp` user so
+    # the container can mkdir subdirs (payment-slips/) without EACCES - a named
+    # volume inherits the mountpoint's ownership on first creation. Losing this
+    # volume would orphan the slip_path rows in payment_submissions (the DB rows
+    # survive; the files behind them wouldn't), so it must persist.
     volumes:
       - locales:/app/backend/locales
-      - uploads:/app/backend/uploads
+      - uploads:/uploads
     restart: unless-stopped
 
   frontend:

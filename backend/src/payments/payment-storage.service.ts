@@ -9,6 +9,7 @@ import { randomUUID } from "node:crypto";
 import { createReadStream, type ReadStream } from "node:fs";
 import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
 import { isAbsolute, join, resolve } from "node:path";
+import { PDFDocument } from "pdf-lib";
 
 // Where payment slips live on disk. Files are written under
 // <UPLOADS_DIR>/payment-slips/. UPLOADS_DIR defaults to ./uploads resolved
@@ -39,10 +40,53 @@ const MIME_EXT: Record<string, string> = {
   "application/pdf": "pdf",
 };
 
-// 5 MB cap. A receipt photo / PDF is well under this; the limit stops someone
-// filling the volume. Enforced here AND in the multer limits (controller) as
-// defence in depth.
-export const MAX_SLIP_BYTES = 5 * 1024 * 1024;
+// 1 MB cap. A receipt photo / single-page PDF is well under this; the limit
+// stops someone filling the volume and keeps uploads fast on mobile data.
+// Enforced here AND in the multer limits (controller) as defence in depth.
+export const MAX_SLIP_BYTES = 1 * 1024 * 1024;
+
+// Max pages allowed in an uploaded PDF slip. A bank transfer receipt is a
+// single page; multi-page PDFs are rejected (could be a padded/abusive file).
+const MAX_PDF_PAGES = 1;
+
+// Magic-byte signatures for the allowed types. We sniff the file's actual
+// bytes rather than trusting the client-declared mimetype, so a non-image
+// renamed with a spoofed Content-Type is rejected. Each entry is [offset,
+// bytes]. WebP and HEIC are container formats, so we check the inner brand
+// after the size field (offset 8) rather than a fixed prefix.
+function sniffMatchesMime(buf: Buffer, mime: string): boolean {
+  const startsWith = (sig: number[], offset = 0): boolean => {
+    if (buf.length < offset + sig.length) return false;
+    return sig.every((b, i) => buf[offset + i] === b);
+  };
+  switch (mime) {
+    case "image/jpeg":
+      // FF D8 FF
+      return startsWith([0xff, 0xd8, 0xff]);
+    case "image/png":
+      // 89 50 4E 47 0D 0A 1A 0A
+      return startsWith([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    case "image/webp":
+      // "RIFF" .... "WEBP"
+      return (
+        startsWith([0x52, 0x49, 0x46, 0x46]) &&
+        startsWith([0x57, 0x45, 0x42, 0x50], 8)
+      );
+    case "image/heic":
+    case "image/heif": {
+      // ISO-BMFF: bytes 4-7 = "ftyp", then a brand. Accept the common HEIF
+      // brands (heic/heix/heif/mif1/msf1) at offset 8.
+      if (!startsWith([0x66, 0x74, 0x79, 0x70], 4)) return false;
+      const brand = buf.slice(8, 12).toString("latin1");
+      return ["heic", "heix", "heif", "mif1", "msf1", "hevc"].includes(brand);
+    }
+    case "application/pdf":
+      // "%PDF"
+      return startsWith([0x25, 0x50, 0x44, 0x46]);
+    default:
+      return false;
+  }
+}
 
 export interface StoredSlip {
   // Path relative to the uploads root (what we persist in the DB). Keeping it
@@ -86,6 +130,35 @@ export class PaymentStorageService {
       throw new BadRequestException(
         "payment slip must be an image (JPG, PNG, WebP, HEIC) or PDF"
       );
+    }
+
+    // Verify the bytes match the declared type. Blocks a renamed executable /
+    // archive sent with a spoofed image/pdf Content-Type from being stored.
+    if (!sniffMatchesMime(file.buffer, mime)) {
+      throw new BadRequestException(
+        "payment slip contents do not match its file type"
+      );
+    }
+
+    // PDFs must be a single page. Parse with pdf-lib (pure JS, handles
+    // compressed page trees / object streams correctly - a regex page count
+    // would under-count compressed PDFs). A parse failure means the file is
+    // malformed or not really a PDF, so we reject it.
+    if (mime === "application/pdf") {
+      let pageCount: number;
+      try {
+        const doc = await PDFDocument.load(file.buffer, {
+          updateMetadata: false,
+        });
+        pageCount = doc.getPageCount();
+      } catch {
+        throw new BadRequestException("payment slip PDF could not be read");
+      }
+      if (pageCount > MAX_PDF_PAGES) {
+        throw new BadRequestException(
+          `payment slip PDF must be a single page (got ${pageCount})`
+        );
+      }
     }
 
     const ext = MIME_EXT[mime] ?? "bin";

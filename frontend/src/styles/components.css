@@ -2088,6 +2088,11 @@ button.list-row.active {
     position: sticky;
     top: 0;
     height: 100vh;
+    /* Scroll internally when the head + 9 nav items + foot (which includes the
+       prefs row) exceed the viewport height on shorter screens. Without this
+       the fixed 100vh container clipped its overflow and the foot's back-to-app
+       button / pickers fell below the fold with no way to reach them. */
+    overflow-y: auto;
 }
 
 .admin-sidebar-head {

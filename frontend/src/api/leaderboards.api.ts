@@ -6,21 +6,23 @@ export interface LeaderboardEntry {
   user_id: string; // used by the page to mark "this is you"; not shown
   display_name: string;
   level: number;
-  xp_in_window: number; // for window='all' this equals users.xp
+  // With no paper filter this equals users.xp (the cumulative total shown on
+  // the dashboard/profile). With a paper filter it's the summed per-paper
+  // xp_earned - a different quantity the page labels "Paper XP".
+  xp_in_window: number;
   streak_count: number;
 }
 
-export type LeaderboardWindow = "week" | "month" | "all";
-
 export const leaderboardsApi = {
-  // GET /leaderboards?window=&paper_id=&limit=
+  // GET /leaderboards?paper_id=&limit=
   // Auth required; server caps limit at 100 regardless of what's sent.
+  // No paper_id -> all-time cumulative board ranked by users.xp.
+  // With paper_id -> all-time per-paper board ranked by summed xp_earned.
   get: async (opts: {
-    window: LeaderboardWindow;
     paper_id?: string | null;
     limit?: number;
   }): Promise<LeaderboardEntry[]> => {
-    const params: Record<string, string | number> = { window: opts.window };
+    const params: Record<string, string | number> = {};
     if (opts.paper_id) params.paper_id = opts.paper_id;
     if (opts.limit) params.limit = opts.limit;
     return (await api.get<LeaderboardEntry[]>("/leaderboards", { params }))

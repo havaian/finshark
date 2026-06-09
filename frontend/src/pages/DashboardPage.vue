@@ -173,6 +173,19 @@ function extractError(e: unknown): string | null {
         <span class="pill pill-accent">{{ t('dashboard.premium_badge') }}</span>
       </div>
 
+      <!-- Premium upsell CTA. Only for free-tier users once the entitlement
+           has loaded (same guard as the quota chips so it doesn't flash for
+           premium users on a cold load). Links to the subscription page where
+           they can pay by card transfer or redeem a code. -->
+      <RouterLink v-if="entitlement.isFree && entitlement.entitlement" :to="lp(`/subscription`)"
+        class="dashboard-upsell mt-6">
+        <div class="dashboard-upsell-body">
+          <div class="dashboard-upsell-title">{{ t('dashboard.upsell_title') }}</div>
+          <div class="dashboard-upsell-sub">{{ t('dashboard.upsell_body') }}</div>
+        </div>
+        <span class="btn btn-primary dashboard-upsell-btn">{{ t('dashboard.upsell_cta') }}</span>
+      </RouterLink>
+
       <section class="mt-8">
         <div class="row" style="justify-content: space-between; margin-bottom: 14px;">
           <h2>{{ t('dashboard.start_lesson_heading') }}</h2>

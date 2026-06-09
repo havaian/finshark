@@ -673,6 +673,7 @@ button.list-row {
 button.list-row:hover {
     padding-left: 1em;
     background: var(--bg-elev);
+    transition: padding-left 120ms ease;
 }
 
 button.list-row.active {
@@ -682,6 +683,7 @@ button.list-row.active {
     /* Left accent strip so the active row reads at a glance without relying
        on subtle background contrast that can look washed out in light theme. */
     box-shadow: inset 3px 0 0 var(--accent);
+    transition: padding-left 120ms ease;
 }
 
 /* -----------------------------------------------------------

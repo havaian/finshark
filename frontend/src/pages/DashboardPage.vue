@@ -149,7 +149,7 @@ function extractError(e: unknown): string | null {
       <!-- Quota chips for free-tier users. Hidden entirely for premium (their
            limits are nulls). Renders only after the entitlement store has
            fetched so we don't flash 0/3 for premium users on a cold load. -->
-      <div v-if="entitlement.isFree && entitlement.entitlement" class="row mt-4" style="gap: 8px; flex-wrap: wrap;">
+      <div v-if="entitlement.isFree && entitlement.entitlement" class="row mt-4" style="gap: 8px; flex-wrap: wrap; grid-template-columns: repeat(3, 1fr);">
         <span v-if="entitlement.entitlement.lessons.limit !== null" class="pill pill-grey">
           {{ t('dashboard.quota_lessons', {
             used: entitlement.entitlement.lessons.used,

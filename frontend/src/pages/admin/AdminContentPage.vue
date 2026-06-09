@@ -1481,7 +1481,7 @@ onMounted(reloadTree);
 }
 
 .row button {
-  text-align: right !important;
+  text-align: left !important;
 }
 
 .content-tree {

@@ -13,6 +13,7 @@ import type {
   AdminPaymentSubmission,
   PaymentSubmissionStatus,
 } from '../../types/payment';
+import PaymentCardMock from '../../components/PaymentCardMock.vue';
 
 // Admin Payments page. Three blocks:
 //   1. Plan pricing - edit price_minor + active toggle for premium plans
@@ -237,10 +238,6 @@ async function deleteCard(c: AdminPaymentCard) {
   }
 }
 
-function displayCardNumber(raw: string): string {
-  return raw.replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim();
-}
-
 // ── Block 3: submission review ──────────────────────────────────────────────
 // Slip preview modal state.
 const slipModalOpen = ref(false);
@@ -354,33 +351,22 @@ function extractError(e: unknown): string | null {
             <div class="admin-plan-info">
               <strong>{{ p.name }}</strong>
               <span class="dim text-sm">
-                {{ p.period_days === null ? t('payments.plan_lifetime') : t('admin.payments.period_days', { n: p.period_days }) }}
+                {{ p.period_days === null ? t('payments.plan_lifetime') : t('admin.payments.period_days', {
+                  n:
+                    p.period_days }) }}
                 · {{ p.currency }}
               </span>
             </div>
             <div class="admin-plan-controls">
               <div class="admin-price-field">
-                <input
-                  v-model="editStateFor(p).priceMajor"
-                  type="number"
-                  min="1"
-                  step="any"
-                  :disabled="editStateFor(p).busy"
-                />
-                <button
-                  class="btn btn-sm btn-primary"
-                  :disabled="editStateFor(p).busy"
-                  @click="savePlanPrice(p)"
-                >
+                <input v-model="editStateFor(p).priceMajor" type="number" min="1" step="any"
+                  :disabled="editStateFor(p).busy" />
+                <button class="btn btn-sm btn-primary" :disabled="editStateFor(p).busy" @click="savePlanPrice(p)">
                   {{ editStateFor(p).busy ? t('common.saving') : t('admin.payments.save_price') }}
                 </button>
               </div>
-              <button
-                class="btn btn-sm"
-                :class="p.is_active ? 'btn-ghost' : 'btn-primary'"
-                :disabled="editStateFor(p).busy"
-                @click="togglePlanActive(p)"
-              >
+              <button class="btn btn-sm" :class="p.is_active ? 'btn-ghost' : 'btn-primary'"
+                :disabled="editStateFor(p).busy" @click="togglePlanActive(p)">
                 {{ p.is_active ? t('admin.payments.deactivate') : t('admin.payments.activate') }}
               </button>
               <span :class="p.is_active ? 'pill pill-green' : 'pill pill-grey'">
@@ -405,31 +391,23 @@ function extractError(e: unknown): string | null {
         <p class="dim text-sm mt-1">{{ t('admin.payments.cards_sub') }}</p>
 
         <p v-if="cards.length === 0" class="dim text-sm mt-4">{{ t('admin.payments.no_cards') }}</p>
-        <ul v-else class="list-bordered mt-4">
-          <li v-for="c in cards" :key="c.id" class="list-row admin-card-row">
-            <div class="admin-card-info">
-              <span class="admin-card-number">{{ displayCardNumber(c.card_number) }}</span>
-              <span class="dim text-sm">
-                {{ c.holder_name }}<template v-if="c.bank_label"> · {{ c.bank_label }}</template>
-              </span>
-            </div>
-            <div class="admin-card-actions">
+        <div v-else class="admin-card-grid mt-4">
+          <div v-for="c in cards" :key="c.id" class="admin-card-cell">
+            <PaymentCardMock :card-number="c.card_number" :holder-name="c.holder_name" :bank-label="c.bank_label"
+              :active="c.is_active" />
+            <div class="admin-card-cell-actions">
               <span :class="c.is_active ? 'pill pill-green' : 'pill pill-grey'">
                 {{ c.is_active ? t('admin.payments.active') : t('admin.payments.inactive') }}
               </span>
               <button class="btn btn-sm btn-ghost" @click="openEditCard(c)">
                 {{ t('admin.payments.edit') }}
               </button>
-              <button
-                class="btn btn-sm btn-danger"
-                :disabled="deletingCardId === c.id"
-                @click="deleteCard(c)"
-              >
+              <button class="btn btn-sm btn-danger" :disabled="deletingCardId === c.id" @click="deleteCard(c)">
                 {{ t('admin.payments.delete') }}
               </button>
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
       </section>
 
       <!-- ── Block 3: Submission review ────────────────────────────────── -->
@@ -479,6 +457,12 @@ function extractError(e: unknown): string | null {
         <div class="modal-card">
           <h3>{{ cardForm.id ? t('admin.payments.edit_card') : t('admin.payments.add_card') }}</h3>
 
+          <!-- Live preview: updates as the fields below are edited. -->
+          <div class="admin-card-preview mt-4">
+            <PaymentCardMock :card-number="cardForm.card_number" :holder-name="cardForm.holder_name"
+              :bank-label="cardForm.bank_label || null" :active="cardForm.is_active" />
+          </div>
+
           <label class="field-label mt-4">{{ t('admin.payments.card_number_label') }}</label>
           <input v-model="cardForm.card_number" type="text" inputmode="numeric" maxlength="64" autocomplete="off" />
 
@@ -524,7 +508,8 @@ function extractError(e: unknown): string | null {
           <div class="slip-preview mt-4">
             <p v-if="slipLoading" class="dim text-sm">{{ t('common.loading') }}</p>
             <template v-else-if="slipUrl">
-              <iframe v-if="slipIsPdf" :src="slipUrl" class="slip-frame" :title="t('admin.payments.slip_review_title')"></iframe>
+              <iframe v-if="slipIsPdf" :src="slipUrl" class="slip-frame"
+                :title="t('admin.payments.slip_review_title')"></iframe>
               <img v-else :src="slipUrl" :alt="t('admin.payments.slip_review_title')" class="slip-image" />
             </template>
             <p v-else class="error-text">{{ t('admin.payments.slip_load_error') }}</p>
@@ -533,7 +518,8 @@ function extractError(e: unknown): string | null {
           <!-- Review actions only for pending submissions. -->
           <template v-if="activeSubmission && activeSubmission.status === 'pending'">
             <label class="field-label mt-4">{{ t('admin.payments.review_note_label') }}</label>
-            <input v-model="reviewNote" type="text" maxlength="500" :placeholder="t('admin.payments.review_note_placeholder')" />
+            <input v-model="reviewNote" type="text" maxlength="500"
+              :placeholder="t('admin.payments.review_note_placeholder')" />
 
             <p v-if="reviewError" class="error-text mt-2">{{ reviewError }}</p>
 
@@ -560,46 +546,71 @@ function extractError(e: unknown): string | null {
 
 <style scoped>
 .admin-plan-row,
-.admin-card-row,
 .admin-sub-row {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
 }
-.admin-card-row,
+
 .admin-sub-row {
   align-items: center;
 }
+
 .admin-plan-info,
-.admin-card-info,
 .admin-sub-info {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
 }
+
 .admin-plan-controls,
-.admin-card-actions,
 .admin-sub-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
 .admin-price-field {
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
+
 .admin-price-field input {
   width: 9rem;
 }
-.admin-card-number {
-  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-  letter-spacing: 0.04em;
-  word-break: break-all;
+
+/* Receiving cards rendered as a grid of card mockups. Each cell stacks the
+   card with its status pill + edit/delete actions below it. */
+.admin-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
 }
+
+.admin-card-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-card-cell-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Live card preview in the add/edit modal. Centred so it reads as a preview
+   sitting above the form fields. */
+.admin-card-preview {
+  display: flex;
+  justify-content: center;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -610,6 +621,7 @@ function extractError(e: unknown): string | null {
   padding: 1rem;
   z-index: 100;
 }
+
 .modal-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -620,9 +632,11 @@ function extractError(e: unknown): string | null {
   max-height: 90vh;
   overflow-y: auto;
 }
+
 .modal-card-wide {
   max-width: 44rem;
 }
+
 .slip-preview {
   display: flex;
   justify-content: center;
@@ -631,11 +645,13 @@ function extractError(e: unknown): string | null {
   padding: 0.5rem;
   min-height: 12rem;
 }
+
 .slip-image {
   max-width: 100%;
   max-height: 60vh;
   object-fit: contain;
 }
+
 .slip-frame {
   width: 100%;
   height: 60vh;

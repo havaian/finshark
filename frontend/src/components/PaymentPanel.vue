@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { paymentApi } from '../api/payment.api';
 import { useEntitlementStore } from '../stores/entitlement.store';
+import PaymentCardMock from './PaymentCardMock.vue';
 import type { Plan } from '../types/billing';
 import type { PaymentCard, PaymentSubmission } from '../types/payment';
 
@@ -106,12 +107,6 @@ async function copyCard(card: PaymentCard) {
     // Clipboard API can be blocked (insecure context / permissions). Fall back
     // to selecting nothing - the number is visible for manual copy anyway.
   }
-}
-
-// Group a raw card number into 4-digit blocks for display readability.
-function displayCardNumber(raw: string): string {
-  const digits = raw.replace(/\s+/g, '');
-  return digits.replace(/(.{4})/g, '$1 ').trim();
 }
 
 // ── Slip upload + submit ─────────────────────────────────────────────────
@@ -230,13 +225,8 @@ function statusPillClass(status: PaymentSubmission['status']): string {
           <!-- 1. Plan picker -->
           <label class="field-label mt-4">{{ t('payments.choose_plan') }}</label>
           <div class="segmented payment-plan-picker">
-            <button
-              v-for="p in plans"
-              :key="p.id"
-              type="button"
-              :class="{ active: selectedPlanId === p.id }"
-              @click="selectedPlanId = p.id"
-            >
+            <button v-for="p in plans" :key="p.id" type="button" :class="{ active: selectedPlanId === p.id }"
+              @click="selectedPlanId = p.id">
               {{ planLabel(p) }}
             </button>
           </div>
@@ -244,41 +234,28 @@ function statusPillClass(status: PaymentSubmission['status']): string {
             {{ formatPrice(selectedPlan.price_minor, selectedPlan.currency) }}
           </p>
 
-          <!-- 2. Card(s) to transfer to, with copy buttons -->
+          <!-- 2. Card(s) to transfer to, shown as card mockups with copy. -->
           <label class="field-label mt-6">{{ t('payments.transfer_to') }}</label>
           <p v-if="cards.length === 0" class="dim text-sm mt-2">
             {{ t('payments.no_cards') }}
           </p>
-          <ul v-else class="list-bordered mt-2">
-            <li v-for="card in cards" :key="card.id" class="list-row payment-card-row">
-              <div class="payment-card-info">
-                <span class="payment-card-number">{{ displayCardNumber(card.card_number) }}</span>
-                <span class="dim text-sm">
-                  {{ card.holder_name }}<template v-if="card.bank_label"> · {{ card.bank_label }}</template>
-                </span>
-              </div>
-              <button type="button" class="btn btn-sm btn-ghost" @click="copyCard(card)">
-                {{ copiedCardId === card.id ? t('payments.copied') : t('payments.copy') }}
-              </button>
-            </li>
-          </ul>
+          <div v-else class="payment-card-grid mt-2">
+            <PaymentCardMock v-for="card in cards" :key="card.id" :card-number="card.card_number"
+              :holder-name="card.holder_name" :bank-label="card.bank_label">
+              <template #action>
+                <button type="button" class="btn btn-sm pay-card-copy-btn" @click="copyCard(card)">
+                  {{ copiedCardId === card.id ? t('payments.copied') : t('payments.copy') }}
+                </button>
+              </template>
+            </PaymentCardMock>
+          </div>
 
           <!-- 3. Slip upload -->
           <label class="field-label mt-6">{{ t('payments.upload_slip') }}</label>
           <p class="dim text-xs mt-1">{{ t('payments.slip_hint') }}</p>
           <div class="payment-slip-input mt-2">
-            <input
-              ref="fileInputRef"
-              type="file"
-              :accept="ACCEPT"
-              @change="onFilePick"
-            />
-            <button
-              v-if="slipName"
-              type="button"
-              class="btn btn-sm btn-ghost"
-              @click="clearFile"
-            >
+            <input ref="fileInputRef" type="file" :accept="ACCEPT" @change="onFilePick" />
+            <button v-if="slipName" type="button" class="btn btn-sm btn-ghost" @click="clearFile">
               {{ t('payments.clear_file') }}
             </button>
           </div>
@@ -286,12 +263,7 @@ function statusPillClass(status: PaymentSubmission['status']): string {
           <p v-if="submitError" class="error-text mt-2">{{ submitError }}</p>
 
           <!-- 4. Submit -->
-          <button
-            type="button"
-            class="btn btn-primary mt-4"
-            :disabled="!canSubmit"
-            @click="submit"
-          >
+          <button type="button" class="btn btn-primary mt-4" :disabled="!canSubmit" @click="submit">
             {{ submitBusy ? t('payments.submitting') : t('payments.submit') }}
           </button>
           <p class="dim text-xs mt-2">{{ t('payments.review_note') }}</p>
@@ -322,34 +294,40 @@ function statusPillClass(status: PaymentSubmission['status']): string {
 .payment-plan-picker {
   margin-top: 0.5rem;
 }
+
 .payment-price {
   font-size: 1.25rem;
   font-weight: 600;
 }
-.payment-card-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.payment-card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-.payment-card-number {
-  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
-  word-break: break-all;
-}
+
 .payment-slip-input {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+
+/* Receiving cards laid out as a responsive grid of card mockups, left-aligned.
+   Cards keep their own max-width, so this just wraps them on wider screens. */
+.payment-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Copy button overlaid on the sage card. Translucent light fill so it reads
+   against the gradient; brightens on hover. No transform. */
+.pay-card-copy-btn {
+  background: rgba(255, 255, 255, 0.18);
+  color: #f3f7f5;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  transition: background-color 0.15s ease;
+}
+
+.pay-card-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .payment-pending {
   padding: 1rem;
   border: 1px solid var(--border);

@@ -563,10 +563,13 @@ function extractError(e: unknown): string | null {
 .admin-card-row,
 .admin-sub-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+}
+.admin-card-row,
+.admin-sub-row {
+  align-items: center;
 }
 .admin-plan-info,
 .admin-card-info,

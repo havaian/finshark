@@ -841,7 +841,7 @@ onMounted(reloadTree);
     <aside class="content-tree">
       <header class="content-tree-head">
         <h2>{{ t('admin.content.title') }}</h2>
-        <div class="row" style="gap: 8px; align-items: center; flex-wrap: wrap;">
+        <div class="row" style="gap: 8px; align-items: center; flex-wrap: wrap; display: inline-flex; gap: 1em;">
           <!-- Add paper - moved here from the legacy AdminPapersPage. -->
           <button type="button" class="btn-link accent" @click="openAddPaper">
             + {{ t('admin.papers.add_btn') }}

@@ -94,7 +94,7 @@
     position: relative;
     overflow: hidden;
     display: grid;
-    /* grid-template-rows: 50% 50%; */
+    grid-template-rows: 40% 60%;
 }
 
 .stat .stat-lbl {
@@ -635,13 +635,11 @@ textarea {
 
 /* Bordered list (admin pages) */
 .list-bordered {
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    padding: 0 !important;
     overflow: hidden;
 }
 
 .list-bordered .list-row {
-    padding: 10px 14px;
     border-top: 1px solid var(--border);
 }
 

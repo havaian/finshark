@@ -374,7 +374,7 @@ onMounted(load);
           <div class="text-sm">{{ grantsOf(c) }} · {{ usedOf(c) }} · {{ windowOf(c) }}</div>
           <div v-if="c.notes" class="dim text-xs">{{ c.notes }}</div>
         </div>
-        <div class="row" style="gap: 8px;">
+        <div class="row" style="gap: 8px; display: inline-flex;">
           <button class="btn btn-ghost btn-sm" @click="openRedemptions(c)">
             {{ t('admin.promocodes.redemptions_btn') }}
           </button>

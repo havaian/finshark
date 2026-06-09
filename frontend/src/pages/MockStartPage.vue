@@ -173,7 +173,7 @@ onMounted(loadPapers);
           <label class="field-label">{{ t('mocks.paper_label') }}</label>
           <p v-if="papersError" class="error-text">{{ papersError }}</p>
           <p v-if="papersLoading" class="dim text-sm">{{ t('common.loading') }}</p>
-          <div v-else-if="papers.length === 0" class="dim text-sm">
+          <div v-else-if="papers.length === 0" class="dim text-sm" style="margin-top: 1em;">
             {{ t('mocks.no_papers') }}
           </div>
           <div v-else class="mock-paper-options">

@@ -194,7 +194,7 @@ onMounted(load);
           <div class="mono text-xs muted">{{ fmtDate(e.created_at) }}</div>
         </div>
 
-        <div class="row" style="gap: 14px;">
+        <div class="row" style="gap: 14px; display: inline-flex;">
           <button v-if="!editingNote.has(e.id)" class="btn-link accent" :disabled="busyIds.has(e.id)"
             @click="startEditNote(e)">
             {{ e.note ? t('common.edit') : t('admin.whitelist.add_note') }}

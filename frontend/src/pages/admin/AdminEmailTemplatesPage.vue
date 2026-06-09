@@ -645,7 +645,7 @@ onMounted(() => {
             <template v-if="editorMode === 'new'">{{ t('admin.email_templates.new_title') }}</template>
             <template v-else>{{ t('admin.email_templates.edit_title') }}</template>
           </h3>
-          <div class="row" style="gap: 8px;">
+          <div class="row" style="gap: 8px; display: inline-flex;">
             <button v-if="editorMode === 'edit'" class="btn btn-ghost btn-sm" @click="onToggleActive">
               {{ form.is_active ? t('admin.email_templates.disable_btn') : t('admin.email_templates.enable_btn') }}
             </button>
@@ -1067,6 +1067,11 @@ onMounted(() => {
   .card {
     min-width: 100% !important;
   }
+}
+
+.list-bordered .list-row {
+    text-align: left !important;
+    padding-left: 1em;
 }
 
 /* Variables reference panel: tight rows of "{{name}} → sample" so the

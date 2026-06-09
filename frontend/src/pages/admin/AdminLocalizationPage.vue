@@ -165,7 +165,7 @@ onMounted(load);
 <template>
   <div class="container-wide">
 
-    <div class="topbar">
+    <div class="topbar" style="padding: 1em;">
       <div>
         <h1>{{ t('admin.localization.title') }}</h1>
         <p class="dim text-sm mt-2">{{ t('admin.localization.sub') }}</p>

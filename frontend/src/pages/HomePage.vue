@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth.store';
 import { useLocaleStore } from '../stores/locale.store';
 import { useLocalePath } from '../router/useLocalePath';
 import ThemeSwitch from '../components/ThemeSwitch.vue';
+import LangPicker from '../components/LangPicker.vue';
 
 // Landing page. Reached at '/'.
 //
@@ -288,6 +289,7 @@ onBeforeUnmount(() => {
           <span>Finshark</span>
         </div>
         <div class="row" style="gap: 10px; align-items: center; margin: 0;">
+          <LangPicker />
           <ThemeSwitch />
           <RouterLink :to="lp(`/login`)" class="btn btn-ghost btn-sm">
             {{ t('common.sign_in') }}
@@ -322,68 +324,57 @@ onBeforeUnmount(() => {
              control, so it carries a label and live region for the result.
              Option B is correct. -->
         <div class="landing-hero-mock">
-          <div class="landing-mock-card" role="group"
-            :aria-label="t('landing.mock_topic')">
+          <div class="landing-mock-card" role="group" :aria-label="t('landing.mock_topic')">
             <div class="landing-mock-head">
               <span class="landing-mock-topic">{{ t('landing.mock_topic') }}</span>
               <!-- Syllabus progress ring. Fills its dash offset once heroReady
                    flips (driven from the script). Decorative number inside. -->
-              <span class="landing-mock-ring" :title="t('landing.mock_ring_label')"
-                aria-hidden="true">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="24" cy="24" :r="RING_R" stroke="var(--border)"
-                    stroke-width="4" />
-                  <circle class="landing-mock-ring-fill" cx="24" cy="24" :r="RING_R"
-                    stroke="var(--accent)" stroke-width="4" stroke-linecap="round"
-                    :stroke-dasharray="RING_CIRC" :stroke-dashoffset="ringOffset"
-                    transform="rotate(-90 24 24)" />
+              <span class="landing-mock-ring" :title="t('landing.mock_ring_label')" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="24" cy="24" :r="RING_R" stroke="var(--border)" stroke-width="4" />
+                  <circle class="landing-mock-ring-fill" cx="24" cy="24" :r="RING_R" stroke="var(--accent)"
+                    stroke-width="4" stroke-linecap="round" :stroke-dasharray="RING_CIRC"
+                    :stroke-dashoffset="ringOffset" transform="rotate(-90 24 24)" />
                 </svg>
                 <span class="landing-mock-ring-num">{{ ringPctLabel }}</span>
               </span>
             </div>
             <p class="landing-mock-q">{{ t('landing.mock_question') }}</p>
             <div class="landing-mock-opts">
-              <button v-for="opt in options" :key="opt.key" type="button"
-                class="landing-mock-opt" :class="optionClass(opt.key)"
-                :disabled="submitted" @click="pick(opt.key)">
+              <button v-for="opt in options" :key="opt.key" type="button" class="landing-mock-opt"
+                :class="optionClass(opt.key)" :disabled="submitted" @click="pick(opt.key)">
                 <span class="landing-mock-key">{{ opt.key.toUpperCase() }}</span>
                 <span class="landing-mock-opt-text">{{ t(opt.label) }}</span>
                 <!-- Tick on the correct option, cross on a wrong pick, after submit. -->
-                <svg v-if="submitted && opt.key === CORRECT_OPTION" class="landing-mock-mark"
-                  width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 13l4 4L19 7" stroke="var(--success)" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" />
+                <svg v-if="submitted && opt.key === CORRECT_OPTION" class="landing-mock-mark" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 13l4 4L19 7" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
                 </svg>
-                <svg v-else-if="submitted && opt.key === selected" class="landing-mock-mark"
-                  width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path d="M6 6l12 12M18 6L6 18" stroke="var(--danger)" stroke-width="2.5"
-                    stroke-linecap="round" />
+                <svg v-else-if="submitted && opt.key === selected" class="landing-mock-mark" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round" />
                 </svg>
               </button>
             </div>
 
             <!-- Before submit: the Check button (disabled until a pick). -->
-            <button v-if="!submitted" type="button"
-              class="btn btn-primary btn-sm landing-mock-submit" :disabled="!selected"
-              @click="check">
+            <button v-if="!submitted" type="button" class="btn btn-primary btn-sm landing-mock-submit"
+              :disabled="!selected" @click="check">
               {{ t('landing.mock_submit') }}
             </button>
 
             <!-- After submit: feedback line + (on correct) a streak chip and
                  Try again. aria-live so screen readers announce the result. -->
             <template v-else>
-              <div class="landing-mock-feedback"
-                :class="isCorrect ? 'is-correct' : 'is-wrong'" aria-live="polite">
+              <div class="landing-mock-feedback" :class="isCorrect ? 'is-correct' : 'is-wrong'" aria-live="polite">
                 {{ isCorrect ? t('landing.mock_feedback_correct') : t('landing.mock_feedback_wrong') }}
               </div>
               <div class="landing-mock-after">
                 <span v-if="isCorrect" class="landing-mock-streak">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2c1.5 3 5 4.5 5 9a5 5 0 0 1-10 0c0-1.5.5-2.5 1-3.5C8 9 9 11 10 11c1 0 1-2 0-4-.8-1.6 0-3.5 2-5Z"
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12 2c1.5 3 5 4.5 5 9a5 5 0 0 1-10 0c0-1.5.5-2.5 1-3.5C8 9 9 11 10 11c1 0 1-2 0-4-.8-1.6 0-3.5 2-5Z"
                       fill="var(--coral)" />
                   </svg>
                   {{ t('landing.mock_streak', { n: 8 }) }}
@@ -472,10 +463,8 @@ onBeforeUnmount(() => {
         <!-- Heatmap card: weekday gutter (Mon/Wed/Fri) + the week columns.
              --heat-cell/--heat-gap set the cell size. The whole grid reveals
              with one fade via .is-revealed on the wrap. -->
-        <div ref="liteWrap" id="landing-lite-heatmap"
-          class="landing-lite-wrap activity-heatmap-wrap"
-          :class="{ 'is-revealed': revealHeatmap }"
-          :style="{ '--heat-cell': '15px', '--heat-gap': '4px' }">
+        <div ref="liteWrap" id="landing-lite-heatmap" class="landing-lite-wrap activity-heatmap-wrap"
+          :class="{ 'is-revealed': revealHeatmap }" :style="{ '--heat-cell': '15px', '--heat-gap': '4px' }">
           <div class="activity-body">
             <div class="activity-weekdays landing-lite-weekdays">
               <span class="activity-weekday" :style="{ top: '15px' }">{{ weekdayLabels.mon }}</span>
@@ -484,8 +473,7 @@ onBeforeUnmount(() => {
             </div>
             <div class="activity-heatmap landing-lite-grid">
               <div v-for="(week, wi) in liteWeeks" :key="wi" class="activity-col">
-                <div v-for="cell in week" :key="cell.date"
-                  :class="['activity-cell', `intensity-${cell.intensity}`]"
+                <div v-for="cell in week" :key="cell.date" :class="['activity-cell', `intensity-${cell.intensity}`]"
                   @mouseenter="onCellEnter(cell, $event)" @mouseleave="onCellLeave"></div>
               </div>
             </div>
@@ -535,17 +523,14 @@ onBeforeUnmount(() => {
             <li v-for="q in demoQuestions" :key="q.id" class="landing-demo-item"
               :class="q.correct ? 'is-correct' : 'is-wrong'">
               <div class="landing-demo-q">
-                <span class="landing-demo-mark" :class="q.correct ? 'is-correct' : 'is-wrong'"
-                  aria-hidden="true">
+                <span class="landing-demo-mark" :class="q.correct ? 'is-correct' : 'is-wrong'" aria-hidden="true">
                   <svg v-if="q.correct" width="14" height="14" viewBox="0 0 24 24" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5"
-                      stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
-                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.5"
-                      stroke-linecap="round" />
+                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
                   </svg>
                 </span>
                 <span class="landing-demo-q-text">{{ t(q.questionKey) }}</span>
@@ -556,8 +541,8 @@ onBeforeUnmount(() => {
               <div class="landing-demo-answers">
                 <div class="landing-demo-answer">
                   <span class="landing-demo-answer-label dim">{{ t('landing.demo_your_answer') }}</span>
-                  <span class="landing-demo-answer-val"
-                    :class="q.correct ? 'is-correct' : 'is-wrong'">{{ t(q.yourKey) }}</span>
+                  <span class="landing-demo-answer-val" :class="q.correct ? 'is-correct' : 'is-wrong'">{{ t(q.yourKey)
+                    }}</span>
                 </div>
                 <div v-if="!q.correct && q.correctKey" class="landing-demo-answer">
                   <span class="landing-demo-answer-label dim">{{ t('landing.demo_correct_answer') }}</span>
@@ -567,14 +552,13 @@ onBeforeUnmount(() => {
 
               <!-- Explanation toggle - only on wrong answers. -->
               <template v-if="!q.correct && q.explainKey">
-                <button type="button" class="landing-demo-explain-btn"
-                  :aria-expanded="openDemo === q.id" @click="toggleDemo(q.id)">
+                <button type="button" class="landing-demo-explain-btn" :aria-expanded="openDemo === q.id"
+                  @click="toggleDemo(q.id)">
                   {{ openDemo === q.id ? t('landing.demo_hide_explanation') : t('landing.demo_show_explanation') }}
-                  <svg class="landing-demo-chevron" :class="{ 'is-open': openDemo === q.id }"
-                    width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round" stroke-linejoin="round" />
+                  <svg class="landing-demo-chevron" :class="{ 'is-open': openDemo === q.id }" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                 </button>
                 <p v-if="openDemo === q.id" class="landing-demo-explain dim">
@@ -595,8 +579,8 @@ onBeforeUnmount(() => {
           <div class="landing-feature">
             <div class="landing-glyph">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
               </svg>
             </div>
             <h3>{{ t('landing.feature_1_title') }}</h3>
@@ -616,7 +600,8 @@ onBeforeUnmount(() => {
           <div class="landing-feature">
             <div class="landing-glyph">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 3c1.8 3.5 6 5.4 6 10.5a6 6 0 0 1-12 0C6 11 7 9.5 7.5 8 9 9.5 10 12 11 12c1.2 0 1.2-2.5 0-5-.9-1.9 0-3 1-4Z"
+                <path
+                  d="M12 3c1.8 3.5 6 5.4 6 10.5a6 6 0 0 1-12 0C6 11 7 9.5 7.5 8 9 9.5 10 12 11 12c1.2 0 1.2-2.5 0-5-.9-1.9 0-3 1-4Z"
                   stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
               </svg>
             </div>

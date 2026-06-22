@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
@@ -158,6 +158,8 @@ function buildPayload(): CompleteOnboardingInput {
 async function completeOnboarding(): Promise<void> {
   const updated = await onboardingApi.complete(buildPayload());
   auth.setUser(updated);
+  // Onboarding is saved - the in-progress draft is no longer needed.
+  clearDraft();
 }
 
 async function onStartFirstLesson() {
@@ -213,6 +215,88 @@ function clearExamDate() {
   examDate.value = '';
 }
 
+// ---- in-progress draft (resume after reload) ----
+// The wizard's answers and current step are stashed in local storage on every
+// change, so a refresh or accidental navigation resumes exactly where the user
+// left off. The draft is cleared once onboarding is completed or skipped (see
+// completeOnboarding). This is local storage only - an unfinished wizard never
+// touches the backend. Anything unavailable (private mode / quota) fails
+// quietly; resume is a nice-to-have, not load-bearing.
+const DRAFT_KEY = 'finshark.onboarding_draft';
+
+interface OnboardingDraft {
+  step: 1 | 2 | 3;
+  bgLevel: BgLevel | null;
+  timeBudget: number;
+  preferredPaperId: string | null;
+  reminders: boolean;
+  examDate: string;
+}
+
+function saveDraft() {
+  try {
+    const draft: OnboardingDraft = {
+      step: step.value,
+      bgLevel: bgLevel.value,
+      timeBudget: timeBudget.value,
+      preferredPaperId: preferredPaperId.value,
+      reminders: reminders.value,
+      examDate: examDate.value,
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    /* private mode / quota - ignore */
+  }
+}
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw) as Partial<OnboardingDraft>;
+    if (d.step === 1 || d.step === 2 || d.step === 3) step.value = d.step;
+    if (
+      d.bgLevel === 'beginner' ||
+      d.bgLevel === 'intermediate' ||
+      d.bgLevel === 'advanced' ||
+      d.bgLevel === null
+    ) {
+      bgLevel.value = d.bgLevel;
+    }
+    if (typeof d.timeBudget === 'number') timeBudget.value = d.timeBudget;
+    if (typeof d.preferredPaperId === 'string') {
+      preferredPaperId.value = d.preferredPaperId;
+    } else if (d.preferredPaperId === null) {
+      preferredPaperId.value = null;
+    }
+    if (typeof d.reminders === 'boolean') reminders.value = d.reminders;
+    if (typeof d.examDate === 'string') examDate.value = d.examDate;
+  } catch {
+    /* malformed draft - ignore and start fresh */
+  }
+}
+
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+// Persist on every change so a reload never loses progress.
+watch(
+  () => [
+    step.value,
+    bgLevel.value,
+    timeBudget.value,
+    preferredPaperId.value,
+    reminders.value,
+    examDate.value,
+  ],
+  saveDraft,
+);
+
 function goNext() {
   if (step.value === 1 && !canAdvanceFromGoal.value) return;
   if (step.value < 3) step.value = (step.value + 1) as 1 | 2 | 3;
@@ -244,6 +328,10 @@ onMounted(() => {
     reminders.value = auth.user.email_reminders_enabled;
     examDate.value = auth.user.exam_date ?? '';
   }
+  // Overlay any in-progress draft so a refresh or accidental navigation resumes
+  // exactly where the user was, including the current step. Wins over the
+  // pre-fill above, since the draft is the user's unfinished work.
+  restoreDraft();
 });
 </script>
 
@@ -278,11 +366,14 @@ onMounted(() => {
               :disabled="!paperStartable(p)" @click="selectPaper(p)">
               <span class="mono">{{ p.code }}</span>
               <span>{{ p.name }}</span>
-              <span v-if="p.active_question_count === 0" class="onboarding-chip-badge">{{ t('onboarding.goal_coming_soon') }}</span>
-              <span v-else-if="!p.free_accessible && !entitlement.isPremium" class="onboarding-chip-badge">{{ t('onboarding.goal_premium') }}</span>
+              <span v-if="p.active_question_count === 0" class="onboarding-chip-badge">{{
+                t('onboarding.goal_coming_soon') }}</span>
+              <span v-else-if="!p.free_accessible && !entitlement.isPremium" class="onboarding-chip-badge">{{
+                t('onboarding.goal_premium') }}</span>
             </button>
           </div>
-          <p v-if="!hasSelectablePapers" class="dim text-sm onboarding-skip-note">{{ t('onboarding.goal_skip_note') }}</p>
+          <p v-if="!hasSelectablePapers" class="dim text-sm onboarding-skip-note">{{ t('onboarding.goal_skip_note') }}
+          </p>
         </template>
 
         <div class="onboarding-field">
@@ -291,7 +382,8 @@ onMounted(() => {
           <div class="onboarding-field-row">
             <input id="onb-exam-date" v-model="examDate" type="date" :min="examDateMin" :max="examDateMaxValue"
               class="onboarding-date-input" />
-            <button v-if="examDate" type="button" class="btn-link" @click="clearExamDate">{{ t('onboarding.exam_clear') }}</button>
+            <button v-if="examDate" type="button" class="btn-link" @click="clearExamDate">{{ t('onboarding.exam_clear')
+              }}</button>
           </div>
         </div>
       </section>
@@ -335,12 +427,17 @@ onMounted(() => {
       <section v-if="step === 3" class="onboarding-section">
         <h2>{{ t('onboarding.confirm_title') }}</h2>
         <ul class="onboarding-summary">
-          <li v-if="selectedPaper">{{ t('onboarding.summary_paper', { code: selectedPaper.code, name: selectedPaper.name }) }}</li>
+          <li v-if="selectedPaper">{{ t('onboarding.summary_paper', {
+            code: selectedPaper.code, name: selectedPaper.name
+            }) }}
+          </li>
           <li v-else class="dim">{{ t('onboarding.summary_paper_none') }}</li>
           <li>{{ t('onboarding.summary_size', { n: estimatedLessonSize(timeBudget) }) }}</li>
           <li v-if="difficultySummaryKey">{{ t(difficultySummaryKey) }}</li>
           <li v-if="reminders">{{ t('onboarding.summary_reminders_on') }}</li>
-          <li v-if="examCountdownDays !== null && examCountdownDays > 0">{{ t('onboarding.summary_exam_days', { days: examCountdownDays }) }}</li>
+          <li v-if="examCountdownDays !== null && examCountdownDays > 0">{{ t('onboarding.summary_exam_days', {
+            days:
+            examCountdownDays }) }}</li>
           <li v-else-if="examCountdownDays === 0">{{ t('onboarding.summary_exam_today') }}</li>
         </ul>
 
@@ -360,13 +457,18 @@ onMounted(() => {
 
       <p v-if="errorMsg && !startFailed" class="error-text">{{ errorMsg }}</p>
 
-      <!-- Wizard nav. Step 3 has its own action buttons, so Back/Next show on 1-2. -->
-      <div v-if="step < 3" class="onboarding-nav">
-        <button v-if="step > 1" type="button" class="btn btn-ghost" @click="goBack">{{ t('onboarding.back') }}</button>
+      <!-- Wizard nav. Back is available from step 2 onward (including the
+           summary, so the user can return to edit). Next shows on steps 1-2;
+           step 3 uses its own Start / dashboard actions above. -->
+      <div class="onboarding-nav">
+        <button v-if="step > 1" type="button" class="btn btn-ghost" :disabled="submitting" @click="goBack">{{
+          t('onboarding.back') }}</button>
         <span v-else></span>
-        <button type="button" class="btn btn-primary" :disabled="step === 1 && !canAdvanceFromGoal" @click="goNext">
+        <button v-if="step < 3" type="button" class="btn btn-primary" :disabled="step === 1 && !canAdvanceFromGoal"
+          @click="goNext">
           {{ t('onboarding.next') }}
         </button>
+        <span v-else></span>
       </div>
 
     </div>

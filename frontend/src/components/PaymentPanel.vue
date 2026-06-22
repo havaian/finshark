@@ -334,4 +334,4 @@ function statusPillClass(status: PaymentSubmission['status']): string {
   border-radius: 0.5rem;
   background: var(--bg-elev);
 }
-</style>
+</style>  

@@ -121,6 +121,10 @@ export interface Paper {
   // The fixed mock definition for this paper - sections, marks, duration, pass
   // mark. The mock start screen derives the exam format from this.
   exam_structure: ExamStructure;
+  // Number of active questions under this paper. Surfaced by GET /papers so the
+  // onboarding goal step can mark empty papers as "coming soon" and keep them
+  // out of the first-lesson target selection.
+  active_question_count: number;
   created_at: string;
   updated_at: string;
 }

@@ -4,8 +4,10 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Matches,
   Max,
   Min,
+  ValidateIf,
 } from "class-validator";
 
 // Submission payload from the onboarding wizard. ALL fields are optional -
@@ -40,4 +42,14 @@ export class CompleteOnboardingDto {
   @IsOptional()
   @IsBoolean()
   email_reminders_enabled?: boolean;
+
+  // Optional next exam date 'YYYY-MM-DD'. Shape-checked here; the service does
+  // the full today-or-later + upper-bound check via normalizeExamDate. null is
+  // permitted (clears the date) and bypasses the regex via ValidateIf.
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: "exam_date must be a date in YYYY-MM-DD format",
+  })
+  exam_date?: string | null;
 }

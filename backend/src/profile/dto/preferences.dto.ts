@@ -53,4 +53,14 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsBoolean()
   leaderboard_opt_in?: boolean;
+
+  // Next exam date 'YYYY-MM-DD', or null to clear it. Shape-checked here; the
+  // profile controller runs the full today-or-later + upper-bound check via
+  // normalizeExamDate. null bypasses the regex through ValidateIf.
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'exam_date must be a date in YYYY-MM-DD format',
+  })
+  exam_date?: string | null;
 }

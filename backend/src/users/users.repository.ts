@@ -10,6 +10,7 @@ const USER_COLS = `
   last_active_date, is_admin, email_reminders_enabled,
   reminder_hour_local, preferred_difficulty, lesson_size,
   bg_level, time_budget_minutes, preferred_paper_id, preferred_program_id, onboarded_at,
+  exam_date,
   leaderboard_opt_in,
   totp_secret, totp_enrolled_at,
   timezone, free_hearts_pool, free_hearts_pool_date,
@@ -151,6 +152,9 @@ export class UsersRepository {
       lesson_size?: number;
       email_reminders_enabled?: boolean;
       leaderboard_opt_in?: boolean;
+      // Next exam date ('YYYY-MM-DD') or null to clear. Validated/normalized by
+      // the profile controller before it reaches here.
+      exam_date?: string | null;
     }
   ): Promise<UserRow | null> {
     const sets: Record<string, unknown> = {};
@@ -164,6 +168,7 @@ export class UsersRepository {
       sets.email_reminders_enabled = input.email_reminders_enabled;
     if (input.leaderboard_opt_in !== undefined)
       sets.leaderboard_opt_in = input.leaderboard_opt_in;
+    if (input.exam_date !== undefined) sets.exam_date = input.exam_date;
 
     if (Object.keys(sets).length === 0) return this.findById(id);
 
@@ -199,6 +204,9 @@ export class UsersRepository {
       // Derived from bg_level + time_budget by the service. Pass undefined to leave alone.
       preferred_difficulty?: "easy" | "medium" | "hard" | null;
       lesson_size?: number;
+      // Next exam date ('YYYY-MM-DD') or null to clear. Validated/normalized by
+      // the service before it reaches here. Pass undefined to leave alone.
+      exam_date?: string | null;
     }
   ): Promise<UserRow | null> {
     const sets: Record<string, unknown> = { onboarded_at: new Date() };
@@ -212,6 +220,7 @@ export class UsersRepository {
     if (input.preferred_difficulty !== undefined)
       sets.preferred_difficulty = input.preferred_difficulty;
     if (input.lesson_size !== undefined) sets.lesson_size = input.lesson_size;
+    if (input.exam_date !== undefined) sets.exam_date = input.exam_date;
 
     const rows = await this.sql<UserRow[]>`
       UPDATE users SET ${this.sql(sets)}

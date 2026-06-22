@@ -127,6 +127,23 @@ const leaderboardOptIn = computed({
   set: (v: boolean) => persistPreference({ leaderboard_opt_in: v }, 'leaderboard_opt_in'),
 });
 
+// Exam date. Empty string clears it (sends null). Picker bounds mirror the
+// server-side validation (today .. +3 years) so the UI can't submit an
+// out-of-range value.
+function isoToday(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+const examDateMin = isoToday();
+const examDateMax = (() => {
+  const d = new Date(`${isoToday()}T00:00:00Z`);
+  d.setUTCFullYear(d.getUTCFullYear() + 3);
+  return d.toISOString().slice(0, 10);
+})();
+const examDate = computed({
+  get: () => auth.user?.exam_date ?? '',
+  set: (v: string) => persistPreference({ exam_date: v ? v : null }, 'exam_date'),
+});
+
 async function persistPreference(payload: UpdatePreferencesPayload, field: string) {
   if (savingField.value || !auth.user) return;
   savingField.value = field;
@@ -443,6 +460,17 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
           <span v-if="justSaved === 'preferred_difficulty'" class="dim text-xs">{{ t('admin.localization.saved') }}
             ✓</span>
         </div>
+
+        <div class="row mt-4">
+          <span class="grow">{{ t('settings.exam_date') }}</span>
+          <input type="date" :value="examDate" :disabled="savingField === 'exam_date'" :min="examDateMin"
+            :max="examDateMax" @change="examDate = ($event.target as HTMLInputElement).value"
+            style="max-width: 180px;" />
+          <button v-if="examDate" type="button" class="btn-link" :disabled="savingField === 'exam_date'"
+            @click="examDate = ''">{{ t('settings.exam_date_clear') }}</button>
+          <span v-if="justSaved === 'exam_date'" class="dim text-xs">{{ t('admin.localization.saved') }} ✓</span>
+        </div>
+        <p class="dim text-xs mt-2">{{ t('settings.exam_date_hint') }}</p>
       </section>
 
       <!-- Notifications -->

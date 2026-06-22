@@ -316,6 +316,15 @@ export interface LocalizedPaper {
   updated_at: string;
 }
 
+// The public paper listing (GET /papers) shape: a localized paper plus the
+// number of active questions it has. The onboarding goal step uses the count
+// to mark empty papers as "coming soon" and keep them out of the first-lesson
+// target selection. Computed at the controller layer (the count isn't a column
+// on the paper row), so it lives as a distinct type rather than on LocalizedPaper.
+export interface PublicPaperListItem extends LocalizedPaper {
+  active_question_count: number;
+}
+
 export interface LocalizedLearningObjective {
   id: string;
   paper_id: string;

@@ -3,6 +3,7 @@ import { UsersRepository } from "../users/users.repository";
 import { PapersRepository } from "../content/papers.repository";
 import type { UserRow, BgLevel } from "../users/user.types";
 import { toPublicUser } from "../users/user.types";
+import { normalizeExamDate } from "../users/exam-date.util";
 import type { CompleteOnboardingDto } from "./dto/complete-onboarding.dto";
 
 // Onboarding orchestration. Owns the derivation rules from background level
@@ -84,6 +85,12 @@ export class OnboardingService {
     if (dto.time_budget_minutes !== undefined) {
       patch.time_budget_minutes = dto.time_budget_minutes;
       patch.lesson_size = deriveLessonSize(dto.time_budget_minutes);
+    }
+
+    // Optional exam date. normalizeExamDate validates the range (today-or-later,
+    // within a few years) and returns the canonical 'YYYY-MM-DD'; null clears.
+    if (dto.exam_date !== undefined) {
+      patch.exam_date = normalizeExamDate(dto.exam_date);
     }
 
     if (dto.preferred_paper_id !== undefined) {

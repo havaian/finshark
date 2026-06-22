@@ -15,6 +15,7 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
 import { UsersRepository } from "../users/users.repository";
 import { toPublicUser } from "../users/user.types";
+import { normalizeExamDate } from "../users/exam-date.util";
 import { Lang } from "../content/lang.decorator";
 import type { Lang as LangType } from "../content/content.types";
 import { ProfileStatsService } from "./profile-stats.service";
@@ -165,6 +166,12 @@ export class ProfileController {
           `unknown IANA timezone: ${dto.timezone}`
         );
       }
+    }
+    // Validate + normalize the exam date (today-or-later, sane upper bound).
+    // Throws BadRequestException on a bad value before the DB write; null is
+    // passed through to clear the column.
+    if (dto.exam_date !== undefined) {
+      dto.exam_date = normalizeExamDate(dto.exam_date);
     }
     const updated = await this.users.updatePreferences(current.sub, dto);
     if (!updated) throw new NotFoundException("user not found");

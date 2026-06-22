@@ -62,6 +62,8 @@ export interface UpdatePreferencesPayload {
   // Leaderboards opt-in (3.3). Settings toggle + leaderboard page banner
   // both flip this through the same PATCH endpoint.
   leaderboard_opt_in?: boolean;
+  // Next exam date 'YYYY-MM-DD', or null to clear it. Validated server-side.
+  exam_date?: string | null;
 }
 
 export const profileApi = {

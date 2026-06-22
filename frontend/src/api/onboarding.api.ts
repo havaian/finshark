@@ -14,6 +14,9 @@ export interface CompleteOnboardingInput {
   time_budget_minutes?: number;
   preferred_paper_id?: string;
   email_reminders_enabled?: boolean;
+  // Optional next exam date 'YYYY-MM-DD'. Validated server-side (today-or-later,
+  // within a few years). Omit when the user didn't pick one.
+  exam_date?: string | null;
 }
 
 export const onboardingApi = {

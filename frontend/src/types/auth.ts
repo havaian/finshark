@@ -29,6 +29,9 @@ export interface PublicUser {
   // Program the user is studying (FK to programs). ACCA today; CFA later.
   preferred_program_id: string | null;
   onboarded_at: string | null; // ISO timestamp or null (null = still needs to onboard)
+  // Next exam date as 'YYYY-MM-DD' or null. Drives the dashboard countdown and
+  // pre-fills the Settings date field. Mirrors backend users.exam_date.
+  exam_date: string | null;
   // Leaderboards (3.3). Privacy default false - user must opt in.
   leaderboard_opt_in: boolean;
   // 2FA enrollment flag. Boolean only - never the secret. Used by Settings

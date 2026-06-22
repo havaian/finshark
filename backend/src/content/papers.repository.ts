@@ -172,4 +172,23 @@ export class PapersRepository {
       ORDER BY p.code ASC, lo.sort_order ASC NULLS LAST, lo.code ASC NULLS LAST
     `;
   }
+
+  // Active-question count per paper, in a single grouped query. Used by the
+  // public paper listing so the onboarding goal step (and any picker) can tell
+  // which papers actually have content to study, and avoid offering an empty
+  // paper as a first-lesson target. Papers with no LOs/questions come back
+  // with active_count 0 (LEFT JOINs + COALESCE), so every paper is represented.
+  async countActiveByPaper(): Promise<
+    Array<{ paper_id: string; active_count: number }>
+  > {
+    return this.sql<Array<{ paper_id: string; active_count: number }>>`
+      SELECT
+        p.id::text AS paper_id,
+        COALESCE(SUM(CASE WHEN q.is_active = TRUE THEN 1 ELSE 0 END), 0)::int AS active_count
+      FROM papers p
+      LEFT JOIN learning_objectives lo ON lo.paper_id = p.id
+      LEFT JOIN questions q            ON q.lo_id = lo.id
+      GROUP BY p.id
+    `;
+  }
 }

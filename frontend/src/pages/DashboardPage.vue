@@ -49,7 +49,16 @@ async function loadPapers() {
   papersLoading.value = true;
   try {
     papers.value = await lessonsApi.listPapers();
-    if (papers.value.length === 1) selectedPaperId.value = papers.value[0].id;
+    // Default the picker to the paper the user chose during onboarding, when it
+    // still exists in the list. Falls back to auto-selecting the only paper if
+    // there's just one. Without this, an onboarding paper choice was invisible
+    // here (it only acted as a silent backend fallback on lesson start).
+    const pref = auth.user?.preferred_paper_id;
+    if (pref && papers.value.some((p) => p.id === pref)) {
+      selectedPaperId.value = pref;
+    } else if (papers.value.length === 1) {
+      selectedPaperId.value = papers.value[0].id;
+    }
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to load papers';
   } finally {
@@ -114,6 +123,32 @@ const startDisabled = computed(
   () => starting.value || blockedByPaper.value || blockedByQuota.value,
 );
 
+// Days until the user's exam date, for the dashboard countdown. null when no
+// date is set. A negative result (date in the past) surfaces as a "passed"
+// prompt rather than a negative number.
+const examCountdown = computed<
+  { kind: 'days' | 'today' | 'passed'; days: number } | null
+>(() => {
+  const d = auth.user?.exam_date;
+  if (!d) return null;
+  const today = new Date(
+    `${new Date().toISOString().slice(0, 10)}T00:00:00Z`,
+  ).getTime();
+  const exam = new Date(`${d}T00:00:00Z`).getTime();
+  const days = Math.round((exam - today) / 86400000);
+  if (days < 0) return { kind: 'passed', days };
+  if (days === 0) return { kind: 'today', days };
+  return { kind: 'days', days };
+});
+
+// The code (e.g. "F2") of the user's preferred paper, to prefix the countdown.
+// null when no preferred paper or it isn't in the loaded list.
+const examPaperCode = computed<string | null>(() => {
+  const id = auth.user?.preferred_paper_id;
+  if (!id) return null;
+  return papers.value.find((p) => p.id === id)?.code ?? null;
+});
+
 function extractError(e: unknown): string | null {
   if (e instanceof AxiosError) {
     const msg = (e.response?.data as { message?: string | string[] })?.message;
@@ -144,6 +179,18 @@ function extractError(e: unknown): string | null {
           <div class="stat-lbl">{{ t('dashboard.level') }}</div>
           <div class="stat-val">{{ auth.user.level }}</div>
         </div>
+      </div>
+
+      <!-- Exam countdown. Shown only when the user set an exam date during
+           onboarding (or in Settings). Prefixed with the target paper code
+           when available, e.g. "F2 · Exam in 47 days". -->
+      <div v-if="examCountdown" class="row mt-4">
+        <span class="pill pill-grey">
+          <template v-if="examPaperCode">{{ examPaperCode }} · </template>
+          <template v-if="examCountdown.kind === 'days'">{{ t('dashboard.exam_countdown', { days: examCountdown.days }) }}</template>
+          <template v-else-if="examCountdown.kind === 'today'">{{ t('dashboard.exam_today') }}</template>
+          <template v-else>{{ t('dashboard.exam_passed') }}</template>
+        </span>
       </div>
 
       <!-- Quota chips for free-tier users. Hidden entirely for premium (their

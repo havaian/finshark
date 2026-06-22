@@ -56,6 +56,13 @@ export class ContentService {
     return this.papers.findAll();
   }
 
+  // Active-question count per paper id, as a Map for O(1) lookup when projecting
+  // the public paper listing. Papers with no active questions map to 0.
+  async activeQuestionCountsByPaper(): Promise<Map<string, number>> {
+    const rows = await this.papers.countActiveByPaper();
+    return new Map(rows.map((r) => [r.paper_id, r.active_count]));
+  }
+
   async getPaper(id: string): Promise<PaperRow> {
     const paper = await this.papers.findById(id);
     if (!paper) throw new NotFoundException("paper not found");

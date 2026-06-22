@@ -34,6 +34,11 @@ export interface UserRow {
   // pre-existing users. Nullable: SET NULL if the program is ever removed.
   preferred_program_id: string | null;
   onboarded_at: Date | null; // null = still needs to onboard
+  // Next exam date the user is working towards (migration 20260622000001).
+  // Optional - NULL when the user hasn't given us a date. Drives the dashboard
+  // countdown; a `date` column comes back from postgres.js as a Date at UTC
+  // midnight, same as last_active_date.
+  exam_date: Date | null;
   // Leaderboards (3.3). Opt-in default false - users only appear if they
   // explicitly enable this from Settings or onboarding.
   leaderboard_opt_in: boolean;
@@ -81,6 +86,9 @@ export interface PublicUser {
   preferred_paper_id: string | null;
   preferred_program_id: string | null;
   onboarded_at: string | null; // ISO timestamp or null
+  // Next exam date as 'YYYY-MM-DD' or null. Surfaced so the dashboard can
+  // render the countdown and Settings can pre-fill the date field.
+  exam_date: string | null;
   leaderboard_opt_in: boolean;
   // 2FA enrollment flag. We expose the boolean only - never the secret or
   // the enrolled-at timestamp leaks beyond this property. The frontend uses
@@ -112,6 +120,9 @@ export function toPublicUser(row: UserRow): PublicUser {
     preferred_paper_id: row.preferred_paper_id,
     preferred_program_id: row.preferred_program_id,
     onboarded_at: row.onboarded_at ? row.onboarded_at.toISOString() : null,
+    exam_date: row.exam_date
+      ? row.exam_date.toISOString().slice(0, 10)
+      : null,
     leaderboard_opt_in: row.leaderboard_opt_in,
     totp_enabled: row.totp_secret !== null,
   };

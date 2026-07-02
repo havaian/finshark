@@ -9,6 +9,7 @@ import { ContentService } from "./content.service";
 import { UiTranslationsService } from "./ui-translations.service";
 import { UiTranslationsFileStore } from "./ui-translations.file-store";
 import { QuestionGenerationService } from "./question-generation.service";
+import { QuestionImportService } from "./question-import.service";
 import { PapersRepository } from "./papers.repository";
 import { ProgramsRepository } from "./programs.repository";
 import { LearningObjectivesRepository } from "./learning-objectives.repository";
@@ -29,6 +30,7 @@ import { QuestionsRepository } from "./questions.repository";
     // UiTranslationsRepository.
     UiTranslationsFileStore,
     QuestionGenerationService,
+    QuestionImportService,
     PapersRepository,
     ProgramsRepository,
     LearningObjectivesRepository,

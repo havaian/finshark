@@ -402,6 +402,9 @@ export default {
     quit_confirm:
       "Quit this lesson? Your answers so far are saved; you can resume the session anytime.",
     concept_tag: "concept",
+    exhibit_tag: "exhibit",
+    select_all_that_apply: "Select all that apply",
+    match_select_placeholder: "Select…",
     submit: "Submit",
     checking: "Checking…",
     finishing: "Finishing…",
@@ -828,6 +831,16 @@ export default {
       batch_delete_confirm:
         "Delete {count} draft question(s)? This is irreversible.",
       // Drop DB + reseed
+      import_btn: "Import workbook",
+      import_running: "Importing…",
+      import_modal_title: "Import mock workbook",
+      import_stat_total: "{count} rows read",
+      import_stat_inserted: "{count} questions inserted",
+      import_stat_updated: "{count} questions updated",
+      import_stat_inactive: "{count} left inactive (missing answer / bad key)",
+      import_stat_skipped: "{count} rows skipped (no matching learning objective)",
+      import_stat_mocks: "{count} mocks rebuilt",
+      import_details: "Show flagged rows",
       reseed_btn: "Drop & reseed",
       reseed_modal_title: "Drop content & reseed",
       reseed_warn_1: "This is irreversible. It will:",

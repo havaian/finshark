@@ -78,6 +78,59 @@ function statusFor(entry: MockAnswerEntry): 'correct' | 'wrong' | 'unanswered' {
   return entry.was_correct ? 'correct' : 'wrong';
 }
 
+// ---- New-type review parsing ----
+// The stored user_answer mirrors the wire format the play page sent:
+//   mcq_multi  -> JSON key array ["B","C"] (or legacy comma "B,C")
+//   true_false -> JSON label array ["No","Yes"] in statement order
+//   matching   -> JSON value array [...] in row order
+// correct_answer is the canonical form:
+//   mcq_multi  -> comma-joined keys "B,C"
+//   true_false -> comma-joined labels "No,Yes"
+//   matching   -> "label=value | label=value | ..." in row order
+
+// Parse a JSON string array; null on anything that isn't one.
+function parseJsonArray(s: string | null): string[] | null {
+  if (!s) return null;
+  try {
+    const v = JSON.parse(s);
+    return Array.isArray(v) ? v.map((x) => String(x)) : null;
+  } catch {
+    return null;
+  }
+}
+
+// mcq_multi correct/user key sets.
+function mmCorrectKeys(entry: MockAnswerEntry): string[] {
+  return entry.correct_answer.split(',').map((k) => k.trim()).filter(Boolean);
+}
+function mmUserKeys(entry: MockAnswerEntry): string[] {
+  const arr = parseJsonArray(entry.user_answer);
+  if (arr) return arr.map((k) => k.trim());
+  // Legacy / comma fallback.
+  return entry.user_answer
+    ? entry.user_answer.split(',').map((k) => k.trim()).filter(Boolean)
+    : [];
+}
+
+// true_false correct/user labels, per statement (index-aligned).
+function tfCorrect(entry: MockAnswerEntry): string[] {
+  return entry.correct_answer.split(',').map((l) => l.trim());
+}
+function tfUser(entry: MockAnswerEntry): (string | null)[] {
+  return parseJsonArray(entry.user_answer) ?? [];
+}
+
+// matching correct/user values, per row (index-aligned).
+function matchCorrect(entry: MockAnswerEntry): string[] {
+  return entry.correct_answer.split('|').map((pair) => {
+    const eq = pair.indexOf('=');
+    return (eq >= 0 ? pair.slice(eq + 1) : pair).trim();
+  });
+}
+function matchUser(entry: MockAnswerEntry): (string | null)[] {
+  return parseJsonArray(entry.user_answer) ?? [];
+}
+
 async function onStartReview() {
   if (startingReview.value || wrongCount.value === 0) return;
   startingReview.value = true;
@@ -167,6 +220,12 @@ onMounted(load);
 
           <p class="prompt mt-4">{{ entry.prompt }}</p>
 
+          <!-- Exhibit panel: supporting data extract shown above the answer. -->
+          <div v-if="entry.exhibit" class="exhibit">
+            <div class="exhibit-tag">{{ t('lesson.exhibit_tag') }}</div>
+            <div class="exhibit-body">{{ entry.exhibit }}</div>
+          </div>
+
           <!-- MCQ options. Each option is styled by outcome:
                - correct (the right answer) → green
                - the user's wrong pick → red, with why_wrong reveal
@@ -180,6 +239,54 @@ onMounted(load);
             ]">
               <span class="option-key">{{ opt.key }}</span>
               <span>{{ opt.text }}</span>
+            </div>
+          </div>
+
+          <!-- Multi-response MCQ: same colour coding as MCQ, over the correct
+               key SET (comma-joined) and the user's key set (JSON array). -->
+          <div v-else-if="entry.type === 'mcq_multi' && entry.options" class="options mt-4">
+            <div v-for="opt in entry.options" :key="opt.key" :class="[
+              'option',
+              mmCorrectKeys(entry).includes(opt.key) ? 'correct' : '',
+              mmUserKeys(entry).includes(opt.key) && !mmCorrectKeys(entry).includes(opt.key) ? 'wrong' : '',
+              !mmCorrectKeys(entry).includes(opt.key) && !mmUserKeys(entry).includes(opt.key) ? 'locked' : '',
+            ]">
+              <span class="option-key">{{ opt.key }}</span>
+              <span>{{ opt.text }}</span>
+            </div>
+          </div>
+
+          <!-- True/False review: per statement, the correct label is green and
+               the user's wrong pick red. -->
+          <div v-else-if="entry.type === 'true_false' && entry.payload && entry.payload.kind === 'true_false'"
+            class="tf-block mt-4">
+            <div v-for="(st, i) in entry.payload.statements" :key="i" class="tf-statement">
+              <p class="tf-text">{{ st.text }}</p>
+              <div class="tf-labels">
+                <span v-for="label in entry.payload.labels" :key="label" :class="[
+                  'tf-label',
+                  label === tfCorrect(entry)[i] ? 'correct' : '',
+                  label === tfUser(entry)[i] && tfUser(entry)[i] !== tfCorrect(entry)[i] ? 'wrong' : '',
+                ]">{{ label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Matching review: per row, the user's value (green if right, red if
+               wrong) and, when wrong, the correct value alongside. -->
+          <div v-else-if="entry.type === 'matching' && entry.payload && entry.payload.kind === 'matching'"
+            class="match-review mt-4">
+            <div v-for="(row, i) in entry.payload.rows" :key="i" class="match-review-row">
+              <span class="match-label">{{ row.label }}</span>
+              <span class="match-review-vals">
+                <span :class="['match-chip', matchUser(entry)[i] === matchCorrect(entry)[i] ? 'correct' : 'wrong']">
+                  {{ matchUser(entry)[i] ?? t('mocks.review_no_answer') }}
+                </span>
+                <template v-if="matchUser(entry)[i] !== matchCorrect(entry)[i]">
+                  <span class="match-arrow" aria-hidden="true">→</span>
+                  <span class="match-chip correct">{{ matchCorrect(entry)[i] }}</span>
+                </template>
+              </span>
             </div>
           </div>
 

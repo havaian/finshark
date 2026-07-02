@@ -5,6 +5,7 @@ import { PG } from "../db/db.module";
 import { F1_PAPER } from "./data/f1";
 import { F2_PAPER } from "./data/f2";
 import { F3_PAPER } from "./data/f3";
+import { FA2_PAPER } from "./data/fa2";
 import { BADGES } from "./data/badges";
 import { ACHIEVEMENTS } from "./data/achievements";
 import type { SeedPaper, SeedQuestion } from "./data/types";
@@ -14,7 +15,12 @@ import { ACCA_APPLIED_KNOWLEDGE_STRUCTURE } from "../content/content.types";
 // CLI script (seed.ts) and the admin "drop & reseed" button hit the same data.
 // F5 exists in /seed/data/f5.ts but is intentionally NOT included - its content
 // is incomplete. Uncomment + import once it's finalised.
-export const SEED_PAPERS: SeedPaper[] = [F1_PAPER, F2_PAPER, F3_PAPER];
+export const SEED_PAPERS: SeedPaper[] = [
+  F1_PAPER,
+  F2_PAPER,
+  F3_PAPER,
+  FA2_PAPER,
+];
 
 export interface ReseedResult {
   papers_dropped: number;
@@ -145,6 +151,14 @@ export class SeedService {
       // 8) reminder_emails_sent: per-user history of reminders. Not strictly
       //    progress but tied to lessons; clear to avoid weird gaps.
       await tx`DELETE FROM reminder_emails_sent`;
+      // 8b) mock_exam_questions: FK to questions is RESTRICT, so this MUST go
+      //     before papers (dropping a paper cascades into its questions, which a
+      //     still-referencing mock_exam_questions row would block). Harmless
+      //     no-op on a DB with no imported mocks.
+      await tx`DELETE FROM mock_exam_questions`;
+      // 8c) mock_exams: cascades from papers anyway, but delete explicitly for a
+      //     clean, ordered wipe now that its children are gone.
+      await tx`DELETE FROM mock_exams`;
       // 9) Finally drop papers - cascades into learning_objectives and
       //    questions automatically.
       await tx`DELETE FROM papers`;
@@ -275,14 +289,16 @@ export class SeedService {
     paper: SeedPaper
   ): Promise<number> {
     // Every paper belongs to a program (NOT NULL) and carries an exam_structure
-    // (NOT NULL). The seeded papers are all ACCA Applied Knowledge exams, so we
-    // resolve (creating if missing) the 'acca' program and stamp the standard
-    // Applied Knowledge structure. ensureAccaProgram is idempotent - the
-    // dropAndReseed path wipes papers but NOT programs, and the migration
-    // already seeds 'acca', so normally this just looks it up.
+    // (NOT NULL). The ACCA Applied Knowledge papers use the standard structure;
+    // FA2 (FIA) supplies its own (50 x 2 marks) on its SeedPaper. We resolve
+    // (creating if missing) the 'acca' program - FA2 is grouped under the same
+    // program for now. ensureAccaProgram is idempotent - the dropAndReseed path
+    // wipes papers but NOT programs, and the migration already seeds 'acca', so
+    // normally this just looks it up.
     const programId = await this.ensureAccaProgram(tx);
     const structureJson = tx.json(
-      ACCA_APPLIED_KNOWLEDGE_STRUCTURE as unknown as postgres.JSONValue
+      (paper.exam_structure ??
+        ACCA_APPLIED_KNOWLEDGE_STRUCTURE) as unknown as postgres.JSONValue
     );
 
     const paperRows = await tx<Array<{ id: string }>>`

@@ -4,7 +4,23 @@
 // short_answer retired (Grading Spec): no faithful auto-marked ACCA format.
 // Legacy rows are converted/removed by migration 20260524000002; the grader
 // still fails closed on any unexpected type value as a defensive backstop.
-export type QuestionType = "mcq" | "number_entry";
+//
+// The five live types are all deterministically auto-markable ACCA CBE
+// objective formats (migrations 20260701000001/2):
+//   - mcq          : single-answer multiple choice. options set; correct_answer_en
+//                    is the option key (e.g. "A").
+//   - mcq_multi    : multiple-response MCQ. options set (same storage as mcq);
+//                    correct_answer_en holds the sorted keys (e.g. "B,C").
+//   - number_entry : numeric fill-in. correct_answer_en is the value string.
+//   - true_false   : classify 1-4 statements. body in payload (TrueFalsePayload).
+//   - matching     : choose a value per row from a shared list. body in payload
+//                    (MatchingPayload).
+export type QuestionType =
+  | "mcq"
+  | "mcq_multi"
+  | "number_entry"
+  | "true_false"
+  | "matching";
 export type QuestionDifficulty = "easy" | "medium" | "hard";
 
 // ----------------------------------------------------------------
@@ -246,6 +262,52 @@ export interface McqOption {
   why_wrong_ru?: string | null;
 }
 
+// ----------------------------------------------------------------
+// Structured payloads for the non-MCQ objective types.
+// Stored in questions.payload JSONB (migration 20260701000002). The DB only
+// guarantees "is a JSON object"; these interfaces are the authoritative shape.
+// correct_answer_en also holds a canonical string form of the answer (so the
+// NOT NULL column is satisfied and there's a human-readable reference), but
+// GRADING for these two types reads payload, not correct_answer_en.
+// ----------------------------------------------------------------
+
+// true_false: classify each statement with one of `labels`.
+export interface TrueFalseStatement {
+  text_en: string;
+  text_ru: string | null;
+  // The correct label for this statement; must be one of TrueFalsePayload.labels.
+  answer: string;
+}
+export interface TrueFalsePayload {
+  // The 2-3 labels shown as choices for every statement, e.g. ["Yes","No"] or
+  // ["Increase","Reduce","Do not change"]. English canonical.
+  labels: string[];
+  // Optional RU labels, positionally aligned with `labels`. Null => clients
+  // show the English labels.
+  labels_ru: string[] | null;
+  statements: TrueFalseStatement[];
+}
+
+// matching: pick a value for each row from the shared `options` pool.
+export interface MatchingRow {
+  label_en: string;
+  label_ru: string | null;
+  // The correct value for this row; must equal one option's value_en.
+  correct_value_en: string;
+}
+export interface MatchingOption {
+  value_en: string;
+  value_ru: string | null;
+}
+export interface MatchingPayload {
+  rows: MatchingRow[];
+  options: MatchingOption[]; // shared list of values to choose from
+}
+
+// Discriminated at the call site by QuestionRow.type (there is no in-object
+// discriminant; the type column is the source of truth).
+export type QuestionPayload = TrueFalsePayload | MatchingPayload;
+
 export interface QuestionRow {
   id: string;
   lo_id: string;
@@ -255,7 +317,13 @@ export interface QuestionRow {
   prompt_en: string;
   prompt_ru: string | null;
 
-  options: McqOption[] | null; // only set when type = 'mcq'
+  options: McqOption[] | null; // only set when type = 'mcq' | 'mcq_multi'
+
+  // Structured body for true_false / matching; null for the other three types.
+  // Discriminate by `type` before reading (cast to TrueFalsePayload /
+  // MatchingPayload). The chk_question_type_shape constraint guarantees it is
+  // set for exactly true_false / matching and null otherwise.
+  payload: QuestionPayload | null;
 
   // For MCQ, correct_answer_en holds the option KEY (e.g. "A") - same across
   // languages, so correct_answer_ru is always NULL for MCQ.
@@ -273,6 +341,16 @@ export interface QuestionRow {
   // number_entry questions: absolute tolerance for matching. NULL for mcq /
   // short_answer (and for number_entry questions that require exact match).
   acceptable_tolerance: number | null;
+
+  // Data/scenario panel shown above the prompt (a trial balance, figures, an
+  // accounts extract). Null when the question has no exhibit. _ru falls back
+  // to _en in clients, same pattern as prompt.
+  exhibit_en: string | null;
+  exhibit_ru: string | null;
+
+  // Stable source reference (e.g. "F1-M1-Q01") used by the bank importer to
+  // upsert. Null for hand-authored / seeded rows.
+  external_ref: string | null;
 
   is_active: boolean;
   created_at: Date;
@@ -337,6 +415,65 @@ export interface LocalizedLearningObjective {
   updated_at: string;
 }
 
+// Localized bodies for the non-MCQ types. Used by the admin projection
+// (toLocalizedQuestion) which is allowed to include answers. The student-facing
+// lesson/mock projection strips answers separately (see lessons.service).
+export interface LocalizedTrueFalseStatement {
+  text: string;
+  answer: string; // correct label - present on the ADMIN projection only
+}
+export interface LocalizedTrueFalsePayload {
+  kind: "true_false";
+  labels: string[];
+  statements: LocalizedTrueFalseStatement[];
+}
+export interface LocalizedMatchingRow {
+  label: string;
+  correct_value: string; // correct value - present on the ADMIN projection only
+}
+export interface LocalizedMatchingOption {
+  value: string;
+}
+export interface LocalizedMatchingPayload {
+  kind: "matching";
+  rows: LocalizedMatchingRow[];
+  options: LocalizedMatchingOption[];
+}
+export type LocalizedQuestionPayload =
+  | LocalizedTrueFalsePayload
+  | LocalizedMatchingPayload;
+
+// ---- Student-facing (answer-free) payload -------------------------------
+// The lesson/mock queue must render true_false / matching bodies WITHOUT
+// leaking the answer. These mirror the localized payload above but drop the
+// correct label / correct value. The ANSWER SPACE (true_false labels, matching
+// option values) is sent canonically in EN so the client returns the chosen
+// value verbatim and the deterministic grader can match it; only the PROMPT
+// parts (statement text, row labels) are localized. Paired EN+RU labels for
+// fully-localized answer choices are a later enhancement.
+export interface LessonTrueFalseStatement {
+  text: string;
+}
+export interface LessonTrueFalsePayload {
+  kind: "true_false";
+  labels: string[];
+  statements: LessonTrueFalseStatement[];
+}
+export interface LessonMatchingRow {
+  label: string;
+}
+export interface LessonMatchingOption {
+  value: string;
+}
+export interface LessonMatchingPayload {
+  kind: "matching";
+  rows: LessonMatchingRow[];
+  options: LessonMatchingOption[];
+}
+export type LessonQuestionPayload =
+  | LessonTrueFalsePayload
+  | LessonMatchingPayload;
+
 export interface LocalizedQuestion {
   id: string;
   lo_id: string;
@@ -344,9 +481,13 @@ export interface LocalizedQuestion {
   difficulty: QuestionDifficulty;
   prompt: string;
   options: LocalizedMcqOption[] | null;
+  // Localized body for true_false / matching; null for the other three types.
+  payload: LocalizedQuestionPayload | null;
   correct_answer: string;
   explanation: string;
   concept_bite: string | null;
+  // Localized exhibit panel; null when the question has no exhibit.
+  exhibit: string | null;
   acceptable_tolerance: number | null;
   is_active: boolean;
   created_at: string;
@@ -424,6 +565,86 @@ export function toLocalizedLo(
   };
 }
 
+// Localize a question's structured payload for the ADMIN projection. This
+// INCLUDES the answers (correct labels / correct values) because the admin
+// editor needs them. The student-facing lesson/mock projection builds its own
+// answer-free version separately. Returns null for types with no payload.
+export function toLocalizedPayload(
+  row: QuestionRow,
+  lang: Lang
+): LocalizedQuestionPayload | null {
+  if (row.payload === null) return null;
+  if (row.type === "true_false") {
+    const p = row.payload as TrueFalsePayload;
+    // Use RU labels only when present AND aligned 1:1 with the EN labels.
+    const labels =
+      lang === "ru" && p.labels_ru && p.labels_ru.length === p.labels.length
+        ? p.labels_ru
+        : p.labels;
+    return {
+      kind: "true_false",
+      labels,
+      statements: p.statements.map((s) => ({
+        text: pickLocalized(s.text_en, s.text_ru, lang),
+        answer: s.answer,
+      })),
+    };
+  }
+  if (row.type === "matching") {
+    const p = row.payload as MatchingPayload;
+    return {
+      kind: "matching",
+      rows: p.rows.map((r) => ({
+        label: pickLocalized(r.label_en, r.label_ru, lang),
+        // Canonical EN value - the admin edits in canonical form.
+        correct_value: r.correct_value_en,
+      })),
+      options: p.options.map((o) => ({
+        value: pickLocalized(o.value_en, o.value_ru, lang),
+      })),
+    };
+  }
+  // number_entry / mcq / mcq_multi have no payload.
+  return null;
+}
+
+// Answer-free counterpart of toLocalizedPayload for the student-facing lesson/
+// mock queue. Localizes the question body (statement text, row labels) but
+// OMITS the correct label / correct value. The answer space (true_false
+// labels, matching option values) is emitted canonically in EN so the client
+// returns the chosen value verbatim for the grader. Takes only the fields it
+// reads, so callers can pass a full QuestionRow or a narrow projection.
+// Returns null for the three types that carry no payload.
+export function toAnswerFreePayload(
+  row: { type: QuestionType; payload: QuestionPayload | null },
+  lang: Lang
+): LessonQuestionPayload | null {
+  if (row.payload === null) return null;
+  if (row.type === "true_false") {
+    const p = row.payload as TrueFalsePayload;
+    return {
+      kind: "true_false",
+      // Canonical EN labels (the answer space); statement text is localized.
+      labels: p.labels,
+      statements: p.statements.map((s) => ({
+        text: pickLocalized(s.text_en, s.text_ru, lang),
+      })),
+    };
+  }
+  if (row.type === "matching") {
+    const p = row.payload as MatchingPayload;
+    return {
+      kind: "matching",
+      // Row labels (prompts) localized; option values canonical EN (answer space).
+      rows: p.rows.map((r) => ({
+        label: pickLocalized(r.label_en, r.label_ru, lang),
+      })),
+      options: p.options.map((o) => ({ value: o.value_en })),
+    };
+  }
+  return null;
+}
+
 export function toLocalizedQuestion(
   row: QuestionRow,
   lang: Lang
@@ -447,15 +668,17 @@ export function toLocalizedQuestion(
             ),
           })),
     correct_answer:
-      row.type === "mcq"
-        ? row.correct_answer_en // option key - same in every language
+      row.type === "mcq" || row.type === "mcq_multi"
+        ? row.correct_answer_en // option key(s) - same in every language
         : pickLocalized(row.correct_answer_en, row.correct_answer_ru, lang),
+    payload: toLocalizedPayload(row, lang),
     explanation: pickLocalized(row.explanation_en, row.explanation_ru, lang),
     concept_bite: pickLocalizedNullable(
       row.concept_bite_en,
       row.concept_bite_ru,
       lang
     ),
+    exhibit: pickLocalizedNullable(row.exhibit_en, row.exhibit_ru, lang),
     acceptable_tolerance: row.acceptable_tolerance,
     is_active: row.is_active,
     created_at: row.created_at.toISOString(),

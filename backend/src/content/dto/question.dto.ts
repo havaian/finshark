@@ -6,6 +6,7 @@ import {
   IsBoolean,
   IsEnum,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Length,
@@ -18,8 +19,16 @@ import {
 // faithful ACCA auto-marked exam format and caused the "correct answer marked
 // wrong" grading bug. All legacy rows were converted to mcq/number_entry and
 // the enum value is dropped by migration 20260524000002. Only deterministic,
-// auto-markable formats remain.
-export const QUESTION_TYPES = ["mcq", "number_entry"] as const;
+// auto-markable formats remain. mcq_multi / true_false / matching were added
+// (migrations 20260701000001/2) as first-class ACCA CBE objective formats -
+// all still exact/rule-based, no fuzzy or LLM marking.
+export const QUESTION_TYPES = [
+  "mcq",
+  "mcq_multi",
+  "number_entry",
+  "true_false",
+  "matching",
+] as const;
 
 // Alias kept for call sites that distinguished "creatable" types; now identical
 // to QUESTION_TYPES since every supported type is creatable.
@@ -87,12 +96,23 @@ export class CreateQuestionDto {
   @Type(() => McqOptionDto)
   options?: McqOptionDto[] | null;
 
-  // For MCQ this is the option KEY (same across languages, hence _en only).
-  // For short_answer this is the canonical English answer; _ru is the canonical RU answer.
+  // true_false / matching structured body. A discriminated union is awkward for
+  // class-validator, so the per-type shape is validated in the service (which
+  // returns a clear message). Must be absent for mcq / mcq_multi / number_entry.
+  @IsOptional()
+  @IsObject()
+  payload?: Record<string, unknown> | null;
+
+  // For mcq this is the option KEY (same across languages, hence _en only).
+  // For mcq_multi this is the sorted correct keys, e.g. "B,C".
   // For number_entry this is the canonical numeric value as a string (e.g. "12.5").
+  // For true_false / matching the service DERIVES the canonical answer from
+  // `payload`, so this is optional here; the service enforces that it is present
+  // for the first three types.
+  @IsOptional()
   @IsString()
   @Length(1, 1000)
-  correct_answer_en!: string;
+  correct_answer_en?: string;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
@@ -121,6 +141,20 @@ export class CreateQuestionDto {
   @IsString()
   @Length(1, 4000)
   concept_bite_ru?: string | null;
+
+  // Optional data/scenario panel (a trial balance, figures, an accounts extract)
+  // shown above the prompt. _ru falls back to _en in clients.
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 8000)
+  exhibit_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 8000)
+  exhibit_ru?: string | null;
 
   // number_entry only: absolute tolerance for matching. Null/omitted = exact match.
   // Must be non-negative. Validated for type compatibility in the service.
@@ -162,6 +196,12 @@ export class UpdateQuestionDto {
   @Type(() => McqOptionDto)
   options?: McqOptionDto[] | null;
 
+  // true_false / matching structured body; per-type shape validated in the
+  // service. Send null to clear (though a type change is what usually drives it).
+  @IsOptional()
+  @IsObject()
+  payload?: Record<string, unknown> | null;
+
   @IsOptional()
   @IsString()
   @Length(1, 1000)
@@ -195,6 +235,19 @@ export class UpdateQuestionDto {
   @IsString()
   @Length(1, 4000)
   concept_bite_ru?: string | null;
+
+  // Optional data/scenario panel shown above the prompt (see CreateQuestionDto).
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 8000)
+  exhibit_en?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 8000)
+  exhibit_ru?: string | null;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)

@@ -1,4 +1,9 @@
-import type { McqOption, QuestionDifficulty, QuestionType } from "./content";
+import type {
+  McqOption,
+  QuestionDifficulty,
+  QuestionType,
+  LessonQuestionPayload,
+} from "./content";
 
 // Session mode mirrors backend's session_mode enum. 'lesson' is the default
 // for ordinary sessions; 'mock' is a CBE-style timed practice with no hearts.
@@ -12,6 +17,12 @@ export interface LessonQuestion {
   difficulty: QuestionDifficulty;
   prompt: string;
   options: McqOption[] | null;
+  // Answer-free body for true_false / matching (statements+labels or
+  // rows+options, WITHOUT the answer). null for mcq / mcq_multi / number_entry.
+  payload: LessonQuestionPayload | null;
+  // Localized exhibit panel (e.g. a data extract) shown above the prompt; null
+  // when the question has none.
+  exhibit: string | null;
   concept_bite: string | null;
   // For number_entry: optional ±tolerance hint. Null for other types and for
   // number_entry questions that require exact match.

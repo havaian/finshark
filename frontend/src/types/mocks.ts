@@ -6,7 +6,11 @@
 // field returned from GET /lessons/:id/session.
 
 import type { LessonQuestion, LessonTheoryBite } from "./lesson";
-import type { ExamSectionKind } from "./content";
+import type {
+  ExamSectionKind,
+  LessonQuestionPayload,
+  QuestionType,
+} from "./content";
 
 // One built section of a started mock. Tells the frontend which queue
 // positions belong to the section and the marks rule that applies, so it can
@@ -87,10 +91,15 @@ export interface MockAnswerOption {
 export interface MockAnswerEntry {
   position: number;
   question_id: string;
-  type: "mcq" | "number_entry";
+  type: QuestionType;
   difficulty: "easy" | "medium" | "hard";
   prompt: string;
   options: MockAnswerOption[] | null;
+  // Answer-free body for true_false / matching; the correct answer is carried
+  // separately in correct_answer below so review can mark the response.
+  payload: LessonQuestionPayload | null;
+  // Localized exhibit panel; null when the question has none.
+  exhibit: string | null;
   correct_answer: string;
   explanation: string;
   concept_bite: string | null;

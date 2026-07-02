@@ -38,6 +38,14 @@ const selectedOption = ref<string | null>(null);
 // state like trailing decimals ("12." while user is mid-type). The grader on
 // the server parses it.
 const numberAnswer = ref('');
+// mcq_multi: the set of currently-selected option keys. All-or-nothing graded.
+const selectedKeys = ref<string[]>([]);
+// true_false: chosen canonical EN label per statement, index-aligned with the
+// payload's statements (null = not yet answered).
+const tfAnswers = ref<(string | null)[]>([]);
+// matching: chosen canonical EN option value per row, index-aligned with the
+// payload's rows (null = not yet answered).
+const matchAnswers = ref<(string | null)[]>([]);
 const submitting = ref(false);
 const feedback = ref<AttemptResult | null>(null);
 
@@ -163,6 +171,53 @@ const wrongOptionsForFeedback = computed(() => {
 
 const numberAnswerInput = ref<HTMLInputElement | null>(null);
 
+// Whether the current question has a submittable answer. Drives the submit
+// button's disabled state across all five objective types.
+const hasAnswer = computed(() => {
+  const q = current.value;
+  if (!q) return false;
+  switch (q.type) {
+    case 'mcq':
+      return !!selectedOption.value;
+    case 'mcq_multi':
+      return selectedKeys.value.length > 0;
+    case 'true_false':
+      return tfAnswers.value.length > 0 && tfAnswers.value.every((a) => a !== null);
+    case 'matching':
+      return matchAnswers.value.length > 0 && matchAnswers.value.every((a) => a !== null);
+    case 'number_entry':
+      return !!numberAnswer.value.trim();
+    default:
+      return false;
+  }
+});
+
+// Reset all answer inputs for the question now at `current`, sizing the
+// per-statement / per-row arrays so v-model bindings have a slot each. Called
+// on load and whenever we advance to the next question.
+function initAnswerStateForCurrent() {
+  selectedOption.value = null;
+  numberAnswer.value = '';
+  selectedKeys.value = [];
+  const q = current.value;
+  tfAnswers.value =
+    q && q.type === 'true_false' && q.payload && q.payload.kind === 'true_false'
+      ? q.payload.statements.map(() => null)
+      : [];
+  matchAnswers.value =
+    q && q.type === 'matching' && q.payload && q.payload.kind === 'matching'
+      ? q.payload.rows.map(() => null)
+      : [];
+}
+
+// mcq_multi: toggle a key in/out of the selected set. Locked once feedback shows.
+function toggleKey(key: string) {
+  if (feedback.value) return;
+  const i = selectedKeys.value.indexOf(key);
+  if (i >= 0) selectedKeys.value.splice(i, 1);
+  else selectedKeys.value.push(key);
+}
+
 async function load() {
   loading.value = true;
   errorMsg.value = null;
@@ -204,6 +259,7 @@ async function load() {
     while (idx < queue.value.length && answered.has(queue.value[idx].id)) idx++;
     currentIndex.value = idx;
     if (idx > 0) theoryDismissed.value = true;
+    initAnswerStateForCurrent();
 
     // Mock timer: start it whenever we successfully loaded a mock session
     // that has a time limit. Re-resume is fine because the tick computes
@@ -232,6 +288,19 @@ async function onSubmit() {
   if (q.type === 'mcq') {
     if (!selectedOption.value) return;
     answer = selectedOption.value;
+  } else if (q.type === 'mcq_multi') {
+    if (selectedKeys.value.length === 0) return;
+    // Sorted keys as a JSON array; the grader is order-insensitive.
+    answer = JSON.stringify([...selectedKeys.value].sort());
+  } else if (q.type === 'true_false') {
+    if (tfAnswers.value.some((a) => a === null)) return;
+    // One chosen canonical EN label per statement, in statement order.
+    answer = JSON.stringify(tfAnswers.value);
+  } else if (q.type === 'matching') {
+    if (matchAnswers.value.some((a) => a === null)) return;
+    // One chosen canonical EN option value per row, in row order. JSON (not
+    // comma-joined) because values may themselves contain commas.
+    answer = JSON.stringify(matchAnswers.value);
   } else {
     // number_entry
     answer = numberAnswer.value.trim();
@@ -275,6 +344,9 @@ async function onNext() {
   feedback.value = null;
   selectedOption.value = null;
   numberAnswer.value = '';
+  selectedKeys.value = [];
+  tfAnswers.value = [];
+  matchAnswers.value = [];
   showWhyWrong.value = false;
 
   if (endedOnThisAttempt) {
@@ -288,6 +360,7 @@ async function onNext() {
     return;
   }
   currentIndex.value += 1;
+  initAnswerStateForCurrent();
   await focusInputForType();
 }
 
@@ -382,13 +455,25 @@ function onStartFromTheory() {
   focusInputForType();
 }
 
-// Compute MCQ option class - selected/correct/wrong/locked.
+// Compute MCQ / mcq_multi option class - selected/correct/wrong/locked.
+// correct_answer is a single key for mcq and a comma-joined key set for
+// mcq_multi ("B,C"); splitting on comma handles both uniformly.
 function optionClass(optKey: string): string {
+  const isMulti = current.value?.type === 'mcq_multi';
   if (!feedback.value) {
-    return selectedOption.value === optKey ? 'option selected' : 'option';
+    const active = isMulti
+      ? selectedKeys.value.includes(optKey)
+      : selectedOption.value === optKey;
+    return active ? 'option selected' : 'option';
   }
-  if (optKey === feedback.value.correct_answer) return 'option correct';
-  if (optKey === selectedOption.value && !feedback.value.was_correct) return 'option wrong';
+  const correctKeys = feedback.value.correct_answer.split(',').map((s) => s.trim());
+  const userKeys = isMulti
+    ? selectedKeys.value
+    : selectedOption.value
+      ? [selectedOption.value]
+      : [];
+  if (correctKeys.includes(optKey)) return 'option correct';
+  if (userKeys.includes(optKey) && !feedback.value.was_correct) return 'option wrong';
   return 'option locked';
 }
 
@@ -580,6 +665,13 @@ onUnmounted(() => {
 
         <p class="prompt">{{ current.prompt }}</p>
 
+        <!-- Exhibit panel: supporting data extract (e.g. a trial balance)
+             shown above the answer inputs. pre-wrap preserves the layout. -->
+        <div v-if="current.exhibit" class="exhibit">
+          <div class="exhibit-tag">{{ t('lesson.exhibit_tag') }}</div>
+          <div class="exhibit-body">{{ current.exhibit }}</div>
+        </div>
+
         <!-- MCQ -->
         <div v-if="current.type === 'mcq' && current.options" class="options">
           <button v-for="(opt, i) in current.options" :key="opt.key" type="button" :class="optionClass(opt.key)"
@@ -588,6 +680,46 @@ onUnmounted(() => {
             <span>{{ opt.text }}</span>
             <span v-if="!feedback" class="dim text-xs mono" style="margin-left: auto;">{{ i + 1 }}</span>
           </button>
+        </div>
+
+        <!-- Multi-response MCQ: pick all that apply. Reuses the .option styles;
+             clicking toggles a key in/out of the selected set. -->
+        <div v-else-if="current.type === 'mcq_multi' && current.options" class="options">
+          <div class="multi-hint dim text-sm">{{ t('lesson.select_all_that_apply') }}</div>
+          <button v-for="opt in current.options" :key="opt.key" type="button" :class="optionClass(opt.key)"
+            :disabled="!!feedback" @click="toggleKey(opt.key)">
+            <span class="option-key">{{ opt.key }}</span>
+            <span>{{ opt.text }}</span>
+          </button>
+        </div>
+
+        <!-- True/False (and other 2-4 label classifications). One label row per
+             statement; each choice is a canonical EN label. -->
+        <div v-else-if="current.type === 'true_false' && current.payload && current.payload.kind === 'true_false'"
+          class="tf-block">
+          <div v-for="(st, i) in current.payload.statements" :key="i" class="tf-statement">
+            <p class="tf-text">{{ st.text }}</p>
+            <div class="tf-labels">
+              <button v-for="label in current.payload.labels" :key="label" type="button"
+                :class="['tf-label', { selected: tfAnswers[i] === label }]" :disabled="!!feedback"
+                @click="tfAnswers[i] = label">{{ label }}</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matching: one dropdown per row, choosing from the shared option
+             pool. Selected values are canonical EN. -->
+        <div v-else-if="current.type === 'matching' && current.payload && current.payload.kind === 'matching'"
+          class="match-block">
+          <div v-for="(row, i) in current.payload.rows" :key="i" class="match-row">
+            <span class="match-label">{{ row.label }}</span>
+            <select v-model="matchAnswers[i]" :disabled="!!feedback" class="match-select">
+              <option :value="null" disabled>{{ t('lesson.match_select_placeholder') }}</option>
+              <option v-for="opt in current.payload.options" :key="opt.value" :value="opt.value">
+                {{ opt.value }}
+              </option>
+            </select>
+          </div>
         </div>
 
         <!-- Number entry - for calculation questions where the answer is a
@@ -657,9 +789,7 @@ onUnmounted(() => {
               <kbd>↵</kbd> {{ t('lesson.keys_help_text') }}
             </template>
           </div>
-          <button v-if="!feedback" class="btn btn-primary" :disabled="submitting || (
-            current.type === 'mcq' ? !selectedOption : !numberAnswer.trim()
-          )" @click="onSubmit">
+          <button v-if="!feedback" class="btn btn-primary" :disabled="submitting || !hasAnswer" @click="onSubmit">
             {{ submitting ? t('lesson.checking') : t('lesson.submit') }}
           </button>
           <button v-else class="btn btn-primary" :disabled="completing" @click="onNext">

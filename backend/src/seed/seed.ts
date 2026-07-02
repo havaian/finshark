@@ -17,13 +17,14 @@ import postgres from "postgres";
 import { F1_PAPER } from "./data/f1";
 import { F2_PAPER } from "./data/f2";
 import { F3_PAPER } from "./data/f3";
+import { FA2_PAPER } from "./data/fa2";
 import { BADGES } from "./data/badges";
 import { ACHIEVEMENTS } from "./data/achievements";
 import type { SeedPaper, SeedQuestion } from "./data/types";
 import { ACCA_APPLIED_KNOWLEDGE_STRUCTURE } from "../content/content.types";
 
 // PAPERS array
-const PAPERS: SeedPaper[] = [F1_PAPER, F2_PAPER, F3_PAPER];
+const PAPERS: SeedPaper[] = [F1_PAPER, F2_PAPER, F3_PAPER, FA2_PAPER];
 
 async function main() {
   const url = process.env.DATABASE_URL;
@@ -105,8 +106,11 @@ async function main() {
           RETURNING id
         `;
         const programId = progRows[0].id;
+        // Per-paper exam structure; FA2 (FIA) supplies its own (50 x 2 marks),
+        // the ACCA Applied Knowledge papers fall back to the standard 35 x 2.
         const structureJson = tx.json(
-          ACCA_APPLIED_KNOWLEDGE_STRUCTURE as unknown as postgres.JSONValue
+          (paper.exam_structure ??
+            ACCA_APPLIED_KNOWLEDGE_STRUCTURE) as unknown as postgres.JSONValue
         );
 
         // NOTE: papers and learning_objectives tables don't have is_active -

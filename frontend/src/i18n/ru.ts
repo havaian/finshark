@@ -385,6 +385,9 @@ export default {
     quit_confirm:
       "Прервать урок? Ответы сохранены - можно вернуться к сессии позже.",
     concept_tag: "теория",
+    exhibit_tag: "материалы",
+    select_all_that_apply: "Выберите все подходящие варианты",
+    match_select_placeholder: "Выберите…",
     submit: "Ответить",
     checking: "Проверка…",
     finishing: "Завершение…",
@@ -798,6 +801,16 @@ export default {
       batch_delete_confirm:
         "Удалить {count} черновик(а/ов)? Действие необратимо.",
       // Drop DB + reseed
+      import_btn: "Импорт из таблицы",
+      import_running: "Импорт…",
+      import_modal_title: "Импорт таблицы пробных экзаменов",
+      import_stat_total: "Прочитано строк: {count}",
+      import_stat_inserted: "Добавлено вопросов: {count}",
+      import_stat_updated: "Обновлено вопросов: {count}",
+      import_stat_inactive: "Оставлено неактивными: {count} (нет ответа / неверный ключ)",
+      import_stat_skipped: "Пропущено строк: {count} (нет подходящей цели обучения)",
+      import_stat_mocks: "Пересобрано пробных экзаменов: {count}",
+      import_details: "Показать отмеченные строки",
       reseed_btn: "Сбросить и пересидить",
       reseed_modal_title: "Сбросить контент и пересидить",
       reseed_warn_1: "Действие необратимо. Что произойдёт:",

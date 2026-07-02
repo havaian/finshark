@@ -39,6 +39,18 @@ export interface AdminOverview {
   };
 }
 
+// Mirrors backend QuestionImportService.ImportReport - the result of a mock
+// workbook upload. Kept inline (small, used only by the content browser's
+// import control).
+export interface ImportReport {
+  total_rows: number;
+  questions_inserted: number;
+  questions_updated: number;
+  questions_inactive: Array<{ ref: string; reason: string }>;
+  rows_skipped: Array<{ ref: string; reason: string }>;
+  mocks: Array<{ code: string; question_count: number }>;
+}
+
 // All endpoints below require an authenticated admin. Axios attaches the bearer
 // token automatically via the interceptor in client.ts.
 // Admin endpoints return RAW i18n shapes (both _en and _ru) so the editor can
@@ -235,6 +247,17 @@ export const adminApi = {
   // network call powers the sidebar tree on the content browser page.
   getContentTree: async (): Promise<ContentTreePaper[]> =>
     (await api.get<ContentTreePaper[]>("/admin/content/tree")).data,
+
+  // Bulk-import the master mock workbook (.xlsx). Multipart form, field "file".
+  // The browser sets the multipart boundary automatically when we pass
+  // FormData - we must NOT set Content-Type ourselves or the boundary is lost.
+  importQuestions: async (file: File): Promise<ImportReport> => {
+    const form = new FormData();
+    form.append("file", file);
+    return (
+      await api.post<ImportReport>("/admin/content/import-questions", form)
+    ).data;
+  },
 
   // Bulk-set is_active on multiple questions. Returns the updated rows.
   setQuestionsActive: async (

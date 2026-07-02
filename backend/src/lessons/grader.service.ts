@@ -1,5 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import type { QuestionRow, Lang } from "../content/content.types";
+import type {
+  QuestionRow,
+  Lang,
+  TrueFalsePayload,
+  MatchingPayload,
+} from "../content/content.types";
 
 export interface GradeResult {
   was_correct: boolean;
@@ -10,13 +15,17 @@ export interface GradeResult {
   llm_grade_json: unknown | null;
 }
 
-// Grading is locked to DETERMINISTIC question types only (mcq, number_entry).
-// See the Grading Spec: ACCA auto-marks only objective formats (MCQ,
-// multiple-response, matching, numeric fill-in-the-blank). Free-text
-// short_answer is not a real auto-marked exam format, so it is being retired
-// from the question bank; the grader no longer has a code path for it. No fuzzy
-// string matching, no synonym sets, and no LLM in the grading path - that is
-// what produced the "Zero based budgeting marked wrong" trust bug.
+// Grading is locked to DETERMINISTIC objective question types only:
+//   mcq, mcq_multi, true_false, matching, number_entry.
+// See the Grading Spec: ACCA auto-marks only objective formats (single-answer
+// MCQ, multiple-response, true/false-style statement sets, matching, numeric
+// fill-in-the-blank) - all of which are exact, rule-based marks. Free-text
+// short_answer is not a real auto-marked exam format, so it was retired from
+// the question bank; the grader has no code path for it. No fuzzy string
+// matching, no synonym sets, and no LLM anywhere in the grading path - that is
+// what produced the "Zero based budgeting marked wrong" trust bug. The
+// multi-part types (mcq_multi, true_false, matching) are marked ALL-OR-NOTHING
+// per question, matching how ACCA marks objective items.
 
 @Injectable()
 export class GraderService {
@@ -35,6 +44,15 @@ export class GraderService {
   ): Promise<GradeResult> {
     if (question.type === "mcq") {
       return this.gradeMcq(question, user_answer);
+    }
+    if (question.type === "mcq_multi") {
+      return this.gradeMcqMulti(question, user_answer);
+    }
+    if (question.type === "true_false") {
+      return this.gradeTrueFalse(question, user_answer);
+    }
+    if (question.type === "matching") {
+      return this.gradeMatching(question, user_answer);
     }
     if (question.type === "number_entry") {
       const numeric = this.gradeNumber(question, user_answer);
@@ -60,6 +78,122 @@ export class GraderService {
     const expected = question.correct_answer_en.trim().toUpperCase();
     const actual = user_answer.trim().toUpperCase();
     return { was_correct: expected === actual, llm_grade_json: null };
+  }
+
+  // ------------------------------------------------------------------
+  // Multi-part objective graders (mcq_multi / true_false / matching).
+  //
+  // WIRE FORMAT of user_answer (what the client submits) - the client is
+  // responsible for producing exactly this; grading is strict and any deviation
+  // marks the attempt WRONG (never throws, never falls back to fuzzy/LLM):
+  //   - mcq_multi : the selected option KEYS. JSON array (e.g. ["B","C"]) or a
+  //                 comma/space-delimited string ("B,C"). Order-insensitive.
+  //   - true_false: the chosen CANONICAL (English) label per statement, in
+  //                 statement order, as a JSON array (e.g. ["No","Yes"]). The
+  //                 client maps the displayed label (which may be RU) back to
+  //                 its canonical English form via payload.labels before
+  //                 sending, so grading stays language-neutral.
+  //   - matching  : the chosen CANONICAL (English) option value per row, in row
+  //                 order, as a JSON array (e.g. ["$121,991","nil"]). Values can
+  //                 contain commas, so this MUST be JSON (no delimiter fallback).
+  // All three are ALL-OR-NOTHING: every part must match to score the mark.
+  // ------------------------------------------------------------------
+
+  private gradeMcqMulti(question: QuestionRow, user_answer: string): GradeResult {
+    // correct_answer_en holds the sorted correct keys (e.g. "B,C"). Compare as
+    // sets so submission order doesn't matter.
+    const expected = this.parseKeySet(question.correct_answer_en);
+    const actual = this.parseKeySet(user_answer);
+    const correct =
+      expected.size > 0 &&
+      expected.size === actual.size &&
+      [...expected].every((k) => actual.has(k));
+    return { was_correct: correct, llm_grade_json: null };
+  }
+
+  private gradeTrueFalse(question: QuestionRow, user_answer: string): GradeResult {
+    const payload = question.payload as TrueFalsePayload | null;
+    if (payload === null || !Array.isArray(payload.statements)) {
+      // Shape guaranteed by chk_question_type_shape; fail closed if somehow off.
+      return { was_correct: false, llm_grade_json: null };
+    }
+    const userLabels = this.parseAnswerList(user_answer);
+    if (
+      userLabels === null ||
+      userLabels.length !== payload.statements.length
+    ) {
+      // Missing / extra answers, or unparseable input, is simply wrong.
+      return { was_correct: false, llm_grade_json: null };
+    }
+    const correct = payload.statements.every((s, i) =>
+      this.labelEq(userLabels[i], s.answer)
+    );
+    return { was_correct: correct, llm_grade_json: null };
+  }
+
+  private gradeMatching(question: QuestionRow, user_answer: string): GradeResult {
+    const payload = question.payload as MatchingPayload | null;
+    if (payload === null || !Array.isArray(payload.rows)) {
+      return { was_correct: false, llm_grade_json: null };
+    }
+    // Matching values may themselves contain commas ("$14,862"), so the answer
+    // MUST be a JSON array - no delimiter fallback - to stay unambiguous.
+    const userValues = this.parseJsonStringArray(user_answer);
+    if (userValues === null || userValues.length !== payload.rows.length) {
+      return { was_correct: false, llm_grade_json: null };
+    }
+    const correct = payload.rows.every((r, i) =>
+      this.labelEq(userValues[i], r.correct_value_en)
+    );
+    return { was_correct: correct, llm_grade_json: null };
+  }
+
+  // Case-insensitive, whitespace-trimmed equality for labels / option values.
+  // These come from a FIXED set the student selected (option keys, labels,
+  // values), so this is exact selection matching - not fuzzy text matching.
+  private labelEq(a: string, b: string): boolean {
+    return a.trim().toLowerCase() === b.trim().toLowerCase();
+  }
+
+  // Parse selected option keys from either a JSON array (["B","C"]) or a
+  // comma/space-delimited string ("B,C"). Keys are short separator-free tokens,
+  // so splitting is safe. Normalised to trimmed uppercase; blanks dropped.
+  private parseKeySet(raw: string): Set<string> {
+    const arr = this.parseJsonStringArray(raw);
+    const tokens = arr !== null ? arr : raw.split(/[,\s]+/);
+    const set = new Set<string>();
+    for (const t of tokens) {
+      const k = t.trim().toUpperCase();
+      if (k !== "") set.add(k);
+    }
+    return set;
+  }
+
+  // Parse a JSON array of strings. Returns null unless the input is a JSON array
+  // whose every element is a string. Non-string elements are REJECTED (not
+  // coerced), keeping grading strict and predictable.
+  private parseJsonStringArray(raw: string): string[] | null {
+    const s = raw.trim();
+    if (!s.startsWith("[")) return null;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(s);
+    } catch {
+      return null;
+    }
+    if (!Array.isArray(parsed)) return null;
+    if (!parsed.every((x) => typeof x === "string")) return null;
+    return parsed as string[];
+  }
+
+  // JSON array of strings, with a comma-delimited fallback for the true_false
+  // wire format (labels are known to be comma-free). Empty input => null.
+  private parseAnswerList(raw: string): string[] | null {
+    const json = this.parseJsonStringArray(raw);
+    if (json !== null) return json;
+    const s = raw.trim();
+    if (s === "") return null;
+    return s.split(",").map((x) => x.trim());
   }
 
   // number_entry grader. Returns null on parse failure (caller falls through

@@ -28,12 +28,16 @@ import type {
   McqOption,
   ExamStructure,
   ExamSection,
+  QuestionRow,
+  QuestionPayload,
+  LessonQuestionPayload,
 } from "../content/content.types";
 import {
   pickLocalized,
   pickLocalizedNullable,
   validateExamStructure,
   examTotalMarks,
+  toAnswerFreePayload,
 } from "../content/content.types";
 
 // Free-tier monthly mock quota. Premium = unlimited. Single edit if product
@@ -148,6 +152,12 @@ export interface MockAnswerEntry {
   difficulty: QuestionDifficulty;
   prompt: string;
   options: LocalizedMcqOption[] | null;
+  // Answer-free body for true_false / matching (statements+labels or
+  // rows+options); null for the other types. The correct answer is carried
+  // separately in correct_answer below, so review can mark each response.
+  payload: LessonQuestionPayload | null;
+  // Localized exhibit panel; null when the question has none.
+  exhibit: string | null;
   correct_answer: string;
   explanation: string;
   concept_bite: string | null;
@@ -233,6 +243,19 @@ export class MocksService {
           `free tier: ${FREE_MOCKS_PER_MONTH} mock per month reached - upgrade or wait until next month`
         );
       }
+    }
+
+    // ── Fixed mock playback ───────────────────────────────────────────
+    // If this paper has at least one active mock_exam (imported bank), play a
+    // random one verbatim: its exact questions, in stored order, with the
+    // per-question section + marks. Papers with no active mock (e.g. not yet
+    // imported, like F3) fall through to the dynamic sampler below. Free-tier
+    // gates above have already been applied and apply equally here.
+    const fixed = await this.questions.findRandomActiveMockWithQuestions(
+      opts.paper_id
+    );
+    if (fixed && fixed.questions.length > 0) {
+      return this.buildFixedMock(user_id, lang, opts.paper_id, fixed);
     }
 
     // ── Build the queue section by section ────────────────────────────
@@ -334,6 +357,89 @@ export class MocksService {
     };
   }
 
+  // Build a mock from a curated mock_exam: serve its questions verbatim, in
+  // stored order, stamping each queued row with its section_code + marks so the
+  // breakdown scores against real per-question marks. Section layout is derived
+  // by grouping consecutive questions by section_code (imported mocks are
+  // ordered by section, so each code forms a contiguous [start,end] run).
+  private async buildFixedMock(
+    user_id: string,
+    lang: Lang,
+    paper_id: string,
+    fixed: {
+      mock_id: string;
+      code: string;
+      duration_seconds: number;
+      pass_mark_pct: number;
+      questions: Array<
+        QuestionRow & { section_code: string | null; marks: number }
+      >;
+    }
+  ): Promise<StartMockResult> {
+    const queue: LessonQuestion[] = [];
+    const rawQueueIds: string[] = [];
+    const sectionCodes: Array<string | null> = [];
+    const marks: Array<number | null> = [];
+
+    const builtSections: StartMockSection[] = [];
+    fixed.questions.forEach((q, i) => {
+      queue.push(this.lessons.toLessonQuestion(q, lang));
+      rawQueueIds.push(q.id);
+      const code = q.section_code ?? "A";
+      sectionCodes.push(code);
+      marks.push(q.marks);
+
+      // Extend the current contiguous section run, or open a new one. marks_each
+      // is null: fixed mocks carry PER-QUESTION marks (not necessarily uniform),
+      // so the section reports a marks_total sum rather than a per-question rate.
+      const last = builtSections[builtSections.length - 1];
+      if (last && last.code === code) {
+        last.question_count += 1;
+        last.end_position = i;
+        last.marks_total = (last.marks_total ?? 0) + q.marks;
+      } else {
+        builtSections.push({
+          code,
+          kind: "ot",
+          question_count: 1,
+          start_position: i,
+          end_position: i,
+          marks_each: null,
+          marks_total: q.marks,
+        });
+      }
+    });
+
+    const totalMarks = fixed.questions.reduce((sum, q) => sum + q.marks, 0);
+
+    const session = await this.sessions.create({
+      user_id,
+      question_count: queue.length,
+      mode: "mock",
+      paper_id,
+      time_limit_seconds: fixed.duration_seconds,
+    });
+
+    await this.sessionQuestions.insertMany(
+      session.id,
+      rawQueueIds,
+      sectionCodes,
+      marks
+    );
+
+    return {
+      session_id: session.id,
+      questions: queue,
+      hearts_remaining: session.hearts_remaining,
+      theory_bites: [],
+      time_limit_seconds: session.time_limit_seconds,
+      paper_id,
+      sections: builtSections,
+      total_marks: totalMarks,
+      pass_mark_pct: fixed.pass_mark_pct,
+    };
+  }
+
   // GET /mocks/:id/breakdown - per-LO accuracy after a mock completes.
   // Returns 404 if the session doesn't exist or isn't a mock; 403 if it's
   // someone else's; 400 if it hasn't been completed yet.
@@ -396,12 +502,20 @@ export class MocksService {
       section_code: string | null;
       total: number;
       correct: number;
+      // Stamped per-question marks (fixed mocks). marks_sum is NULL when every
+      // row in the section has NULL marks (dynamic/legacy mock) - the signal to
+      // fall back to the exam_structure marks_each below.
+      marks_sum: number | null;
+      marks_correct: number | null;
     };
     const sectionRows = await this.sql<SectionRow[]>`
       SELECT
         lsq.section_code                                       AS section_code,
         COUNT(*)::int                                          AS total,
-        SUM(CASE WHEN a.was_correct THEN 1 ELSE 0 END)::int    AS correct
+        SUM(CASE WHEN a.was_correct THEN 1 ELSE 0 END)::int    AS correct,
+        SUM(lsq.marks)::int                                    AS marks_sum,
+        SUM(CASE WHEN a.was_correct THEN lsq.marks ELSE 0 END)::int
+                                                               AS marks_correct
       FROM attempts a
       JOIN lesson_session_questions lsq
         ON lsq.session_id = a.session_id AND lsq.question_id = a.question_id
@@ -458,6 +572,21 @@ export class MocksService {
           correct: sr.correct,
           marks_available: 0,
           marks_awarded: 0,
+        };
+      }
+
+      // Fixed mock: per-question marks were stamped on the session (marks_sum
+      // non-null). Score directly off those - honours non-uniform marks (e.g.
+      // an 8-mark multi-part number_entry task alongside 2-mark objectives).
+      if (sr.marks_sum !== null) {
+        return {
+          code: code || "A",
+          kind: "ot",
+          scored: true,
+          total: sr.total,
+          correct: sr.correct,
+          marks_available: sr.marks_sum,
+          marks_awarded: sr.marks_correct ?? 0,
         };
       }
 
@@ -540,6 +669,9 @@ export class MocksService {
       prompt_en: string;
       prompt_ru: string | null;
       options: McqOption[] | null;
+      payload: QuestionPayload | null;
+      exhibit_en: string | null;
+      exhibit_ru: string | null;
       correct_answer_en: string;
       correct_answer_ru: string | null;
       explanation_en: string;
@@ -566,6 +698,9 @@ export class MocksService {
         q.prompt_en                                    AS prompt_en,
         q.prompt_ru                                    AS prompt_ru,
         q.options                                      AS options,
+        q.payload                                      AS payload,
+        q.exhibit_en                                   AS exhibit_en,
+        q.exhibit_ru                                   AS exhibit_ru,
         q.correct_answer_en                            AS correct_answer_en,
         q.correct_answer_ru                            AS correct_answer_ru,
         q.explanation_en                               AS explanation_en,
@@ -605,6 +740,10 @@ export class MocksService {
                 lang
               ),
             })),
+      // Answer-free body for true_false / matching; correct_answer (below)
+      // carries the key so review can mark the response.
+      payload: toAnswerFreePayload({ type: r.q_type, payload: r.payload }, lang),
+      exhibit: pickLocalizedNullable(r.exhibit_en, r.exhibit_ru, lang),
       // For MCQ correct_answer is the option key (language-neutral).
       // For number_entry it's the canonical value in the user's language.
       correct_answer:

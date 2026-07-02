@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,14 +9,18 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
 import { ContentService } from "./content.service";
 import { QuestionGenerationService } from "./question-generation.service";
+import { QuestionImportService } from "./question-import.service";
 import { CreatePaperDto, UpdatePaperDto } from "./dto/paper.dto";
 import { CreateLoDto, UpdateLoDto } from "./dto/learning-objective.dto";
 import { CreateQuestionDto, UpdateQuestionDto } from "./dto/question.dto";
@@ -25,13 +30,18 @@ import {
   BatchSetActiveDto,
 } from "./dto/batch-questions.dto";
 
+// Max size for the mock-workbook upload. The master bank is well under 1 MB;
+// 15 MB is a generous hard cap enforced by multer before our code runs.
+const MAX_IMPORT_BYTES = 15 * 1024 * 1024;
+
 // All routes under /api/admin require an authenticated admin user.
 @Controller("admin")
 @UseGuards(JwtAuthGuard, AdminWith2faGuard)
 export class AdminContentController {
   constructor(
     private readonly content: ContentService,
-    private readonly generator: QuestionGenerationService
+    private readonly generator: QuestionGenerationService,
+    private readonly importer: QuestionImportService
   ) {}
 
   // ---- programs ----
@@ -51,6 +61,24 @@ export class AdminContentController {
   @Get("content/tree")
   getContentTree() {
     return this.content.getContentTree();
+  }
+
+  // Bulk-import the master mock workbook (.xlsx). Multipart form, field "file".
+  // Upserts questions (keyed on question_ref) and rebuilds each mock's fixed
+  // question set. Returns a structured report (inserted/updated/inactive/
+  // skipped + per-mock counts). memoryStorage: multer keeps the file in a
+  // Buffer so the importer parses it without ever writing to disk.
+  @Post("content/import-questions")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      limits: { fileSize: MAX_IMPORT_BYTES, files: 1 },
+    })
+  )
+  importQuestions(@UploadedFile() file: Express.Multer.File | undefined) {
+    if (!file) {
+      throw new BadRequestException("workbook file is required (field 'file')");
+    }
+    return this.importer.importWorkbook(file.buffer);
   }
 
   @Post("papers")

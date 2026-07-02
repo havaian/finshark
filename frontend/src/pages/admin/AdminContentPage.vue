@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
-import { adminApi } from '../../api/admin.api';
+import { adminApi, type ImportReport } from '../../api/admin.api';
 import type {
   ContentTreePaper,
   ContentTreeLo,
@@ -429,6 +429,46 @@ function extractError(e: unknown): string | null {
   return null;
 }
 
+// ---- Import mock workbook (.xlsx) ----
+// Upload the master question workbook to the importer endpoint. On success we
+// show a summary (inserted / updated / inactive / skipped + per-mock counts)
+// and reload the tree so new question counts appear. The file input is hidden;
+// the toolbar button proxies clicks to it.
+const importInput = ref<HTMLInputElement | null>(null);
+const importBusy = ref(false);
+const importError = ref<string | null>(null);
+const importResult = ref<ImportReport | null>(null);
+const importModalOpen = ref(false);
+
+function onPickImport() {
+  importError.value = null;
+  importInput.value?.click();
+}
+
+async function onImportFile(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+  // Reset the input so re-selecting the same file still fires change.
+  input.value = '';
+  if (!file) return;
+  importBusy.value = true;
+  importError.value = null;
+  importModalOpen.value = true;
+  try {
+    importResult.value = await adminApi.importQuestions(file);
+    await reloadTree();
+  } catch (err) {
+    importError.value = extractError(err) ?? 'import failed';
+  } finally {
+    importBusy.value = false;
+  }
+}
+
+function closeImportModal() {
+  if (importBusy.value) return;
+  importModalOpen.value = false;
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // Structural ops - Add paper / Add LO / Add question / LLM generate
 // Ported from the legacy AdminPapersPage / AdminLosPage / AdminQuestionsPage
@@ -846,6 +886,11 @@ onMounted(reloadTree);
           <button type="button" class="btn-link accent" @click="openAddPaper">
             + {{ t('admin.papers.add_btn') }}
           </button>
+          <!-- Import mock workbook (.xlsx) - bulk question + mock import. -->
+          <button type="button" class="btn-link accent" :disabled="importBusy" @click="onPickImport">
+            {{ importBusy ? t('admin.content.import_running') : t('admin.content.import_btn') }}
+          </button>
+          <input ref="importInput" type="file" accept=".xlsx" style="display: none" @change="onImportFile" />
           <!-- Drop & reseed: destructive - danger styling. -->
           <button type="button" class="btn-link" style="color: var(--danger);" @click="openReseedModal">
             {{ t('admin.content.reseed_btn') }}
@@ -1465,6 +1510,44 @@ onMounted(reloadTree);
           </button>
           <button class="btn btn-ghost" :disabled="llmBusy" @click="closeLlmModal">
             {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import mock workbook result. Opens immediately on file pick (showing a
+         busy state), then renders the importer's summary or an error. -->
+    <div v-if="importModalOpen" class="modal-backdrop" @click="closeImportModal">
+      <div class="modal-card" @click.stop>
+        <header class="modal-head">
+          <h2>{{ t('admin.content.import_modal_title') }}</h2>
+          <button type="button" class="btn-link" :disabled="importBusy" @click="closeImportModal">✕</button>
+        </header>
+
+        <p v-if="importBusy" class="dim text-sm mt-2">{{ t('admin.content.import_running') }}</p>
+        <p v-else-if="importError" class="error-text mt-2">{{ importError }}</p>
+
+        <div v-else-if="importResult" class="card mt-2" style="background: var(--bg-elev);">
+          <ul class="dim text-sm" style="padding-left: 20px; line-height: 1.9;">
+            <li>{{ t('admin.content.import_stat_total', { count: importResult.total_rows }) }}</li>
+            <li>{{ t('admin.content.import_stat_inserted', { count: importResult.questions_inserted }) }}</li>
+            <li>{{ t('admin.content.import_stat_updated', { count: importResult.questions_updated }) }}</li>
+            <li>{{ t('admin.content.import_stat_inactive', { count: importResult.questions_inactive.length }) }}</li>
+            <li>{{ t('admin.content.import_stat_skipped', { count: importResult.rows_skipped.length }) }}</li>
+            <li>{{ t('admin.content.import_stat_mocks', { count: importResult.mocks.length }) }}</li>
+          </ul>
+          <details v-if="importResult.questions_inactive.length || importResult.rows_skipped.length" class="mt-2">
+            <summary class="dim text-sm">{{ t('admin.content.import_details') }}</summary>
+            <ul class="mono text-xs mt-2" style="padding-left: 20px; line-height: 1.7;">
+              <li v-for="r in importResult.questions_inactive" :key="'i-' + r.ref">{{ r.ref }}: {{ r.reason }}</li>
+              <li v-for="r in importResult.rows_skipped" :key="'s-' + r.ref">{{ r.ref }}: {{ r.reason }}</li>
+            </ul>
+          </details>
+        </div>
+
+        <div class="admin-edit-actions mt-4">
+          <button type="button" class="btn btn-ghost" :disabled="importBusy" @click="closeImportModal">
+            {{ t('common.close') }}
           </button>
         </div>
       </div>

@@ -39,19 +39,36 @@ import type {
   LocalizedMcqOption,
   QuestionRow,
   QuestionDifficulty,
+  QuestionType,
+  LessonQuestionPayload,
 } from "../content/content.types";
-import { pickLocalized, pickLocalizedNullable } from "../content/content.types";
+import {
+  pickLocalized,
+  pickLocalizedNullable,
+  toAnswerFreePayload,
+} from "../content/content.types";
 
 // Public shape returned in the lesson queue. Note: NO correct_answer or explanation.
 // Those are only revealed in the attempt response, per question, after answering.
 // Fields are LANGUAGE-RESOLVED - frontend receives a single string per field.
 export interface LessonQuestion {
   id: string;
-  // short_answer retired: lessons only serve active mcq/number_entry questions.
-  type: "mcq" | "number_entry";
+  // short_answer retired. Widened to the full objective set because MocksService
+  // reuses this projection for mock sessions, which can include mcq_multi /
+  // true_false / matching. The answer-free structured body (payload) + exhibit
+  // for those types are threaded through when fixed-mock playback lands; the
+  // daily lesson pool itself still serves mcq / number_entry.
+  type: QuestionType;
   difficulty: QuestionDifficulty;
   prompt: string;
   options: LocalizedMcqOption[] | null; // for MCQ
+  // Answer-free structured body for true_false / matching (statements+labels or
+  // rows+options, WITHOUT the correct answer). null for mcq / mcq_multi /
+  // number_entry. Lets a mock render these types without leaking the answer.
+  payload: LessonQuestionPayload | null;
+  // Localized exhibit panel (e.g. a data extract) shown above the prompt;
+  // null when the question has none.
+  exhibit: string | null;
   concept_bite: string | null;
   // Sent to the frontend so it can hint "±X" near the number_entry input.
   // null for non-number_entry questions, and for number_entry questions that
@@ -935,6 +952,10 @@ export class LessonsService {
                 lang
               ),
             })),
+      // Answer-free body for true_false / matching; null for the other types.
+      payload: toAnswerFreePayload(q, lang),
+      // Localized exhibit panel; null when the question has none.
+      exhibit: pickLocalizedNullable(q.exhibit_en, q.exhibit_ru, lang),
       concept_bite: pickLocalizedNullable(
         q.concept_bite_en,
         q.concept_bite_ru,

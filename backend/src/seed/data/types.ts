@@ -1,6 +1,8 @@
 // Shared types for seed content files. These describe the input shape - the
 // seed runner does the actual DB insert mapping.
 
+import type { ExamStructure } from "../../content/content.types";
+
 export type SeedDifficulty = "easy" | "medium" | "hard";
 // short_answer retired (Grading Spec): no faithful ACCA auto-marked format.
 // Seed content is mcq / number_entry only.
@@ -83,5 +85,9 @@ export interface SeedPaper {
   name_en: string;
   name_ru: string;
   name_uz?: string;
+  // Per-paper exam structure. Omit to use the standard ACCA Applied Knowledge
+  // structure (ACCA_APPLIED_KNOWLEDGE_STRUCTURE). FA2 (FIA) sets its own here
+  // (50 x 2 marks, 120 min, 50% pass).
+  exam_structure?: ExamStructure;
   learning_objectives: SeedLearningObjective[];
 }

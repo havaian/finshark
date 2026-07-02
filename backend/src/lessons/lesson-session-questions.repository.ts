@@ -12,10 +12,16 @@ export class LessonSessionQuestionsRepository {
   // and stamps each row's exam section (used by structured mocks for per-section
   // scoring). When omitted, section_code is left NULL - the case for regular
   // lessons and review sessions, which have no exam sections.
+  //
+  // marks, when provided, likewise aligns 1:1 and stamps each row's marks -
+  // used by FIXED (imported) mocks so the breakdown scores by real per-question
+  // marks. Omitted (NULL) for dynamic mocks and lessons/reviews, whose marks
+  // come from the exam_structure or don't apply.
   async insertMany(
     session_id: string,
     question_ids: string[],
-    section_codes?: Array<string | null>
+    section_codes?: Array<string | null>,
+    marks?: Array<number | null>
   ): Promise<void> {
     if (question_ids.length === 0) return;
     const rows = question_ids.map((qid, i) => ({
@@ -23,9 +29,10 @@ export class LessonSessionQuestionsRepository {
       question_id: qid,
       position: i,
       section_code: section_codes ? section_codes[i] ?? null : null,
+      marks: marks ? marks[i] ?? null : null,
     }));
     // postgres.js helpers: pass an array of objects to
-    // `sql(rows, 'session_id', 'question_id', 'position', 'section_code')`
+    // `sql(rows, 'session_id', 'question_id', 'position', 'section_code', 'marks')`
     // to build a multi-row VALUES list with the named columns.
     await this.sql`
       INSERT INTO lesson_session_questions ${this.sql(
@@ -33,7 +40,8 @@ export class LessonSessionQuestionsRepository {
         "session_id",
         "question_id",
         "position",
-        "section_code"
+        "section_code",
+        "marks"
       )}
     `;
   }

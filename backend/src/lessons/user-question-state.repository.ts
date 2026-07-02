@@ -67,6 +67,9 @@ export class UserQuestionStateRepository {
         WHERE uqs.user_id = ${input.user_id}
           AND uqs.due_date <= CURRENT_DATE
           AND q.is_active = TRUE
+          AND NOT EXISTS (
+            SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
+          )
           ${paperFilter}
         ORDER BY q.lo_id, uqs.due_date ASC, random()
       ) per_lo
@@ -119,6 +122,9 @@ export class UserQuestionStateRepository {
       WHERE uqs.user_id = ${input.user_id}
         AND uqs.due_date <= CURRENT_DATE
         AND q.is_active = TRUE
+        AND NOT EXISTS (
+          SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
+        )
         ${excludeFilter}
         ${paperFilter}
       ORDER BY uqs.due_date ASC, random()
@@ -143,6 +149,9 @@ export class UserQuestionStateRepository {
       FROM learning_objectives lo
       LEFT JOIN questions q
         ON q.lo_id = lo.id AND q.is_active = TRUE
+        AND NOT EXISTS (
+          SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
+        )
       LEFT JOIN user_question_state uqs
         ON uqs.question_id = q.id AND uqs.user_id = ${input.user_id}
       WHERE 1=1
@@ -193,6 +202,9 @@ export class UserQuestionStateRepository {
             SELECT 1 FROM user_question_state uqs
             WHERE uqs.user_id = ${input.user_id} AND uqs.question_id = q.id
           )
+          AND NOT EXISTS (
+            SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
+          )
         ORDER BY
           CASE q.difficulty::text WHEN ${input.preferred_difficulty} THEN 0 ELSE 1 END,
           COALESCE(er.error_rate, 0.4) DESC,
@@ -208,6 +220,9 @@ export class UserQuestionStateRepository {
         AND NOT EXISTS (
           SELECT 1 FROM user_question_state uqs
           WHERE uqs.user_id = ${input.user_id} AND uqs.question_id = q.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
         )
       ORDER BY
         CASE q.difficulty::text WHEN ${input.preferred_difficulty} THEN 0 ELSE 1 END,

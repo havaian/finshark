@@ -3,9 +3,15 @@
 //  - "Raw" (admin) - both _en and _ru fields. Used in admin editor pages.
 //  - Localized   (public) - single resolved string per field. Used in dashboard, lesson, progress.
 
-// short_answer retired (Grading Spec): no faithful ACCA auto-marked format.
-// Mirrors the backend QuestionType, which now permits only these two.
-export type QuestionType = "mcq" | "number_entry";
+// Objective question types. Mirrors the backend QuestionType enum. mcq /
+// number_entry are the daily-lesson types; mcq_multi / true_false / matching
+// are additionally used by imported mocks. short_answer stays retired.
+export type QuestionType =
+  | "mcq"
+  | "number_entry"
+  | "mcq_multi"
+  | "true_false"
+  | "matching";
 export type QuestionDifficulty = "easy" | "medium" | "hard";
 
 // ---- Raw (admin) shapes ----
@@ -148,6 +154,25 @@ export interface McqOption {
   // when the admin hasn't written one yet.
   why_wrong: string | null;
 }
+
+// Answer-free structured body for the lesson/mock queue. Mirrors the backend
+// LessonQuestionPayload: the PROMPT parts (statement text, row labels) are
+// localized; the ANSWER SPACE (true_false labels, matching option values) is
+// sent canonically in EN so the client returns the chosen value verbatim for
+// the deterministic grader. No correct label / correct value is present.
+export interface LessonTrueFalsePayload {
+  kind: "true_false";
+  labels: string[];
+  statements: { text: string }[];
+}
+export interface LessonMatchingPayload {
+  kind: "matching";
+  rows: { label: string }[];
+  options: { value: string }[];
+}
+export type LessonQuestionPayload =
+  | LessonTrueFalsePayload
+  | LessonMatchingPayload;
 
 export interface Question {
   id: string;

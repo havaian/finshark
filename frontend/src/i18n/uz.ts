@@ -404,6 +404,9 @@ export default {
     quit_confirm:
       "Bu darsdan chiqasizmi? Shu paytgacha bergan javoblaringiz saqlanadi; sessiyani istalgan vaqtda davom ettirishingiz mumkin.",
     concept_tag: "tushuncha",
+    exhibit_tag: "ilova",
+    select_all_that_apply: "Barcha mos variantlarni tanlang",
+    match_select_placeholder: "Tanlang…",
     submit: "Yuborish",
     checking: "Tekshirilmoqda…",
     finishing: "Tugatilmoqda…",
@@ -827,6 +830,16 @@ export default {
       batch_delete_confirm:
         "{count} ta qoralama savol o'chirilsinmi? Buni qaytarib bo'lmaydi.",
       // Drop DB + reseed
+      import_btn: "Jadvalni import qilish",
+      import_running: "Import qilinmoqda…",
+      import_modal_title: "Sinov imtihonlari jadvalini import qilish",
+      import_stat_total: "{count} qator o'qildi",
+      import_stat_inserted: "{count} savol qo'shildi",
+      import_stat_updated: "{count} savol yangilandi",
+      import_stat_inactive: "{count} nofaol qoldirildi (javob yo'q / noto'g'ri kalit)",
+      import_stat_skipped: "{count} qator o'tkazib yuborildi (mos o'quv maqsadi yo'q)",
+      import_stat_mocks: "{count} sinov imtihoni qayta yig'ildi",
+      import_details: "Belgilangan qatorlarni ko'rsatish",
       reseed_btn: "O'chirish va qayta urug'lash",
       reseed_modal_title: "Kontentni o'chirish va qayta urug'lash",
       reseed_warn_1: "Buni qaytarib bo'lmaydi. U quyidagilarni bajaradi:",

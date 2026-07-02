@@ -4,6 +4,7 @@ import { PG } from "../db/db.module";
 import type {
   McqOption,
   QuestionDifficulty,
+  QuestionPayload,
   QuestionRow,
   QuestionType,
 } from "./content.types";
@@ -11,11 +12,13 @@ import type {
 const COLS = `
   id, lo_id, type, difficulty,
   prompt_en, prompt_ru,
-  options,
+  options, payload,
   correct_answer_en, correct_answer_ru,
   explanation_en, explanation_ru,
   concept_bite_en, concept_bite_ru,
+  exhibit_en, exhibit_ru,
   acceptable_tolerance,
+  external_ref,
   is_active,
   created_at, updated_at
 `;
@@ -52,20 +55,30 @@ export class QuestionsRepository {
     prompt_en: string;
     prompt_ru: string | null;
     options: McqOption[] | null;
+    payload?: QuestionPayload | null; // true_false / matching only
     correct_answer_en: string;
     correct_answer_ru: string | null;
     explanation_en: string;
     explanation_ru: string | null;
     concept_bite_en: string | null;
     concept_bite_ru: string | null;
+    exhibit_en?: string | null;
+    exhibit_ru?: string | null;
     acceptable_tolerance?: number | null; // number_entry only
+    external_ref?: string | null; // set by the bank importer
     is_active?: boolean; // default true - new in question-generator
   }): Promise<QuestionRow> {
-    // postgres.js: passing a JS array as a JSONB param via sql.json.
+    // postgres.js: passing a JS array/object as a JSONB param via sql.json.
     // The `as any` is postgres.js's overly strict JSONValue type rejecting typed
-    // object arrays; runtime is fine with anything JSON-serializable.
+    // objects; runtime is fine with anything JSON-serializable.
     const optionsParam =
-      input.options === null ? null : this.sql.json(input.options as any);
+      input.options === null || input.options === undefined
+        ? null
+        : this.sql.json(input.options as any);
+    const payloadParam =
+      input.payload === null || input.payload === undefined
+        ? null
+        : this.sql.json(input.payload as any);
     // is_active default mirrors the schema default of TRUE. The generator uses
     // FALSE so admin-generated drafts don't appear in lessons until reviewed.
     const isActive = input.is_active ?? true;
@@ -75,11 +88,13 @@ export class QuestionsRepository {
       INSERT INTO questions (
         lo_id, type, difficulty,
         prompt_en, prompt_ru,
-        options,
+        options, payload,
         correct_answer_en, correct_answer_ru,
         explanation_en, explanation_ru,
         concept_bite_en, concept_bite_ru,
+        exhibit_en, exhibit_ru,
         acceptable_tolerance,
+        external_ref,
         is_active
       )
       VALUES (
@@ -89,13 +104,17 @@ export class QuestionsRepository {
         ${input.prompt_en},
         ${input.prompt_ru},
         ${optionsParam},
+        ${payloadParam},
         ${input.correct_answer_en},
         ${input.correct_answer_ru},
         ${input.explanation_en},
         ${input.explanation_ru},
         ${input.concept_bite_en},
         ${input.concept_bite_ru},
+        ${input.exhibit_en ?? null},
+        ${input.exhibit_ru ?? null},
         ${tolerance},
+        ${input.external_ref ?? null},
         ${isActive}
       )
       RETURNING ${this.sql.unsafe(COLS)}
@@ -111,13 +130,17 @@ export class QuestionsRepository {
       prompt_en?: string;
       prompt_ru?: string | null;
       options?: McqOption[] | null;
+      payload?: QuestionPayload | null;
       correct_answer_en?: string;
       correct_answer_ru?: string | null;
       explanation_en?: string;
       explanation_ru?: string | null;
       concept_bite_en?: string | null;
       concept_bite_ru?: string | null;
+      exhibit_en?: string | null;
+      exhibit_ru?: string | null;
       acceptable_tolerance?: number | null;
+      external_ref?: string | null;
       is_active?: boolean;
     }
   ): Promise<QuestionRow | null> {
@@ -129,6 +152,10 @@ export class QuestionsRepository {
     if (input.options !== undefined) {
       sets.options =
         input.options === null ? null : this.sql.json(input.options as any);
+    }
+    if (input.payload !== undefined) {
+      sets.payload =
+        input.payload === null ? null : this.sql.json(input.payload as any);
     }
     if (input.correct_answer_en !== undefined)
       sets.correct_answer_en = input.correct_answer_en;
@@ -142,8 +169,11 @@ export class QuestionsRepository {
       sets.concept_bite_en = input.concept_bite_en;
     if (input.concept_bite_ru !== undefined)
       sets.concept_bite_ru = input.concept_bite_ru;
+    if (input.exhibit_en !== undefined) sets.exhibit_en = input.exhibit_en;
+    if (input.exhibit_ru !== undefined) sets.exhibit_ru = input.exhibit_ru;
     if (input.acceptable_tolerance !== undefined)
       sets.acceptable_tolerance = input.acceptable_tolerance;
+    if (input.external_ref !== undefined) sets.external_ref = input.external_ref;
     if (input.is_active !== undefined) sets.is_active = input.is_active;
 
     if (Object.keys(sets).length === 0) return this.findById(id);
@@ -219,11 +249,12 @@ export class QuestionsRepository {
         SELECT
           q.id, q.lo_id, q.type, q.difficulty,
           q.prompt_en, q.prompt_ru,
-          q.options,
+          q.options, q.payload,
           q.correct_answer_en, q.correct_answer_ru,
           q.explanation_en, q.explanation_ru,
           q.concept_bite_en, q.concept_bite_ru,
-          q.acceptable_tolerance,
+          q.exhibit_en, q.exhibit_ru,
+          q.acceptable_tolerance, q.external_ref,
           q.is_active,
           q.created_at, q.updated_at,
           ROW_NUMBER() OVER (PARTITION BY q.lo_id ORDER BY random()) AS lo_rank,
@@ -259,11 +290,12 @@ export class QuestionsRepository {
         SELECT
           q.id, q.lo_id, q.type, q.difficulty,
           q.prompt_en, q.prompt_ru,
-          q.options,
+          q.options, q.payload,
           q.correct_answer_en, q.correct_answer_ru,
           q.explanation_en, q.explanation_ru,
           q.concept_bite_en, q.concept_bite_ru,
-          q.acceptable_tolerance,
+          q.exhibit_en, q.exhibit_ru,
+          q.acceptable_tolerance, q.external_ref,
           q.is_active,
           q.created_at, q.updated_at,
           ROW_NUMBER() OVER (PARTITION BY q.lo_id ORDER BY random()) AS lo_rank,
@@ -279,6 +311,62 @@ export class QuestionsRepository {
       ORDER BY lo_rank ASC, rnd ASC
       LIMIT ${safeCount}
     `;
+  }
+
+  // Fixed-mock playback: pick ONE active mock_exam for the paper at random and
+  // return its questions in stored (position) order, each carrying its
+  // section_code + marks from mock_exam_questions. Returns null when the paper
+  // has no active mock (the caller then falls back to the dynamic sampler).
+  //
+  // Only ACTIVE questions are returned: an imported mock that still has
+  // blank-answer rows (is_active=false, pending an answer) simply serves fewer
+  // than its full membership until those rows are completed, rather than
+  // serving an ungradeable question. COLS is unqualified but unambiguous here -
+  // none of its column names exist on mock_exam_questions.
+  async findRandomActiveMockWithQuestions(paper_id: string): Promise<{
+    mock_id: string;
+    code: string;
+    duration_seconds: number;
+    pass_mark_pct: number;
+    questions: Array<QuestionRow & { section_code: string | null; marks: number }>;
+  } | null> {
+    const mocks = await this.sql<
+      Array<{
+        id: string;
+        code: string;
+        duration_seconds: number;
+        pass_mark_pct: number;
+      }>
+    >`
+      SELECT id::text, code, duration_seconds, pass_mark_pct
+      FROM mock_exams
+      WHERE paper_id = ${paper_id} AND is_active = TRUE
+      ORDER BY random()
+      LIMIT 1
+    `;
+    if (mocks.length === 0) return null;
+    const mock = mocks[0];
+
+    const questions = await this.sql<
+      Array<QuestionRow & { section_code: string | null; marks: number }>
+    >`
+      SELECT ${this.sql.unsafe(COLS)},
+             meq.section_code AS section_code,
+             meq.marks::int   AS marks
+      FROM mock_exam_questions meq
+      JOIN questions q ON q.id = meq.question_id
+      WHERE meq.mock_id = ${mock.id}
+        AND q.is_active = TRUE
+      ORDER BY meq.position ASC
+    `;
+
+    return {
+      mock_id: mock.id,
+      code: mock.code,
+      duration_seconds: mock.duration_seconds,
+      pass_mark_pct: mock.pass_mark_pct,
+      questions,
+    };
   }
 
   // Used by the post-mock review-session flow: fetch the full question rows

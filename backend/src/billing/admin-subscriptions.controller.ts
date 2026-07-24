@@ -88,6 +88,15 @@ class UpdatePlanDto {
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;
+
+  // Receipt line for the OFD fiscal check, printed when this plan is bought
+  // through Click. Nullable: passing null clears it, which stops fiscalization
+  // for the plan instead of filing an invented description. Must end with the
+  // unit per the OFD spec, e.g. "Finshark Premium 30 kun, 1 dona".
+  @IsOptional()
+  @IsString()
+  @MaxLength(63)
+  fiscal_item_name?: string | null;
 }
 
 @Controller("admin")
@@ -127,10 +136,22 @@ export class AdminSubscriptionsController {
   // Structural fields (tier, period_days) are intentionally not editable.
   @Patch("plans/:id")
   async updatePlan(@Param("id") id: string, @Body() body: UpdatePlanDto) {
-    const updated = await this.plans.update(id, {
+    // fiscal_item_name is forwarded only when the key was actually sent, so an
+    // edit that touches price alone can't blank the receipt line. Presence with
+    // an empty value means "clear it".
+    const patch: {
+      price_minor?: number;
+      is_active?: boolean;
+      fiscal_item_name?: string | null;
+    } = {
       price_minor: body.price_minor,
       is_active: body.is_active,
-    });
+    };
+    if ("fiscal_item_name" in body) {
+      const trimmed = body.fiscal_item_name?.trim();
+      patch.fiscal_item_name = trimmed ? trimmed : null;
+    }
+    const updated = await this.plans.update(id, patch);
     if (!updated) throw new NotFoundException("plan not found");
     // Take effect immediately for cached readers (entitlement + payment price
     // snapshot). See EntitlementsService.invalidatePlan for the multi-instance

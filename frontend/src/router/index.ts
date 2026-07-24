@@ -34,6 +34,7 @@ const PublicProfilePage = () => import("../pages/PublicProfilePage.vue");
 const ProgressPage = () => import("../pages/ProgressPage.vue");
 const SettingsPage = () => import("../pages/SettingsPage.vue");
 const SubscriptionPage = () => import("../pages/SubscriptionPage.vue");
+const ClickReturnPage = () => import("../pages/ClickReturnPage.vue");
 const LeaderboardsPage = () => import("../pages/LeaderboardsPage.vue");
 const MockStartPage = () => import("../pages/MockStartPage.vue");
 const MockBreakdownPage = () => import("../pages/MockBreakdownPage.vue");
@@ -173,6 +174,23 @@ const routes: RouteRecordRaw[] = [
         name: "subscription",
         component: SubscriptionPage,
         meta: { requiresAuth: true, titleKey: "page_titles.subscription" },
+      },
+      {
+        // Landing route for Click's return_url after a redirect payment. It
+        // polls the order until Click's Complete callback reaches our server,
+        // because the browser redirect and that callback arrive in no
+        // guaranteed order. The checkout.js overlay path never redirects, so it
+        // waits inline on the subscription page instead - both share the same
+        // polling helper in api/click.api.ts.
+        //
+        // Kept inside the /:lang tree: the backend builds return_url from
+        // APP_PUBLIC_URL with a bare /subscription/click/return path, and the
+        // router's bare-URL guard prefixes it with the user's language on
+        // arrival.
+        path: "subscription/click/return",
+        name: "click-return",
+        component: ClickReturnPage,
+        meta: { requiresAuth: true, titleKey: "page_titles.click_return" },
       },
       {
         // 2FA enrollment flow. Admin-only: requiresAdmin enforces it server-

@@ -9,7 +9,8 @@
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down",
     "migrate:create": "node-pg-migrate create",
-    "db:seed": "ts-node src/seed/seed.ts"
+    "db:seed": "ts-node src/seed/seed.ts",
+    "test:click": "ts-node --project test/tsconfig.json test/click-payment-flow.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

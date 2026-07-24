@@ -5,7 +5,7 @@ import type { PlanRow } from "./billing.types";
 
 const PLAN_COLS = `
   id, name, tier, period_days, price_minor, currency,
-  is_active, sort_order, created_at, updated_at
+  is_active, sort_order, fiscal_item_name, created_at, updated_at
 `;
 
 @Injectable()
@@ -53,13 +53,25 @@ export class PlansRepository {
   // price edit), so callers pass a positive integer.
   //
   // Returns null if the plan doesn't exist. Bumps updated_at via the DB trigger.
+  // fiscal_item_name joins price_minor / is_active as an admin-editable field.
+  // It is content, not structure: it prints on the OFD receipt and has to be
+  // changeable without a deploy when the accountant revises the wording.
+  // Passing null clears it, which disables fiscalization for the plan rather
+  // than filing a receipt with a made-up description.
   async update(
     id: string,
-    patch: { price_minor?: number; is_active?: boolean }
+    patch: {
+      price_minor?: number;
+      is_active?: boolean;
+      fiscal_item_name?: string | null;
+    }
   ): Promise<PlanRow | null> {
     const set: Record<string, unknown> = {};
     if (patch.price_minor !== undefined) set.price_minor = patch.price_minor;
     if (patch.is_active !== undefined) set.is_active = patch.is_active;
+    if (patch.fiscal_item_name !== undefined) {
+      set.fiscal_item_name = patch.fiscal_item_name;
+    }
 
     if (Object.keys(set).length === 0) {
       return this.findById(id);

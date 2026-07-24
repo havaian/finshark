@@ -23,6 +23,7 @@ import { SeedModule } from "./seed/seed.module";
 import { WhitelistModule } from "./whitelist/whitelist.module";
 import { TotpModule } from "./totp/totp.module";
 import { BillingModule } from "./billing/billing.module";
+import { ClickModule } from "./billing/click/click.module";
 import { PaymentsModule } from "./payments/payments.module";
 
 @Module({
@@ -55,6 +56,7 @@ import { PaymentsModule } from "./payments/payments.module";
     WhitelistModule,
     TotpModule,
     BillingModule,
+    ClickModule,
     PaymentsModule,
   ],
   providers: [

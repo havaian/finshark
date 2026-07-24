@@ -43,6 +43,11 @@ export interface PlanRow {
   currency: string | null;
   is_active: boolean;
   sort_order: number;
+  // Receipt line printed on the OFD fiscal check when this plan is bought via
+  // Click. Must end with the unit, per the OFD item spec (e.g. "Finshark
+  // Premium 30 kun, 1 dona"). NULL blocks fiscalization for the plan rather
+  // than falling back to `name` - see click/click-fiscal.service.ts.
+  fiscal_item_name: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -154,6 +159,7 @@ export interface PublicPlan {
   currency: string | null;
   is_active: boolean;
   sort_order: number;
+  fiscal_item_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -168,6 +174,7 @@ export function toPublicPlan(row: PlanRow): PublicPlan {
     currency: row.currency,
     is_active: row.is_active,
     sort_order: row.sort_order,
+    fiscal_item_name: row.fiscal_item_name,
     created_at: row.created_at.toISOString(),
     updated_at: row.updated_at.toISOString(),
   };

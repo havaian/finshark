@@ -6,7 +6,7 @@ import { billingApi } from '../api/billing.api';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import type { Subscription } from '../types/billing';
 import AppNav from '../components/AppNav.vue';
-import PaymentPanel from '../components/PaymentPanel.vue';
+import ClickPayPanel from '../components/ClickPayPanel.vue';
 
 // Dedicated billing surface. Previously this content was split between the
 // Settings "Premium" section (the redeem widget + status line) and the Profile
@@ -154,9 +154,9 @@ onMounted(() => {
         <p v-else-if="entitlement.isFree" class="dim text-sm mt-1">{{ t('subscription.free_hint') }}</p>
       </section>
 
-      <!-- Pay via card transfer (P2P). Self-contained panel: plan picker, card
-           display + copy, slip upload, pending status. -->
-      <PaymentPanel />
+      <!-- Pay via Click. Self-contained panel: plan picker, both Click payment
+           surfaces (hosted page + card overlay), and payment history. -->
+      <ClickPayPanel />
 
       <!-- Redeem a code -->
       <section class="card mt-6">

@@ -1,84 +1,46 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  Post,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
-} from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { IsOptional, IsString, Length } from "class-validator";
+import { Controller, Get, GoneException, Post, UseGuards } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AccessTokenPayload } from "../auth/auth.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaymentsService } from "./payments.service";
-import { MAX_SLIP_BYTES } from "./payment-storage.service";
 
-// Multipart body fields that accompany the uploaded slip. The file itself is
-// handled by FileInterceptor, not validated by this DTO.
-class CreateSubmissionDto {
-  @IsString()
-  @Length(1, 64)
-  plan_id!: string;
-
-  // Optional: which displayed card the user transferred to. Omit if there's a
-  // single card and the distinction doesn't matter.
-  @IsOptional()
-  @IsString()
-  @Length(1, 64)
-  card_id?: string;
-}
-
-// User-facing P2P payment endpoints. All require auth (a logged-in user buying
-// premium). Card numbers returned here are the operator's own receiving cards.
+// DECOMMISSIONED: the P2P (card-transfer) payment flow.
+//
+// Users used to transfer to one of the operator's own cards and upload a slip
+// for manual admin approval. That flow has been replaced by Click, which
+// settles through a licensed payment provider with proper fiscal receipts.
+//
+// What remains here:
+//   - submissions/mine  READ-ONLY history, so a user who paid this way before
+//                       the cutover can still see their past payments.
+//
+// What was removed and why it returns 410 rather than 404:
+//   - POST submissions  a stale frontend build (or a bookmarked tab) hitting a
+//                       404 looks like a bug and invites a retry. 410 Gone says
+//                       "this existed and is finished", and the message tells
+//                       the user where to go instead.
+//   - GET cards         removed outright. Every payment_cards row was
+//                       deactivated by migration 20260724000001, so this would
+//                       return an empty list and render an empty transfer panel
+//                       that looks broken.
+//
+// The admin side (AdminPaymentsController) keeps working against the historical
+// records - see the note there. The service methods behind the removed routes
+// are left intact rather than deleted: PaymentsService.approve is still needed
+// if a pre-cutover submission ever has to be settled.
 @Controller("billing/payments")
 @UseGuards(JwtAuthGuard)
 export class PaymentsController {
   constructor(private readonly payments: PaymentsService) {}
 
-  // Active receiving cards for the transfer + copy-to-clipboard UI.
-  @Get("cards")
-  async cards() {
-    return this.payments.listActiveCards();
-  }
-
-  // Purchasable plans (active premium plans with a price) for the picker. Prices
-  // reflect the latest admin edits.
-  @Get("plans")
-  async plans() {
-    return this.payments.listPurchasablePlans();
-  }
-
-  // Submit a payment: multipart form with `slip` (the file) + plan_id [+ card_id].
-  // memoryStorage keeps the file in a Buffer so PaymentStorageService can
-  // validate type/size before committing it to disk. The multer fileSize limit
-  // is a hard cap enforced before our code runs (defence in depth with the
-  // service-level check).
   @Post("submissions")
-  @UseInterceptors(
-    FileInterceptor("slip", {
-      limits: { fileSize: MAX_SLIP_BYTES, files: 1 },
-    })
-  )
-  async submit(
-    @CurrentUser() user: AccessTokenPayload,
-    @UploadedFile() slip: Express.Multer.File | undefined,
-    @Body() body: CreateSubmissionDto
-  ) {
-    if (!slip) {
-      throw new BadRequestException("payment slip file is required");
-    }
-    return this.payments.createSubmission({
-      userId: user.sub,
-      planId: body.plan_id,
-      cardId: body.card_id ?? null,
-      slip,
-    });
+  submitRetired(): never {
+    throw new GoneException(
+      "Card-transfer payments have been replaced by Click. Please pay from the subscription page."
+    );
   }
 
-  // The current user's own submissions (status + history).
+  // The current user's own historical submissions. Read-only.
   @Get("submissions/mine")
   async mine(@CurrentUser() user: AccessTokenPayload) {
     return this.payments.listMySubmissions(user.sub);

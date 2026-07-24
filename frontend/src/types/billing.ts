@@ -37,6 +37,10 @@ export interface Plan {
   currency: string | null;
   is_active: boolean;
   sort_order: number;
+  // Receipt line printed on the OFD fiscal check when this plan is bought via
+  // Click. Null blocks fiscalization for the plan rather than falling back to
+  // `name` - a receipt is a legal document, not a place for a guess.
+  fiscal_item_name: string | null;
   created_at: string;
   updated_at: string;
 }

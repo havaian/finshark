@@ -357,12 +357,25 @@ export class AuthService {
     const payload: AccessTokenPayload = { sub: user.id, email: user.email };
     if (opts?.elevated) payload.adm2fa = true;
 
-    const access_token = jwt.sign(payload, accessSecret, {
-      expiresIn: accessTtl as jwt.SignOptions["expiresIn"],
-    });
-    const refresh_token = jwt.sign(payload, refreshSecret, {
-      expiresIn: refreshTtl as jwt.SignOptions["expiresIn"],
-    });
+    // A JWT's timestamps (iat/exp) are in whole SECONDS, and the signature is a
+    // pure function of payload + secret. Two tokens minted for the same user
+    // inside one second with the same claims are therefore byte-identical, and
+    // their SHA-256 hashes collide on refresh_tokens.token_hash's unique index
+    // (a real 23505 seen on rapid login / elevate / refresh). A per-token
+    // random jti breaks that tie so every token is distinct regardless of
+    // timing. Signed SEPARATELY into each token so access and refresh never
+    // share a jti - a stored refresh token then has its own stable identity if
+    // we ever need to deny-list one directly.
+    const access_token = jwt.sign(
+      { ...payload, jti: crypto.randomBytes(16).toString("hex") },
+      accessSecret,
+      { expiresIn: accessTtl as jwt.SignOptions["expiresIn"] }
+    );
+    const refresh_token = jwt.sign(
+      { ...payload, jti: crypto.randomBytes(16).toString("hex") },
+      refreshSecret,
+      { expiresIn: refreshTtl as jwt.SignOptions["expiresIn"] }
+    );
 
     // Decode just to read the expiry the lib computed, so we store the same date.
     const decoded = jwt.decode(refresh_token) as jwt.JwtPayload;

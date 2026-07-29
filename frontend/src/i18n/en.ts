@@ -1415,5 +1415,7 @@ export default {
     notfound: "We couldn't find that payment.",
     back: "Back to subscription",
     try_again: "Try again",
-  },
+      coverage_label: "This payment covers",
+    coverage_future: "Your current subscription is still active, so this new period starts when it ends.",
+},
 };

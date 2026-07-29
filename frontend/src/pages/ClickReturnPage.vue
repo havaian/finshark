@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { clickApi, pollClickOrder } from '../api/click.api';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import { useLocaleStore } from '../stores/locale.store';
+import { fmtDate } from '../i18n/dates';
 import type { ClickOrder } from '../types/click';
 import AppNav from '../components/AppNav.vue';
 
@@ -91,6 +92,15 @@ function backToSubscription() {
   });
 }
 
+// True when the purchased period starts later than now - the signature of a
+// chained renewal stacked onto an active subscription. Drives the explanatory
+// line so the buyer isn't surprised their premium "starts next month".
+const coverageStartsInFuture = computed(() => {
+  const starts = order.value?.coverage_starts_at;
+  if (!starts) return false;
+  return new Date(starts).getTime() > Date.now() + 60_000;
+});
+
 function formatPrice(minor: number | null, currency: string | null): string {
   if (minor === null || currency === null) return '';
   const grouped = new Intl.NumberFormat('en-US', {
@@ -123,6 +133,19 @@ function formatPrice(minor: number | null, currency: string | null): string {
           <p v-if="order" class="dim text-sm mt-2">
             {{ formatPrice(order.amount_minor, order.currency) }}
           </p>
+          <!-- Coverage window. With chained grants a renewal starts when the
+               current period ends, so these dates can begin in the future -
+               showing them explains why premium may not start "today". -->
+          <div v-if="order && order.coverage_starts_at && order.coverage_ends_at"
+            class="click-coverage mt-4">
+            <span class="dim text-xs">{{ t('click_return.coverage_label') }}</span>
+            <p class="click-coverage-dates mt-1">
+              {{ fmtDate(order.coverage_starts_at) }} - {{ fmtDate(order.coverage_ends_at) }}
+            </p>
+            <p v-if="coverageStartsInFuture" class="dim text-xs mt-1">
+              {{ t('click_return.coverage_future') }}
+            </p>
+          </div>
           <button type="button" class="btn btn-primary mt-6" @click="backToSubscription">
             {{ t('click_return.back') }}
           </button>
@@ -163,5 +186,17 @@ function formatPrice(minor: number | null, currency: string | null): string {
 <style scoped>
 .click-return-card {
   max-width: 520px;
+}
+
+.click-coverage {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-elev);
+}
+
+.click-coverage-dates {
+  font-size: 1rem;
+  font-weight: 600;
 }
 </style>

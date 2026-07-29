@@ -48,6 +48,11 @@ export interface ClickOrder {
   status: ClickOrderStatus;
   error_note: string | null;
   subscription_id: string | null;
+  // The window this payment bought, present once the order is paid. Grants are
+  // chained, so a renewal's window can start in the future - the success screen
+  // shows these actual dates rather than assuming "starts today".
+  coverage_starts_at: string | null;
+  coverage_ends_at: string | null;
   created_at: string;
   paid_at: string | null;
 }

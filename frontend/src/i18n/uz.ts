@@ -1410,5 +1410,7 @@ export default {
     notfound: "Bu to'lovni topa olmadik.",
     back: "Obunaga qaytish",
     try_again: "Qayta urinish",
-  },
+      coverage_label: "Bu to'lov quyidagi muddatni qamrab oladi",
+    coverage_future: "Joriy obunangiz hali faol, shuning uchun bu yangi muddat u tugagach boshlanadi.",
+},
 };

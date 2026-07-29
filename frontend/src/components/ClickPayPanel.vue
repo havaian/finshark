@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import {
-  clickApi,
-  loadClickCheckoutJs,
-  pollClickOrder,
-} from '../api/click.api';
-import { useEntitlementStore } from '../stores/entitlement.store';
+import { clickApi, loadClickCheckoutJs } from '../api/click.api';
+import { useLocaleStore } from '../stores/locale.store';
 import type { Plan } from '../types/billing';
 import type { ClickCheckoutHandle, ClickOrder } from '../types/click';
 
@@ -32,7 +29,8 @@ import type { ClickCheckoutHandle, ClickOrder } from '../types/click';
 // instead of trusting the status the overlay reports.
 
 const { t } = useI18n();
-const entitlement = useEntitlementStore();
+const router = useRouter();
+const locale = useLocaleStore();
 
 // ── Load ─────────────────────────────────────────────────────────────────
 const plans = ref<Plan[]>([]);
@@ -43,9 +41,6 @@ const loadError = ref<string | null>(null);
 
 const selectedPlanId = ref<string | null>(null);
 
-// Cancellation flag handed to pollClickOrder so an unmount stops the loop
-// instead of leaving it running against a dead component.
-const pollSignal = { cancelled: false };
 
 async function loadAll() {
   loading.value = true;
@@ -77,9 +72,6 @@ async function loadAll() {
 }
 
 onMounted(loadAll);
-onBeforeUnmount(() => {
-  pollSignal.cancelled = true;
-});
 
 const selectedPlan = computed<Plan | null>(
   () => plans.value.find((p) => p.id === selectedPlanId.value) ?? null
@@ -108,13 +100,8 @@ type PayMode = 'redirect' | 'card';
 const busyMode = ref<PayMode | null>(null);
 const payError = ref<string | null>(null);
 
-// Set once the overlay closes and we start waiting on the callback.
-const waiting = ref(false);
-const waitOrder = ref<ClickOrder | null>(null);
-const paidOk = ref(false);
-
 const canPay = computed(
-  () => enabled.value && !!selectedPlanId.value && busyMode.value === null && !waiting.value
+  () => enabled.value && !!selectedPlanId.value && busyMode.value === null
 );
 
 async function createOrder(): Promise<ClickCheckoutHandle | null> {
@@ -178,46 +165,24 @@ async function payWithCard() {
       busyMode.value = null;
       // status: <0 error, 0 created, 1 processing, 2 paid.
       //
-      // Even at status 2 we do NOT show success yet. That code means Click's
+      // Even at status 2 we do NOT show success here. That code means Click's
       // side completed; premium exists only once their Complete callback has
-      // reached our server and granted it. Anything from 0 upward is worth
-      // waiting on - 0 and 1 routinely settle a moment later.
+      // reached our server and granted it. So on any non-error close we hand off
+      // to the SAME return page the redirect button lands on - it polls the
+      // order until the callback settles and shows one unified confirmation
+      // screen with the coverage dates. A hard error stays in place so the user
+      // can retry without losing the panel.
       if (data.status < 0) {
         payError.value = t('click.payment_failed');
         return;
       }
-      void waitForSettlement(handle.order_id);
+      void router.push({
+        name: 'click-return',
+        params: { lang: locale.lang },
+        query: { order: handle.order_id },
+      });
     }
   );
-}
-
-// Poll our own order until the callback lands.
-async function waitForSettlement(orderId: string) {
-  waiting.value = true;
-  paidOk.value = false;
-  payError.value = null;
-  const final = await pollClickOrder(orderId, {
-    signal: pollSignal,
-    onTick: (o) => {
-      waitOrder.value = o;
-    },
-  });
-  waiting.value = false;
-
-  if (!final) return;
-  if (final.status === 'paid') {
-    paidOk.value = true;
-    await Promise.all([entitlement.fetch(), loadMyOrders()]);
-    return;
-  }
-  if (final.status === 'cancelled' || final.status === 'failed') {
-    payError.value = t('click.payment_failed');
-    await loadMyOrders();
-    return;
-  }
-  // Still pending after the attempt cap. A slow callback is not a failed
-  // payment, so this stays a neutral "still processing" message.
-  payError.value = t('click.still_processing');
 }
 
 function mapPayError(e: unknown): string {
@@ -275,21 +240,11 @@ function statusPillClass(status: ClickOrder['status']): string {
       </template>
 
       <template v-else>
-        <!-- Settlement wait / result banner -->
-        <div v-if="waiting" class="click-banner mt-4">
-          <span class="pill pill-amber">{{ t('click.processing') }}</span>
-          <p class="dim text-sm mt-2">{{ t('click.processing_explainer') }}</p>
-        </div>
-        <div v-else-if="paidOk" class="click-banner click-banner-ok mt-4">
-          <span class="pill pill-green">{{ t('click.paid') }}</span>
-          <p class="dim text-sm mt-2">{{ t('click.paid_explainer') }}</p>
-        </div>
-
         <!-- 1. Plan picker -->
         <label class="field-label mt-4">{{ t('click.choose_plan') }}</label>
         <div class="segmented click-plan-picker">
           <button v-for="p in plans" :key="p.id" type="button" :class="{ active: selectedPlanId === p.id }"
-            :disabled="waiting" @click="selectedPlanId = p.id">
+            @click="selectedPlanId = p.id">
             {{ planLabel(p) }}
           </button>
         </div>
@@ -364,16 +319,5 @@ function statusPillClass(status: ClickOrder['status']): string {
 
 .click-btn-card:hover:not(:disabled) {
   border-color: var(--accent, var(--border));
-}
-
-.click-banner {
-  padding: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: var(--bg-elev);
-}
-
-.click-banner-ok {
-  border-color: var(--success, #16a34a);
 }
 </style>

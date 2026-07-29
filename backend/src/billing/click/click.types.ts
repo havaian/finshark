@@ -180,6 +180,13 @@ export interface PublicClickOrder {
   status: ClickOrderStatus;
   error_note: string | null;
   subscription_id: string | null;
+  // The window this payment bought, filled in once the order is paid and its
+  // subscription is known. Because grants are CHAINED (a renewal starts when the
+  // current period ends, not today), these are the actual covered dates, which
+  // can begin in the future - the success screen shows them so a renewal buyer
+  // understands why their new period doesn't start immediately.
+  coverage_starts_at: string | null;
+  coverage_ends_at: string | null;
   created_at: string;
   paid_at: string | null;
 }
@@ -196,6 +203,10 @@ export function toPublicClickOrder(row: ClickOrderRow): PublicClickOrder {
     // through only so a stuck payment has something concrete in support chats.
     error_note: row.error_note,
     subscription_id: row.subscription_id,
+    // Populated by ClickService once the subscription row is loaded - this pure
+    // mapper has no DB access, so it can't resolve the dates itself.
+    coverage_starts_at: null,
+    coverage_ends_at: null,
     created_at: row.created_at.toISOString(),
     paid_at: row.paid_at ? row.paid_at.toISOString() : null,
   };

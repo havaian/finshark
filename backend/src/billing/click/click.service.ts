@@ -144,12 +144,31 @@ export class ClickService {
     if (!order || order.user_id !== input.userId) {
       throw new NotFoundException("order not found");
     }
-    return toPublicClickOrder(order);
+    return this.withCoverage(order);
   }
 
   async listMyOrders(userId: string): Promise<PublicClickOrder[]> {
     const rows = await this.orders.findByUser(userId);
-    return rows.map(toPublicClickOrder);
+    return Promise.all(rows.map((row) => this.withCoverage(row)));
+  }
+
+  // Turn an order row into its public shape, resolving coverage dates from the
+  // linked subscription when the order is paid. Only paid orders carry a
+  // subscription_id, so unpaid ones simply come back with null coverage - the
+  // base mapper already defaults them, so this adds one lookup only where it
+  // pays off.
+  private async withCoverage(order: ClickOrderRow): Promise<PublicClickOrder> {
+    const base = toPublicClickOrder(order);
+    if (!order.subscription_id) return base;
+    const sub = await this.subs.findById(order.subscription_id);
+    if (!sub) return base;
+    return {
+      ...base,
+      coverage_starts_at: sub.starts_at.toISOString(),
+      // ends_at is null only for open-ended subscriptions, which Click orders
+      // never produce (lifetime is refused at order-create), but guard anyway.
+      coverage_ends_at: sub.ends_at ? sub.ends_at.toISOString() : null,
+    };
   }
 
   private toCheckoutHandle(

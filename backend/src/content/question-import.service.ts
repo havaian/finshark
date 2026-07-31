@@ -172,6 +172,22 @@ export class QuestionImportService {
       for (const p of parsed) {
         const loId = los.get(`${p.paper_code}::${p.lo_code}`)!;
         this.mergeTranslations(p, existingBodies.get(p.ref));
+
+        // Shape guard, mirroring chk_question_type_shape.
+        //
+        // A row whose body failed to parse is marked is_active=false with a
+        // reason, which reads like a soft rejection - but it was still being
+        // INSERTED, with type='matching' and payload NULL. That combination
+        // violates the check constraint, and because the whole import runs in
+        // one transaction the database error rolled back all 452 rows. A row
+        // the importer has already decided to deactivate must never be able to
+        // abort the batch, so it is reported and skipped instead.
+        const shapeProblem = shapeViolation(p);
+        if (shapeProblem) {
+          report.rows_skipped.push({ ref: p.ref, reason: shapeProblem });
+          continue;
+        }
+
         const { id, inserted } = await this.upsertQuestion(tx, loId, p);
         idByRef.set(p.ref, id);
         if (inserted) report.questions_inserted += 1;
@@ -463,12 +479,45 @@ export class QuestionImportService {
     const optValuesUz = aligned("match_options_uz", optTexts.length);
 
     const optLower = new Map(optTexts.map((o) => [o.toLowerCase(), o]));
+
+    // Resolve the right-hand side of a `row = value` pair to one of the
+    // canonical match_options. Three accepted forms, tried in order, each
+    // deterministic - an ambiguous input errors rather than guessing:
+    //
+    //   1. EXACT option text (case-insensitive). The common form.
+    //   2. LETTER SHORTHAND - a single A-H that indexes match_options
+    //      positionally. The workbook uses this when the prompt itself spells
+    //      out the key, e.g. "A=Research and development, B=Marketing, ..."
+    //      and the answer is then written "(i)=B". Out-of-range letters fall
+    //      through and error.
+    //   3. UNIQUE PREFIX. "Neither" resolves to "Neither method" because
+    //      exactly one option starts with it. If two options shared the
+    //      prefix this returns nothing and the caller errors, so a shortened
+    //      answer can never silently pick the wrong option.
+    const resolveValue = (value: string): string | null => {
+      const exact = optLower.get(value.toLowerCase());
+      if (exact) return exact;
+
+      if (value.length === 1) {
+        const pos = value.toUpperCase().charCodeAt(0) - 65; // 'A' -> 0
+        if (pos >= 0 && pos < optTexts.length) return optTexts[pos];
+      }
+
+      const needle = value.toLowerCase();
+      const prefixed = optTexts.filter((o) =>
+        o.toLowerCase().startsWith(needle)
+      );
+      if (prefixed.length === 1) return prefixed[0];
+
+      return null;
+    };
+
     const rows: MatchingPayload["rows"] = [];
     for (let i = 0; i < rowTexts.length; i++) {
       const eq = pairs[i].indexOf("=");
       if (eq < 0) return `pair "${pairs[i]}" has no =`;
       const value = pairs[i].slice(eq + 1).trim();
-      const canonicalValue = optLower.get(value.toLowerCase());
+      const canonicalValue = resolveValue(value);
       if (!canonicalValue) return `value "${value}" not in match_options`;
       rows.push({
         label_en: rowTexts[i],
@@ -764,6 +813,33 @@ export class QuestionImportService {
 function str(v: unknown): string {
   if (v === null || v === undefined) return "";
   return String(v).trim();
+}
+
+// Mirrors the DB constraint chk_question_type_shape. Returns a reason when the
+// parsed row could not be stored, or null when it is safe to upsert.
+//
+// Kept as a plain function beside the other parsers so the rule sits next to
+// the code that produces the shape, rather than only in a migration.
+function shapeViolation(p: ParsedRow): string | null {
+  const needsOptions = p.type === "mcq" || p.type === "mcq_multi";
+  const needsPayload = p.type === "true_false" || p.type === "matching";
+
+  if (needsOptions && (p.options === null || p.options.length === 0)) {
+    return `${p.type} row has no options`;
+  }
+  if (needsPayload && p.payload === null) {
+    // The usual cause is buildMatching / buildTrueFalse rejecting the row -
+    // its message is already on inactive_reason, so surface that rather than a
+    // generic one.
+    return p.inactive_reason ?? `${p.type} row has no payload`;
+  }
+  if (!needsOptions && p.options !== null) {
+    return `${p.type} row must not carry options`;
+  }
+  if (!needsPayload && p.payload !== null) {
+    return `${p.type} row must not carry a payload`;
+  }
+  return null;
 }
 
 function toMarks(v: unknown): number {

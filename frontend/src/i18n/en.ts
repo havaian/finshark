@@ -707,6 +707,8 @@ export default {
     pending_explainer: "Your payment is being reviewed. We'll activate premium as soon as it's confirmed.",
     submitted_on: "Submitted {date}",
     history_title: "Your payments",
+    receipt_link: "Fiscal receipt",
+    receipt_pending: "Receipt pending",
   },
   subscription: {
     title: "Subscription",

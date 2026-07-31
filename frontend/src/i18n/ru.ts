@@ -678,6 +678,8 @@ export default {
     pending_explainer: "Ваш платёж проверяется. Мы активируем премиум сразу после подтверждения.",
     submitted_on: "Отправлено {date}",
     history_title: "Ваши платежи",
+    receipt_link: "Фискальный чек",
+    receipt_pending: "Чек оформляется",
   },
   subscription: {
     title: "Подписка",

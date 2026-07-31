@@ -707,6 +707,8 @@ export default {
     pending_explainer: "To'lovingiz tekshirilmoqda. Tasdiqlanishi bilan premiumni faollashtiramiz.",
     submitted_on: "Yuborilgan: {date}",
     history_title: "To'lovlaringiz",
+    receipt_link: "Fiskal chek",
+    receipt_pending: "Chek rasmiylashtirilmoqda",
   },
   subscription: {
     title: "Obuna",

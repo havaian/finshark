@@ -278,7 +278,22 @@ function statusPillClass(status: ClickOrder['status']): string {
                 {{ formatPrice(o.amount_minor, o.currency) }}
               </span>
             </div>
-            <span class="dim text-xs">{{ new Date(o.created_at).toLocaleDateString() }}</span>
+            <div class="click-history-right">
+              <!-- Fiscal receipt for a past purchase. Under PKM No. 943 this is
+                   the customer's own document, so it has to be reachable after
+                   the payment screen is long gone - not only on the return page
+                   they saw once. Paid orders with no URL yet say so rather than
+                   rendering nothing, which would look like the receipt was
+                   never issued. -->
+              <a v-if="o.fiscal_qr_url" :href="o.fiscal_qr_url" target="_blank"
+                rel="noopener noreferrer" class="btn-link accent text-xs">
+                {{ t('click.receipt_link') }}
+              </a>
+              <span v-else-if="o.status === 'paid'" class="dim text-xs">
+                {{ t('click.receipt_pending') }}
+              </span>
+              <span class="dim text-xs">{{ new Date(o.created_at).toLocaleDateString() }}</span>
+            </div>
           </li>
         </ul>
       </template>
@@ -287,6 +302,13 @@ function statusPillClass(status: ClickOrder['status']): string {
 </template>
 
 <style scoped>
+.click-history-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .click-plan-picker {
   margin-top: 0.5rem;
 }

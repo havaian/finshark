@@ -1065,14 +1065,16 @@ export default {
       order_status_failed: "Needs attention",
 
       // Fiscalization
-      fiscal_status_not_required: "No receipt",
-      fiscal_status_pending: "Receipt pending",
-      fiscal_status_submitted: "Receipt filed",
-      fiscal_status_failed: "Receipt failed",
+      fiscal_status_not_required: "Чек не требуется",
+      fiscal_status_pending: "Чек в очереди",
+      fiscal_status_submitted: "Чек оформлен",
+      fiscal_status_failed: "Ошибка чека",
       fiscal_attempts: "{n} attempt(s)",
       fiscal_retry: "Re-file receipt",
       fiscal_retry_error: "Couldn't re-file the receipt. Check the fiscal config and the error below.",
       fiscal_receipt_link: "Open OFD receipt",
+      fiscal_receipt_pending: "Чек передан в ОФД; ссылка на QR обычно появляется в течение часа.",
+      fiscal_receipt_none: "По этому заказу фискальный чек не оформляется.",
 
       // Order detail
       detail_status: "Status",
@@ -1337,6 +1339,8 @@ export default {
   },
 
   click_return: {
+    receipt_link: "Посмотреть фискальный чек",
+    receipt_pending: "Фискальный чек оформляется и появится здесь в ближайшее время.",
     title: "Оплата",
     waiting: "Подтверждаем платёж…",
     waiting_hint: "Не закрывайте эту страницу. Обычно это занимает несколько секунд.",
@@ -1350,4 +1354,13 @@ export default {
       coverage_label: "Этот платёж покрывает период",
     coverage_future: "Текущая подписка ещё активна, поэтому новый период начнётся после её окончания.",
 },
+  celebrate: {
+    level_title: "Новый уровень!",
+    level_body: "Вы достигли уровня {level}",
+    achievement_title: "Достижение открыто",
+    badge_title: "Получен знак",
+    next: "Далее",
+    done: "Продолжить",
+  },
+
 };

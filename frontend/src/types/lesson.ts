@@ -107,4 +107,11 @@ export interface CompleteLessonResult {
   // Badge codes earned by this session completion. Empty when none.
   // The lesson page renders these as a brief toast on the summary screen.
   newly_earned_badges: string[];
+  // Achievement LEVELS crossed this session (tiered, so a code can recur later
+  // at a higher level). Previously computed server-side and discarded.
+  newly_unlocked_achievements: {
+    code: string;
+    new_level: number;
+    threshold: number;
+  }[];
 }

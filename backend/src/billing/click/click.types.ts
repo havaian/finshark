@@ -171,7 +171,14 @@ export interface ClickCheckoutHandle {
 }
 
 // Order status as polled by the return page. Deliberately narrow - no Click
-// internals, no fiscal detail, nothing an end user shouldn't see.
+// internals, no merchant ids, nothing an end user shouldn't see.
+//
+// fiscal_qr_url is the ONE fiscal field that crosses this line, and it does so
+// on purpose: under PKM No. 943 the fiscal receipt belongs to the CUSTOMER, not
+// to us. Withholding it would mean filing a receipt in someone's name and never
+// showing it to them. Everything else about fiscalization (status, attempt
+// count, OFD error text) stays admin-only - those describe OUR filing pipeline,
+// not the customer's document.
 export interface PublicClickOrder {
   id: string;
   plan_id: string;
@@ -189,6 +196,11 @@ export interface PublicClickOrder {
   coverage_ends_at: string | null;
   created_at: string;
   paid_at: string | null;
+  // Link to the customer's fiscal receipt. NULL is the normal state for a
+  // freshly paid order - the OFD lags behind submission, so the return page
+  // must treat "no link yet" as pending rather than as an error, and the
+  // hourly backfill sweep fills it in shortly after.
+  fiscal_qr_url: string | null;
 }
 
 export function toPublicClickOrder(row: ClickOrderRow): PublicClickOrder {
@@ -209,6 +221,7 @@ export function toPublicClickOrder(row: ClickOrderRow): PublicClickOrder {
     coverage_ends_at: null,
     created_at: row.created_at.toISOString(),
     paid_at: row.paid_at ? row.paid_at.toISOString() : null,
+    fiscal_qr_url: row.fiscal_qr_url,
   };
 }
 

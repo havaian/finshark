@@ -367,6 +367,13 @@ function mapError(e: unknown, fallback: string): string {
                 <span style="font-weight: 500; margin-left: 10px;">
                   {{ formatPrice(o.amount_minor, o.currency) }}
                 </span>
+                <!-- Receipt reachable straight from the list; the detail modal
+                     is for the callback trail, not for routine receipt lookup. -->
+                <a v-if="o.fiscal_qr_url" :href="o.fiscal_qr_url" target="_blank"
+                  rel="noopener noreferrer" class="btn-link accent text-xs"
+                  style="margin-left: 10px;" @click.stop>
+                  {{ t('admin.payments.fiscal_receipt_link') }}
+                </a>
               </div>
               <div class="dim text-xs mt-1">
                 {{ o.user_email ?? o.user_id }} · {{ o.plan_name ?? o.plan_id }}
@@ -441,10 +448,21 @@ function mapError(e: unknown, fallback: string): string {
         <p v-if="detailOrder.fiscal_last_error" class="error-text text-sm mt-2">
           {{ detailOrder.fiscal_last_error }}
         </p>
+        <!-- Receipt link, or an explanation of why there isn't one yet.
+             Previously this was a bare v-if on the URL, so a filed receipt
+             whose QR had not yet come back from the OFD rendered NOTHING - the
+             status pill said "Receipt filed" and then silence, which reads as a
+             broken page rather than as "wait a few minutes". -->
         <p v-if="detailOrder.fiscal_qr_url" class="text-sm mt-2">
           <a :href="detailOrder.fiscal_qr_url" target="_blank" rel="noopener noreferrer">
             {{ t('admin.payments.fiscal_receipt_link') }}
           </a>
+        </p>
+        <p v-else-if="detailOrder.fiscal_status === 'submitted'" class="dim text-sm mt-2">
+          {{ t('admin.payments.fiscal_receipt_pending') }}
+        </p>
+        <p v-else-if="detailOrder.fiscal_status === 'not_required'" class="dim text-sm mt-2">
+          {{ t('admin.payments.fiscal_receipt_none') }}
         </p>
 
         <button v-if="detailOrder.status === 'paid' && detailOrder.fiscal_status !== 'submitted'"

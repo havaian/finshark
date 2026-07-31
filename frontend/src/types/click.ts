@@ -55,6 +55,10 @@ export interface ClickOrder {
   coverage_ends_at: string | null;
   created_at: string;
   paid_at: string | null;
+  // Customer's fiscal receipt. NULL immediately after payment is NORMAL - the
+  // OFD lags behind filing - so the UI shows "receipt on its way" rather than
+  // an error, and the link appears once the hourly backfill sweep fills it in.
+  fiscal_qr_url: string | null;
 }
 
 // Admin view of an order: Click's ids and the fiscal receipt state.

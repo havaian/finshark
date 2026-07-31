@@ -14,6 +14,10 @@ import type {
   LessonTheoryBite,
 } from '../../types/lesson';
 import type { PublicBadge } from '../../types/badges';
+import CelebrationModal, {
+  type AchievementUnlockView,
+} from '../../components/CelebrationModal.vue';
+import { achievementsApi } from '../../api/achievements.api';
 import AppNav from '../../components/AppNav.vue';
 
 // Hearts are 3 per session - must match backend lesson_sessions.hearts_remaining default.
@@ -68,6 +72,13 @@ const leveledUp = computed(() => {
 // We fetch /me/badges only when there ARE newly earned badges so the common
 // case (no earns) has zero extra cost.
 const newlyEarnedDetails = ref<PublicBadge[]>([]);
+
+// Awards earned this session, shown one at a time in the celebration modal.
+// The badge ribbon on the summary stays: the modal is the moment, the ribbon is
+// the record you can still see after dismissing it.
+const newlyUnlockedAchievements = ref<AchievementUnlockView[]>([]);
+const levelReached = ref<number | null>(null);
+const celebrateOpen = ref(false);
 
 // Theory primers shown on a dedicated intro screen before the question flow.
 // Skipped entirely (theoryDismissed = true from the start) when no LO in the
@@ -404,6 +415,46 @@ async function onComplete() {
         newlyEarnedDetails.value = [];
       }
     }
+
+    // Hydrate achievement unlocks into display cards. The server sends only
+    // code + level + threshold; names, icons and level titles live in the
+    // catalogue. As with badges a network failure here is non-fatal - we fall
+    // back to the raw code so the user still gets a celebration rather than a
+    // blank card or a swallowed award.
+    if (summary.value.newly_unlocked_achievements.length > 0) {
+      let catalogue: Awaited<ReturnType<typeof achievementsApi.getMine>> = [];
+      try {
+        catalogue = await achievementsApi.getMine();
+      } catch {
+        catalogue = [];
+      }
+      newlyUnlockedAchievements.value = summary.value.newly_unlocked_achievements.map(
+        (u) => {
+          const meta = catalogue.find((a) => a.code === u.code);
+          return {
+            code: u.code,
+            new_level: u.new_level,
+            threshold: u.threshold,
+            name: meta?.name ?? u.code,
+            description: meta?.description ?? '',
+            icon: meta?.icon ?? '',
+            level_name:
+              meta?.levels?.find((l) => l.level === u.new_level)?.name ?? null,
+          };
+        },
+      );
+    }
+
+    // A level-up is only celebrated when the session actually crossed one.
+    // Reuse prevLevel, the value the page already captured before completing -
+    // the summary banner at line ~573 keys off the same comparison, so the
+    // modal and the banner can never disagree about whether a level happened.
+    levelReached.value = leveledUp.value ? summary.value.new_level : null;
+
+    celebrateOpen.value =
+      levelReached.value !== null ||
+      newlyUnlockedAchievements.value.length > 0 ||
+      newlyEarnedDetails.value.length > 0;
   } catch (e) {
     errorMsg.value = extractError(e) ?? 'failed to complete lesson';
   } finally {
@@ -812,4 +863,10 @@ onUnmounted(() => {
     </div>
     </div>
   </main>
+
+  <!-- Ceremony for anything earned this session. Rendered outside the summary
+       so dismissing it leaves the summary (and its badge ribbon) intact. -->
+  <CelebrationModal :open="celebrateOpen" :level-reached="levelReached"
+    :achievements="newlyUnlockedAchievements" :badges="newlyEarnedDetails"
+    @close="celebrateOpen = false" />
 </template>

@@ -1123,6 +1123,8 @@ export default {
       fiscal_retry: "Re-file receipt",
       fiscal_retry_error: "Couldn't re-file the receipt. Check the fiscal config and the error below.",
       fiscal_receipt_link: "Open OFD receipt",
+      fiscal_receipt_pending: "Receipt filed with the OFD; the QR link usually appears within the hour.",
+      fiscal_receipt_none: "No fiscal receipt for this order.",
 
       // Order detail
       detail_status: "Status",
@@ -1392,6 +1394,8 @@ export default {
 
   // Landing page for Click's return_url after a redirect payment.
   click_return: {
+    receipt_link: "View fiscal receipt",
+    receipt_pending: "Your fiscal receipt is being issued and will appear here shortly.",
     title: "Payment",
     waiting: "Confirming your payment…",
     waiting_hint: "Please keep this page open. This usually takes a few seconds.",
@@ -1405,4 +1409,13 @@ export default {
       coverage_label: "This payment covers",
     coverage_future: "Your current subscription is still active, so this new period starts when it ends.",
 },
+  celebrate: {
+    level_title: "Level up!",
+    level_body: "You reached level {level}",
+    achievement_title: "Achievement unlocked",
+    badge_title: "Badge earned",
+    next: "Next",
+    done: "Continue",
+  },
+
 };

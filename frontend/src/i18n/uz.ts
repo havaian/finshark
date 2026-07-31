@@ -1113,14 +1113,16 @@ export default {
       order_status_failed: "Needs attention",
 
       // Fiscalization
-      fiscal_status_not_required: "No receipt",
-      fiscal_status_pending: "Receipt pending",
-      fiscal_status_submitted: "Receipt filed",
-      fiscal_status_failed: "Receipt failed",
+      fiscal_status_not_required: "Chek talab qilinmaydi",
+      fiscal_status_pending: "Chek navbatda",
+      fiscal_status_submitted: "Chek rasmiylashtirildi",
+      fiscal_status_failed: "Chek xatosi",
       fiscal_attempts: "{n} attempt(s)",
       fiscal_retry: "Re-file receipt",
       fiscal_retry_error: "Couldn't re-file the receipt. Check the fiscal config and the error below.",
       fiscal_receipt_link: "Open OFD receipt",
+      fiscal_receipt_pending: "Chek OFD ga topshirildi; QR havolasi odatda bir soat ichida paydo bo'ladi.",
+      fiscal_receipt_none: "Bu buyurtma bo'yicha fiskal chek rasmiylashtirilmaydi.",
 
       // Order detail
       detail_status: "Status",
@@ -1387,6 +1389,8 @@ export default {
   },
 
   click_return: {
+    receipt_link: "Fiskal chekni ko'rish",
+    receipt_pending: "Fiskal chek rasmiylashtirilmoqda va tez orada shu yerda paydo bo'ladi.",
     title: "To'lov",
     waiting: "To'lov tasdiqlanmoqda…",
     waiting_hint: "Iltimos, bu sahifani yopmang. Odatda bu bir necha soniya oladi.",
@@ -1400,4 +1404,13 @@ export default {
       coverage_label: "Bu to'lov quyidagi muddatni qamrab oladi",
     coverage_future: "Joriy obunangiz hali faol, shuning uchun bu yangi muddat u tugagach boshlanadi.",
 },
+  celebrate: {
+    level_title: "Yangi daraja!",
+    level_body: "Siz {level}-darajaga yetdingiz",
+    achievement_title: "Yutuq ochildi",
+    badge_title: "Nishon olindi",
+    next: "Keyingi",
+    done: "Davom etish",
+  },
+
 };

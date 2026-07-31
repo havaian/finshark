@@ -20,7 +20,10 @@ import { AttemptsRepository } from "./attempts.repository";
 import { UserQuestionStateRepository } from "./user-question-state.repository";
 import { GraderService } from "./grader.service";
 import { BadgesService } from "../badges/badges.service";
-import { AchievementsService } from "../achievements/achievements.service";
+import {
+  AchievementsService,
+  type AchievementUnlock,
+} from "../achievements/achievements.service";
 import { EntitlementsService } from "../billing/entitlements.service";
 import type { SessionMode } from "./lesson.types";
 import {
@@ -139,6 +142,11 @@ export interface CompleteLessonResult {
   // Badge codes earned by this session-completion. Empty array if none.
   // Frontend uses these to render a one-time toast on the completion screen.
   newly_earned_badges: string[];
+  // Achievement LEVELS crossed during this session, not whole achievements:
+  // these are tiered, so the same code can appear again later at a higher
+  // level. Previously computed and thrown away with `void` - the client now
+  // celebrates them alongside badges.
+  newly_unlocked_achievements: AchievementUnlock[];
 }
 
 // Returned by GET /lessons/:id - used to resume in-progress sessions after reload.
@@ -676,6 +684,7 @@ export class LessonsService {
         // by the original completion were toasted at that time; surfacing them
         // again would re-toast on every page reload.
         newly_earned_badges: [],
+        newly_unlocked_achievements: [],
       };
     }
 
@@ -743,7 +752,6 @@ export class LessonsService {
       this.badges.evaluateAfterSession(user_id),
       this.achievements.evaluateAfterSession(user_id),
     ]);
-    void newlyUnlockedAchievements;
 
     return {
       session_id: completed.id,
@@ -760,6 +768,7 @@ export class LessonsService {
       freeze_granted: streakResult.freeze_granted,
       ended_out_of_hearts: completed.ended_out_of_hearts,
       newly_earned_badges: newlyEarnedBadges,
+      newly_unlocked_achievements: newlyUnlockedAchievements,
     };
   }
 

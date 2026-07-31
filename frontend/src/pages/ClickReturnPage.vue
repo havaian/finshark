@@ -146,6 +146,18 @@ function formatPrice(minor: number | null, currency: string | null): string {
               {{ t('click_return.coverage_future') }}
             </p>
           </div>
+          <!-- Fiscal receipt. Under PKM No. 943 the receipt is the customer's
+               document, so it belongs here and not only in the admin panel.
+               A missing link right after payment is the NORMAL case - the OFD
+               lags behind filing - so this says "on its way" instead of
+               presenting an error the user cannot act on. -->
+          <div class="click-receipt mt-4">
+            <a v-if="order?.fiscal_qr_url" :href="order.fiscal_qr_url" target="_blank"
+              rel="noopener noreferrer" class="btn-link accent">
+              {{ t('click_return.receipt_link') }}
+            </a>
+            <p v-else class="dim text-xs">{{ t('click_return.receipt_pending') }}</p>
+          </div>
           <button type="button" class="btn btn-primary mt-6" @click="backToSubscription">
             {{ t('click_return.back') }}
           </button>

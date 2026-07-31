@@ -302,8 +302,8 @@ export class SeedService {
     );
 
     const paperRows = await tx<Array<{ id: string }>>`
-      INSERT INTO papers (code, name_en, name_ru, program_id, exam_structure)
-      VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru}, ${programId}, ${structureJson})
+      INSERT INTO papers (code, name_en, name_ru, name_uz, program_id, exam_structure)
+      VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru}, ${paper.name_uz ?? null}, ${programId}, ${structureJson})
       RETURNING id
     `;
     const paperId = paperRows[0].id;
@@ -313,16 +313,16 @@ export class SeedService {
       const loRows = await tx<Array<{ id: string }>>`
         INSERT INTO learning_objectives (
           paper_id, code,
-          title_en, title_ru,
-          description_en, description_ru,
-          theory_en, theory_ru,
+          title_en, title_ru, title_uz,
+          description_en, description_ru, description_uz,
+          theory_en, theory_ru, theory_uz,
           sort_order
         )
         VALUES (
           ${paperId}, ${lo.code},
-          ${lo.title_en}, ${lo.title_ru},
-          ${lo.description_en}, ${lo.description_ru},
-          ${lo.theory_en ?? null}, ${lo.theory_ru ?? null},
+          ${lo.title_en}, ${lo.title_ru}, ${lo.title_uz ?? null},
+          ${lo.description_en}, ${lo.description_ru}, ${lo.description_uz ?? null},
+          ${lo.theory_en ?? null}, ${lo.theory_ru ?? null}, ${lo.theory_uz ?? null},
           ${lo.sort_order}
         )
         RETURNING id
@@ -346,13 +346,17 @@ export class SeedService {
             "difficulty",
             "prompt_en",
             "prompt_ru",
+            "prompt_uz",
             "options",
             "correct_answer_en",
             "correct_answer_ru",
+            "correct_answer_uz",
             "explanation_en",
             "explanation_ru",
+            "explanation_uz",
             "concept_bite_en",
             "concept_bite_ru",
+            "concept_bite_uz",
             "acceptable_tolerance",
             "is_active"
           )}
@@ -364,15 +368,16 @@ export class SeedService {
   }
 
   // Normalise one SeedQuestion into the flat row object the batch INSERT
-  // expects. Column set is identical to the previous single-row insertQuestion
-  // (en + ru only; _uz seed fields remain unmapped here exactly as before).
+  // expects. Maps all three languages: the F1/F2/F3 seed files carry complete
+  // _uz alongside _en/_ru, and until this mapping existed every one of those
+  // Uzbek strings was silently dropped on insert.
   // Discriminates on type:
   //   - mcq: options JSONB (why_wrong scrubbed off the correct option),
   //          correct_answer_en holds the option key, no tolerance.
   //   - number_entry: no options, correct_answer_en holds the numeric value
   //                   string, acceptable_tolerance optional.
-  // correct_answer_ru is always null (MCQ keys are language-neutral; numeric
-  // values are too), matching the original behaviour.
+  // correct_answer_ru / _uz are always null (MCQ keys are language-neutral;
+  // numeric values are too), matching the original behaviour.
   private toQuestionRow(
     tx: postgres.TransactionSql,
     lo_id: string,
@@ -384,15 +389,24 @@ export class SeedService {
       const cleanedOptions = q.options.map((o) => {
         if (o.key === q.correct_answer_en) {
           // Strip why_wrong on correct option.
-          const { why_wrong_en, why_wrong_ru, ...rest } = o;
+          const { why_wrong_en, why_wrong_ru, why_wrong_uz, ...rest } = o;
           void why_wrong_en;
           void why_wrong_ru;
-          return { ...rest, why_wrong_en: null, why_wrong_ru: null };
+          void why_wrong_uz;
+          return {
+            ...rest,
+            text_uz: o.text_uz ?? null,
+            why_wrong_en: null,
+            why_wrong_ru: null,
+            why_wrong_uz: null,
+          };
         }
         return {
           ...o,
+          text_uz: o.text_uz ?? null,
           why_wrong_en: o.why_wrong_en ?? null,
           why_wrong_ru: o.why_wrong_ru ?? null,
+          why_wrong_uz: o.why_wrong_uz ?? null,
         };
       });
       return {
@@ -401,13 +415,17 @@ export class SeedService {
         difficulty: q.difficulty,
         prompt_en: q.prompt_en,
         prompt_ru: q.prompt_ru,
+        prompt_uz: q.prompt_uz ?? null,
         options: tx.json(cleanedOptions as unknown as postgres.JSONValue),
         correct_answer_en: q.correct_answer_en,
         correct_answer_ru: null,
+        correct_answer_uz: null,
         explanation_en: q.explanation_en,
         explanation_ru: q.explanation_ru,
+        explanation_uz: q.explanation_uz ?? null,
         concept_bite_en: q.concept_bite_en ?? null,
         concept_bite_ru: q.concept_bite_ru ?? null,
+        concept_bite_uz: q.concept_bite_uz ?? null,
         acceptable_tolerance: null,
         is_active: true,
       };
@@ -419,13 +437,17 @@ export class SeedService {
       difficulty: q.difficulty,
       prompt_en: q.prompt_en,
       prompt_ru: q.prompt_ru,
+      prompt_uz: q.prompt_uz ?? null,
       options: null,
       correct_answer_en: q.correct_answer_en,
       correct_answer_ru: null,
+      correct_answer_uz: null,
       explanation_en: q.explanation_en,
       explanation_ru: q.explanation_ru,
+      explanation_uz: q.explanation_uz ?? null,
       concept_bite_en: q.concept_bite_en ?? null,
       concept_bite_ru: q.concept_bite_ru ?? null,
+      concept_bite_uz: q.concept_bite_uz ?? null,
       acceptable_tolerance: q.acceptable_tolerance ?? null,
       is_active: true,
     };

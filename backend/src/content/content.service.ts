@@ -102,6 +102,7 @@ export class ContentService {
       code: dto.code,
       name_en: dto.name_en,
       name_ru: dto.name_ru ?? null,
+      name_uz: dto.name_uz ?? null,
       free_accessible: dto.free_accessible,
       program_id: program.id,
       exam_structure: structure,
@@ -138,6 +139,7 @@ export class ContentService {
       code: dto.code,
       name_en: dto.name_en,
       name_ru: dto.name_ru,
+      name_uz: dto.name_uz,
       free_accessible: dto.free_accessible,
       program_id,
       exam_structure,
@@ -162,11 +164,13 @@ export class ContentService {
       code: string;
       name_en: string;
       name_ru: string | null;
+      name_uz: string | null;
       learning_objectives: Array<{
         id: string;
         code: string;
         title_en: string;
         title_ru: string | null;
+        title_uz: string | null;
         sort_order: number;
         has_theory: boolean;
         active_count: number;
@@ -187,11 +191,13 @@ export class ContentService {
         code: string;
         name_en: string;
         name_ru: string | null;
+        name_uz: string | null;
         learning_objectives: Array<{
           id: string;
           code: string;
           title_en: string;
           title_ru: string | null;
+          title_uz: string | null;
           sort_order: number;
           has_theory: boolean;
           active_count: number;
@@ -208,6 +214,7 @@ export class ContentService {
           code: row.paper_code,
           name_en: row.paper_name_en,
           name_ru: row.paper_name_ru,
+          name_uz: row.paper_name_uz,
           learning_objectives: [],
         };
         byPaper.set(row.paper_id, paper);
@@ -218,6 +225,7 @@ export class ContentService {
           code: row.lo_code!,
           title_en: row.lo_title_en!,
           title_ru: row.lo_title_ru,
+          title_uz: row.lo_title_uz,
           sort_order: row.lo_sort_order ?? 0,
           has_theory: row.lo_has_theory,
           active_count: row.active_count,
@@ -280,10 +288,13 @@ export class ContentService {
       code: dto.code,
       title_en: dto.title_en,
       title_ru: dto.title_ru ?? null,
+      title_uz: dto.title_uz ?? null,
       description_en: dto.description_en ?? null,
       description_ru: dto.description_ru ?? null,
+      description_uz: dto.description_uz ?? null,
       theory_en: dto.theory_en ?? null,
       theory_ru: dto.theory_ru ?? null,
+      theory_uz: dto.theory_uz ?? null,
       sort_order: dto.sort_order ?? 0,
     });
   }
@@ -346,6 +357,7 @@ export class ContentService {
       difficulty: dto.difficulty,
       prompt_en: dto.prompt_en,
       prompt_ru: dto.prompt_ru ?? null,
+      prompt_uz: dto.prompt_uz ?? null,
       options: storedOptions,
       payload: hasPayload ? payload : null,
       correct_answer_en: canonicalCorrect,
@@ -354,12 +366,16 @@ export class ContentService {
       // the payload), so correct_answer_ru is always null. (short_answer, the
       // only type that used _ru, is retired.)
       correct_answer_ru: null,
+      correct_answer_uz: null,
       explanation_en: dto.explanation_en,
       explanation_ru: dto.explanation_ru ?? null,
+      explanation_uz: dto.explanation_uz ?? null,
       concept_bite_en: dto.concept_bite_en ?? null,
       concept_bite_ru: dto.concept_bite_ru ?? null,
+      concept_bite_uz: dto.concept_bite_uz ?? null,
       exhibit_en: dto.exhibit_en ?? null,
       exhibit_ru: dto.exhibit_ru ?? null,
+      exhibit_uz: dto.exhibit_uz ?? null,
       acceptable_tolerance:
         dto.type === "number_entry" ? dto.acceptable_tolerance ?? null : null,
       external_ref: null, // admin-created; the bank importer sets its own refs
@@ -407,17 +423,22 @@ export class ContentService {
       difficulty: dto.difficulty,
       prompt_en: dto.prompt_en,
       prompt_ru: dto.prompt_ru,
+      prompt_uz: dto.prompt_uz,
       options: storedOptions,
       payload: hasPayload ? nextPayload : null,
       correct_answer_en: canonicalCorrect,
       // Language-neutral canonical answer for every live type (see createQuestion).
       correct_answer_ru: null,
+      correct_answer_uz: null,
       explanation_en: dto.explanation_en,
       explanation_ru: dto.explanation_ru,
+      explanation_uz: dto.explanation_uz,
       concept_bite_en: dto.concept_bite_en,
       concept_bite_ru: dto.concept_bite_ru,
+      concept_bite_uz: dto.concept_bite_uz,
       exhibit_en: dto.exhibit_en,
       exhibit_ru: dto.exhibit_ru,
+      exhibit_uz: dto.exhibit_uz,
       acceptable_tolerance: dto.acceptable_tolerance,
       is_active: dto.is_active,
     };
@@ -448,20 +469,23 @@ export class ContentService {
 
   // ---- helpers ----
 
-  // Convert the DTO option shape (where text_ru / why_wrong_* are optional/undefined)
-  // into the strict storage shape (all nullable string fields normalised to null).
+  // Convert the DTO option shape (where text_ru / text_uz / why_wrong_* are
+  // optional/undefined) into the strict storage shape (all nullable string
+  // fields normalised to null).
   private normalizeOptions(opts: McqOptionDto[] | null): McqOption[] | null {
     if (opts === null) return null;
     return opts.map((o) => ({
       key: o.key,
       text_en: o.text_en,
       text_ru: o.text_ru ?? null,
+      text_uz: o.text_uz ?? null,
       why_wrong_en: o.why_wrong_en ?? null,
       why_wrong_ru: o.why_wrong_ru ?? null,
+      why_wrong_uz: o.why_wrong_uz ?? null,
     }));
   }
 
-  // Storage invariant: the correct option(s) must have why_wrong_{en,ru} = null.
+  // Storage invariant: the correct option(s) must have why_wrong_{en,ru,uz} = null.
   // We don't fail validation if the admin/LLM left text there - we just scrub
   // it on the way to the DB. This keeps the frontend rule "why_wrong present ⇒
   // wrong option" reliable regardless of input quality. Applies to mcq and
@@ -479,7 +503,7 @@ export class ContentService {
     );
     return opts.map((o) =>
       correctKeys.has(o.key.trim().toUpperCase())
-        ? { ...o, why_wrong_en: null, why_wrong_ru: null }
+        ? { ...o, why_wrong_en: null, why_wrong_ru: null, why_wrong_uz: null }
         : o
     );
   }
@@ -640,6 +664,15 @@ export class ContentService {
         );
       }
     }
+    let labels_uz: string[] | null = null;
+    if (raw.labels_uz !== undefined && raw.labels_uz !== null) {
+      labels_uz = this.asStringArray(raw.labels_uz, "payload.labels_uz");
+      if (labels_uz.length !== labels.length) {
+        throw new BadRequestException(
+          "true_false payload.labels_uz must align 1:1 with labels"
+        );
+      }
+    }
     const rawStatements = raw.statements;
     if (!Array.isArray(rawStatements) || rawStatements.length === 0) {
       throw new BadRequestException(
@@ -654,15 +687,16 @@ export class ContentService {
       const obj = s as Record<string, unknown>;
       const text_en = this.asNonEmptyString(obj.text_en, `statement ${i} text_en`);
       const text_ru = this.asNullableString(obj.text_ru, `statement ${i} text_ru`);
+      const text_uz = this.asNullableString(obj.text_uz, `statement ${i} text_uz`);
       const answer = this.asNonEmptyString(obj.answer, `statement ${i} answer`);
       if (!labelSet.has(answer.trim().toLowerCase())) {
         throw new BadRequestException(
           `true_false statement ${i} answer "${answer}" must be one of the labels`
         );
       }
-      return { text_en, text_ru, answer };
+      return { text_en, text_ru, text_uz, answer };
     });
-    return { labels, labels_ru, statements };
+    return { labels, labels_ru, labels_uz, statements };
   }
 
   private normalizeMatchingPayload(
@@ -681,7 +715,8 @@ export class ContentService {
       const obj = o as Record<string, unknown>;
       const value_en = this.asNonEmptyString(obj.value_en, `option ${i} value_en`);
       const value_ru = this.asNullableString(obj.value_ru, `option ${i} value_ru`);
-      return { value_en, value_ru };
+      const value_uz = this.asNullableString(obj.value_uz, `option ${i} value_uz`);
+      return { value_en, value_ru, value_uz };
     });
     const valueSet = new Set<string>();
     for (const o of options) {
@@ -706,6 +741,7 @@ export class ContentService {
       const obj = r as Record<string, unknown>;
       const label_en = this.asNonEmptyString(obj.label_en, `row ${i} label_en`);
       const label_ru = this.asNullableString(obj.label_ru, `row ${i} label_ru`);
+      const label_uz = this.asNullableString(obj.label_uz, `row ${i} label_uz`);
       const correct_value_en = this.asNonEmptyString(
         obj.correct_value_en,
         `row ${i} correct_value_en`
@@ -715,7 +751,7 @@ export class ContentService {
           `matching row ${i} correct_value_en "${correct_value_en}" must be one of the option values`
         );
       }
-      return { label_en, label_ru, correct_value_en };
+      return { label_en, label_uz, label_ru, correct_value_en };
     });
     return { rows, options };
   }

@@ -51,6 +51,13 @@ export interface CallbackOutcome<T> {
   orderId: string | null;
 }
 
+// Click gives us 30 seconds to answer a callback. These keep a single request
+// comfortably inside that budget even when it contends for the per-order
+// advisory lock. Deliberately well under 30s: a fast failure Click can retry
+// beats a slow success they never hear about.
+const CALLBACK_LOCK_TIMEOUT_MS = 5000;
+const CALLBACK_STATEMENT_TIMEOUT_MS = 15000;
+
 @Injectable()
 export class ClickService {
   private readonly log = new Logger(ClickService.name);
@@ -398,6 +405,28 @@ export class ClickService {
     // if this handler throws. SubscriptionsService.grant runs on its own pooled
     // connection and never contends for this key, so there is no deadlock path.
     return this.sql.begin(async (tx) => {
+      // Fail fast rather than queue behind a stalled transaction.
+      //
+      // Click confirmed a 30-SECOND timeout on their side: if we have not
+      // answered within 30s they hang up. But pg_advisory_xact_lock waits
+      // FOREVER by default, so a contended lock would leave this handler
+      // blocked long past that point - and worse, our transaction would carry
+      // on and commit after Click had already given up, leaving them believing
+      // the call failed while we recorded it as settled.
+      //
+      // With lock_timeout the contended case throws instead, Click gets an
+      // error they can retry, and the two sides stay in agreement.
+      // statement_timeout bounds the rest of the transaction for the same
+      // reason. SET LOCAL scopes both to this transaction, so long-running
+      // admin work (reseed, workbook import) on other connections is untouched.
+      // sql.unsafe, not a template value: SET LOCAL does not accept a bound
+      // parameter (`SET LOCAL lock_timeout = $1` is a syntax error), and
+      // postgres.js binds every interpolated value. Both numbers are
+      // compile-time constants, so there is nothing to inject.
+      await tx.unsafe(`SET LOCAL lock_timeout = ${CALLBACK_LOCK_TIMEOUT_MS}`);
+      await tx.unsafe(
+        `SET LOCAL statement_timeout = ${CALLBACK_STATEMENT_TIMEOUT_MS}`
+      );
       await tx`SELECT pg_advisory_xact_lock(hashtextextended(${body.merchant_trans_id}, 0))`;
 
       const order = await this.orders.findByMerchantTransId(

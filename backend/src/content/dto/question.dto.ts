@@ -50,6 +50,12 @@ export class McqOptionDto {
   @Length(1, 1000)
   text_ru?: string | null;
 
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 1000)
+  text_uz?: string | null;
+
   // Per-option "why this is wrong" explanation, baked into the seed/admin
   // content so we don't pay an LLM call at runtime. Always null for the
   // correct option. Optional on input (admins can leave blank during drafting).
@@ -64,6 +70,12 @@ export class McqOptionDto {
   @IsString()
   @Length(1, 2000)
   why_wrong_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 2000)
+  why_wrong_uz?: string | null;
 }
 
 export class CreateQuestionDto {
@@ -85,6 +97,12 @@ export class CreateQuestionDto {
   @IsString()
   @Length(1, 4000)
   prompt_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  prompt_uz?: string | null;
 
   // Required for MCQ, must be absent/null for short_answer and number_entry.
   // Cross-field rule is validated in the service layer for a clearer error message.
@@ -120,6 +138,12 @@ export class CreateQuestionDto {
   @Length(1, 1000)
   correct_answer_ru?: string | null;
 
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 1000)
+  correct_answer_uz?: string | null;
+
   @IsString()
   @Length(1, 4000)
   explanation_en!: string;
@@ -134,6 +158,12 @@ export class CreateQuestionDto {
   @ValidateIf((_o, v) => v !== null)
   @IsString()
   @Length(1, 4000)
+  explanation_uz?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
   concept_bite_en?: string | null;
 
   @IsOptional()
@@ -142,8 +172,14 @@ export class CreateQuestionDto {
   @Length(1, 4000)
   concept_bite_ru?: string | null;
 
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  concept_bite_uz?: string | null;
+
   // Optional data/scenario panel (a trial balance, figures, an accounts extract)
-  // shown above the prompt. _ru falls back to _en in clients.
+  // shown above the prompt. _ru / _uz fall back to _en in clients.
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
   @IsString()
@@ -155,6 +191,12 @@ export class CreateQuestionDto {
   @IsString()
   @Length(1, 8000)
   exhibit_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 8000)
+  exhibit_uz?: string | null;
 
   // number_entry only: absolute tolerance for matching. Null/omitted = exact match.
   // Must be non-negative. Validated for type compatibility in the service.
@@ -189,6 +231,12 @@ export class UpdateQuestionDto {
   prompt_ru?: string | null;
 
   @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  prompt_uz?: string | null;
+
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(2)
   @ArrayMaxSize(8)
@@ -214,6 +262,12 @@ export class UpdateQuestionDto {
   correct_answer_ru?: string | null;
 
   @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 1000)
+  correct_answer_uz?: string | null;
+
+  @IsOptional()
   @IsString()
   @Length(1, 4000)
   explanation_en?: string;
@@ -228,6 +282,12 @@ export class UpdateQuestionDto {
   @ValidateIf((_o, v) => v !== null)
   @IsString()
   @Length(1, 4000)
+  explanation_uz?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
   concept_bite_en?: string | null;
 
   @IsOptional()
@@ -235,6 +295,12 @@ export class UpdateQuestionDto {
   @IsString()
   @Length(1, 4000)
   concept_bite_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 4000)
+  concept_bite_uz?: string | null;
 
   // Optional data/scenario panel shown above the prompt (see CreateQuestionDto).
   @IsOptional()
@@ -248,6 +314,12 @@ export class UpdateQuestionDto {
   @IsString()
   @Length(1, 8000)
   exhibit_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 8000)
+  exhibit_uz?: string | null;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)

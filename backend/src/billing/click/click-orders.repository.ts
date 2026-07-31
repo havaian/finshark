@@ -11,6 +11,10 @@ import type {
 
 type SqlOrTx = Sql | postgres.TransactionSql;
 
+// Short on purpose - an expiry sweep is never urgent enough to block a
+// payment callback that is waiting on the same order.
+const SWEEP_LOCK_TIMEOUT_MS = 2000;
+
 const ORDER_COLS = `
   id, user_id, plan_id, merchant_trans_id, amount_minor, currency, status,
   click_trans_id, click_paydoc_id, merchant_prepare_id, merchant_confirm_id,
@@ -208,6 +212,91 @@ export class ClickOrdersRepository {
       RETURNING ${sql.unsafe(ORDER_COLS)}
     `;
     return rows[0] ?? null;
+  }
+
+  // ── Abandoned-order expiry ───────────────────────────────────────────────
+
+  // Orders that were opened and never settled. Two separate windows because the
+  // two states carry very different risk:
+  //
+  //   created   Click never called us. We handed the user a pay URL and nothing
+  //             came back, so there is no transaction on Click's side to
+  //             conflict with. Safe to expire quickly.
+  //   prepared  Click DID call Prepare, so they hold an open transaction and a
+  //             Complete may still arrive. Expiring one of these races Click's
+  //             own timeout, so the window is deliberately much longer.
+  //
+  // Ordered oldest-first so a backlog drains deterministically rather than
+  // re-picking the same rows.
+  async findExpirableOrders(input: {
+    createdTtlMinutes: number;
+    preparedTtlMinutes: number;
+    limit: number;
+  }): Promise<ClickOrderRow[]> {
+    return this.sql<ClickOrderRow[]>`
+      SELECT ${this.sql.unsafe(ORDER_COLS)}
+      FROM click_orders
+      WHERE (
+              status = 'created'
+              AND created_at < NOW() - make_interval(mins => ${input.createdTtlMinutes})
+            )
+         OR (
+              status = 'prepared'
+              AND COALESCE(prepared_at, created_at)
+                  < NOW() - make_interval(mins => ${input.preparedTtlMinutes})
+            )
+      ORDER BY created_at ASC
+      LIMIT ${input.limit}
+    `;
+  }
+
+  // Expire ONE order, guarded against the callback that may be landing right
+  // now. Two protections, both necessary:
+  //
+  //   1. The same advisory lock the Prepare/Complete handlers take. Without it
+  //      a Complete could be mid-transaction when we flip the row, and we would
+  //      fail an order the user has actually paid for.
+  //   2. The status and age predicates are REPEATED in the UPDATE. The rows came
+  //      from a SELECT taken outside this lock, so by the time we get here the
+  //      order may already be paid or cancelled. Re-checking inside means a
+  //      stale candidate updates zero rows and returns null instead of
+  //      clobbering a settled payment.
+  async expireOrder(input: {
+    id: string;
+    merchantTransId: string;
+    createdTtlMinutes: number;
+    preparedTtlMinutes: number;
+    errorNote: string;
+  }): Promise<ClickOrderRow | null> {
+    return this.sql.begin(async (tx) => {
+      // Same fail-fast rule as the Click callback path: the sweeper must never
+      // sit on this lock while a live Complete waits behind it. If the lock is
+      // contended the UPDATE throws, the caller logs it and moves to the next
+      // order, and the row is simply picked up on the following sweep.
+      // sql.unsafe because SET LOCAL rejects bound parameters.
+      await tx.unsafe(`SET LOCAL lock_timeout = ${SWEEP_LOCK_TIMEOUT_MS}`);
+      await tx`SELECT pg_advisory_xact_lock(hashtextextended(${input.merchantTransId}, 0))`;
+      const rows = await tx<ClickOrderRow[]>`
+        UPDATE click_orders SET
+          status = 'failed',
+          error_note = ${input.errorNote},
+          cancelled_at = NOW()
+        WHERE id = ${input.id}
+          AND (
+                (
+                  status = 'created'
+                  AND created_at < NOW() - make_interval(mins => ${input.createdTtlMinutes})
+                )
+                OR (
+                  status = 'prepared'
+                  AND COALESCE(prepared_at, created_at)
+                      < NOW() - make_interval(mins => ${input.preparedTtlMinutes})
+                )
+              )
+        RETURNING ${tx.unsafe(ORDER_COLS)}
+      `;
+      return rows[0] ?? null;
+    });
   }
 
   // ── Fiscalization ────────────────────────────────────────────────────────

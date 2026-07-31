@@ -185,7 +185,7 @@ export const DEFAULT_PROGRAM_CODE = "acca";
 
 // Supported UI/content languages. Add to this tuple to add a language;
 // the type system will then force every consumer to handle it.
-export const SUPPORTED_LANGS = ["en", "ru"] as const;
+export const SUPPORTED_LANGS = ["en", "ru", "uz"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
 // Default for requests with no explicit language signal (no ?lang, no X-Lang,
 // no matching Accept-Language). The ACCA exam is in English, so EN is the
@@ -206,6 +206,7 @@ export interface ProgramRow {
   code: string;
   name_en: string;
   name_ru: string | null;
+  name_uz: string | null;
   unit_noun: string;
   sort_order: number;
   created_at: Date;
@@ -217,6 +218,7 @@ export interface PaperRow {
   code: string;
   name_en: string;
   name_ru: string | null;
+  name_uz: string | null;
   // Whether this paper is reachable on the free tier. Default true on creation;
   // admin can flip it to lock a paper behind premium. See migration
   // 20260525000006_papers_free_accessible.js.
@@ -239,12 +241,15 @@ export interface LearningObjectiveRow {
   code: string;
   title_en: string;
   title_ru: string | null;
+  title_uz: string | null;
   description_en: string | null;
   description_ru: string | null;
+  description_uz: string | null;
   // Long-form theory (150-300 words, Kaplan-style). Optional; surfaces as a
   // pre-lesson primer. _en is canonical; _ru optional and falls back to _en.
   theory_en: string | null;
   theory_ru: string | null;
+  theory_uz: string | null;
   sort_order: number;
   created_at: Date;
   updated_at: Date;
@@ -255,11 +260,13 @@ export interface McqOption {
   key: string; // "A" | "B" | ... - admin-defined but app validates
   text_en: string;
   text_ru: string | null; // optional; falls back to text_en in clients
+  text_uz?: string | null; // optional; falls back to text_en in clients
   // Per-option "why this is wrong" explanations, shown to the user after
   // submitting a wrong answer on MCQ. Always null for the correct option.
   // Optional during content authoring; admin UI shows a hint when missing.
   why_wrong_en?: string | null;
   why_wrong_ru?: string | null;
+  why_wrong_uz?: string | null;
 }
 
 // ----------------------------------------------------------------
@@ -275,6 +282,7 @@ export interface McqOption {
 export interface TrueFalseStatement {
   text_en: string;
   text_ru: string | null;
+  text_uz?: string | null;
   // The correct label for this statement; must be one of TrueFalsePayload.labels.
   answer: string;
 }
@@ -285,6 +293,8 @@ export interface TrueFalsePayload {
   // Optional RU labels, positionally aligned with `labels`. Null => clients
   // show the English labels.
   labels_ru: string[] | null;
+  // Optional UZ labels, same positional-alignment rule as labels_ru.
+  labels_uz?: string[] | null;
   statements: TrueFalseStatement[];
 }
 
@@ -292,12 +302,14 @@ export interface TrueFalsePayload {
 export interface MatchingRow {
   label_en: string;
   label_ru: string | null;
+  label_uz?: string | null;
   // The correct value for this row; must equal one option's value_en.
   correct_value_en: string;
 }
 export interface MatchingOption {
   value_en: string;
   value_ru: string | null;
+  value_uz?: string | null;
 }
 export interface MatchingPayload {
   rows: MatchingRow[];
@@ -316,6 +328,7 @@ export interface QuestionRow {
 
   prompt_en: string;
   prompt_ru: string | null;
+  prompt_uz: string | null;
 
   options: McqOption[] | null; // only set when type = 'mcq' | 'mcq_multi'
 
@@ -331,12 +344,15 @@ export interface QuestionRow {
   // matches against whichever the user is currently answering in.
   correct_answer_en: string;
   correct_answer_ru: string | null;
+  correct_answer_uz: string | null;
 
   explanation_en: string;
   explanation_ru: string | null;
+  explanation_uz: string | null;
 
   concept_bite_en: string | null;
   concept_bite_ru: string | null;
+  concept_bite_uz: string | null;
 
   // number_entry questions: absolute tolerance for matching. NULL for mcq /
   // short_answer (and for number_entry questions that require exact match).
@@ -347,6 +363,7 @@ export interface QuestionRow {
   // to _en in clients, same pattern as prompt.
   exhibit_en: string | null;
   exhibit_ru: string | null;
+  exhibit_uz: string | null;
 
   // Stable source reference (e.g. "F1-M1-Q01") used by the bank importer to
   // upsert. Null for hand-authored / seeded rows.
@@ -446,25 +463,35 @@ export type LocalizedQuestionPayload =
 // ---- Student-facing (answer-free) payload -------------------------------
 // The lesson/mock queue must render true_false / matching bodies WITHOUT
 // leaking the answer. These mirror the localized payload above but drop the
-// correct label / correct value. The ANSWER SPACE (true_false labels, matching
-// option values) is sent canonically in EN so the client returns the chosen
-// value verbatim and the deterministic grader can match it; only the PROMPT
-// parts (statement text, row labels) are localized. Paired EN+RU labels for
-// fully-localized answer choices are a later enhancement.
+// correct label / correct value.
+//
+// The ANSWER SPACE (true_false labels, matching option values) is sent as
+// PAIRS: `value` is the canonical English string the client must submit back,
+// `label` is the localized text to display. Grading stays language-neutral
+// (the grader still string-matches canonical EN) while the candidate reads the
+// choices in their own language. Previously only the canonical value was sent
+// and the client rendered it directly, which is why a Russian/Uzbek mock
+// showed localized statement text above English answer buttons.
 export interface LessonTrueFalseStatement {
   text: string;
 }
+export interface LessonAnswerChoice {
+  // Canonical EN - submitted verbatim, matched by GraderService.
+  value: string;
+  // Localized display text. Equals `value` when lang is EN or no translation
+  // exists (the latter can't happen on a served question - see
+  // isQuestionTranslated - but the projection is defensive).
+  label: string;
+}
 export interface LessonTrueFalsePayload {
   kind: "true_false";
-  labels: string[];
+  labels: LessonAnswerChoice[];
   statements: LessonTrueFalseStatement[];
 }
 export interface LessonMatchingRow {
   label: string;
 }
-export interface LessonMatchingOption {
-  value: string;
-}
+export type LessonMatchingOption = LessonAnswerChoice;
 export interface LessonMatchingPayload {
   kind: "matching";
   rows: LessonMatchingRow[];
@@ -499,21 +526,158 @@ export interface LocalizedQuestion {
 // ----------------------------------------------------------------
 
 // Pick a localized string with fallback to EN. Used pervasively.
+//
+// The EN fallback stays in place for NON-QUESTION content (paper names, LO
+// titles, badge copy) where a missing translation should degrade gracefully.
+// QUESTION content follows a stricter rule: questions that aren't fully
+// translated into the requested language are filtered out upstream (see
+// isQuestionTranslated + the lesson/mock queue builders), so these helpers
+// should never actually hit the fallback branch on a question row.
 export function pickLocalized(
   en: string,
   ru: string | null,
+  uz: string | null,
   lang: Lang
 ): string {
   if (lang === "ru") return ru ?? en;
+  if (lang === "uz") return uz ?? en;
   return en;
 }
 export function pickLocalizedNullable(
   en: string | null,
   ru: string | null,
+  uz: string | null,
   lang: Lang
 ): string | null {
   if (lang === "ru") return ru ?? en;
+  if (lang === "uz") return uz ?? en;
   return en;
+}
+
+// Read the translation of one field for `lang`, WITHOUT falling back to EN.
+// Returns null when the language has no value for that field. `lang === "en"`
+// returns the canonical value. Used by isQuestionTranslated below.
+function rawForLang(
+  en: string | null,
+  ru: string | null | undefined,
+  uz: string | null | undefined,
+  lang: Lang
+): string | null {
+  if (lang === "ru") return ru ?? null;
+  if (lang === "uz") return uz ?? null;
+  return en;
+}
+
+function isFilled(v: string | null): boolean {
+  return typeof v === "string" && v.trim() !== "";
+}
+
+// ----------------------------------------------------------------
+// Translation completeness (product decision B3)
+// ----------------------------------------------------------------
+// A question is only served to a non-English user when EVERY user-visible
+// string on it exists in that language. Partially-translated questions are
+// hidden rather than shown with English patches mixed in.
+//
+// "User-visible" means, per type:
+//   - all types      : prompt, explanation, exhibit (only when exhibit_en set)
+//   - mcq/mcq_multi  : every option's text. why_wrong is EXCLUDED - it's an
+//                      optional authoring extra that is frequently absent even
+//                      in English, so requiring it would hide most of the bank.
+//   - true_false     : every statement's text, plus a full aligned label set
+//   - matching       : every row label and every option value
+//   - number_entry   : nothing extra (the answer is a number)
+//
+// concept_bite is EXCLUDED for the same reason as why_wrong: optional extra.
+// correct_answer is EXCLUDED because it is canonical/language-neutral for mcq
+// and numeric for number_entry.
+//
+// lang === "en" is always true: English is the canonical language and every
+// row has it by NOT NULL constraint.
+export function isQuestionTranslated(
+  row: Pick<
+    QuestionRow,
+    | "type"
+    | "prompt_en"
+    | "prompt_ru"
+    | "prompt_uz"
+    | "explanation_en"
+    | "explanation_ru"
+    | "explanation_uz"
+    | "exhibit_en"
+    | "exhibit_ru"
+    | "exhibit_uz"
+    | "options"
+    | "payload"
+  >,
+  lang: Lang
+): boolean {
+  if (lang === "en") return true;
+
+  if (!isFilled(rawForLang(row.prompt_en, row.prompt_ru, row.prompt_uz, lang))) {
+    return false;
+  }
+  if (
+    !isFilled(
+      rawForLang(row.explanation_en, row.explanation_ru, row.explanation_uz, lang)
+    )
+  ) {
+    return false;
+  }
+  // Exhibit is only required when the question actually has one.
+  if (isFilled(row.exhibit_en)) {
+    if (
+      !isFilled(rawForLang(row.exhibit_en, row.exhibit_ru, row.exhibit_uz, lang))
+    ) {
+      return false;
+    }
+  }
+
+  if (row.type === "mcq" || row.type === "mcq_multi") {
+    if (row.options === null || row.options.length === 0) return false;
+    for (const opt of row.options) {
+      if (!isFilled(rawForLang(opt.text_en, opt.text_ru, opt.text_uz, lang))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (row.type === "true_false") {
+    const p = row.payload as TrueFalsePayload | null;
+    if (p === null) return false;
+    const labels = lang === "ru" ? p.labels_ru : p.labels_uz;
+    // The label set must exist AND line up 1:1 with the canonical labels; a
+    // short or mismatched array would render the wrong choice under a
+    // statement, which is worse than hiding the question.
+    if (!labels || labels.length !== p.labels.length) return false;
+    if (labels.some((l) => !isFilled(l))) return false;
+    for (const s of p.statements) {
+      if (!isFilled(rawForLang(s.text_en, s.text_ru, s.text_uz, lang))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (row.type === "matching") {
+    const p = row.payload as MatchingPayload | null;
+    if (p === null) return false;
+    for (const r of p.rows) {
+      if (!isFilled(rawForLang(r.label_en, r.label_ru, r.label_uz, lang))) {
+        return false;
+      }
+    }
+    for (const o of p.options) {
+      if (!isFilled(rawForLang(o.value_en, o.value_ru, o.value_uz, lang))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // number_entry: prompt + explanation already checked, nothing else is text.
+  return true;
 }
 
 export function toLocalizedProgram(
@@ -523,7 +687,7 @@ export function toLocalizedProgram(
   return {
     id: row.id,
     code: row.code,
-    name: pickLocalized(row.name_en, row.name_ru, lang),
+    name: pickLocalized(row.name_en, row.name_ru, row.name_uz, lang),
     unit_noun: row.unit_noun,
     sort_order: row.sort_order,
     created_at: row.created_at.toISOString(),
@@ -535,7 +699,7 @@ export function toLocalizedPaper(row: PaperRow, lang: Lang): LocalizedPaper {
   return {
     id: row.id,
     code: row.code,
-    name: pickLocalized(row.name_en, row.name_ru, lang),
+    name: pickLocalized(row.name_en, row.name_ru, row.name_uz, lang),
     free_accessible: row.free_accessible,
     program_id: row.program_id,
     exam_structure: row.exam_structure,
@@ -552,13 +716,19 @@ export function toLocalizedLo(
     id: row.id,
     paper_id: row.paper_id,
     code: row.code,
-    title: pickLocalized(row.title_en, row.title_ru, lang),
+    title: pickLocalized(row.title_en, row.title_ru, row.title_uz, lang),
     description: pickLocalizedNullable(
       row.description_en,
       row.description_ru,
+      row.description_uz,
       lang
     ),
-    theory: pickLocalizedNullable(row.theory_en, row.theory_ru, lang),
+    theory: pickLocalizedNullable(
+      row.theory_en,
+      row.theory_ru,
+      row.theory_uz,
+      lang
+    ),
     sort_order: row.sort_order,
     created_at: row.created_at.toISOString(),
     updated_at: row.updated_at.toISOString(),
@@ -569,6 +739,17 @@ export function toLocalizedLo(
 // INCLUDES the answers (correct labels / correct values) because the admin
 // editor needs them. The student-facing lesson/mock projection builds its own
 // answer-free version separately. Returns null for types with no payload.
+// Resolve the true_false label set for a language. The translated array is
+// used only when it exists AND is positionally aligned 1:1 with the canonical
+// labels - a shorter or longer array would put the wrong choice under a
+// statement. Falls back to the canonical EN labels otherwise.
+function localizedLabels(p: TrueFalsePayload, lang: Lang): string[] {
+  const candidate =
+    lang === "ru" ? p.labels_ru : lang === "uz" ? p.labels_uz ?? null : null;
+  if (candidate && candidate.length === p.labels.length) return candidate;
+  return p.labels;
+}
+
 export function toLocalizedPayload(
   row: QuestionRow,
   lang: Lang
@@ -576,16 +757,13 @@ export function toLocalizedPayload(
   if (row.payload === null) return null;
   if (row.type === "true_false") {
     const p = row.payload as TrueFalsePayload;
-    // Use RU labels only when present AND aligned 1:1 with the EN labels.
-    const labels =
-      lang === "ru" && p.labels_ru && p.labels_ru.length === p.labels.length
-        ? p.labels_ru
-        : p.labels;
+    // Use translated labels only when present AND aligned 1:1 with the EN set.
+    const labels = localizedLabels(p, lang);
     return {
       kind: "true_false",
       labels,
       statements: p.statements.map((s) => ({
-        text: pickLocalized(s.text_en, s.text_ru, lang),
+        text: pickLocalized(s.text_en, s.text_ru, s.text_uz ?? null, lang),
         answer: s.answer,
       })),
     };
@@ -595,12 +773,12 @@ export function toLocalizedPayload(
     return {
       kind: "matching",
       rows: p.rows.map((r) => ({
-        label: pickLocalized(r.label_en, r.label_ru, lang),
+        label: pickLocalized(r.label_en, r.label_ru, r.label_uz ?? null, lang),
         // Canonical EN value - the admin edits in canonical form.
         correct_value: r.correct_value_en,
       })),
       options: p.options.map((o) => ({
-        value: pickLocalized(o.value_en, o.value_ru, lang),
+        value: pickLocalized(o.value_en, o.value_ru, o.value_uz ?? null, lang),
       })),
     };
   }
@@ -622,12 +800,16 @@ export function toAnswerFreePayload(
   if (row.payload === null) return null;
   if (row.type === "true_false") {
     const p = row.payload as TrueFalsePayload;
+    // value = canonical EN (submitted + graded), label = localized display.
+    const display = localizedLabels(p, lang);
     return {
       kind: "true_false",
-      // Canonical EN labels (the answer space); statement text is localized.
-      labels: p.labels,
+      labels: p.labels.map((value, i) => ({
+        value,
+        label: display[i] ?? value,
+      })),
       statements: p.statements.map((s) => ({
-        text: pickLocalized(s.text_en, s.text_ru, lang),
+        text: pickLocalized(s.text_en, s.text_ru, s.text_uz ?? null, lang),
       })),
     };
   }
@@ -635,11 +817,15 @@ export function toAnswerFreePayload(
     const p = row.payload as MatchingPayload;
     return {
       kind: "matching",
-      // Row labels (prompts) localized; option values canonical EN (answer space).
+      // Row labels (prompts) localized.
       rows: p.rows.map((r) => ({
-        label: pickLocalized(r.label_en, r.label_ru, lang),
+        label: pickLocalized(r.label_en, r.label_ru, r.label_uz ?? null, lang),
       })),
-      options: p.options.map((o) => ({ value: o.value_en })),
+      // value = canonical EN (submitted + graded), label = localized display.
+      options: p.options.map((o) => ({
+        value: o.value_en,
+        label: pickLocalized(o.value_en, o.value_ru, o.value_uz ?? null, lang),
+      })),
     };
   }
   return null;
@@ -654,31 +840,53 @@ export function toLocalizedQuestion(
     lo_id: row.lo_id,
     type: row.type,
     difficulty: row.difficulty,
-    prompt: pickLocalized(row.prompt_en, row.prompt_ru, lang),
+    prompt: pickLocalized(row.prompt_en, row.prompt_ru, row.prompt_uz, lang),
     options:
       row.options === null
         ? null
         : row.options.map((opt) => ({
             key: opt.key,
-            text: pickLocalized(opt.text_en, opt.text_ru, lang),
+            text: pickLocalized(
+              opt.text_en,
+              opt.text_ru,
+              opt.text_uz ?? null,
+              lang
+            ),
             why_wrong: pickLocalizedNullable(
               opt.why_wrong_en ?? null,
               opt.why_wrong_ru ?? null,
+              opt.why_wrong_uz ?? null,
               lang
             ),
           })),
     correct_answer:
       row.type === "mcq" || row.type === "mcq_multi"
         ? row.correct_answer_en // option key(s) - same in every language
-        : pickLocalized(row.correct_answer_en, row.correct_answer_ru, lang),
+        : pickLocalized(
+            row.correct_answer_en,
+            row.correct_answer_ru,
+            row.correct_answer_uz,
+            lang
+          ),
     payload: toLocalizedPayload(row, lang),
-    explanation: pickLocalized(row.explanation_en, row.explanation_ru, lang),
+    explanation: pickLocalized(
+      row.explanation_en,
+      row.explanation_ru,
+      row.explanation_uz,
+      lang
+    ),
     concept_bite: pickLocalizedNullable(
       row.concept_bite_en,
       row.concept_bite_ru,
+      row.concept_bite_uz,
       lang
     ),
-    exhibit: pickLocalizedNullable(row.exhibit_en, row.exhibit_ru, lang),
+    exhibit: pickLocalizedNullable(
+      row.exhibit_en,
+      row.exhibit_ru,
+      row.exhibit_uz,
+      lang
+    ),
     acceptable_tolerance: row.acceptable_tolerance,
     is_active: row.is_active,
     created_at: row.created_at.toISOString(),

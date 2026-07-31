@@ -3,8 +3,10 @@ export interface BadgeRow {
   code: string;
   name_en: string;
   name_ru: string | null;
+  name_uz: string | null;
   description_en: string;
   description_ru: string | null;
+  description_uz: string | null;
   icon: string;
   sort_order: number;
   created_at: Date;
@@ -31,7 +33,17 @@ export interface PublicBadge {
   earned_at: string | null;
 }
 
-export type Lang = "en" | "ru";
+export type Lang = "en" | "ru" | "uz";
+
+// Badge copy falls back to EN when a translation is missing. Unlike question
+// content (which is hidden outright when untranslated - see isQuestionTranslated)
+// a badge is chrome: showing an English badge name is far better than hiding
+// the user's achievement.
+function pickLang(en: string, ru: string | null, uz: string | null, lang: Lang) {
+  if (lang === "ru") return ru || en;
+  if (lang === "uz") return uz || en;
+  return en;
+}
 
 export function toPublicBadge(
   row: BadgeRow,
@@ -40,11 +52,13 @@ export function toPublicBadge(
 ): PublicBadge {
   return {
     code: row.code,
-    name: lang === "ru" && row.name_ru ? row.name_ru : row.name_en,
-    description:
-      lang === "ru" && row.description_ru
-        ? row.description_ru
-        : row.description_en,
+    name: pickLang(row.name_en, row.name_ru, row.name_uz, lang),
+    description: pickLang(
+      row.description_en,
+      row.description_ru,
+      row.description_uz,
+      lang
+    ),
     icon: row.icon,
     sort_order: row.sort_order,
     earned: earned_at !== null,

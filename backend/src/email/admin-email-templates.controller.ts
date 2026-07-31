@@ -32,7 +32,10 @@ import {
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { EmailTemplatesRepository } from "./email-templates.repository";
-import { EmailTemplatesService } from "./email-templates.service";
+import {
+  EmailTemplatesService,
+  type EmailLang,
+} from "./email-templates.service";
 import {
   EmailBlastService,
   EMAIL_VARIABLE_CATALOGUE,
@@ -67,6 +70,12 @@ class UpsertEmailTemplateDto {
   @MaxLength(200)
   subject_ru?: string | null;
 
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @MaxLength(200)
+  subject_uz?: string | null;
+
   @IsString()
   @MaxLength(20000)
   body_en!: string;
@@ -80,6 +89,12 @@ class UpsertEmailTemplateDto {
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
   @IsString()
+  @MaxLength(20000)
+  body_uz?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
   @MaxLength(50000)
   html_en?: string | null;
 
@@ -88,6 +103,12 @@ class UpsertEmailTemplateDto {
   @IsString()
   @MaxLength(50000)
   html_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @MaxLength(50000)
+  html_uz?: string | null;
 
   // Variable name allowlist for the admin form. Each entry should match
   // the {{var}} placeholder used in the bodies. Bounded so a misclick
@@ -120,7 +141,7 @@ class SetActiveDto {
 class PreviewDto {
   @IsOptional()
   @IsIn(["en", "ru"])
-  lang?: "en" | "ru";
+  lang?: EmailLang;
 
   @IsOptional()
   @IsUUID()
@@ -137,7 +158,7 @@ class SendTestDto {
 
   @IsOptional()
   @IsIn(["en", "ru"])
-  lang?: "en" | "ru";
+  lang?: EmailLang;
 
   // Optional variable map for the test. Keys are the variable names; values
   // are stringified. The render path leaves unsupplied placeholders intact
@@ -169,7 +190,7 @@ class BlastDto {
 
   @IsOptional()
   @IsIn(["en", "ru"])
-  lang?: "en" | "ru";
+  lang?: EmailLang;
 
   // Admin-supplied extras merged on top of per-user vars. Keys constrained
   // by EmailBlastService - invalid keys are simply ignored at render time.
@@ -234,10 +255,13 @@ export class AdminEmailTemplatesController {
       key: dto.key,
       subject_en: dto.subject_en,
       subject_ru: dto.subject_ru ?? null,
+      subject_uz: dto.subject_uz ?? null,
       body_en: dto.body_en,
       body_ru: dto.body_ru ?? null,
+      body_uz: dto.body_uz ?? null,
       html_en: dto.html_en ?? null,
       html_ru: dto.html_ru ?? null,
+      html_uz: dto.html_uz ?? null,
       variables: dto.variables,
       is_active: dto.is_active ?? true,
       notes: dto.notes ?? null,

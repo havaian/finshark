@@ -76,7 +76,12 @@ export class ProgressService {
         p = {
           paper_id: r.paper_id,
           paper_code: r.paper_code,
-          paper_name: pickLocalized(r.paper_name_en, r.paper_name_ru, lang),
+          paper_name: pickLocalized(
+            r.paper_name_en,
+            r.paper_name_ru,
+            r.paper_name_uz,
+            lang
+          ),
           los: [],
         };
         byPaper.set(r.paper_id, p);
@@ -84,7 +89,7 @@ export class ProgressService {
       p.los.push({
         lo_id: r.lo_id,
         lo_code: r.lo_code,
-        lo_title: pickLocalized(r.lo_title_en, r.lo_title_ru, lang),
+        lo_title: pickLocalized(r.lo_title_en, r.lo_title_ru, r.lo_title_uz, lang),
         total_questions: r.total_questions,
         seen_questions: r.seen_questions,
         avg_mastery: r.avg_mastery,
@@ -97,7 +102,7 @@ export class ProgressService {
       weak_topics: weak.map((w) => ({
         lo_id: w.lo_id,
         lo_code: w.lo_code,
-        lo_title: pickLocalized(w.lo_title_en, w.lo_title_ru, lang),
+        lo_title: pickLocalized(w.lo_title_en, w.lo_title_ru, w.lo_title_uz, lang),
         paper_code: w.paper_code,
         avg_mastery: w.avg_mastery,
         seen_questions: w.seen_questions,

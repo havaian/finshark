@@ -252,7 +252,8 @@ export class MocksService {
     // imported, like F3) fall through to the dynamic sampler below. Free-tier
     // gates above have already been applied and apply equally here.
     const fixed = await this.questions.findRandomActiveMockWithQuestions(
-      opts.paper_id
+      opts.paper_id,
+      lang
     );
     if (fixed && fixed.questions.length > 0) {
       return this.buildFixedMock(user_id, lang, opts.paper_id, fixed);
@@ -285,7 +286,8 @@ export class MocksService {
       const rows = await this.questions.findRandomForMockExcluding(
         opts.paper_id,
         section.question_count,
-        rawQueueIds
+        rawQueueIds,
+        lang
       );
       if (rows.length === 0) {
         // Nothing available for this section - skip it (don't emit an empty
@@ -668,20 +670,26 @@ export class MocksService {
       difficulty: QuestionDifficulty;
       prompt_en: string;
       prompt_ru: string | null;
+      prompt_uz: string | null;
       options: McqOption[] | null;
       payload: QuestionPayload | null;
       exhibit_en: string | null;
       exhibit_ru: string | null;
+      exhibit_uz: string | null;
       correct_answer_en: string;
       correct_answer_ru: string | null;
+      correct_answer_uz: string | null;
       explanation_en: string;
       explanation_ru: string | null;
+      explanation_uz: string | null;
       concept_bite_en: string | null;
       concept_bite_ru: string | null;
+      concept_bite_uz: string | null;
       acceptable_tolerance: number | null;
       lo_code: string;
       lo_title_en: string;
       lo_title_ru: string | null;
+      lo_title_uz: string | null;
       user_answer: string | null;
       was_correct: boolean | null;
     };
@@ -697,20 +705,26 @@ export class MocksService {
         q.difficulty                                   AS difficulty,
         q.prompt_en                                    AS prompt_en,
         q.prompt_ru                                    AS prompt_ru,
+        q.prompt_uz                                    AS prompt_uz,
         q.options                                      AS options,
         q.payload                                      AS payload,
         q.exhibit_en                                   AS exhibit_en,
         q.exhibit_ru                                   AS exhibit_ru,
+        q.exhibit_uz                                   AS exhibit_uz,
         q.correct_answer_en                            AS correct_answer_en,
         q.correct_answer_ru                            AS correct_answer_ru,
+        q.correct_answer_uz                            AS correct_answer_uz,
         q.explanation_en                               AS explanation_en,
         q.explanation_ru                               AS explanation_ru,
+        q.explanation_uz                               AS explanation_uz,
         q.concept_bite_en                              AS concept_bite_en,
         q.concept_bite_ru                              AS concept_bite_ru,
+        q.concept_bite_uz                              AS concept_bite_uz,
         q.acceptable_tolerance                         AS acceptable_tolerance,
         lo.code                                        AS lo_code,
         lo.title_en                                    AS lo_title_en,
         lo.title_ru                                    AS lo_title_ru,
+        lo.title_uz                                    AS lo_title_uz,
         a.user_answer                                  AS user_answer,
         a.was_correct                                  AS was_correct
       FROM lesson_session_questions lsq
@@ -727,38 +741,60 @@ export class MocksService {
       question_id: r.question_id,
       type: r.q_type,
       difficulty: r.difficulty,
-      prompt: pickLocalized(r.prompt_en, r.prompt_ru, lang),
+      prompt: pickLocalized(r.prompt_en, r.prompt_ru, r.prompt_uz, lang),
       options:
         r.options === null
           ? null
           : r.options.map((opt) => ({
               key: opt.key,
-              text: pickLocalized(opt.text_en, opt.text_ru, lang),
+              text: pickLocalized(
+                opt.text_en,
+                opt.text_ru,
+                opt.text_uz ?? null,
+                lang
+              ),
               why_wrong: pickLocalizedNullable(
                 opt.why_wrong_en ?? null,
                 opt.why_wrong_ru ?? null,
+                opt.why_wrong_uz ?? null,
                 lang
               ),
             })),
       // Answer-free body for true_false / matching; correct_answer (below)
       // carries the key so review can mark the response.
       payload: toAnswerFreePayload({ type: r.q_type, payload: r.payload }, lang),
-      exhibit: pickLocalizedNullable(r.exhibit_en, r.exhibit_ru, lang),
+      exhibit: pickLocalizedNullable(
+        r.exhibit_en,
+        r.exhibit_ru,
+        r.exhibit_uz,
+        lang
+      ),
       // For MCQ correct_answer is the option key (language-neutral).
       // For number_entry it's the canonical value in the user's language.
       correct_answer:
         r.q_type === "mcq"
           ? r.correct_answer_en
-          : pickLocalized(r.correct_answer_en, r.correct_answer_ru, lang),
-      explanation: pickLocalized(r.explanation_en, r.explanation_ru, lang),
+          : pickLocalized(
+              r.correct_answer_en,
+              r.correct_answer_ru,
+              r.correct_answer_uz,
+              lang
+            ),
+      explanation: pickLocalized(
+        r.explanation_en,
+        r.explanation_ru,
+        r.explanation_uz,
+        lang
+      ),
       concept_bite: pickLocalizedNullable(
         r.concept_bite_en,
         r.concept_bite_ru,
+        r.concept_bite_uz,
         lang
       ),
       acceptable_tolerance: r.acceptable_tolerance,
       lo_code: r.lo_code,
-      lo_title: pickLocalized(r.lo_title_en, r.lo_title_ru, lang),
+      lo_title: pickLocalized(r.lo_title_en, r.lo_title_ru, r.lo_title_uz, lang),
       user_answer: r.user_answer,
       was_correct: r.was_correct,
     }));

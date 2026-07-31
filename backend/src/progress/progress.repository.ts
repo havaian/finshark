@@ -13,10 +13,12 @@ export interface HeatMapRow {
   paper_code: string;
   paper_name_en: string;
   paper_name_ru: string | null;
+  paper_name_uz: string | null;
   lo_id: string;
   lo_code: string;
   lo_title_en: string;
   lo_title_ru: string | null;
+  lo_title_uz: string | null;
   lo_sort_order: number;
   total_questions: number; // questions in the LO (active only)
   seen_questions: number; // distinct questions the user has state for
@@ -28,6 +30,7 @@ export interface WeakTopicRow {
   lo_code: string;
   lo_title_en: string;
   lo_title_ru: string | null;
+  lo_title_uz: string | null;
   paper_code: string;
   avg_mastery: number;
   seen_questions: number;
@@ -54,10 +57,12 @@ export class ProgressRepository {
         p.code            AS paper_code,
         p.name_en         AS paper_name_en,
         p.name_ru         AS paper_name_ru,
+        p.name_uz         AS paper_name_uz,
         lo.id             AS lo_id,
         lo.code           AS lo_code,
         lo.title_en       AS lo_title_en,
         lo.title_ru       AS lo_title_ru,
+        lo.title_uz       AS lo_title_uz,
         lo.sort_order     AS lo_sort_order,
         COUNT(DISTINCT q.id) FILTER (WHERE q.is_active)::int AS total_questions,
         COUNT(DISTINCT uqs.question_id)::int                  AS seen_questions,
@@ -81,6 +86,7 @@ export class ProgressRepository {
         lo.code                              AS lo_code,
         lo.title_en                          AS lo_title_en,
         lo.title_ru                          AS lo_title_ru,
+        lo.title_uz                          AS lo_title_uz,
         p.code                               AS paper_code,
         AVG(uqs.mastery_score)::float        AS avg_mastery,
         COUNT(DISTINCT uqs.question_id)::int AS seen_questions

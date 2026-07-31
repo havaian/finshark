@@ -5,14 +5,19 @@ export interface AchievementLevelRow {
   threshold: number;
   name_en: string;
   name_ru: string | null;
+  // Optional: older seeded `levels` jsonb blobs predate Uzbek support, so a
+  // missing key is normal and resolves to the EN name.
+  name_uz?: string | null;
 }
 
 export interface AchievementRow {
   code: string;
   name_en: string;
   name_ru: string | null;
+  name_uz: string | null;
   description_en: string;
   description_ru: string | null;
+  description_uz: string | null;
   icon: string;
   sort_order: number;
   // jsonb column - postgres.js returns it pre-parsed.
@@ -33,7 +38,7 @@ export interface UserAchievementProgressRow {
   updated_at: Date;
 }
 
-export type Lang = "en" | "ru";
+export type Lang = "en" | "ru" | "uz";
 
 // What the frontend consumes - localised, with progress-bar fields pre-computed
 // so the UI doesn't need to think about thresholds.
@@ -78,8 +83,17 @@ export interface PublicEarnedAchievement {
   unlocked_at: string | null; // when current_level was unlocked
 }
 
-function pickLang(en: string, ru: string | null, lang: Lang): string {
-  return lang === "ru" && ru ? ru : en;
+// Achievement copy falls back to EN when a translation is missing - same
+// reasoning as badges: chrome, not exam content.
+function pickLang(
+  en: string,
+  ru: string | null,
+  uz: string | null | undefined,
+  lang: Lang
+): string {
+  if (lang === "ru") return ru || en;
+  if (lang === "uz") return uz || en;
+  return en;
 }
 
 // Build the full public payload (used on /me/achievements). Includes locked
@@ -100,7 +114,7 @@ export function toPublicAchievement(
   const levels: PublicAchievementLevel[] = sorted.map((lv) => ({
     level: lv.level,
     threshold: lv.threshold,
-    name: pickLang(lv.name_en, lv.name_ru, lang),
+    name: pickLang(lv.name_en, lv.name_ru, lv.name_uz, lang),
     unlocked: lv.level <= currentLevel,
     unlocked_at: unlockedMap[String(lv.level)] ?? null,
   }));
@@ -113,13 +127,23 @@ export function toPublicAchievement(
   const nextLevelRow = sorted.find((lv) => lv.level === currentLevel + 1);
   const next_threshold = nextLevelRow?.threshold ?? null;
   const next_level_name = nextLevelRow
-    ? pickLang(nextLevelRow.name_en, nextLevelRow.name_ru, lang)
+    ? pickLang(
+        nextLevelRow.name_en,
+        nextLevelRow.name_ru,
+        nextLevelRow.name_uz,
+        lang
+      )
     : null;
 
   return {
     code: row.code,
-    name: pickLang(row.name_en, row.name_ru, lang),
-    description: pickLang(row.description_en, row.description_ru, lang),
+    name: pickLang(row.name_en, row.name_ru, row.name_uz, lang),
+    description: pickLang(
+      row.description_en,
+      row.description_ru,
+      row.description_uz,
+      lang
+    ),
     icon: row.icon,
     sort_order: row.sort_order,
     current_value: currentValue,
@@ -150,12 +174,17 @@ export function toPublicEarnedAchievement(
 
   return {
     code: row.code,
-    name: pickLang(row.name_en, row.name_ru, lang),
-    description: pickLang(row.description_en, row.description_ru, lang),
+    name: pickLang(row.name_en, row.name_ru, row.name_uz, lang),
+    description: pickLang(
+      row.description_en,
+      row.description_ru,
+      row.description_uz,
+      lang
+    ),
     icon: row.icon,
     sort_order: row.sort_order,
     current_level: currentLevel,
-    current_level_name: pickLang(lvRow.name_en, lvRow.name_ru, lang),
+    current_level_name: pickLang(lvRow.name_en, lvRow.name_ru, lvRow.name_uz, lang),
     unlocked_at: unlockedMap[String(currentLevel)] ?? null,
   };
 }

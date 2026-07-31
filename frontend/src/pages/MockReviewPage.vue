@@ -120,6 +120,20 @@ function tfUser(entry: MockAnswerEntry): (string | null)[] {
   return parseJsonArray(entry.user_answer) ?? [];
 }
 
+// Canonical EN value -> localized display label, using the answer-space pairs
+// on the payload. Stored answers (user_answer, correct_answer) are always
+// canonical EN, so review has to translate them back for display or a Russian
+// review screen shows English chips under Russian row labels. true_false needs
+// no equivalent: it renders the payload's own label objects directly.
+function matchLabelFor(entry: MockAnswerEntry, value: string | null): string | null {
+  if (value === null) return null;
+  if (entry.payload && entry.payload.kind === 'matching') {
+    const hit = entry.payload.options.find((o) => o.value === value);
+    if (hit) return hit.label;
+  }
+  return value;
+}
+
 // matching correct/user values, per row (index-aligned).
 function matchCorrect(entry: MockAnswerEntry): string[] {
   return entry.correct_answer.split('|').map((pair) => {
@@ -263,11 +277,11 @@ onMounted(load);
             <div v-for="(st, i) in entry.payload.statements" :key="i" class="tf-statement">
               <p class="tf-text">{{ st.text }}</p>
               <div class="tf-labels">
-                <span v-for="label in entry.payload.labels" :key="label" :class="[
+                <span v-for="choice in entry.payload.labels" :key="choice.value" :class="[
                   'tf-label',
-                  label === tfCorrect(entry)[i] ? 'correct' : '',
-                  label === tfUser(entry)[i] && tfUser(entry)[i] !== tfCorrect(entry)[i] ? 'wrong' : '',
-                ]">{{ label }}</span>
+                  choice.value === tfCorrect(entry)[i] ? 'correct' : '',
+                  choice.value === tfUser(entry)[i] && tfUser(entry)[i] !== tfCorrect(entry)[i] ? 'wrong' : '',
+                ]">{{ choice.label }}</span>
               </div>
             </div>
           </div>
@@ -280,11 +294,11 @@ onMounted(load);
               <span class="match-label">{{ row.label }}</span>
               <span class="match-review-vals">
                 <span :class="['match-chip', matchUser(entry)[i] === matchCorrect(entry)[i] ? 'correct' : 'wrong']">
-                  {{ matchUser(entry)[i] ?? t('mocks.review_no_answer') }}
+                  {{ matchLabelFor(entry, matchUser(entry)[i]) ?? t('mocks.review_no_answer') }}
                 </span>
                 <template v-if="matchUser(entry)[i] !== matchCorrect(entry)[i]">
                   <span class="match-arrow" aria-hidden="true">→</span>
-                  <span class="match-chip correct">{{ matchCorrect(entry)[i] }}</span>
+                  <span class="match-chip correct">{{ matchLabelFor(entry, matchCorrect(entry)[i]) }}</span>
                 </template>
               </span>
             </div>

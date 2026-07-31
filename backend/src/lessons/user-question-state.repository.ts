@@ -1,6 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
+import type { Lang } from "../content/content.types";
+import { andTranslatedIn } from "../content/translation-filter.sql";
 import type { UserQuestionStateRow } from "./lesson.types";
 
 const COLS = `
@@ -39,6 +41,8 @@ export class UserQuestionStateRepository {
     user_id: string;
     paper_id?: string | null;
     limit: number;
+    // B3: only questions fully translated into this language are eligible.
+    lang: Lang;
   }): Promise<
     Array<{
       question_id: string;
@@ -50,6 +54,7 @@ export class UserQuestionStateRepository {
     const paperFilter = input.paper_id
       ? this.sql`AND lo.paper_id = ${input.paper_id}`
       : this.sql``;
+    const translated = andTranslatedIn(this.sql, input.lang, "q");
     return this.sql<
       Array<{
         question_id: string;
@@ -70,6 +75,7 @@ export class UserQuestionStateRepository {
           AND NOT EXISTS (
             SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
           )
+          ${translated}
           ${paperFilter}
         ORDER BY q.lo_id, uqs.due_date ASC, random()
       ) per_lo
@@ -87,6 +93,8 @@ export class UserQuestionStateRepository {
     paper_id?: string | null;
     exclude_ids: string[];
     limit: number;
+    // B3: only questions fully translated into this language are eligible.
+    lang: Lang;
   }): Promise<
     Array<{
       question_id: string;
@@ -125,6 +133,7 @@ export class UserQuestionStateRepository {
         AND NOT EXISTS (
           SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
         )
+        ${andTranslatedIn(this.sql, input.lang, "q")}
         ${excludeFilter}
         ${paperFilter}
       ORDER BY uqs.due_date ASC, random()
@@ -139,6 +148,9 @@ export class UserQuestionStateRepository {
     user_id: string;
     paper_id?: string | null;
     limit: number;
+    // B3: LO weakness is measured over the questions the user could actually
+    // be served, so untranslated ones don't drag an LO's average around.
+    lang: Lang;
   }): Promise<Array<{ lo_id: string; avg_mastery: number | null }>> {
     const paperFilter = input.paper_id
       ? this.sql`AND lo.paper_id = ${input.paper_id}`
@@ -152,6 +164,7 @@ export class UserQuestionStateRepository {
         AND NOT EXISTS (
           SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
         )
+        ${andTranslatedIn(this.sql, input.lang, "q")}
       LEFT JOIN user_question_state uqs
         ON uqs.question_id = q.id AND uqs.user_id = ${input.user_id}
       WHERE 1=1
@@ -190,7 +203,18 @@ export class UserQuestionStateRepository {
     limit: number;
     preferred_difficulty: "easy" | "medium" | "hard";
     error_rate_bias?: boolean;
+    // B3: only questions fully translated into this language are eligible.
+    lang: Lang;
+    // Question ids the caller has already queued. Used by the second sweep
+    // (which revisits an LO for a 2nd/3rd question) so the same row can't be
+    // picked twice. Empty array = no exclusion.
+    exclude_ids?: string[];
   }): Promise<Array<{ id: string; difficulty: string }>> {
+    const translated = andTranslatedIn(this.sql, input.lang, "q");
+    const excludeFilter =
+      input.exclude_ids && input.exclude_ids.length > 0
+        ? this.sql`AND q.id NOT IN ${this.sql(input.exclude_ids)}`
+        : this.sql``;
     if (input.error_rate_bias) {
       return this.sql<Array<{ id: string; difficulty: string }>>`
         SELECT q.id, q.difficulty::text AS difficulty
@@ -205,6 +229,8 @@ export class UserQuestionStateRepository {
           AND NOT EXISTS (
             SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
           )
+          ${translated}
+          ${excludeFilter}
         ORDER BY
           CASE q.difficulty::text WHEN ${input.preferred_difficulty} THEN 0 ELSE 1 END,
           COALESCE(er.error_rate, 0.4) DESC,
@@ -224,6 +250,8 @@ export class UserQuestionStateRepository {
         AND NOT EXISTS (
           SELECT 1 FROM mock_exam_questions meq WHERE meq.question_id = q.id
         )
+        ${translated}
+        ${excludeFilter}
       ORDER BY
         CASE q.difficulty::text WHEN ${input.preferred_difficulty} THEN 0 ELSE 1 END,
         random()

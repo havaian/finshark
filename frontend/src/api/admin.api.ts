@@ -1,4 +1,5 @@
 import { api } from "./client";
+import type { Lang } from "../i18n";
 import type {
   ContentTreePaper,
   LearningObjectiveRaw,
@@ -286,14 +287,14 @@ export const adminApi = {
 
   upsertUiTranslation: async (input: {
     key: string;
-    lang: "en" | "ru";
+    lang: Lang;
     value: string;
   }): Promise<UiTranslation> =>
     (await api.post<UiTranslation>("/admin/ui-translations", input)).data,
 
   deleteUiTranslation: async (
     key: string,
-    lang: "en" | "ru"
+    lang: Lang
   ): Promise<void> => {
     await api.delete(
       `/admin/ui-translations/${lang}/${encodeURIComponent(key)}`

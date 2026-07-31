@@ -13,6 +13,7 @@ export interface AccuracyByPaperRow {
   paper_code: string;
   paper_name_en: string;
   paper_name_ru: string | null;
+  paper_name_uz: string | null;
   attempts: number;
   correct: number;
 }
@@ -76,6 +77,7 @@ export class ProfileStatsRepository {
         p.code       AS paper_code,
         p.name_en    AS paper_name_en,
         p.name_ru    AS paper_name_ru,
+        p.name_uz    AS paper_name_uz,
         COUNT(a.id)::int                                AS attempts,
         COUNT(a.id) FILTER (WHERE a.was_correct)::int   AS correct
       FROM attempts a

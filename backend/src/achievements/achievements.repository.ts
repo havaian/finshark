@@ -7,7 +7,8 @@ import type {
 } from "./achievements.types";
 
 const ACH_COLS = `
-  code, name_en, name_ru, description_en, description_ru, icon, sort_order,
+  code, name_en, name_ru, name_uz,
+  description_en, description_ru, description_uz, icon, sort_order,
   levels, created_at, updated_at
 `;
 

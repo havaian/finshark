@@ -4,7 +4,8 @@ import { PG } from "../db/db.module";
 import type { BadgeRow, UserBadgeRow } from "./badges.types";
 
 const BADGE_COLS = `
-  code, name_en, name_ru, description_en, description_ru, icon, sort_order,
+  code, name_en, name_ru, name_uz,
+  description_en, description_ru, description_uz, icon, sort_order,
   created_at, updated_at
 `;
 

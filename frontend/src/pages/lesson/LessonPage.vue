@@ -694,21 +694,23 @@ onUnmounted(() => {
         </div>
 
         <!-- True/False (and other 2-4 label classifications). One label row per
-             statement; each choice is a canonical EN label. -->
+             statement. Each choice renders its localized `label` but stores the
+             canonical EN `value` - the grader matches on the canonical form. -->
         <div v-else-if="current.type === 'true_false' && current.payload && current.payload.kind === 'true_false'"
           class="tf-block">
           <div v-for="(st, i) in current.payload.statements" :key="i" class="tf-statement">
             <p class="tf-text">{{ st.text }}</p>
             <div class="tf-labels">
-              <button v-for="label in current.payload.labels" :key="label" type="button"
-                :class="['tf-label', { selected: tfAnswers[i] === label }]" :disabled="!!feedback"
-                @click="tfAnswers[i] = label">{{ label }}</button>
+              <button v-for="choice in current.payload.labels" :key="choice.value" type="button"
+                :class="['tf-label', { selected: tfAnswers[i] === choice.value }]" :disabled="!!feedback"
+                @click="tfAnswers[i] = choice.value">{{ choice.label }}</button>
             </div>
           </div>
         </div>
 
         <!-- Matching: one dropdown per row, choosing from the shared option
-             pool. Selected values are canonical EN. -->
+             pool. The option shows its localized `label`; the bound value stays
+             canonical EN so grading is language-neutral. -->
         <div v-else-if="current.type === 'matching' && current.payload && current.payload.kind === 'matching'"
           class="match-block">
           <div v-for="(row, i) in current.payload.rows" :key="i" class="match-row">
@@ -716,7 +718,7 @@ onUnmounted(() => {
             <select v-model="matchAnswers[i]" :disabled="!!feedback" class="match-select">
               <option :value="null" disabled>{{ t('lesson.match_select_placeholder') }}</option>
               <option v-for="opt in current.payload.options" :key="opt.value" :value="opt.value">
-                {{ opt.value }}
+                {{ opt.label }}
               </option>
             </select>
           </div>

@@ -242,16 +242,26 @@ export class ClickFiscalService {
       limit: SWEEP_BATCH_SIZE,
       maxAttempts: MAX_FISCAL_ATTEMPTS,
     });
-    if (pending.length === 0) return;
 
-    this.log.log(`fiscal retry: ${pending.length} order(s) to file`);
-    for (const order of pending) {
-      // Sequential on purpose. These are low-volume and Click's API is not
-      // something to fan out against.
-      await this.submitForOrder(order.id);
+    if (pending.length > 0) {
+      this.log.log(`fiscal retry: ${pending.length} order(s) to file`);
+      for (const order of pending) {
+        // Sequential on purpose. These are low-volume and Click's API is not
+        // something to fan out against.
+        await this.submitForOrder(order.id);
+      }
     }
 
     // Backfill receipt URLs for anything filed earlier that still lacks one.
+    //
+    // This MUST run unconditionally, not behind the pending check. A receipt
+    // that was accepted but has no QR URL yet is the NORMAL state right after
+    // filing - the OFD lags behind submission - and such an order is NOT
+    // fiscally pending, so it never appears in findFiscalPending. Gating this
+    // call behind `pending.length > 0` meant the backfill only ran on an hour
+    // where some unrelated order happened to be stuck, and in the steady state
+    // (everything filed cleanly) it never ran at all. Receipts then kept
+    // fiscal_qr_url = NULL forever and the customer had no receipt link.
     await this.backfillQrUrls();
   }
 

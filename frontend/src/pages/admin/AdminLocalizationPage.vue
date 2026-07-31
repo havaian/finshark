@@ -5,19 +5,27 @@ import { useI18n } from 'vue-i18n';
 import { adminApi } from '../../api/admin.api';
 import en from '../../i18n/en';
 import ru from '../../i18n/ru';
+import uz from '../../i18n/uz';
 import { flattenMessages } from '../../i18n/flatten';
+import { SUPPORTED_LANGS, type Lang } from '../../i18n';
 
-type Lang = 'en' | 'ru';
+// One editable column per supported language. Driven off SUPPORTED_LANGS so a
+// new language needs no change here - previously EN and RU were two hand-copied
+// template blocks, which is why UZ was missing from this screen entirely.
+const EDIT_LANGS = SUPPORTED_LANGS;
 
 const { t } = useI18n();
 
 // Flatten the bundled static locales once. These are the "default" values
 // shown in the table rows when no override exists, plus the master list of
 // every key the app references.
-const STATIC_EN = flattenMessages(en);
-const STATIC_RU = flattenMessages(ru);
+const STATIC_BY_LANG: Record<Lang, Record<string, string>> = {
+  en: flattenMessages(en),
+  ru: flattenMessages(ru),
+  uz: flattenMessages(uz),
+};
 const ALL_KEYS = Array.from(
-  new Set([...Object.keys(STATIC_EN), ...Object.keys(STATIC_RU)]),
+  new Set(EDIT_LANGS.flatMap((l) => Object.keys(STATIC_BY_LANG[l]))),
 ).sort();
 
 // Overrides loaded from the backend: {key: {en?: string, ru?: string}}.
@@ -40,11 +48,11 @@ const filteredKeys = computed(() => {
   if (!q) return ALL_KEYS;
   return ALL_KEYS.filter((k) => {
     if (k.toLowerCase().includes(q)) return true;
-    if ((STATIC_EN[k] ?? '').toLowerCase().includes(q)) return true;
-    if ((STATIC_RU[k] ?? '').toLowerCase().includes(q)) return true;
+    if (EDIT_LANGS.some((l) => (STATIC_BY_LANG[l][k] ?? '').toLowerCase().includes(q))) {
+      return true;
+    }
     const ov = overrides.value[k];
-    if (ov?.en?.toLowerCase().includes(q)) return true;
-    if (ov?.ru?.toLowerCase().includes(q)) return true;
+    if (EDIT_LANGS.some((l) => ov?.[l]?.toLowerCase().includes(q))) return true;
     return false;
   });
 });
@@ -57,7 +65,7 @@ async function load() {
     const next: Record<string, Partial<Record<Lang, string>>> = {};
     for (const row of rows) {
       // Destructure with an explicit Lang annotation on `lang`. The Volar
-      // ts-plugin in the editor sometimes loses the narrow `'en' | 'ru'` type
+      // ts-plugin in the editor sometimes loses the narrow Lang union type
       // when `row.lang` is read off a property - annotating it locally makes
       // the index access on `bucket[lang]` unambiguously typed.
       const { key, lang, value }: { key: string; lang: Lang; value: string } = row;
@@ -144,7 +152,7 @@ function isBusy(key: string, lang: Lang): boolean {
 }
 
 function defaultFor(key: string, lang: Lang): string {
-  return (lang === 'en' ? STATIC_EN[key] : STATIC_RU[key]) ?? '';
+  return STATIC_BY_LANG[lang][key] ?? '';
 }
 
 function overrideFor(key: string, lang: Lang): string | undefined {
@@ -180,66 +188,37 @@ onMounted(load);
       <div v-for="key in filteredKeys" :key="key" class="ui-trans-row">
         <div class="ui-trans-key mono text-xs muted">{{ key }}</div>
 
-        <!-- EN cell -->
-        <div class="ui-trans-cell">
+        <!-- One cell per supported language. Single loop rather than a block
+             per language, so adding a language is a change in SUPPORTED_LANGS
+             and nothing here. -->
+        <div v-for="lang in EDIT_LANGS" :key="lang" class="ui-trans-cell">
           <div class="ui-trans-default dim text-xs">
-            {{ t('admin.localization.default') }}: {{ defaultFor(key, 'en') || '-' }}
+            {{ lang.toUpperCase() }} {{ t('admin.localization.default') }}:
+            {{ defaultFor(key, lang) || '-' }}
           </div>
-          <template v-if="!isEditing(key, 'en')">
+          <template v-if="!isEditing(key, lang)">
             <div class="ui-trans-current">
-              <span v-if="overrideFor(key, 'en')">{{ overrideFor(key, 'en') }}</span>
+              <span v-if="overrideFor(key, lang)">{{ overrideFor(key, lang) }}</span>
               <span v-else class="muted">-</span>
             </div>
             <div class="ui-trans-actions">
-              <button class="btn-link accent" @click="startEdit(key, 'en')">
-                {{ overrideFor(key, 'en') ? t('common.edit') : t('common.add') }}
+              <button class="btn-link accent" @click="startEdit(key, lang)">
+                {{ overrideFor(key, lang) ? t('common.edit') : t('common.add') }}
               </button>
-              <button v-if="overrideFor(key, 'en')" class="btn-link" style="color: var(--danger);"
-                :disabled="isBusy(key, 'en')" @click="onDelete(key, 'en')">
+              <button v-if="overrideFor(key, lang)" class="btn-link" style="color: var(--danger);"
+                :disabled="isBusy(key, lang)" @click="onDelete(key, lang)">
                 {{ t('common.delete') }}
               </button>
             </div>
           </template>
           <template v-else>
-            <textarea v-model="editing[`${key}::en`]" rows="2" maxlength="10000"
+            <textarea v-model="editing[`${key}::${lang}`]" rows="2" maxlength="10000"
               :placeholder="t('admin.localization.add_value_ph')" />
             <div class="ui-trans-actions">
-              <button class="btn btn-primary btn-sm" :disabled="isBusy(key, 'en')" @click="saveEdit(key, 'en')">
-                {{ isBusy(key, 'en') ? t('admin.localization.saving') : t('common.save') }}
+              <button class="btn btn-primary btn-sm" :disabled="isBusy(key, lang)" @click="saveEdit(key, lang)">
+                {{ isBusy(key, lang) ? t('admin.localization.saving') : t('common.save') }}
               </button>
-              <button class="btn btn-ghost btn-sm" @click="cancelEdit(key, 'en')">{{ t('common.cancel') }}</button>
-            </div>
-          </template>
-        </div>
-
-        <!-- RU cell -->
-        <div class="ui-trans-cell">
-          <div class="ui-trans-default dim text-xs">
-            {{ t('admin.localization.default') }}: {{ defaultFor(key, 'ru') || '-' }}
-          </div>
-          <template v-if="!isEditing(key, 'ru')">
-            <div class="ui-trans-current">
-              <span v-if="overrideFor(key, 'ru')">{{ overrideFor(key, 'ru') }}</span>
-              <span v-else class="muted">-</span>
-            </div>
-            <div class="ui-trans-actions">
-              <button class="btn-link accent" @click="startEdit(key, 'ru')">
-                {{ overrideFor(key, 'ru') ? t('common.edit') : t('common.add') }}
-              </button>
-              <button v-if="overrideFor(key, 'ru')" class="btn-link" style="color: var(--danger);"
-                :disabled="isBusy(key, 'ru')" @click="onDelete(key, 'ru')">
-                {{ t('common.delete') }}
-              </button>
-            </div>
-          </template>
-          <template v-else>
-            <textarea v-model="editing[`${key}::ru`]" rows="2" maxlength="10000"
-              :placeholder="t('admin.localization.add_value_ph')" />
-            <div class="ui-trans-actions">
-              <button class="btn btn-primary btn-sm" :disabled="isBusy(key, 'ru')" @click="saveEdit(key, 'ru')">
-                {{ isBusy(key, 'ru') ? t('admin.localization.saving') : t('common.save') }}
-              </button>
-              <button class="btn btn-ghost btn-sm" @click="cancelEdit(key, 'ru')">{{ t('common.cancel') }}</button>
+              <button class="btn btn-ghost btn-sm" @click="cancelEdit(key, lang)">{{ t('common.cancel') }}</button>
             </div>
           </template>
         </div>

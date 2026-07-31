@@ -2,21 +2,26 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
 import type {
+  Lang,
   McqOption,
   QuestionDifficulty,
   QuestionPayload,
   QuestionRow,
   QuestionType,
 } from "./content.types";
+import {
+  andNotTranslatedIn,
+  andTranslatedIn,
+} from "./translation-filter.sql";
 
 const COLS = `
   id, lo_id, type, difficulty,
-  prompt_en, prompt_ru,
+  prompt_en, prompt_ru, prompt_uz,
   options, payload,
-  correct_answer_en, correct_answer_ru,
-  explanation_en, explanation_ru,
-  concept_bite_en, concept_bite_ru,
-  exhibit_en, exhibit_ru,
+  correct_answer_en, correct_answer_ru, correct_answer_uz,
+  explanation_en, explanation_ru, explanation_uz,
+  concept_bite_en, concept_bite_ru, concept_bite_uz,
+  exhibit_en, exhibit_ru, exhibit_uz,
   acceptable_tolerance,
   external_ref,
   is_active,
@@ -54,16 +59,21 @@ export class QuestionsRepository {
     difficulty: QuestionDifficulty;
     prompt_en: string;
     prompt_ru: string | null;
+    prompt_uz: string | null;
     options: McqOption[] | null;
     payload?: QuestionPayload | null; // true_false / matching only
     correct_answer_en: string;
     correct_answer_ru: string | null;
+    correct_answer_uz: string | null;
     explanation_en: string;
     explanation_ru: string | null;
+    explanation_uz: string | null;
     concept_bite_en: string | null;
     concept_bite_ru: string | null;
+    concept_bite_uz: string | null;
     exhibit_en?: string | null;
     exhibit_ru?: string | null;
+    exhibit_uz?: string | null;
     acceptable_tolerance?: number | null; // number_entry only
     external_ref?: string | null; // set by the bank importer
     is_active?: boolean; // default true - new in question-generator
@@ -87,12 +97,12 @@ export class QuestionsRepository {
     const rows = await this.sql<QuestionRow[]>`
       INSERT INTO questions (
         lo_id, type, difficulty,
-        prompt_en, prompt_ru,
+        prompt_en, prompt_ru, prompt_uz,
         options, payload,
-        correct_answer_en, correct_answer_ru,
-        explanation_en, explanation_ru,
-        concept_bite_en, concept_bite_ru,
-        exhibit_en, exhibit_ru,
+        correct_answer_en, correct_answer_ru, correct_answer_uz,
+        explanation_en, explanation_ru, explanation_uz,
+        concept_bite_en, concept_bite_ru, concept_bite_uz,
+        exhibit_en, exhibit_ru, exhibit_uz,
         acceptable_tolerance,
         external_ref,
         is_active
@@ -103,16 +113,21 @@ export class QuestionsRepository {
         ${input.difficulty},
         ${input.prompt_en},
         ${input.prompt_ru},
+        ${input.prompt_uz},
         ${optionsParam},
         ${payloadParam},
         ${input.correct_answer_en},
         ${input.correct_answer_ru},
+        ${input.correct_answer_uz},
         ${input.explanation_en},
         ${input.explanation_ru},
+        ${input.explanation_uz},
         ${input.concept_bite_en},
         ${input.concept_bite_ru},
+        ${input.concept_bite_uz},
         ${input.exhibit_en ?? null},
         ${input.exhibit_ru ?? null},
+        ${input.exhibit_uz ?? null},
         ${tolerance},
         ${input.external_ref ?? null},
         ${isActive}
@@ -129,16 +144,21 @@ export class QuestionsRepository {
       difficulty?: QuestionDifficulty;
       prompt_en?: string;
       prompt_ru?: string | null;
+      prompt_uz?: string | null;
       options?: McqOption[] | null;
       payload?: QuestionPayload | null;
       correct_answer_en?: string;
       correct_answer_ru?: string | null;
+      correct_answer_uz?: string | null;
       explanation_en?: string;
       explanation_ru?: string | null;
+      explanation_uz?: string | null;
       concept_bite_en?: string | null;
       concept_bite_ru?: string | null;
+      concept_bite_uz?: string | null;
       exhibit_en?: string | null;
       exhibit_ru?: string | null;
+      exhibit_uz?: string | null;
       acceptable_tolerance?: number | null;
       external_ref?: string | null;
       is_active?: boolean;
@@ -149,6 +169,7 @@ export class QuestionsRepository {
     if (input.difficulty !== undefined) sets.difficulty = input.difficulty;
     if (input.prompt_en !== undefined) sets.prompt_en = input.prompt_en;
     if (input.prompt_ru !== undefined) sets.prompt_ru = input.prompt_ru;
+    if (input.prompt_uz !== undefined) sets.prompt_uz = input.prompt_uz;
     if (input.options !== undefined) {
       sets.options =
         input.options === null ? null : this.sql.json(input.options as any);
@@ -161,16 +182,23 @@ export class QuestionsRepository {
       sets.correct_answer_en = input.correct_answer_en;
     if (input.correct_answer_ru !== undefined)
       sets.correct_answer_ru = input.correct_answer_ru;
+    if (input.correct_answer_uz !== undefined)
+      sets.correct_answer_uz = input.correct_answer_uz;
     if (input.explanation_en !== undefined)
       sets.explanation_en = input.explanation_en;
     if (input.explanation_ru !== undefined)
       sets.explanation_ru = input.explanation_ru;
+    if (input.explanation_uz !== undefined)
+      sets.explanation_uz = input.explanation_uz;
     if (input.concept_bite_en !== undefined)
       sets.concept_bite_en = input.concept_bite_en;
     if (input.concept_bite_ru !== undefined)
       sets.concept_bite_ru = input.concept_bite_ru;
+    if (input.concept_bite_uz !== undefined)
+      sets.concept_bite_uz = input.concept_bite_uz;
     if (input.exhibit_en !== undefined) sets.exhibit_en = input.exhibit_en;
     if (input.exhibit_ru !== undefined) sets.exhibit_ru = input.exhibit_ru;
+    if (input.exhibit_uz !== undefined) sets.exhibit_uz = input.exhibit_uz;
     if (input.acceptable_tolerance !== undefined)
       sets.acceptable_tolerance = input.acceptable_tolerance;
     if (input.external_ref !== undefined) sets.external_ref = input.external_ref;
@@ -238,9 +266,12 @@ export class QuestionsRepository {
   // If the paper has fewer than N active questions, returns whatever exists.
   async findRandomForMock(
     paper_id: string,
-    count: number
+    count: number,
+    lang: Lang = "en"
   ): Promise<QuestionRow[]> {
     const safeCount = Math.max(1, Math.min(200, count));
+    // B3: never sample a question the candidate can't read in their language.
+    const translated = andTranslatedIn(this.sql, lang, "q");
     // We embed ${this.sql.unsafe(COLS)} inside the SELECT after q.* expansion
     // would be ambiguous. Instead we use a two-step SELECT: outer pulls fully-
     // qualified column list from the CTE.
@@ -248,12 +279,12 @@ export class QuestionsRepository {
       WITH ranked AS (
         SELECT
           q.id, q.lo_id, q.type, q.difficulty,
-          q.prompt_en, q.prompt_ru,
+          q.prompt_en, q.prompt_ru, q.prompt_uz,
           q.options, q.payload,
-          q.correct_answer_en, q.correct_answer_ru,
-          q.explanation_en, q.explanation_ru,
-          q.concept_bite_en, q.concept_bite_ru,
-          q.exhibit_en, q.exhibit_ru,
+          q.correct_answer_en, q.correct_answer_ru, q.correct_answer_uz,
+          q.explanation_en, q.explanation_ru, q.explanation_uz,
+          q.concept_bite_en, q.concept_bite_ru, q.concept_bite_uz,
+          q.exhibit_en, q.exhibit_ru, q.exhibit_uz,
           q.acceptable_tolerance, q.external_ref,
           q.is_active,
           q.created_at, q.updated_at,
@@ -263,6 +294,7 @@ export class QuestionsRepository {
         JOIN learning_objectives lo ON lo.id = q.lo_id
         WHERE lo.paper_id = ${paper_id}
           AND q.is_active = TRUE
+          ${translated}
       )
       SELECT ${this.sql.unsafe(COLS)}
       FROM ranked
@@ -279,22 +311,24 @@ export class QuestionsRepository {
   async findRandomForMockExcluding(
     paper_id: string,
     count: number,
-    exclude_ids: string[]
+    exclude_ids: string[],
+    lang: Lang = "en"
   ): Promise<QuestionRow[]> {
     const safeCount = Math.max(1, Math.min(200, count));
     if (exclude_ids.length === 0) {
-      return this.findRandomForMock(paper_id, safeCount);
+      return this.findRandomForMock(paper_id, safeCount, lang);
     }
+    const translated = andTranslatedIn(this.sql, lang, "q");
     return this.sql<QuestionRow[]>`
       WITH ranked AS (
         SELECT
           q.id, q.lo_id, q.type, q.difficulty,
-          q.prompt_en, q.prompt_ru,
+          q.prompt_en, q.prompt_ru, q.prompt_uz,
           q.options, q.payload,
-          q.correct_answer_en, q.correct_answer_ru,
-          q.explanation_en, q.explanation_ru,
-          q.concept_bite_en, q.concept_bite_ru,
-          q.exhibit_en, q.exhibit_ru,
+          q.correct_answer_en, q.correct_answer_ru, q.correct_answer_uz,
+          q.explanation_en, q.explanation_ru, q.explanation_uz,
+          q.concept_bite_en, q.concept_bite_ru, q.concept_bite_uz,
+          q.exhibit_en, q.exhibit_ru, q.exhibit_uz,
           q.acceptable_tolerance, q.external_ref,
           q.is_active,
           q.created_at, q.updated_at,
@@ -305,6 +339,7 @@ export class QuestionsRepository {
         WHERE lo.paper_id = ${paper_id}
           AND q.is_active = TRUE
           AND q.id NOT IN ${this.sql(exclude_ids)}
+          ${translated}
       )
       SELECT ${this.sql.unsafe(COLS)}
       FROM ranked
@@ -323,7 +358,17 @@ export class QuestionsRepository {
   // than its full membership until those rows are completed, rather than
   // serving an ungradeable question. COLS is unqualified but unambiguous here -
   // none of its column names exist on mock_exam_questions.
-  async findRandomActiveMockWithQuestions(paper_id: string): Promise<{
+  //
+  // Language gate (B3) is ALL-OR-NOTHING per mock: a mock is eligible only when
+  // every one of its active questions is fully translated into `lang`. Dropping
+  // individual untranslated questions from a fixed exam would silently change
+  // its total marks and make the pass threshold meaningless, so a partially
+  // translated mock is skipped entirely and the caller falls through to the
+  // dynamic sampler (which filters per question and rebuilds the marks layout).
+  async findRandomActiveMockWithQuestions(
+    paper_id: string,
+    lang: Lang = "en"
+  ): Promise<{
     mock_id: string;
     code: string;
     duration_seconds: number;
@@ -338,9 +383,17 @@ export class QuestionsRepository {
         pass_mark_pct: number;
       }>
     >`
-      SELECT id::text, code, duration_seconds, pass_mark_pct
-      FROM mock_exams
-      WHERE paper_id = ${paper_id} AND is_active = TRUE
+      SELECT m.id::text, m.code, m.duration_seconds, m.pass_mark_pct
+      FROM mock_exams m
+      WHERE m.paper_id = ${paper_id} AND m.is_active = TRUE
+        AND NOT EXISTS (
+          SELECT 1
+          FROM mock_exam_questions meq
+          JOIN questions q ON q.id = meq.question_id
+          WHERE meq.mock_id = m.id
+            AND q.is_active = TRUE
+            ${andNotTranslatedIn(this.sql, lang, "q")}
+        )
       ORDER BY random()
       LIMIT 1
     `;

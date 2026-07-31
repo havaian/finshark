@@ -5,7 +5,9 @@ import { PG } from "../db/db.module";
 import type { EmailTemplateRow } from "./email-templates.types";
 
 const COLS = `
-  key, subject_en, subject_ru, body_en, body_ru, html_en, html_ru,
+  key, subject_en, subject_ru, subject_uz,
+  body_en, body_ru, body_uz,
+  html_en, html_ru, html_uz,
   variables, is_active, notes, created_at, updated_at
 `;
 
@@ -55,24 +57,29 @@ export class EmailTemplatesRepository {
     key: string;
     subject_en: string;
     subject_ru: string | null;
+    subject_uz: string | null;
     body_en: string;
     body_ru: string | null;
+    body_uz: string | null;
     html_en: string | null;
     html_ru: string | null;
+    html_uz: string | null;
     variables: string[];
     is_active: boolean;
     notes: string | null;
   }): Promise<EmailTemplateRow> {
     const rows = await this.sql<EmailTemplateRow[]>`
       INSERT INTO email_templates (
-        key, subject_en, subject_ru, body_en, body_ru, html_en, html_ru,
+        key, subject_en, subject_ru, subject_uz,
+        body_en, body_ru, body_uz,
+        html_en, html_ru, html_uz,
         variables, is_active, notes
       )
       VALUES (
         ${input.key},
-        ${input.subject_en}, ${input.subject_ru},
-        ${input.body_en}, ${input.body_ru},
-        ${input.html_en}, ${input.html_ru},
+        ${input.subject_en}, ${input.subject_ru}, ${input.subject_uz},
+        ${input.body_en}, ${input.body_ru}, ${input.body_uz},
+        ${input.html_en}, ${input.html_ru}, ${input.html_uz},
         ${this.sql.json(input.variables as unknown as postgres.JSONValue)},
         ${input.is_active},
         ${input.notes}
@@ -80,10 +87,13 @@ export class EmailTemplatesRepository {
       ON CONFLICT (key) DO UPDATE SET
         subject_en = EXCLUDED.subject_en,
         subject_ru = EXCLUDED.subject_ru,
+        subject_uz = EXCLUDED.subject_uz,
         body_en    = EXCLUDED.body_en,
         body_ru    = EXCLUDED.body_ru,
+        body_uz    = EXCLUDED.body_uz,
         html_en    = EXCLUDED.html_en,
         html_ru    = EXCLUDED.html_ru,
+        html_uz    = EXCLUDED.html_uz,
         variables  = EXCLUDED.variables,
         is_active  = EXCLUDED.is_active,
         notes      = EXCLUDED.notes

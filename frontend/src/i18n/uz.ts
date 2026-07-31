@@ -1134,19 +1134,6 @@ export default {
       callbacks_error: "Couldn't load the callback log.",
 
       // Legacy P2P card transfers (decommissioned)
-      legacy_title: "Legacy card transfers",
-      legacy_sub: "Read-only history of the retired transfer-and-slip flow. Users can no longer submit these.",
-      legacy_show: "Show",
-      legacy_hide: "Hide",
-      legacy_empty: "No submissions in this view.",
-      legacy_filter_all: "All",
-      legacy_filter_pending: "Pending",
-      legacy_filter_approved: "Approved",
-      legacy_filter_rejected: "Rejected",
-      legacy_pending_warning: "{n} submission(s) still pending from before the Click cutover. Settle them - users can't chase these any more.",
-      legacy_approve: "Approve & grant",
-      legacy_reject: "Reject",
-      legacy_review_error: "Couldn't process this submission. Please refresh and retry.",
     },
 
     // Admin email templates page. CRUD over the DB-backed template table

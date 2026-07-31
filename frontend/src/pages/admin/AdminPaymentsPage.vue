@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import AdminModal from '../../components/AdminModal.vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { adminBillingApi } from '../../api/billing.api';
 import { adminClickApi } from '../../api/click.api';
-import { adminPaymentApi, adminPlanApi } from '../../api/payment.api';
+import { adminPlanApi } from '../../api/payment.api';
 import type { Plan } from '../../types/billing';
 import type {
   AdminClickCallbackLog,
@@ -12,12 +13,8 @@ import type {
   ClickHealth,
   ClickOrderStatus,
 } from '../../types/click';
-import type {
-  AdminPaymentSubmission,
-  PaymentSubmissionStatus,
-} from '../../types/payment';
 
-// Admin Payments page. Four blocks:
+// Admin Payments page. Three blocks:
 //
 //   1. Integration health - is Click configured, is fiscalization configured.
 //      Surfaced here so a broken deployment is visible in the panel rather than
@@ -26,8 +23,11 @@ import type {
 //      tier/period stay structural and are not editable.
 //   3. Click orders - the live payment queue, with Click's own ids, the raw
 //      callback trail, and fiscal receipt state + re-fire.
-//   4. Legacy card transfers - READ-ONLY history of the retired P2P flow, plus
-//      approve/reject for anything left pending at cutover.
+//
+// The P2P card-transfer block that used to sit at the bottom of this page is
+// gone: the flow was decommissioned at the Click cutover and the code has now
+// been removed. The payment_submissions / payment_cards TABLES are deliberately
+// left in place - they are financial records and must be retained.
 
 const { t } = useI18n();
 
@@ -243,67 +243,7 @@ function prettyJson(v: unknown): string {
 
 // ── 4. Legacy card transfers ───────────────────────────────────────────────
 
-const legacyOpen = ref(false);
-const legacySubmissions = ref<AdminPaymentSubmission[]>([]);
-const legacyLoading = ref(false);
-const legacyFilter = ref<PaymentSubmissionStatus | 'all'>('all');
-const legacyError = ref<string | null>(null);
-const legacyBusy = ref<string | null>(null);
 
-async function loadLegacy() {
-  legacyLoading.value = true;
-  legacyError.value = null;
-  try {
-    legacySubmissions.value = await adminPaymentApi.listSubmissions(
-      legacyFilter.value === 'all' ? undefined : legacyFilter.value
-    );
-  } catch (e) {
-    legacyError.value = mapError(e, t('admin.payments.load_error'));
-  } finally {
-    legacyLoading.value = false;
-  }
-}
-
-async function toggleLegacy() {
-  legacyOpen.value = !legacyOpen.value;
-  if (legacyOpen.value && legacySubmissions.value.length === 0) {
-    await loadLegacy();
-  }
-}
-
-// Kept for stragglers: a submission left pending at cutover, or a dispute
-// surfacing later. Approving still grants premium through the same path it
-// always did.
-async function reviewLegacy(
-  s: AdminPaymentSubmission,
-  action: 'approve' | 'reject'
-) {
-  legacyBusy.value = s.id;
-  legacyError.value = null;
-  try {
-    const updated =
-      action === 'approve'
-        ? await adminPaymentApi.approve(s.id)
-        : await adminPaymentApi.reject(s.id);
-    legacySubmissions.value = legacySubmissions.value.map((x) =>
-      x.id === updated.id ? updated : x
-    );
-  } catch (e) {
-    legacyError.value = mapError(e, t('admin.payments.legacy_review_error'));
-  } finally {
-    legacyBusy.value = null;
-  }
-}
-
-const legacyPendingCount = computed(
-  () => legacySubmissions.value.filter((s) => s.status === 'pending').length
-);
-
-function legacyPill(status: PaymentSubmissionStatus): string {
-  if (status === 'approved') return 'pill pill-green';
-  if (status === 'rejected') return 'pill pill-red';
-  return 'pill pill-amber';
-}
 
 // ── shared ─────────────────────────────────────────────────────────────────
 
@@ -448,70 +388,16 @@ function mapError(e: unknown, fallback: string): string {
       </section>
 
       <!-- 4. Legacy card transfers -->
-      <section class="card mt-6">
-        <div class="admin-legacy-head">
-          <div>
-            <h2>{{ t('admin.payments.legacy_title') }}</h2>
-            <p class="dim text-sm mt-1">{{ t('admin.payments.legacy_sub') }}</p>
-          </div>
-          <button class="btn btn-sm btn-ghost" @click="toggleLegacy">
-            {{ legacyOpen ? t('admin.payments.legacy_hide') : t('admin.payments.legacy_show') }}
-          </button>
-        </div>
-
-        <template v-if="legacyOpen">
-          <p v-if="legacyPendingCount > 0" class="error-text text-sm mt-2">
-            {{ t('admin.payments.legacy_pending_warning', { n: legacyPendingCount }) }}
-          </p>
-
-          <div class="segmented mt-4">
-            <button v-for="f in (['all', 'pending', 'approved', 'rejected'] as const)" :key="f" type="button"
-              :class="{ active: legacyFilter === f }" @click="legacyFilter = f; loadLegacy()">
-              {{ t('admin.payments.legacy_filter_' + f) }}
-            </button>
-          </div>
-
-          <p v-if="legacyError" class="error-text mt-2">{{ legacyError }}</p>
-          <p v-if="legacyLoading" class="dim text-sm mt-4">{{ t('common.loading') }}</p>
-          <p v-else-if="legacySubmissions.length === 0" class="dim text-sm mt-4">
-            {{ t('admin.payments.legacy_empty') }}
-          </p>
-          <div v-else class="list-bordered mt-4">
-            <div v-for="s in legacySubmissions" :key="s.id" class="list-row admin-order-row">
-              <div class="admin-order-info">
-                <div>
-                  <span :class="legacyPill(s.status)">{{ t('payments.status_' + s.status) }}</span>
-                  <span style="font-weight: 500; margin-left: 10px;">
-                    {{ formatPrice(s.amount_minor, s.currency) }}
-                  </span>
-                </div>
-                <div class="dim text-xs mt-1">
-                  {{ s.user_email ?? s.user_id }} · {{ s.plan_name ?? s.plan_id }}
-                  · {{ new Date(s.created_at).toLocaleString() }}
-                </div>
-                <p v-if="s.review_note" class="dim text-xs mt-1">{{ s.review_note }}</p>
-              </div>
-              <div v-if="s.status === 'pending'" class="admin-order-actions">
-                <button class="btn btn-sm btn-primary" :disabled="legacyBusy === s.id"
-                  @click="reviewLegacy(s, 'approve')">
-                  {{ t('admin.payments.legacy_approve') }}
-                </button>
-                <button class="btn btn-sm btn-danger" :disabled="legacyBusy === s.id"
-                  @click="reviewLegacy(s, 'reject')">
-                  {{ t('admin.payments.legacy_reject') }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </template>
-      </section>
     </template>
 
-    <!-- Order detail: Click ids, fiscal state, raw callback trail -->
-    <div v-if="detailOrder" class="modal-overlay" @click.self="closeDetail">
-      <div class="modal-card modal-card-wide">
-        <h2>{{ t('admin.payments.order_detail') }}</h2>
-        <p class="dim text-xs mt-1 admin-mono">{{ detailOrder.merchant_trans_id }}</p>
+    <!-- Order detail: Click ids, fiscal state, raw callback trail.
+         Previously used a `.modal-overlay` class that exists nowhere in the
+         stylesheet, so it rendered unpositioned at the end of the DOM - which
+         is why this looked like a panel glued to the bottom of the page. -->
+    <AdminModal :open="detailOrder !== null" wide :title="t('admin.payments.order_detail')"
+      :subtitle="detailOrder?.merchant_trans_id ?? ''" :busy="detailLoading"
+      @update:open="(v: boolean) => { if (!v) closeDetail(); }">
+      <template v-if="detailOrder">
 
         <p v-if="detailError" class="error-text mt-2">{{ detailError }}</p>
 
@@ -589,9 +475,11 @@ function mapError(e: unknown, fallback: string): string {
           </div>
         </div>
 
-        <button class="btn btn-ghost mt-6" @click="closeDetail">{{ t('admin.payments.close') }}</button>
-      </div>
-    </div>
+      </template>
+      <template #footer>
+        <button class="btn btn-ghost" @click="closeDetail">{{ t('admin.payments.close') }}</button>
+      </template>
+    </AdminModal>
   </div>
 </template>
 
@@ -655,12 +543,6 @@ function mapError(e: unknown, fallback: string): string {
   max-width: 100%;
 }
 
-.admin-legacy-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
 
 .admin-detail-grid {
   display: grid;

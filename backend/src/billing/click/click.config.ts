@@ -82,6 +82,29 @@ export class ClickConfig {
     return missing.length > 0 ? `missing: ${missing.join(", ")}` : null;
   }
 
+  // ── Abandoned-order expiry ───────────────────────────────────────────────
+  //
+  // Nothing used to close out orders the user walked away from, so a checkout
+  // that never completed sat 'prepared' forever - and because Prepare refuses
+  // to let a second attempt converge on an already-prepared order, the user
+  // could not cleanly retry it either.
+  //
+  // Two windows, because the risk is asymmetric. A 'created' order was never
+  // touched by Click, so expiring it cannot conflict with anything. A
+  // 'prepared' order means Click holds an open transaction and a Complete may
+  // still arrive; expiring one early races their timeout and would reject a
+  // real payment. Hence the much longer default, and hence these being
+  // configurable rather than hardcoded: the correct prepared window is whatever
+  // Click say their transaction lifetime is, and that is a question for them.
+
+  get orderCreatedTtlMinutes(): number {
+    return this.intEnv("CLICK_ORDER_CREATED_TTL_MIN", 60);
+  }
+
+  get orderPreparedTtlMinutes(): number {
+    return this.intEnv("CLICK_ORDER_PREPARED_TTL_MIN", 1440);
+  }
+
   // ── Fiscalization config ─────────────────────────────────────────────────
 
   get fiscalEnabled(): boolean {
@@ -188,6 +211,20 @@ export class ClickConfig {
     if (raw === undefined || raw === null) return null;
     const trimmed = String(raw).trim();
     return trimmed === "" ? null : trimmed;
+  }
+
+  // Positive-integer env with a fallback. A zero or negative value would make
+  // the sweeper expire orders the instant they are created, so anything not
+  // strictly positive falls back rather than being taken literally.
+  private intEnv(key: string, fallback: number): number {
+    const raw = this.strEnv(key);
+    if (raw === null) return fallback;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) {
+      this.log.warn(`${key}="${raw}" is not a positive number - using ${fallback}`);
+      return fallback;
+    }
+    return Math.trunc(n);
   }
 
   private boolEnv(key: string, fallback: boolean): boolean {

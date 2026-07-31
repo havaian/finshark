@@ -49,15 +49,17 @@ export class LlmGraderService {
     lang: Lang
   ): Promise<ShortAnswerGradeResult> {
     // Resolve the canonical answer + prompt for the language the user is answering in.
-    // Fallback to EN when RU is missing.
+    // Fallback to EN when the translation is missing.
     const correctAnswer = pickLocalized(
       question.correct_answer_en,
       question.correct_answer_ru,
+      question.correct_answer_uz,
       lang
     );
     const promptText = pickLocalized(
       question.prompt_en,
       question.prompt_ru,
+      question.prompt_uz,
       lang
     );
 

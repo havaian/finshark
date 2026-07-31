@@ -5,8 +5,8 @@ import type { LearningObjectiveRow } from "./content.types";
 
 const COLS = `
   id, paper_id, code,
-  title_en, title_ru, description_en, description_ru,
-  theory_en, theory_ru,
+  title_en, title_ru, title_uz, description_en, description_ru, description_uz,
+  theory_en, theory_ru, theory_uz,
   sort_order, created_at, updated_at
 `;
 
@@ -49,17 +49,21 @@ export class LearningObjectivesRepository {
     code: string;
     title_en: string;
     title_ru: string | null;
+    title_uz: string | null;
     description_en: string | null;
     description_ru: string | null;
+    description_uz: string | null;
     theory_en?: string | null;
     theory_ru?: string | null;
+    theory_uz?: string | null;
     sort_order: number;
   }): Promise<LearningObjectiveRow> {
     const rows = await this.sql<LearningObjectiveRow[]>`
       INSERT INTO learning_objectives (
         paper_id, code,
-        title_en, title_ru, description_en, description_ru,
-        theory_en, theory_ru,
+        title_en, title_ru, title_uz,
+        description_en, description_ru, description_uz,
+        theory_en, theory_ru, theory_uz,
         sort_order
       )
       VALUES (
@@ -67,10 +71,13 @@ export class LearningObjectivesRepository {
         ${input.code},
         ${input.title_en},
         ${input.title_ru},
+        ${input.title_uz},
         ${input.description_en},
         ${input.description_ru},
+        ${input.description_uz},
         ${input.theory_en ?? null},
         ${input.theory_ru ?? null},
+        ${input.theory_uz ?? null},
         ${input.sort_order}
       )
       RETURNING ${this.sql.unsafe(COLS)}
@@ -84,10 +91,13 @@ export class LearningObjectivesRepository {
       code?: string;
       title_en?: string;
       title_ru?: string | null;
+      title_uz?: string | null;
       description_en?: string | null;
       description_ru?: string | null;
+      description_uz?: string | null;
       theory_en?: string | null;
       theory_ru?: string | null;
+      theory_uz?: string | null;
       sort_order?: number;
     }
   ): Promise<LearningObjectiveRow | null> {
@@ -95,12 +105,16 @@ export class LearningObjectivesRepository {
     if (input.code !== undefined) sets.code = input.code;
     if (input.title_en !== undefined) sets.title_en = input.title_en;
     if (input.title_ru !== undefined) sets.title_ru = input.title_ru;
+    if (input.title_uz !== undefined) sets.title_uz = input.title_uz;
     if (input.description_en !== undefined)
       sets.description_en = input.description_en;
     if (input.description_ru !== undefined)
       sets.description_ru = input.description_ru;
+    if (input.description_uz !== undefined)
+      sets.description_uz = input.description_uz;
     if (input.theory_en !== undefined) sets.theory_en = input.theory_en;
     if (input.theory_ru !== undefined) sets.theory_ru = input.theory_ru;
+    if (input.theory_uz !== undefined) sets.theory_uz = input.theory_uz;
     if (input.sort_order !== undefined) sets.sort_order = input.sort_order;
 
     if (Object.keys(sets).length === 0) return this.findById(id);

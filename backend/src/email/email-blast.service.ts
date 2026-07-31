@@ -3,7 +3,10 @@ import { ConfigService } from "@nestjs/config";
 import * as jwt from "jsonwebtoken";
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
-import { EmailTemplatesService } from "./email-templates.service";
+import {
+  EmailTemplatesService,
+  type EmailLang,
+} from "./email-templates.service";
 
 // Manual email blasts triggered by an admin. Distinct from the
 // reminders.service cron path:
@@ -63,7 +66,7 @@ export interface BlastInput {
   audience: BlastAudience;
   // Required when audience='ids'. Otherwise ignored.
   user_ids?: string[];
-  lang?: "en" | "ru";
+  lang?: EmailLang;
   // Admin-supplied additional variables merged into each recipient's
   // computed variable map. Override per-user values for the same key.
   extra_variables?: Record<string, string | number>;

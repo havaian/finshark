@@ -10,6 +10,7 @@ import { ClickConfig } from "./click.config";
 import { ClickController } from "./click.controller";
 import { ClickFiscalService } from "./click-fiscal.service";
 import { ClickMerchantClient } from "./click-merchant.client";
+import { ClickOrderExpiryService } from "./click-order-expiry.service";
 import { ClickOrdersRepository } from "./click-orders.repository";
 import { ClickService } from "./click.service";
 
@@ -39,6 +40,7 @@ import { ClickService } from "./click.service";
   imports: [AuthModule, UsersModule, BillingModule],
   controllers: [ClickController, ClickCallbackController, AdminClickController],
   providers: [
+    ClickOrderExpiryService,
     ClickConfig,
     ClickOrdersRepository,
     ClickCallbackLogRepository,

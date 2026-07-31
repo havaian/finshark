@@ -68,13 +68,20 @@ export class CreatePaperDto {
   @Length(1, 200)
   name_en!: string;
 
-  // Russian translation is optional. Allow explicit null (clears it) or undefined (skip).
-  // ValidateIf skips validation when the value is null so we don't fail @IsString on null.
+  // Russian / Uzbek translations are optional. Allow explicit null (clears it)
+  // or undefined (skip). ValidateIf skips validation when the value is null so
+  // we don't fail @IsString on null.
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
   @IsString()
   @Length(1, 200)
   name_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 200)
+  name_uz?: string | null;
 
   // Free-tier access flag. Default true on create (matches DB default); admins
   // toggle this on the paper edit screen to gate a paper behind premium.
@@ -117,6 +124,12 @@ export class UpdatePaperDto {
   @IsString()
   @Length(1, 200)
   name_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, 200)
+  name_uz?: string | null;
 
   // Toggle free-tier access. Free users only see papers where this is true;
   // they also can't start lessons / mocks against locked papers.

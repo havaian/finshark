@@ -11,13 +11,13 @@ export interface RenderedEmail {
   subject: string;
   body: string;
   html: string | null;
-  lang: "en" | "ru";
+  lang: EmailLang;
 }
 
 export interface SendByTemplateInput {
   templateKey: string;
   to: string;
-  lang?: "en" | "ru"; // defaults to 'en'
+  lang?: EmailLang; // defaults to 'en'
   variables: Record<string, string | number>;
   // Override the From: header. Defaults to EMAIL_FROM env var, which the
   // existing reminder path also uses.
@@ -46,13 +46,19 @@ function substitute(
   });
 }
 
+// Languages an email can be sent in. Mirrors SUPPORTED_LANGS in
+// content.types, but kept as its own alias: emails resolve per RECIPIENT
+// preference (users.locale), not per HTTP request, so they don't go through
+// the @Lang decorator.
+export type EmailLang = "en" | "ru" | "uz";
+
 // Pick the localised body. Falls back to _en when the requested language's
 // column is null, mirroring the rest of the localisation surface area
 // (paper name, LO title, badge name, etc.).
 function pickLang(
   row: EmailTemplateRow,
-  lang: "en" | "ru"
-): { subject: string; body: string; html: string | null; lang: "en" | "ru" } {
+  lang: EmailLang
+): { subject: string; body: string; html: string | null; lang: EmailLang } {
   if (lang === "ru") {
     return {
       subject: row.subject_ru ?? row.subject_en,
@@ -61,6 +67,14 @@ function pickLang(
       // Report the language we actually resolved to so callers (or the
       // admin "send test" log) can see whether the fallback fired.
       lang: row.body_ru === null ? "en" : "ru",
+    };
+  }
+  if (lang === "uz") {
+    return {
+      subject: row.subject_uz ?? row.subject_en,
+      body: row.body_uz ?? row.body_en,
+      html: row.html_uz ?? row.html_en,
+      lang: row.body_uz === null ? "en" : "uz",
     };
   }
   return {
@@ -88,7 +102,7 @@ export class EmailTemplatesService {
   // default (so a deleted reminder template can't block the cron).
   async render(
     key: string,
-    lang: "en" | "ru",
+    lang: EmailLang,
     variables: Record<string, string | number>
   ): Promise<RenderedEmail> {
     const row = await this.repo.findActiveByKey(key);
@@ -112,7 +126,7 @@ export class EmailTemplatesService {
   // only when the key doesn't exist at all.
   async renderPreview(
     key: string,
-    lang: "en" | "ru",
+    lang: EmailLang,
     variables: Record<string, string | number>
   ): Promise<RenderedEmail> {
     const row = await this.repo.findByKey(key);

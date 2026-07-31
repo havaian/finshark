@@ -117,8 +117,8 @@ async function main() {
         // only questions do. Don't add it here unless you've also added a
         // migration introducing the column.
         const paperRows = await tx<Array<{ id: string }>>`
-          INSERT INTO papers (code, name_en, name_ru, program_id, exam_structure)
-          VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru}, ${programId}, ${structureJson})
+          INSERT INTO papers (code, name_en, name_ru, name_uz, program_id, exam_structure)
+          VALUES (${paper.code}, ${paper.name_en}, ${paper.name_ru}, ${paper.name_uz ?? null}, ${programId}, ${structureJson})
           RETURNING id
         `;
         const paperId = paperRows[0].id;
@@ -127,16 +127,16 @@ async function main() {
           const loRows = await tx<Array<{ id: string }>>`
             INSERT INTO learning_objectives (
               paper_id, code,
-              title_en, title_ru,
-              description_en, description_ru,
-              theory_en, theory_ru,
+              title_en, title_ru, title_uz,
+              description_en, description_ru, description_uz,
+              theory_en, theory_ru, theory_uz,
               sort_order
             )
             VALUES (
               ${paperId}, ${lo.code},
-              ${lo.title_en}, ${lo.title_ru},
-              ${lo.description_en}, ${lo.description_ru},
-              ${lo.theory_en ?? null}, ${lo.theory_ru ?? null},
+              ${lo.title_en}, ${lo.title_ru}, ${lo.title_uz ?? null},
+              ${lo.description_en}, ${lo.description_ru}, ${lo.description_uz ?? null},
+              ${lo.theory_en ?? null}, ${lo.theory_ru ?? null}, ${lo.theory_uz ?? null},
               ${lo.sort_order}
             )
             RETURNING id
@@ -175,15 +175,24 @@ async function insertQuestion(
     const cleanedOptions = q.options.map((o) => {
       if (o.key === q.correct_answer_en) {
         // Strip why_wrong on correct option.
-        const { why_wrong_en, why_wrong_ru, ...rest } = o;
+        const { why_wrong_en, why_wrong_ru, why_wrong_uz, ...rest } = o;
         void why_wrong_en;
         void why_wrong_ru;
-        return { ...rest, why_wrong_en: null, why_wrong_ru: null };
+        void why_wrong_uz;
+        return {
+          ...rest,
+          text_uz: o.text_uz ?? null,
+          why_wrong_en: null,
+          why_wrong_ru: null,
+          why_wrong_uz: null,
+        };
       }
       return {
         ...o,
+        text_uz: o.text_uz ?? null,
         why_wrong_en: o.why_wrong_en ?? null,
         why_wrong_ru: o.why_wrong_ru ?? null,
+        why_wrong_uz: o.why_wrong_uz ?? null,
       };
     });
     const optionsJson = tx.json(
@@ -192,20 +201,20 @@ async function insertQuestion(
     await tx`
       INSERT INTO questions (
         lo_id, type, difficulty,
-        prompt_en, prompt_ru,
+        prompt_en, prompt_ru, prompt_uz,
         options,
-        correct_answer_en, correct_answer_ru,
-        explanation_en, explanation_ru,
-        concept_bite_en, concept_bite_ru,
+        correct_answer_en, correct_answer_ru, correct_answer_uz,
+        explanation_en, explanation_ru, explanation_uz,
+        concept_bite_en, concept_bite_ru, concept_bite_uz,
         acceptable_tolerance,
         is_active
       ) VALUES (
         ${lo_id}, ${q.type}, ${q.difficulty},
-        ${q.prompt_en}, ${q.prompt_ru},
+        ${q.prompt_en}, ${q.prompt_ru}, ${q.prompt_uz ?? null},
         ${optionsJson},
-        ${q.correct_answer_en}, ${null},
-        ${q.explanation_en}, ${q.explanation_ru},
-        ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
+        ${q.correct_answer_en}, ${null}, ${null},
+        ${q.explanation_en}, ${q.explanation_ru}, ${q.explanation_uz ?? null},
+        ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null}, ${q.concept_bite_uz ?? null},
         ${null},
         TRUE
       )
@@ -216,20 +225,20 @@ async function insertQuestion(
     await tx`
       INSERT INTO questions (
         lo_id, type, difficulty,
-        prompt_en, prompt_ru,
+        prompt_en, prompt_ru, prompt_uz,
         options,
-        correct_answer_en, correct_answer_ru,
-        explanation_en, explanation_ru,
-        concept_bite_en, concept_bite_ru,
+        correct_answer_en, correct_answer_ru, correct_answer_uz,
+        explanation_en, explanation_ru, explanation_uz,
+        concept_bite_en, concept_bite_ru, concept_bite_uz,
         acceptable_tolerance,
         is_active
       ) VALUES (
         ${lo_id}, ${q.type}, ${q.difficulty},
-        ${q.prompt_en}, ${q.prompt_ru},
+        ${q.prompt_en}, ${q.prompt_ru}, ${q.prompt_uz ?? null},
         ${null},
-        ${q.correct_answer_en}, ${null},
-        ${q.explanation_en}, ${q.explanation_ru},
-        ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null},
+        ${q.correct_answer_en}, ${null}, ${null},
+        ${q.explanation_en}, ${q.explanation_ru}, ${q.explanation_uz ?? null},
+        ${q.concept_bite_en ?? null}, ${q.concept_bite_ru ?? null}, ${q.concept_bite_uz ?? null},
         ${q.acceptable_tolerance ?? null},
         TRUE
       )

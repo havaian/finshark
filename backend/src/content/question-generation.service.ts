@@ -546,8 +546,14 @@ export class QuestionGenerationService {
           key: opt.key,
           text_en: opt.text_en,
           text_ru: opt.text_ru,
+          // The generator prompt asks for EN + RU only. Uzbek is filled in
+          // afterwards in the admin editor; until it is, the draft is invisible
+          // to Uzbek users (isQuestionTranslated). Drafts are is_active=false
+          // anyway, so nothing user-facing changes here.
+          text_uz: null,
           why_wrong_en: isCorrect ? null : opt.why_wrong_en ?? null,
           why_wrong_ru: isCorrect ? null : opt.why_wrong_ru ?? null,
+          why_wrong_uz: null,
         };
       });
     }
@@ -558,16 +564,20 @@ export class QuestionGenerationService {
       difficulty: q.difficulty,
       prompt_en: q.prompt_en.trim(),
       prompt_ru: q.prompt_ru.trim(),
+      prompt_uz: null,
       options: normalizedOptions,
       correct_answer_en: q.correct_answer_en.trim(),
       // MCQ stores the option key in _en and leaves _ru null; number_entry uses
       // _en for the numeric value (also language-neutral). With short_answer
       // retired, the only two remaining types both leave _ru null.
       correct_answer_ru: null,
+      correct_answer_uz: null,
       explanation_en: q.explanation_en.trim(),
       explanation_ru: q.explanation_ru.trim(),
+      explanation_uz: null,
       concept_bite_en: q.concept_bite_en?.trim() || null,
       concept_bite_ru: q.concept_bite_ru?.trim() || null,
+      concept_bite_uz: null,
       acceptable_tolerance: isNumber ? q.acceptable_tolerance ?? null : null,
       is_active: false, // <-- the key bit: drafts, not live
     };

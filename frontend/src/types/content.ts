@@ -1,3 +1,5 @@
+import type { Lang } from "../i18n";
+
 // Mirrors backend/src/content/content.types.ts.
 // Two flavours per entity:
 //  - "Raw" (admin) - both _en and _ru fields. Used in admin editor pages.
@@ -157,18 +159,26 @@ export interface McqOption {
 
 // Answer-free structured body for the lesson/mock queue. Mirrors the backend
 // LessonQuestionPayload: the PROMPT parts (statement text, row labels) are
-// localized; the ANSWER SPACE (true_false labels, matching option values) is
-// sent canonically in EN so the client returns the chosen value verbatim for
-// the deterministic grader. No correct label / correct value is present.
+// localized outright; the ANSWER SPACE (true_false labels, matching option
+// values) arrives as { value, label } pairs - `value` is the canonical English
+// string that MUST be submitted back for the deterministic grader, `label` is
+// the localized text to render. No correct label / correct value is present.
+//
+// Always bind the control's value to `.value` and display `.label`. Submitting
+// the label would fail grading in every non-English locale.
+export interface LessonAnswerChoice {
+  value: string;
+  label: string;
+}
 export interface LessonTrueFalsePayload {
   kind: "true_false";
-  labels: string[];
+  labels: LessonAnswerChoice[];
   statements: { text: string }[];
 }
 export interface LessonMatchingPayload {
   kind: "matching";
   rows: { label: string }[];
-  options: { value: string }[];
+  options: LessonAnswerChoice[];
 }
 export type LessonQuestionPayload =
   | LessonTrueFalsePayload
@@ -197,7 +207,7 @@ export interface Question {
 
 export interface UiTranslation {
   key: string;
-  lang: "en" | "ru";
+  lang: Lang;
   value: string;
 }
 

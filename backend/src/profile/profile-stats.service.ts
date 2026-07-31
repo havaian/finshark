@@ -74,7 +74,12 @@ export class ProfileStatsService {
       accuracy_by_paper: byPaper.map((r) => ({
         paper_id: r.paper_id,
         paper_code: r.paper_code,
-        paper_name: pickLocalized(r.paper_name_en, r.paper_name_ru, lang),
+        paper_name: pickLocalized(
+          r.paper_name_en,
+          r.paper_name_ru,
+          r.paper_name_uz,
+          lang
+        ),
         attempts: r.attempts,
         correct: r.correct,
         accuracy_pct: r.attempts === 0 ? 0 : (r.correct / r.attempts) * 100,

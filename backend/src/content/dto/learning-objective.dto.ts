@@ -29,12 +29,23 @@ export class CreateLoDto {
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
   @IsString()
+  @Length(1, 200)
+  title_uz?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
   description_en?: string | null;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
   @IsString()
   description_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  description_uz?: string | null;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
@@ -47,6 +58,12 @@ export class CreateLoDto {
   @IsString()
   @Length(1, THEORY_MAX)
   theory_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, THEORY_MAX)
+  theory_uz?: string | null;
 
   @IsOptional()
   @IsInt()
@@ -74,12 +91,23 @@ export class UpdateLoDto {
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
   @IsString()
+  @Length(1, 200)
+  title_uz?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
   description_en?: string | null;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
   @IsString()
   description_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  description_uz?: string | null;
 
   @IsOptional()
   @ValidateIf((_o, v) => v !== null)
@@ -92,6 +120,12 @@ export class UpdateLoDto {
   @IsString()
   @Length(1, THEORY_MAX)
   theory_ru?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null)
+  @IsString()
+  @Length(1, THEORY_MAX)
+  theory_uz?: string | null;
 
   @IsOptional()
   @IsInt()

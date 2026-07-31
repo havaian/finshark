@@ -3,7 +3,7 @@ import type { Sql, JSONValue as PgJson } from "postgres";
 import { PG } from "../db/db.module";
 import type { PaperRow, ExamStructure } from "./content.types";
 
-const COLS = `id, code, name_en, name_ru, free_accessible, program_id, exam_structure, created_at, updated_at`;
+const COLS = `id, code, name_en, name_ru, name_uz, free_accessible, program_id, exam_structure, created_at, updated_at`;
 
 @Injectable()
 export class PapersRepository {
@@ -33,6 +33,7 @@ export class PapersRepository {
     code: string;
     name_en: string;
     name_ru: string | null;
+    name_uz: string | null;
     // Default true (matches the DB default) so old admin UIs that don't send
     // this still produce a paper visible to free users.
     free_accessible?: boolean;
@@ -49,20 +50,22 @@ export class PapersRepository {
       input.exam_structure as unknown as PgJson
     );
     const rows = await this.sql<PaperRow[]>`
-      INSERT INTO papers (code, name_en, name_ru, free_accessible, program_id, exam_structure)
-      VALUES (${input.code}, ${input.name_en}, ${input.name_ru}, ${free}, ${input.program_id}, ${structureJson})
+      INSERT INTO papers (code, name_en, name_ru, name_uz, free_accessible, program_id, exam_structure)
+      VALUES (${input.code}, ${input.name_en}, ${input.name_ru}, ${input.name_uz}, ${free}, ${input.program_id}, ${structureJson})
       RETURNING ${this.sql.unsafe(COLS)}
     `;
     return rows[0];
   }
 
-  // Partial update. Pass `null` to explicitly clear name_ru; omit (undefined) to leave it.
+  // Partial update. Pass `null` to explicitly clear name_ru / name_uz; omit
+  // (undefined) to leave it.
   async update(
     id: string,
     input: {
       code?: string;
       name_en?: string;
       name_ru?: string | null;
+      name_uz?: string | null;
       free_accessible?: boolean;
       // Resolved by the service from program_code. Omit to leave unchanged.
       program_id?: string;
@@ -83,6 +86,7 @@ export class PapersRepository {
     if (input.code !== undefined) sets.code = input.code;
     if (input.name_en !== undefined) sets.name_en = input.name_en;
     if (input.name_ru !== undefined) sets.name_ru = input.name_ru;
+    if (input.name_uz !== undefined) sets.name_uz = input.name_uz;
     if (input.free_accessible !== undefined)
       sets.free_accessible = input.free_accessible;
     if (input.program_id !== undefined) sets.program_id = input.program_id;
@@ -120,10 +124,12 @@ export class PapersRepository {
       paper_code: string;
       paper_name_en: string;
       paper_name_ru: string | null;
+      paper_name_uz: string | null;
       lo_id: string | null;
       lo_code: string | null;
       lo_title_en: string | null;
       lo_title_ru: string | null;
+      lo_title_uz: string | null;
       lo_sort_order: number | null;
       // theory_en non-null = LO has a primer. We send only the flag, not the
       // full text, to keep this payload tiny.
@@ -142,10 +148,12 @@ export class PapersRepository {
         paper_code: string;
         paper_name_en: string;
         paper_name_ru: string | null;
+        paper_name_uz: string | null;
         lo_id: string | null;
         lo_code: string | null;
         lo_title_en: string | null;
         lo_title_ru: string | null;
+        lo_title_uz: string | null;
         lo_sort_order: number | null;
         lo_has_theory: boolean;
         active_count: number;
@@ -157,10 +165,12 @@ export class PapersRepository {
         p.code                                  AS paper_code,
         p.name_en                               AS paper_name_en,
         p.name_ru                               AS paper_name_ru,
+        p.name_uz                               AS paper_name_uz,
         lo.id::text                             AS lo_id,
         lo.code                                 AS lo_code,
         lo.title_en                             AS lo_title_en,
         lo.title_ru                             AS lo_title_ru,
+        lo.title_uz                             AS lo_title_uz,
         lo.sort_order                           AS lo_sort_order,
         (lo.theory_en IS NOT NULL)              AS lo_has_theory,
         COALESCE(SUM(CASE WHEN q.is_active = TRUE  THEN 1 ELSE 0 END), 0)::int AS active_count,

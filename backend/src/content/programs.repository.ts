@@ -8,7 +8,7 @@ import type { ProgramRow } from "./content.types";
 // paper), fetch one by id/code. There's no admin "create program" UI yet -
 // new programs are added by seed/migration - so there's deliberately no
 // create/update/delete here. Add them when a program-management screen exists.
-const COLS = `id, code, name_en, name_ru, unit_noun, sort_order, created_at, updated_at`;
+const COLS = `id, code, name_en, name_ru, name_uz, unit_noun, sort_order, created_at, updated_at`;
 
 @Injectable()
 export class ProgramsRepository {

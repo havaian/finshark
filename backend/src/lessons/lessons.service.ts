@@ -286,11 +286,17 @@ export class LessonsService {
     // keeps the API flexible (e.g. for future "extra practice" buttons).
     const size = opts.size ?? user.lesson_size ?? DEFAULT_LESSON_SIZE;
 
-    const queue = await this.buildQueue(user, opts.paper_id ?? null, size);
+    const queue = await this.buildQueue(user, opts.paper_id ?? null, size, lang);
 
     if (queue.length === 0) {
+      // With B3 in force, "nothing available" now has a third cause beyond
+      // "empty paper" and "nothing due": the paper has questions, but none of
+      // them are translated into the language the user is studying in. Say so,
+      // otherwise this reads as a bug to anyone on RU/UZ.
       throw new BadRequestException(
-        "no questions available - either the paper has no questions yet, or you have nothing due and no new content to learn"
+        lang === "en"
+          ? "no questions available - either the paper has no questions yet, or you have nothing due and no new content to learn"
+          : "no questions available in your language yet - this paper has no content translated into the language you're studying in"
       );
     }
 
@@ -602,12 +608,14 @@ export class LessonsService {
         : pickLocalized(
             question.correct_answer_en,
             question.correct_answer_ru,
+            question.correct_answer_uz,
             lang
           );
 
     const explanationForResponse = pickLocalized(
       question.explanation_en,
       question.explanation_ru,
+      question.explanation_uz,
       lang
     );
 
@@ -759,7 +767,7 @@ export class LessonsService {
   // Queue construction
   // ============================================================
   //
-  // Algorithm (current - revised May 2026):
+  // Algorithm (current - revised July 2026):
   //  1. Diversified due fetch - at most ONE question per LO, oldest-due first.
   //     This is the key change over textbook SRS: even if 4 questions in the
   //     same LO are all due today, we only pull one of them now. Stops the
@@ -772,21 +780,34 @@ export class LessonsService {
   //     a high global error rate ("often-wrong weighting" - high error rate
   //     = users get this wrong a lot = worth more exposure).
   //
-  //  3. If we STILL don't have `size` questions (i.e. the user has fewer
-  //     candidate LOs than the requested lesson size), fall back to "extras"
-  //     - additional due questions from LOs already covered. This is the
-  //     starvation path; without it, a user with content in only 2 LOs would
-  //     get a 2-question lesson even when they asked for 5.
+  //  2b. SECOND SWEEP. Pass 2 is capped at one question per LO, so a paper
+  //     with 6 LOs could never build a lesson longer than 6 no matter what
+  //     the user set in Settings - which is exactly the "asked for 10, got 6"
+  //     report. Once every distinct LO has contributed, sweep the weak-LO list
+  //     again (still weakest-first) taking a 2nd, then 3rd, ... question per
+  //     LO until the queue reaches `size` or the eligible pool is exhausted.
+  //     Diversification is preserved as a PRIORITY rather than a hard cap:
+  //     every LO gets one slot before any LO gets two.
+  //
+  //  3. If we STILL don't have `size` questions, fall back to "extras" -
+  //     additional DUE questions from LOs already covered. This only helps
+  //     returning users (it reads user_question_state, which is empty for a
+  //     new account), which is why the second sweep above is the real fix.
   //
   // Difficulty preference: derived from user's saved preference, or, if NULL
   // ("auto"), the level-based heuristic (level 1-2 easy, 3-5 medium, 6+ hard).
+  //
+  // Language (B3): every pass filters to questions fully translated into
+  // `lang`, in SQL rather than after hydration - otherwise a LIMIT would be
+  // spent on rows we then discard, producing short lessons again.
   //
   // `user` is passed in by the caller (start()) which has already loaded the
   // row - avoids a redundant findById here on the hot path.
   private async buildQueue(
     user: UserRow,
     paper_id: string | null,
-    size: number
+    size: number,
+    lang: Lang
   ): Promise<QuestionRow[]> {
     const user_id = user.id;
 
@@ -795,6 +816,7 @@ export class LessonsService {
       user_id,
       paper_id,
       limit: size,
+      lang,
     });
 
     // Batch-fetch the question rows in ONE query, then re-order to match the
@@ -828,6 +850,7 @@ export class LessonsService {
       user_id,
       paper_id,
       limit: Math.max(remaining * 3, 8),
+      lang,
     });
 
     // Gather one candidate id per eligible weak LO first, then hydrate them all
@@ -850,6 +873,7 @@ export class LessonsService {
         limit: 3,
         preferred_difficulty: preferred,
         error_rate_bias: true,
+        lang,
       });
 
       // Take the first candidate from this LO that isn't already picked. We
@@ -880,14 +904,73 @@ export class LessonsService {
 
     if (queue.length >= size) return queue.slice(0, size);
 
+    // ----- 2b. Second sweep: revisit weak LOs for additional questions -----
+    // Pass 2 hard-capped itself at one question per LO. With F1 at 6 LOs, F2 at
+    // 6 and F3 at 7, that made those numbers the real ceiling on lesson length
+    // regardless of the user's Settings choice. Now that every distinct LO has
+    // had its turn, go round again - weakest LO first - taking one more
+    // question per LO per round until we hit `size` or run out of eligible
+    // unseen questions.
+    //
+    // Round-robin rather than draining one LO at a time: a user who asks for
+    // 10 on a 6-LO paper gets 6 distinct LOs then a 2nd question from the four
+    // weakest, instead of four extra questions all from the single weakest LO.
+    //
+    // `lastRoundAdded` guards termination: if a full round adds nothing (every
+    // remaining LO is out of unseen, translated questions) we stop rather than
+    // loop forever.
+    if (queue.length < size && weakLos.length > 0) {
+      let lastRoundAdded = 1;
+      while (queue.length < size && lastRoundAdded > 0) {
+        lastRoundAdded = 0;
+        for (const lo of weakLos) {
+          if (queue.length >= size) break;
+
+          const more = await this.uqs.findUnseenInLo({
+            user_id,
+            lo_id: lo.lo_id,
+            limit: 1,
+            preferred_difficulty: preferred,
+            error_rate_bias: true,
+            lang,
+            // Exclude everything already queued so each round returns a
+            // genuinely new row for this LO.
+            exclude_ids: Array.from(pickedIds),
+          });
+          if (more.length === 0) continue;
+
+          const hydrated = await this.fetchQuestionsById(
+            more.map((m) => m.id),
+            { activeOnly: true }
+          );
+          for (const cand of more) {
+            if (queue.length >= size) break;
+            const q = hydrated.get(cand.id);
+            if (!q) continue; // retired between the id fetch and now
+            if (pickedIds.has(q.id)) continue;
+            queue.push(q);
+            pickedIds.add(q.id);
+            coveredLos.add(q.lo_id);
+            lastRoundAdded++;
+          }
+        }
+      }
+    }
+
+    if (queue.length >= size) return queue.slice(0, size);
+
     // ----- 3. Extras fallback (starvation path) -----
-    // We exhausted distinct LOs but still need more questions. Pull additional
-    // overdue items, allowing the same LO to appear twice (last resort).
+    // We exhausted distinct LOs AND every unseen question in them, but still
+    // need more. Pull additional overdue items, allowing the same LO to appear
+    // twice (last resort). Only helps returning users - user_question_state is
+    // empty for a new account, which is why 2b above is the real fix for the
+    // "asked for 10, got 6" case.
     const extras = await this.uqs.findDueQuestionsExtras({
       user_id,
       paper_id,
       exclude_ids: Array.from(pickedIds),
       limit: size - queue.length,
+      lang,
     });
     const extraIds = extras.map((e) => e.question_id);
     const extraById = await this.fetchQuestionsById(extraIds, {
@@ -939,26 +1022,38 @@ export class LessonsService {
       id: q.id,
       type: q.type,
       difficulty: q.difficulty,
-      prompt: pickLocalized(q.prompt_en, q.prompt_ru, lang),
+      prompt: pickLocalized(q.prompt_en, q.prompt_ru, q.prompt_uz, lang),
       options:
         q.options === null
           ? null
           : q.options.map((opt) => ({
               key: opt.key,
-              text: pickLocalized(opt.text_en, opt.text_ru, lang),
+              text: pickLocalized(
+                opt.text_en,
+                opt.text_ru,
+                opt.text_uz ?? null,
+                lang
+              ),
               why_wrong: pickLocalizedNullable(
                 opt.why_wrong_en ?? null,
                 opt.why_wrong_ru ?? null,
+                opt.why_wrong_uz ?? null,
                 lang
               ),
             })),
       // Answer-free body for true_false / matching; null for the other types.
       payload: toAnswerFreePayload(q, lang),
       // Localized exhibit panel; null when the question has none.
-      exhibit: pickLocalizedNullable(q.exhibit_en, q.exhibit_ru, lang),
+      exhibit: pickLocalizedNullable(
+        q.exhibit_en,
+        q.exhibit_ru,
+        q.exhibit_uz,
+        lang
+      ),
       concept_bite: pickLocalizedNullable(
         q.concept_bite_en,
         q.concept_bite_ru,
+        q.concept_bite_uz,
         lang
       ),
       acceptable_tolerance: q.acceptable_tolerance,
@@ -996,12 +1091,23 @@ export class LessonsService {
     for (const loId of ordered) {
       const lo = byId.get(loId);
       if (!lo) continue;
-      const theory = pickLocalizedNullable(lo.theory_en, lo.theory_ru, lang);
-      if (!theory) continue; // skip LOs with no theory yet - opt-in per LO
+      // B3 applied to theory: an LO primer that has no translation in the
+      // active language is SKIPPED, not shown in English. Theory bites are
+      // already opt-in per LO (missing theory just omits the card), so
+      // dropping one degrades cleanly - whereas an English primer above
+      // Uzbek questions is exactly the mixed-language reading experience the
+      // rule exists to prevent.
+      const theory =
+        lang === "en"
+          ? lo.theory_en
+          : lang === "ru"
+            ? lo.theory_ru
+            : lo.theory_uz;
+      if (!theory || theory.trim() === "") continue; // no primer in this language
       bites.push({
         lo_id: lo.id,
         lo_code: lo.code,
-        lo_title: pickLocalized(lo.title_en, lo.title_ru, lang),
+        lo_title: pickLocalized(lo.title_en, lo.title_ru, lo.title_uz, lang),
         theory,
       });
     }

@@ -37,12 +37,22 @@ const showForm = ref(false);
 const subscribing = ref(false);
 const selectedPlanId = ref<string>('');
 
-// Subscribing is only offered when the user has NO active subscription: with
-// one already running, the auto-renew toggle is the right control and a second
-// "subscribe" button would just charge them for a period they already own.
+// Subscribing is offered whenever there is NO active subscription - with one
+// running, the auto-renew toggle is the right control and a second "subscribe"
+// button would charge for a period the user already owns.
+//
+// Crucially this does NOT require a saved card. Hiding Subscribe until a card
+// existed left "Add card" as the only visible action, which is a means with no
+// stated end: nobody wants to add a card, they want the subscription. The card
+// is now collected as a step inside subscribing.
 const canSubscribe = computed(
-  () => card.value !== null && !props.canAutoRenew && (props.plans?.length ?? 0) > 0,
+  () => !props.canAutoRenew && (props.plans?.length ?? 0) > 0,
 );
+
+// Set when the user pressed Subscribe without a saved card. The binding form
+// then runs as step 1, and verification continues straight into the charge
+// instead of dumping them back on a page with a new button to find.
+const subscribeIntent = ref(false);
 const cardNumber = ref('');
 const expiry = ref('');
 const smsCode = ref('');
@@ -159,6 +169,11 @@ async function confirmSms() {
     showForm.value = false;
     resetForm();
     emit('changed');
+    // The card was only ever collected to subscribe, so finish the job.
+    if (subscribeIntent.value) {
+      subscribeIntent.value = false;
+      await subscribeNow();
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : t('cards.verify_failed');
   } finally {
@@ -183,6 +198,18 @@ async function removeCard() {
 
 // Charge the saved card now and come back subscribed. The subscription itself
 // lands via Click's callbacks, so we reload rather than assume.
+// Entry point for the Subscribe button. With a card this charges; without one
+// it opens the card form and remembers why we opened it.
+async function startSubscribe() {
+  if (!selectedPlanId.value || subscribing.value) return;
+  if (!card.value) {
+    subscribeIntent.value = true;
+    showForm.value = true;
+    return;
+  }
+  await subscribeNow();
+}
+
 async function subscribeNow() {
   if (!selectedPlanId.value || subscribing.value) return;
   subscribing.value = true;
@@ -213,115 +240,94 @@ async function toggleAutoRenew(next: boolean) {
 </script>
 
 <template>
-  <section class="card mt-6">
-    <h2>{{ t('cards.title') }}</h2>
+  <!-- SUBSCRIPTION FIRST. This is what the user actually wants; saving a card
+       is a step toward it, not a task in its own right. The panel renders even
+       with no card saved - pressing Subscribe then collects one and continues
+       automatically, so "add a card" always has a stated purpose. -->
+  <section v-if="!loading && canSubscribe" class="card mt-6 subscribe-panel">
+    <h2>{{ t('cards.subscribe_heading') }}</h2>
+    <p class="dim text-sm mt-1">{{ t('cards.subscribe_lead') }}</p>
 
-    <p v-if="loading" class="dim text-sm mt-2">{{ t('common.loading') }}</p>
-
-    <template v-else>
-      <!-- Saved card -->
-      <div v-if="card" class="saved-card mt-3">
-        <div>
-          <div class="saved-card-number">{{ card.card_masked ?? t('cards.saved') }}</div>
-          <p v-if="card.last_error" class="text-xs mt-1" style="color: var(--danger);">
-            {{ card.last_error }}
-          </p>
-        </div>
-        <button class="btn-link" style="color: var(--danger);" :disabled="busy"
-          @click="removeCard">
-          {{ t('cards.remove') }}
+    <label class="field-label mt-4">{{ t('cards.subscribe_plan') }}</label>
+    <div class="subscribe-row">
+      <div class="segmented click-plan-picker">
+        <button v-for="p in props.plans" :key="p.id" type="button"
+          :class="{ active: selectedPlanId === p.id }" @click="selectedPlanId = p.id">
+          {{ p.name }}
         </button>
       </div>
+      <button class="btn btn-primary" :disabled="!selectedPlanId || subscribing"
+        @click="startSubscribe">
+        {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
+      </button>
+    </div>
+    <p class="dim text-xs mt-2">{{ t('cards.subscribe_hint') }}</p>
 
-      <!-- Binding form -->
-      <template v-if="!card">
-        <p v-if="!showForm" class="dim text-sm mt-2">{{ t('cards.none_hint') }}</p>
-        <button v-if="!showForm" class="btn btn-secondary mt-3" @click="showForm = true">
-          {{ t('cards.add') }}
-        </button>
+    <!-- Card collection, inline, only once Subscribe has been pressed. -->
+    <div v-if="showForm && !card" class="subscribe-step mt-4">
+      <div class="subscribe-step-head">{{ t('cards.step_card') }}</div>
 
-        <div v-else class="mt-3">
-          <!-- Step 1: card details -->
-          <template v-if="!pendingTokenId">
-            <label class="field-label">{{ t('cards.number') }}</label>
-            <input v-model="cardNumber" type="text" inputmode="numeric"
-              autocomplete="cc-number" maxlength="19" placeholder="8600 0000 0000 0000"
-              class="card-input" @input="onCardInput" />
+      <template v-if="!pendingTokenId">
+        <label class="field-label">{{ t('cards.number') }}</label>
+        <input v-model="cardNumber" type="text" inputmode="numeric"
+          autocomplete="cc-number" maxlength="19" placeholder="8600 0000 0000 0000"
+          class="card-input" @input="onCardInput" />
 
-            <label class="field-label mt-3">{{ t('cards.expiry') }}</label>
-            <input v-model="expiry" type="text" inputmode="numeric"
-              autocomplete="cc-exp" maxlength="5" placeholder="MM/YY"
-              class="card-input card-input-short" @input="onExpiryInput" />
-            <div class="admin-order-actions mt-3">
-              <button class="btn btn-primary" :disabled="!canSubmitCard || busy"
-                @click="startBinding">
-                {{ busy ? t('common.loading') : t('cards.continue') }}
-              </button>
-              <button class="btn btn-ghost" :disabled="busy"
-                @click="showForm = false; resetForm()">
-                {{ t('common.cancel') }}
-              </button>
-            </div>
-          </template>
+        <label class="field-label mt-3">{{ t('cards.expiry') }}</label>
+        <input v-model="expiry" type="text" inputmode="numeric" autocomplete="cc-exp"
+          maxlength="5" placeholder="MM/YY" class="card-input card-input-short"
+          @input="onExpiryInput" />
 
-          <!-- Step 2: SMS -->
-          <template v-else>
-            <p class="text-sm">
-              {{ t('cards.sms_sent', { phone: pendingPhone ?? '' }) }}
-            </p>
-            <label class="field-label mt-3">{{ t('cards.sms_code') }}</label>
-            <input v-model="smsCode" type="text" inputmode="numeric" maxlength="8"
-              autocomplete="one-time-code" class="card-input card-input-short"
-              @input="onSmsInput" />
-            <div class="admin-order-actions mt-3">
-              <button class="btn btn-primary" :disabled="!smsCode || busy"
-                @click="confirmSms">
-                {{ busy ? t('common.loading') : t('cards.confirm') }}
-              </button>
-              <button class="btn btn-ghost" :disabled="busy" @click="resetForm">
-                {{ t('common.cancel') }}
-              </button>
-            </div>
-          </template>
+        <div class="admin-order-actions">
+          <button class="btn btn-primary" :disabled="!canSubmitCard || busy"
+            @click="startBinding">
+            {{ busy ? t('common.loading') : t('cards.continue') }}
+          </button>
+          <button class="btn btn-ghost" :disabled="busy"
+            @click="showForm = false; subscribeIntent = false; resetForm()">
+            {{ t('common.cancel') }}
+          </button>
         </div>
       </template>
 
-      <!-- Where the card number goes. Stated at the point of entry, because
-           that is when the user wonders. Wording is deliberately about what we
-           STORE: on the fallback path the number does transit our backend, so
-           "never touches our servers" would not be true. -->
-      <p v-if="!card && showForm" class="card-privacy dim text-xs">
-        {{ t('cards.privacy_note') }}
-      </p>
-
-      <p v-if="error" class="text-sm mt-3" style="color: var(--danger);">{{ error }}</p>
-    </template>
-  </section>
-
-  <!-- Subscription is a separate concern from storing a card, so it is a
-       separate panel. Only rendered once a card exists - there is nothing to
-       subscribe with otherwise. -->
-  <section v-if="!loading && card && (canSubscribe || canAutoRenew)" class="card mt-6">
-    <h2>{{ t('cards.subscription_title') }}</h2>
-
-    <!-- Start a subscription. -->
-    <div v-if="canSubscribe" class="mt-3">
-      <label class="field-label">{{ t('cards.subscribe_plan') }}</label>
-      <!-- Same segmented picker the one-time panel uses, so choosing a plan
-           looks identical whichever way you buy. -->
-      <div class="subscribe-row">
-        <div class="segmented click-plan-picker">
-          <button v-for="p in props.plans" :key="p.id" type="button"
-            :class="{ active: selectedPlanId === p.id }" @click="selectedPlanId = p.id">
-            {{ p.name }}
+      <template v-else>
+        <p class="text-sm">{{ t('cards.sms_sent', { phone: pendingPhone ?? '' }) }}</p>
+        <label class="field-label mt-3">{{ t('cards.sms_code') }}</label>
+        <input v-model="smsCode" type="text" inputmode="numeric" maxlength="8"
+          autocomplete="one-time-code" class="card-input card-input-short"
+          @input="onSmsInput" />
+        <div class="admin-order-actions">
+          <button class="btn btn-primary" :disabled="!smsCode || busy" @click="confirmSms">
+            {{ busy ? t('common.loading') : t('cards.confirm') }}
+          </button>
+          <button class="btn btn-ghost" :disabled="busy" @click="resetForm">
+            {{ t('common.cancel') }}
           </button>
         </div>
-        <button class="btn btn-primary" :disabled="!selectedPlanId || subscribing"
-          @click="subscribeNow">
-          {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
-        </button>
+      </template>
+
+      <p class="card-privacy dim text-xs">{{ t('cards.privacy_note') }}</p>
+    </div>
+
+    <p v-if="error" class="text-sm mt-3" style="color: var(--danger);">{{ error }}</p>
+  </section>
+
+  <!-- Saved card. Secondary: a record of what is on file, plus removal. Only
+       shown once a card exists - there is nothing to say otherwise. -->
+  <section v-if="!loading && card" class="card mt-6">
+    <h2>{{ t('cards.title') }}</h2>
+
+    <div class="saved-card mt-3">
+      <div>
+        <div class="saved-card-number">{{ card.card_masked ?? t('cards.saved') }}</div>
+        <p v-if="card.last_error" class="text-xs mt-1" style="color: var(--danger);">
+          {{ card.last_error }}
+        </p>
       </div>
-      <p class="dim text-xs mt-2">{{ t('cards.subscribe_hint') }}</p>
+      <button class="btn-link" style="color: var(--danger);" :disabled="busy"
+        @click="removeCard">
+        {{ t('cards.remove') }}
+      </button>
     </div>
 
     <!-- Auto-renew, for a subscription that already exists. -->
@@ -330,12 +336,14 @@ async function toggleAutoRenew(next: boolean) {
         <div style="font-weight: 500;">{{ t('cards.auto_renew') }}</div>
         <p class="dim text-xs mt-1">{{ t('cards.auto_renew_hint') }}</p>
       </div>
-      <!-- The app's own toggle component, same as SettingsPage. A bare
-           checkbox reads as a different product. -->
       <button class="toggle" :class="{ on: autoRenewOn }" :disabled="busy"
         :aria-label="t('cards.auto_renew')" @click="toggleAutoRenew(!autoRenewOn)">
         <span class="toggle-knob"></span>
       </button>
     </div>
+
+    <p v-if="error && !canSubscribe" class="text-sm mt-3" style="color: var(--danger);">
+      {{ error }}
+    </p>
   </section>
 </template>

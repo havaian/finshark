@@ -3899,3 +3899,25 @@
     border-radius: 8px;
     background: var(--bg-elev);
 }
+
+/* Subscription panel. Accent border so it reads as the primary offer on the
+   page rather than one card among several. */
+.subscribe-panel {
+    border-color: var(--accent);
+}
+
+/* Card collection nested inside the subscribe flow - indented and labelled so
+   it reads as a step toward subscribing, not a separate task. */
+.subscribe-step {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-elev);
+}
+
+.subscribe-step-head {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 10px;
+}

@@ -303,7 +303,7 @@ export default {
     premium_badge: "Premium",
     upsell_title: "Premium bilan hammasini oching",
     upsell_body: "Cheksiz darslar va jonlar, barcha fanlar va to'liq sinov imtihonlari.",
-    upsell_cta: "Premiumga o'tish",
+    upsell_cta: "Obuna bo'lish",
     // Locked paper picker entry (used by the dashboard + mock-start <option>).
     // We keep the picker showing premium-only papers so free users can see
     // what they'd unlock; the start button surfaces a friendly 403 when they
@@ -718,9 +718,9 @@ export default {
     history_section: "To'lovlar tarixi",
     history_section_sub: "Hisobingizdagi barcha obunalar va ular qanday olingani.",
     history_empty: "Hozircha to'lovlar tarixi yo'q.",
-    link_title: "Obuna va to'lovlar",
-    link_sub: "Tarifni boshqarish, kodlar, tarix",
-    link_cta: "Ochish",
+    link_title: "Obuna",
+    link_sub: "Obuna bo'lish, kodni faollashtirish yoki to'lovlarni ko'rish",
+    link_cta: "Obuna bo'lish",
   },
 
   tfa_verify: {
@@ -1445,6 +1445,9 @@ export default {
     remove_failed: "Kartani o'chirib bo'lmadi",
     auto_renew_failed: "Avtomatik uzaytirishni o'zgartirib bo'lmadi",
     subscribe_plan: "Obuna",
+    subscribe_heading: "Finshark Premium ni ulang",
+    subscribe_lead: "Barcha fanlarga to'liq kirish, avtomatik uzaytirish bilan - birorta ham tayyorgarlik kunini yo'qotmaysiz.",
+    step_card: "1-qadam - kartangiz",
     subscribe_cta: "Obuna bo'lish",
     subscribe_hint: "Saqlangan kartadan hozir, so'ng har bir davr tugashidan 3 kun oldin yechamiz. Istalgan vaqtda bekor qilish mumkin.",
     subscribe_failed: "Obunani rasmiylashtirib bo'lmadi",

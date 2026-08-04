@@ -301,7 +301,7 @@ export default {
     // code.
     upsell_title: "Unlock everything with Premium",
     upsell_body: "Unlimited lessons and hearts, every paper, and full mock exams.",
-    upsell_cta: "Go Premium",
+    upsell_cta: "Subscribe",
     // Locked paper picker entry (used by the dashboard + mock-start <option>).
     // We keep the picker showing premium-only papers so free users can see
     // what they'd unlock; the start button surfaces a friendly 403 when they
@@ -719,9 +719,9 @@ export default {
     history_section_sub: "Every subscription on your account and how it was obtained.",
     history_empty: "No billing history yet.",
     // Link shown on Settings / Profile that points here.
-    link_title: "Subscription & billing",
-    link_sub: "Manage your plan, redeem codes, view history",
-    link_cta: "Open",
+    link_title: "Subscription",
+    link_sub: "Subscribe, redeem a code, or view your payments",
+    link_cta: "Subscribe",
   },
 
   tfa_verify: {
@@ -1450,6 +1450,9 @@ export default {
     remove_failed: "Could not remove the card",
     auto_renew_failed: "Could not change auto-renewal",
     subscribe_plan: "Subscribe to",
+    subscribe_heading: "Get Finshark Premium",
+    subscribe_lead: "Full access to every paper, renewed automatically so you never lose a study day.",
+    step_card: "Step 1 - your card",
     subscribe_cta: "Subscribe",
     subscribe_hint: "We charge your saved card now, then again 3 days before each period ends. Cancel any time.",
     subscribe_failed: "Could not start the subscription",

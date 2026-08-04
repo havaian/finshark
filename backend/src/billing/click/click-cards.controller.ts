@@ -22,10 +22,12 @@ import { toPublicCardToken, type PublicCardToken } from "./click.types";
 // It is the only place in this codebase that ever sees a card number, it holds
 // it in a request-scoped variable, and it must never log, store or echo it.
 class RequestBindingDto {
-  // 16-19 digits, no spaces. Validated for shape only - Click does the real
-  // check - so that an obviously malformed value fails before it leaves us.
+  // Exactly 16 digits, no spaces. Uzcard (8600...) and Humo (9860...) are both
+  // 16, and card_token/request only issues tokens for those schemes - the
+  // earlier 16-19 range was a generic PAN rule that let a mistyped number
+  // reach Click for no reason. Shape only; Click does the real validation.
   @IsString()
-  @Matches(/^[0-9]{16,19}$/, { message: "card_number must be 16-19 digits" })
+  @Matches(/^[0-9]{16}$/, { message: "card_number must be 16 digits" })
   card_number!: string;
 
   @IsString()

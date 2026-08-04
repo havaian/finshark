@@ -51,15 +51,21 @@ const pendingPhone = ref<string | null>(null);
 
 const digitsOnly = computed(() => cardNumber.value.replace(/\D/g, ''));
 const expiryDigits = computed(() => expiry.value.replace(/\D/g, ''));
+// Uzcard (8600...) and Humo (9860...) are both exactly 16 digits, and Click's
+// card_token/request only issues tokens for those two schemes. The old
+// `>= 16` with a 19-digit cap came from generic PAN rules and let a
+// mistyped 17-19 digit number through to Click for no reason.
+const CARD_DIGITS = 16;
+
 const canSubmitCard = computed(
-  () => digitsOnly.value.length >= 16 && expiryDigits.value.length === 4,
+  () => digitsOnly.value.length === CARD_DIGITS && expiryDigits.value.length === 4,
 );
 
 // Group the card number in fours as it is typed. Purely presentational -
 // digitsOnly is what gets sent - but an ungrouped 16-digit run is genuinely
 // hard to check by eye.
 function onCardInput(e: Event) {
-  const raw = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 19);
+  const raw = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, CARD_DIGITS);
   cardNumber.value = raw.replace(/(.{4})/g, '$1 ').trim();
 }
 
@@ -239,7 +245,7 @@ async function toggleAutoRenew(next: boolean) {
           <template v-if="!pendingTokenId">
             <label class="field-label">{{ t('cards.number') }}</label>
             <input v-model="cardNumber" type="text" inputmode="numeric"
-              autocomplete="cc-number" maxlength="23" placeholder="8600 0000 0000 0000"
+              autocomplete="cc-number" maxlength="19" placeholder="8600 0000 0000 0000"
               class="card-input" @input="onCardInput" />
 
             <label class="field-label mt-3">{{ t('cards.expiry') }}</label>

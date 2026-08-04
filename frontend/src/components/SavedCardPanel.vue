@@ -44,6 +44,24 @@ const canSubmitCard = computed(
   () => digitsOnly.value.length >= 16 && expiryDigits.value.length === 4,
 );
 
+// Group the card number in fours as it is typed. Purely presentational -
+// digitsOnly is what gets sent - but an ungrouped 16-digit run is genuinely
+// hard to check by eye.
+function onCardInput(e: Event) {
+  const raw = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 19);
+  cardNumber.value = raw.replace(/(.{4})/g, '$1 ').trim();
+}
+
+// Insert the slash after MM so the user does not have to type it.
+function onExpiryInput(e: Event) {
+  const raw = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 4);
+  expiry.value = raw.length > 2 ? `${raw.slice(0, 2)}/${raw.slice(2)}` : raw;
+}
+
+function onSmsInput(e: Event) {
+  smsCode.value = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 8);
+}
+
 async function load() {
   loading.value = true;
   try {
@@ -204,16 +222,15 @@ async function toggleAutoRenew(next: boolean) {
         <div v-else class="mt-3">
           <!-- Step 1: card details -->
           <template v-if="!pendingTokenId">
-            <label class="field">
-              <span class="field-label">{{ t('cards.number') }}</span>
-              <input v-model="cardNumber" inputmode="numeric" autocomplete="cc-number"
-                maxlength="23" placeholder="8600 0000 0000 0000" />
-            </label>
-            <label class="field mt-2">
-              <span class="field-label">{{ t('cards.expiry') }}</span>
-              <input v-model="expiry" inputmode="numeric" autocomplete="cc-exp"
-                maxlength="5" placeholder="MM/YY" />
-            </label>
+            <label class="field-label">{{ t('cards.number') }}</label>
+            <input v-model="cardNumber" type="text" inputmode="numeric"
+              autocomplete="cc-number" maxlength="23" placeholder="8600 0000 0000 0000"
+              class="card-input" @input="onCardInput" />
+
+            <label class="field-label mt-3">{{ t('cards.expiry') }}</label>
+            <input v-model="expiry" type="text" inputmode="numeric"
+              autocomplete="cc-exp" maxlength="5" placeholder="MM/YY"
+              class="card-input card-input-short" @input="onExpiryInput" />
             <div class="admin-order-actions mt-3">
               <button class="btn btn-primary" :disabled="!canSubmitCard || busy"
                 @click="startBinding">
@@ -231,10 +248,10 @@ async function toggleAutoRenew(next: boolean) {
             <p class="text-sm">
               {{ t('cards.sms_sent', { phone: pendingPhone ?? '' }) }}
             </p>
-            <label class="field mt-2">
-              <span class="field-label">{{ t('cards.sms_code') }}</span>
-              <input v-model="smsCode" inputmode="numeric" maxlength="8" />
-            </label>
+            <label class="field-label mt-3">{{ t('cards.sms_code') }}</label>
+            <input v-model="smsCode" type="text" inputmode="numeric" maxlength="8"
+              autocomplete="one-time-code" class="card-input card-input-short"
+              @input="onSmsInput" />
             <div class="admin-order-actions mt-3">
               <button class="btn btn-primary" :disabled="!smsCode || busy"
                 @click="confirmSms">

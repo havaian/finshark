@@ -1047,6 +1047,10 @@ export default {
       fiscal_name_label: "Fiscal receipt line",
       fiscal_name_placeholder: "Finshark Premium 30 kun, 1 dona",
       fiscal_name_hint: "Printed on the legal receipt. Must end with the unit. Leaving it blank stops receipts being filed for this plan.",
+      plan_name_label: "Название плана",
+      period_label: "Дней за покупку",
+      period_invalid: "Количество дней должно быть целым числом от 1 до 3650",
+      period_hint: "Изменение длительности влияет только на будущие покупки. У существующих подписок даты сохраняются. Название плана и строку чека держите в соответствии.",
       fiscal_name_missing: "{n} active plan(s) have no fiscal receipt line - payments for them will complete but no receipt will be filed.",
 
       // Click orders

@@ -1095,6 +1095,10 @@ export default {
       fiscal_name_label: "Fiscal receipt line",
       fiscal_name_placeholder: "Finshark Premium 30 kun, 1 dona",
       fiscal_name_hint: "Printed on the legal receipt. Must end with the unit. Leaving it blank stops receipts being filed for this plan.",
+      plan_name_label: "Reja nomi",
+      period_label: "Har xarid uchun kun",
+      period_invalid: "Kunlar soni 1 dan 3650 gacha butun son bo'lishi kerak",
+      period_hint: "Davomiylikni o'zgartirish faqat kelgusi xaridlarga ta'sir qiladi. Mavjud obunalarning sanalari saqlanadi. Reja nomi va chek satrini shunga mos saqlang.",
       fiscal_name_missing: "{n} active plan(s) have no fiscal receipt line - payments for them will complete but no receipt will be filed.",
 
       // Click orders

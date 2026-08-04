@@ -16,6 +16,10 @@ export const adminPlanApi = {
   updatePlan: async (
     id: string,
     patch: {
+      name?: string;
+      // Days granted per purchase. Future grants only - existing subscriptions
+      // hold concrete dates and do not shift.
+      period_days?: number;
       price_minor?: number;
       is_active?: boolean;
       // Present-but-null clears the receipt line, which disables fiscalization

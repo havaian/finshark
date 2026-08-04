@@ -3848,3 +3848,14 @@
         gap: 10px;
     }
 }
+
+/* Card entry fields. Monospace + wider tracking so a 16-digit run stays
+   checkable by eye; the global input rules supply everything else. */
+.card-input {
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.08em;
+}
+
+.card-input-short {
+    max-width: 160px;
+}

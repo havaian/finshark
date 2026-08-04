@@ -16,6 +16,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Max,
   MaxLength,
   Min,
 } from "class-validator";
@@ -82,6 +83,21 @@ class ReasonDto {
 // we don't allow setting a premium plan's price to 0 or null via this path.
 class UpdatePlanDto {
   @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  name?: string;
+
+  // How many days a purchase of this plan grants. Affects FUTURE grants only -
+  // existing subscriptions hold concrete dates. Capped at 10 years: anything
+  // longer is meant to be a lifetime plan, which is period_days = NULL and a
+  // structural choice, not a very large number.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(3650)
+  period_days?: number;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   price_minor?: number;
@@ -135,17 +151,25 @@ export class AdminSubscriptionsController {
   // don't hard-block editing 'free' here, but the DTO requires a positive price
   // so you can't accidentally give the free plan a price without also tripping
   // the table's price/currency-consistency CHECK (free has NULL currency).
-  // Structural fields (tier, period_days) are intentionally not editable.
+  //
+  // `tier` stays structural - entitlement gates key off it. name, period_days,
+  // price and the receipt line are all editable, and should be kept consistent
+  // with each other: a plan named "monthly" that grants 45 days will print
+  // that contradiction onto a fiscal receipt.
   @Patch("plans/:id")
   async updatePlan(@Param("id") id: string, @Body() body: UpdatePlanDto) {
     // fiscal_item_name is forwarded only when the key was actually sent, so an
     // edit that touches price alone can't blank the receipt line. Presence with
     // an empty value means "clear it".
     const patch: {
+      name?: string;
+      period_days?: number;
       price_minor?: number;
       is_active?: boolean;
       fiscal_item_name?: string | null;
     } = {
+      name: body.name?.trim() || undefined,
+      period_days: body.period_days,
       price_minor: body.price_minor,
       is_active: body.is_active,
     };

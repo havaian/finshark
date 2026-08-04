@@ -79,6 +79,8 @@ async function reloadOrders() {
 // Drafts keyed by plan id so an in-progress edit survives a list refresh.
 const priceDrafts = ref<Record<string, string>>({});
 const fiscalDrafts = ref<Record<string, string>>({});
+const nameDrafts = ref<Record<string, string>>({});
+const periodDrafts = ref<Record<string, string>>({});
 const planBusy = ref<string | null>(null);
 const planError = ref<string | null>(null);
 
@@ -98,14 +100,49 @@ function fiscalDraftFor(p: Plan): string {
   return fiscalDrafts.value[p.id];
 }
 
+function nameDraft(p: Plan): string {
+  if (nameDrafts.value[p.id] === undefined) nameDrafts.value[p.id] = p.name;
+  return nameDrafts.value[p.id];
+}
+
+// Lifetime plans have period_days = null and stay that way: "forever" is a
+// structural property, not a very large number of days.
+function periodDraft(p: Plan): string {
+  if (periodDrafts.value[p.id] === undefined) {
+    periodDrafts.value[p.id] = p.period_days === null ? '' : String(p.period_days);
+  }
+  return periodDrafts.value[p.id];
+}
+
 async function savePlan(p: Plan) {
   planBusy.value = p.id;
   planError.value = null;
   try {
     const patch: {
+      name?: string;
+      period_days?: number;
       price_minor?: number;
       fiscal_item_name?: string | null;
     } = {};
+
+    const rawName = (nameDrafts.value[p.id] ?? '').trim();
+    if (rawName !== '' && rawName !== p.name) patch.name = rawName;
+
+    // Only sent for plans that already have a duration. Turning a lifetime
+    // plan into a fixed-term one (or back) changes what the product IS, so it
+    // stays a migration rather than an admin toggle.
+    if (p.period_days !== null) {
+      const rawPeriod = (periodDrafts.value[p.id] ?? '').trim();
+      if (rawPeriod !== '') {
+        const days = Number(rawPeriod);
+        if (!Number.isInteger(days) || days < 1 || days > 3650) {
+          planError.value = t('admin.payments.period_invalid');
+          planBusy.value = null;
+          return;
+        }
+        patch.period_days = days;
+      }
+    }
 
     const rawPrice = (priceDrafts.value[p.id] ?? '').trim();
     if (rawPrice !== '') {
@@ -127,6 +164,8 @@ async function savePlan(p: Plan) {
     plans.value = plans.value.map((x) => (x.id === updated.id ? updated : x));
     delete priceDrafts.value[p.id];
     delete fiscalDrafts.value[p.id];
+    delete nameDrafts.value[p.id];
+    delete periodDrafts.value[p.id];
   } catch (e) {
     planError.value = mapError(e, t('admin.payments.plan_save_error'));
   } finally {
@@ -313,6 +352,18 @@ function mapError(e: unknown, fallback: string): string {
               <div class="dim text-xs mt-1">{{ p.id }}</div>
 
               <div class="admin-plan-fields mt-2">
+                <label class="admin-fiscal-field">
+                  <span class="field-label">{{ t('admin.payments.plan_name_label') }}</span>
+                  <input :value="nameDraft(p)" type="text" maxlength="120"
+                    @input="nameDrafts[p.id] = ($event.target as HTMLInputElement).value" />
+                </label>
+                <!-- Lifetime plans have no duration and are not given one here:
+                     "forever" is structural, not a large number of days. -->
+                <label v-if="p.period_days !== null" class="admin-price-field">
+                  <span class="field-label">{{ t('admin.payments.period_label') }}</span>
+                  <input :value="periodDraft(p)" type="number" min="1" max="3650" step="1"
+                    @input="periodDrafts[p.id] = ($event.target as HTMLInputElement).value" />
+                </label>
                 <label class="admin-price-field">
                   <span class="field-label">{{ t('admin.payments.price_label', { currency: p.currency ?? '' }) }}</span>
                   <input :value="priceDraftFor(p)" type="number" min="0" step="1"
@@ -326,6 +377,7 @@ function mapError(e: unknown, fallback: string): string {
                 </label>
               </div>
               <p class="dim text-xs mt-1">{{ t('admin.payments.fiscal_name_hint') }}</p>
+              <p class="dim text-xs mt-1">{{ t('admin.payments.period_hint') }}</p>
             </div>
 
             <div class="admin-plan-controls">

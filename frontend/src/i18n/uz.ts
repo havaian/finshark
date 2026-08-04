@@ -1099,6 +1099,8 @@ export default {
       plan_name_label: "Reja nomi",
       period_label: "Har xarid uchun kun",
       period_invalid: "Kunlar soni 1 dan 3650 gacha butun son bo'lishi kerak",
+      period_confirm: "{name} ni {from} kundan {to} kunga o'zgartirilsinmi?\n\nBu rejaga obuna bo'lganlarning barchasidan {from} kun o'rniga har {to} kunda o'sha summa yechiladi. Mavjud obunalar sanalari saqlanadi, biroq keyingi uzaytirish yangi davr bo'yicha bo'ladi.",
+      period_short_hint: "7 kundan kam - odatda xato. Avtomatik uzaytirishni sinash uchun 1 kun mumkin.",
       period_hint: "Davomiylikni o'zgartirish faqat kelgusi xaridlarga ta'sir qiladi. Mavjud obunalarning sanalari saqlanadi. Reja nomi va chek satrini shunga mos saqlang.",
       fiscal_name_missing: "{n} ta faol rejada chek satri yo'q - ular bo'yicha to'lovlar fiskallashtirilmaydi.",
 
@@ -1437,7 +1439,7 @@ export default {
     confirm: "Tasdiqlash",
     remove: "O'chirish",
     auto_renew: "Avtomatik uzaytirish",
-    auto_renew_hint: "Obuna tugashidan 3 kun oldin saqlangan kartadan yechamiz. Istalgan vaqtda o'chirish mumkin.",
+    auto_renew_hint: "Saqlangan kartadan har bir davr tugagan kuni yechamiz, 3 kun oldin xat yuboramiz. Istalgan vaqtda o'chirish mumkin.",
     subscription_title: "Obuna",
     privacy_note: "Karta raqami to'g'ridan-to'g'ri Click ga yuboriladi va bizning serverlarimizda saqlanmaydi.",
     bind_failed: "Kartani saqlab bo'lmadi",
@@ -1451,8 +1453,11 @@ export default {
     subscribe_cta: "Obuna bo'lish",
     subscribe_hint: "Saqlangan kartadan hozir, so'ng har bir davr tugashidan 3 kun oldin yechamiz. Istalgan vaqtda bekor qilish mumkin.",
     per_period: "har {days} kunda",
-    subscribe_hint_priced: "Hozir {price}, so'ng har {days} kunda {price} yechamiz, har bir davr tugashidan 3 kun oldin. Istalgan vaqtda bekor qilish mumkin.",
+    subscribe_hint_priced: "Hozir {price}, so'ng har {days} kunda, har bir davr tugagan kuni {price} yechamiz. 3 kun oldin xat yuboramiz. Istalgan vaqtda bekor qilish mumkin.",
     subscribe_failed: "Obunani rasmiylashtirib bo'lmadi",
+    subscribe_settling: "To'lov Click da tasdiqlanmoqda...",
+    subscribe_done: "Obuna rasmiylashtirildi. Chek SMS orqali yuborildi.",
+    subscribe_slow: "To'lovni tasdiqlash odatdagidan uzoqroq davom etmoqda. Bir daqiqadan so'ng sahifani yangilang - to'lov o'tgan bo'lsa, reja Premium bo'lib ko'rinadi.",
   },
 
 };

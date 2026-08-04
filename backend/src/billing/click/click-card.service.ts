@@ -31,21 +31,17 @@ import type { ClickCardTokenRow } from "./click.types";
 // That is why there is no "renewal grant" path here. Duplicating it would mean
 // two ways to create a subscription and two places for a bug to hide.
 //
-// WHY THE CHARGE IS EARLY
+// WHEN THE CHARGE HAPPENS
 //
-// Renewal is attempted RENEW_LEAD_DAYS before the subscription ends, not on the
-// day it ends. A card declines for boring reasons - insufficient funds on the
-// wrong day of the month - and charging on the last day means one decline is an
-// instant lockout with no room to retry. Charging early means the user's access
-// is never interrupted by a failure we could have retried.
+// On the day the subscription ENDS, not before. Taking money days early means
+// billing someone for a period they have not reached yet, and if they cancel in
+// between they have already been charged for it.
 //
-// Coverage does not overlap: SubscriptionsService chains grants, so a renewal
-// bought three days early still starts when the current period ends.
-
-const RENEW_LEAD_DAYS = 3;
-// Attempts are one per sweep, and the sweep is hourly, so these are bounded by
-// wall-clock time rather than by a tight loop: 3 attempts across the 3-day lead
-// window. Click performs no retries of its own - every one of these is ours.
+// What happens 3 days out is a NOTICE, not a charge: renewal_upcoming tells the
+// user the exact date and amount so the debit is never a surprise. That is the
+// part users actually need early; the money is not.
+//
+// The sweep runs hourly, so "on the day" means within an hour of expiry.
 const MAX_RENEW_ATTEMPTS = 3;
 const RENEW_RETRY_HOURS = 24;
 const SWEEP_BATCH_SIZE = 50;
@@ -327,7 +323,6 @@ export class ClickCardService {
     let due;
     try {
       due = await this.subs.findDueForRenewal({
-        leadDays: RENEW_LEAD_DAYS,
         maxAttempts: MAX_RENEW_ATTEMPTS,
         retryHours: RENEW_RETRY_HOURS,
         limit: SWEEP_BATCH_SIZE,

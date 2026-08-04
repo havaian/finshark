@@ -13,7 +13,8 @@
 // pending token, verify confirms it. Only a verified token can be charged.
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { clickApi } from '../api/click.api';
+import { clickApi, pollClickOrder } from '../api/click.api';
+import { useEntitlementStore } from '../stores/entitlement.store';
 import type { SavedCard } from '../types/click';
 
 const props = defineProps<{
@@ -32,6 +33,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'changed'): void }>();
 const { t } = useI18n();
+const entitlement = useEntitlementStore();
 
 const card = ref<SavedCard | null>(null);
 const loading = ref(true);
@@ -41,6 +43,11 @@ const error = ref<string | null>(null);
 // Binding form
 const showForm = ref(false);
 const subscribing = ref(false);
+// Set while we wait for Click's callbacks to settle the charge, and after they
+// do. Without this the panel reloaded instantly, found no subscription yet -
+// the callbacks land seconds later - and silently showed nothing at all.
+const settling = ref(false);
+const subscribeDone = ref(false);
 const selectedPlanId = ref<string>('');
 
 // Subscribing is offered whenever there is NO active subscription - with one
@@ -235,12 +242,34 @@ async function subscribeNow() {
   subscribing.value = true;
   error.value = null;
   try {
-    await clickApi.subscribeNow(selectedPlanId.value);
-    emit('changed');
+    const { order_id } = await clickApi.subscribeNow(selectedPlanId.value);
+
+    // The POST only means Click ACCEPTED the charge. The subscription appears
+    // when their Prepare/Complete callbacks reach us, which is seconds later -
+    // so poll the order rather than reloading immediately and finding nothing.
+    subscribing.value = false;
+    settling.value = true;
+    const settled = await pollClickOrder(order_id);
+
+    if (settled?.status === 'paid') {
+      subscribeDone.value = true;
+      // Entitlement is a separate store from the subscriptions list and drives
+      // the "Free plan" badge. Reloading only the list left the page still
+      // claiming the user was on free.
+      await entitlement.fetch();
+      emit('changed');
+    } else if (settled?.status === 'failed' || settled?.status === 'cancelled') {
+      error.value = settled.error_note ?? t('cards.subscribe_failed');
+    } else {
+      // Ran out of attempts with the order unsettled. Deliberately NOT an
+      // error: a slow callback is not a failed payment.
+      error.value = t('cards.subscribe_slow');
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : t('cards.subscribe_failed');
   } finally {
     subscribing.value = false;
+    settling.value = false;
   }
 }
 
@@ -276,9 +305,9 @@ async function toggleAutoRenew(next: boolean) {
           {{ p.name }}
         </button>
       </div>
-      <button class="btn btn-primary" :disabled="!selectedPlanId || subscribing"
+      <button class="btn btn-primary" :disabled="!selectedPlanId || subscribing || settling"
         @click="startSubscribe">
-        {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
+        {{ subscribing || settling ? t('common.loading') : t('cards.subscribe_cta') }}
       </button>
     </div>
     <p v-if="selectedPlan" class="click-price mt-3">
@@ -342,6 +371,13 @@ async function toggleAutoRenew(next: boolean) {
 
       <p class="card-privacy dim text-xs">{{ t('cards.privacy_note') }}</p>
     </div>
+
+    <!-- Confirmation. Without this the whole flow ended in silence: the charge
+         succeeded, the receipt went out by SMS, and the page looked untouched. -->
+    <p v-if="settling" class="dim text-sm mt-3">{{ t('cards.subscribe_settling') }}</p>
+    <p v-else-if="subscribeDone" class="text-sm mt-3" style="color: var(--success);">
+      {{ t('cards.subscribe_done') }}
+    </p>
 
     <p v-if="error" class="text-sm mt-3" style="color: var(--danger);">{{ error }}</p>
   </section>

@@ -1101,6 +1101,8 @@ export default {
       plan_name_label: "Plan name",
       period_label: "Days per purchase",
       period_invalid: "Days must be a whole number between 1 and 3650",
+      period_confirm: "Change {name} from {from} to {to} days?\n\nEveryone subscribed to this plan will be charged the same price every {to} days instead of every {from}. Existing subscriptions keep their dates, but the next renewal uses the new period.",
+      period_short_hint: "Under 7 days is normally a typo. 1 day is allowed so auto-renewal can be tested.",
       period_hint: "Changing the duration affects future purchases only. Existing subscriptions keep the dates they were granted. Keep the plan name and receipt line consistent with it.",
       fiscal_name_missing: "{n} active plan(s) have no fiscal receipt line - payments for them will complete but no receipt will be filed.",
 
@@ -1442,7 +1444,7 @@ export default {
     confirm: "Confirm",
     remove: "Remove",
     auto_renew: "Renew automatically",
-    auto_renew_hint: "We charge your saved card 3 days before your subscription ends. Turn this off any time.",
+    auto_renew_hint: "We charge your saved card on the day each period ends, and email you 3 days before. Turn this off any time.",
     subscription_title: "Subscription",
     privacy_note: "Your card number is sent straight to Click and is never saved on our servers.",
     bind_failed: "Could not save the card",
@@ -1456,8 +1458,11 @@ export default {
     subscribe_cta: "Subscribe",
     subscribe_hint: "We charge your saved card now, then again 3 days before each period ends. Cancel any time.",
     per_period: "every {days} days",
-    subscribe_hint_priced: "We charge {price} now, then {price} every {days} days, 3 days before each period ends. Cancel any time.",
+    subscribe_hint_priced: "We charge {price} now, then {price} every {days} days on the day each period ends. We email you 3 days before. Cancel any time.",
     subscribe_failed: "Could not start the subscription",
+    subscribe_settling: "Confirming your payment with Click...",
+    subscribe_done: "You are subscribed. Your receipt has been sent by SMS.",
+    subscribe_slow: "Your payment is taking longer than usual to confirm. Refresh this page in a minute - if it went through, your plan will show as Premium.",
   },
 
 };

@@ -29,7 +29,7 @@ function formatPrice(minor: number, currency: string): string {
   return `${(minor / 100).toLocaleString()} ${currency}`;
 }
 
-onMounted(async () => {
+async function reload() {
   try {
     orders.value = await clickApi.listMyOrders();
   } catch {
@@ -37,7 +37,12 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-});
+}
+onMounted(reload);
+
+// Exposed so the page can refresh this list after a payment completes -
+// otherwise a purchase made on the page above never appears below it.
+defineExpose({ reload });
 </script>
 
 <template>

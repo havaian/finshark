@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { EmailTemplatesService } from "../email/email-templates.service";
+import { PlansRepository } from "./plans.repository";
 import { SubscriptionsRepository } from "./subscriptions.repository";
 
 // Warns users whose premium is about to lapse.
@@ -28,6 +29,7 @@ export class SubscriptionExpiryService {
 
   constructor(
     private readonly subs: SubscriptionsRepository,
+    private readonly plans: PlansRepository,
     private readonly templates: EmailTemplatesService,
     private readonly config: ConfigService
   ) {}
@@ -42,6 +44,85 @@ export class SubscriptionExpiryService {
 
   // Public so an admin endpoint can trigger it without waiting a day.
   async runOnce(): Promise<{ sent: number; failed: number }> {
+    const warned = await this.warnExpiring();
+    const notified = await this.notifyUpcomingRenewals();
+    return {
+      sent: warned.sent + notified.sent,
+      failed: warned.failed + notified.failed,
+    };
+  }
+
+  // Tells auto-renewing users the exact DATE and AMOUNT of their next charge,
+  // WARN_DAYS_BEFORE ahead of it. This is what replaced charging early: the
+  // user gets warning, we do not take money before the period they paid for
+  // has actually run out.
+  private async notifyUpcomingRenewals(): Promise<{ sent: number; failed: number }> {
+    let due;
+    try {
+      due = await this.subs.findUpcomingRenewals({
+        days: WARN_DAYS_BEFORE,
+        limit: SWEEP_BATCH_SIZE,
+      });
+    } catch (e) {
+      this.log.error(
+        `renewal notice query failed: ${e instanceof Error ? e.message : String(e)}`
+      );
+      return { sent: 0, failed: 0 };
+    }
+    if (due.length === 0) return { sent: 0, failed: 0 };
+
+    const appUrl = this.config
+      .getOrThrow<string>("APP_PUBLIC_URL")
+      .replace(/\/$/, "");
+
+    let sent = 0;
+    let failed = 0;
+    for (const row of due) {
+      // Marked before sending, same reasoning as the expiry warning: a crash
+      // mid-send costs one notice, marking afterwards would mail in a loop.
+      try {
+        await this.subs.markRenewalNotified(row.id);
+      } catch {
+        failed++;
+        continue;
+      }
+      const plan = await this.plans.findById(row.plan_id);
+      const price =
+        plan && plan.price_minor !== null && plan.currency !== null
+          ? `${(plan.price_minor / 100).toLocaleString("en-US")} ${plan.currency}`
+          : "";
+      try {
+        await this.templates.sendByTemplate({
+          templateKey: "renewal_upcoming",
+          to: row.email,
+          lang: "en",
+          variables: {
+            display_name: row.display_name,
+            renews_on: row.ends_at.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            }),
+            price,
+            app_url: appUrl,
+          },
+        });
+        sent++;
+      } catch (e) {
+        failed++;
+        this.log.warn(
+          `renewal notice to ${row.email} failed: ${
+            e instanceof Error ? e.message : String(e)
+          }`
+        );
+      }
+    }
+    this.log.log(`renewal notices: ${sent} sent, ${failed} failed`);
+    return { sent, failed };
+  }
+
+  private async warnExpiring(): Promise<{ sent: number; failed: number }> {
     let due;
     try {
       due = await this.subs.findExpiringForWarning({

@@ -247,14 +247,16 @@ export class SubscriptionsRepository {
     `;
   }
 
-  // Subscriptions to attempt now.
+  // Subscriptions to charge now.
   //
-  // Conditions, in order: auto-renew is on, the subscription is still active
-  // and actually ends, we are inside the lead window, we have not burned the
-  // attempt ceiling, and enough time has passed since the last try. The last
-  // two are what stop an hourly sweep from hammering a declining card.
+  // `ends_at <= NOW()` - the period has run out. Renewal takes money on the day
+  // the subscription ends, never before: charging early bills someone for time
+  // they have not reached, and a cancellation in between means they paid for
+  // nothing. The 3-day notice is an email, not a debit.
+  //
+  // The attempt ceiling and retry gap are what stop an hourly sweep from
+  // hammering a card that keeps declining.
   async findDueForRenewal(input: {
-    leadDays: number;
     maxAttempts: number;
     retryHours: number;
     limit: number;
@@ -265,8 +267,7 @@ export class SubscriptionsRepository {
       WHERE auto_renew = TRUE
         AND status = 'active'
         AND ends_at IS NOT NULL
-        AND ends_at <= NOW() + make_interval(days => ${input.leadDays})
-        AND ends_at > NOW()
+        AND ends_at <= NOW()
         AND renew_attempts < ${input.maxAttempts}
         AND (
           renew_last_attempt_at IS NULL
@@ -343,6 +344,55 @@ export class SubscriptionsRepository {
 
   // Mark the warning as sent. Written before the email goes out, so a crash
   // mid-send loses one warning rather than looping and sending it repeatedly.
+  // Auto-renewing subscriptions coming up for their charge. The counterpart to
+  // findExpiringForWarning, which deliberately excludes them: they are not
+  // expiring, they are about to be billed, and those need different words.
+  async findUpcomingRenewals(input: {
+    days: number;
+    limit: number;
+  }): Promise<
+    Array<{
+      id: string;
+      user_id: string;
+      ends_at: Date;
+      plan_id: string;
+      email: string;
+      display_name: string;
+    }>
+  > {
+    return this.sql<
+      Array<{
+        id: string;
+        user_id: string;
+        ends_at: Date;
+        plan_id: string;
+        email: string;
+        display_name: string;
+      }>
+    >`
+      SELECT s.id, s.user_id::text, s.ends_at, s.plan_id, u.email, u.display_name
+      FROM subscriptions s
+      JOIN users u ON u.id = s.user_id
+      WHERE s.status = 'active'
+        AND s.auto_renew = TRUE
+        AND s.renew_card_token_id IS NOT NULL
+        AND s.ends_at IS NOT NULL
+        AND s.ends_at > NOW()
+        AND s.ends_at <= NOW() + make_interval(days => ${input.days})
+        AND NOT COALESCE((s.metadata->>'renewal_notified')::boolean, FALSE)
+      ORDER BY s.ends_at ASC
+      LIMIT ${input.limit}
+    `;
+  }
+
+  async markRenewalNotified(id: string): Promise<void> {
+    await this.sql`
+      UPDATE subscriptions
+      SET metadata = COALESCE(metadata, '{}'::jsonb) || '{"renewal_notified": true}'::jsonb
+      WHERE id = ${id}
+    `;
+  }
+
   async markExpiryWarned(id: string): Promise<void> {
     await this.sql`
       UPDATE subscriptions

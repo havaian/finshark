@@ -154,6 +154,17 @@ onMounted(() => {
   void loadSubscribablePlans();
 });
 
+// A new payment has to reach three places: the subscription list, the
+// entitlement badge, and the payments history. Reloading only the first left
+// the page showing "Free plan" over a completed purchase.
+const historyPanel = ref<{ reload: () => Promise<void> } | null>(null);
+
+async function onBillingChanged() {
+  await loadSubscriptions();
+  void entitlement.fetch();
+  void historyPanel.value?.reload();
+}
+
 async function loadSubscribablePlans() {
   try {
     const all: Plan[] = await clickApi.listPlans();
@@ -194,7 +205,7 @@ async function loadSubscribablePlans() {
       <!-- Subscription comes FIRST. It is the offer the page should lead with;
            a one-time purchase is the alternative below it, not the default. -->
       <SavedCardPanel :plans="subscribablePlans" :can-auto-renew="activeSub !== null"
-        :auto-renew-on="activeSub?.auto_renew ?? false" @changed="loadSubscriptions" />
+        :auto-renew-on="activeSub?.auto_renew ?? false" @changed="onBillingChanged" />
 
       <!-- One-time purchase -->
       <ClickPayPanel />
@@ -222,7 +233,7 @@ async function loadSubscribablePlans() {
 
       <!-- Payments, then subscription periods. Both are reference material, so
            they sit below everything the user might act on. -->
-      <PaymentHistoryPanel />
+      <PaymentHistoryPanel ref="historyPanel" />
 
       <!-- Billing history -->
       <section class="card mt-6">

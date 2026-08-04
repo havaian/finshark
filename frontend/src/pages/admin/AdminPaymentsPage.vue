@@ -140,6 +140,28 @@ async function savePlan(p: Plan) {
           planBusy.value = null;
           return;
         }
+
+        // Guardrail against the realistic mistake, which is not 0 or -1 - those
+        // are rejected by the DTO and by a CHECK constraint - but a typo like 3
+        // for 30. That silently bills every auto-renewing subscriber ten times
+        // as often at the same price, and nothing else in the system would
+        // flag it. Anything under a week, or a cut of more than half, has to be
+        // confirmed out loud.
+        const current = p.period_days ?? 0;
+        const suspicious = days < 7 || (current > 0 && days < current / 2);
+        if (days !== current && suspicious) {
+          const ok = window.confirm(
+            t('admin.payments.period_confirm', {
+              name: p.name,
+              from: current,
+              to: days,
+            }),
+          );
+          if (!ok) {
+            planBusy.value = null;
+            return;
+          }
+        }
         patch.period_days = days;
       }
     }
@@ -378,6 +400,7 @@ function mapError(e: unknown, fallback: string): string {
               </div>
               <p class="dim text-xs mt-1">{{ t('admin.payments.fiscal_name_hint') }}</p>
               <p class="dim text-xs mt-1">{{ t('admin.payments.period_hint') }}</p>
+              <p class="dim text-xs mt-1">{{ t('admin.payments.period_short_hint') }}</p>
             </div>
 
             <div class="admin-plan-controls">

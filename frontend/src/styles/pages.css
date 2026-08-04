@@ -3928,3 +3928,74 @@
     font-weight: 400;
     margin-left: 4px;
 }
+
+/* Confetti for the payment celebration. Pure CSS - no dependency for one
+   moment - and translate/rotate only, never scale. */
+.confetti {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.confetti-bit {
+    position: absolute;
+    top: -12px;
+    width: 8px;
+    height: 12px;
+    opacity: 0;
+    animation: confetti-fall 2.4s ease-in forwards;
+}
+
+.confetti-bit-0 { left: 8%;  background: var(--accent);      animation-delay: 0ms; }
+.confetti-bit-1 { left: 22%; background: var(--accent-deep); animation-delay: 140ms; }
+.confetti-bit-2 { left: 38%; background: var(--accent);      animation-delay: 60ms; }
+.confetti-bit-3 { left: 55%; background: var(--accent-deep); animation-delay: 220ms; }
+.confetti-bit-4 { left: 72%; background: var(--accent);      animation-delay: 100ms; }
+.confetti-bit-5 { left: 88%; background: var(--accent-deep); animation-delay: 300ms; }
+
+@keyframes confetti-fall {
+    0%   { opacity: 0; transform: translateY(0) rotate(0deg); }
+    12%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(260px) rotate(420deg); }
+}
+
+/* Respect a reduced-motion preference: keep the moment, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+    .confetti-bit {
+        animation: none;
+    }
+}
+
+.celebrate-card {
+    position: relative;
+}
+
+/* Right-hand column of a payment history row: receipt link above, date below.
+   Defined here rather than scoped inside a component - the markup has already
+   moved once, and a scoped rule does not travel with it. */
+.payment-history-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    text-align: right;
+}
+
+/* The receipt is the actionable item in the row, so it gets breathing room
+   instead of sitting flush against the date. */
+.payment-receipt {
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    line-height: 1.6;
+}
+
+a.payment-receipt {
+    border-color: var(--accent-deep);
+}
+
+.payment-history-date {
+    padding-right: 2px;
+}

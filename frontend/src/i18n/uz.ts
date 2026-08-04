@@ -1398,7 +1398,7 @@ export default {
     status_prepared: "Ishlanmoqda",
     status_paid: "To'landi",
     status_cancelled: "Bekor qilindi",
-    status_failed: "E'tibor talab qiladi",
+    status_failed: "O'tmadi",
   },
 
   click_return: {
@@ -1419,6 +1419,9 @@ export default {
 },
   celebrate: {
     level_title: "Yangi daraja!",
+    premium_title: "To'lov amalga oshdi",
+    premium_body: "Premium faol. Fiskal chek SMS orqali yuborildi.",
+    premium_until: "{date} gacha amal qiladi",
     level_body: "Siz {level}-darajaga yetdingiz",
     achievement_title: "Yutuq ochildi",
     badge_title: "Nishon olindi",

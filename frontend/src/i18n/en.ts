@@ -1402,7 +1402,7 @@ export default {
     status_prepared: "Processing",
     status_paid: "Paid",
     status_cancelled: "Cancelled",
-    status_failed: "Needs attention",
+    status_failed: "Failed",
   },
 
   // Landing page for Click's return_url after a redirect payment.
@@ -1424,6 +1424,9 @@ export default {
 },
   celebrate: {
     level_title: "Level up!",
+    premium_title: "Payment complete",
+    premium_body: "Premium is active. Your fiscal receipt has been sent by SMS.",
+    premium_until: "Active until {date}",
     level_body: "You reached level {level}",
     achievement_title: "Achievement unlocked",
     badge_title: "Badge earned",

@@ -37,18 +37,31 @@ const props = defineProps<{
   levelReached: number | null;
   achievements: AchievementUnlockView[];
   badges: PublicBadge[];
+  // Set after a successful payment. Independent of the lesson awards, so the
+  // same shell serves both moments instead of a second near-identical modal.
+  premium?: { planName: string; endsOn: string | null } | null;
 }>();
 
 const emit = defineEmits<{ (e: 'close'): void }>();
 const { t } = useI18n();
 
 type Card =
+  // A completed purchase. Comes first when present: paying is the biggest
+  // thing that happened, and it is also the one the user most needs confirmed.
+  | { kind: 'premium'; planName: string; endsOn: string | null }
   | { kind: 'level'; level: number }
   | { kind: 'achievement'; item: AchievementUnlockView }
   | { kind: 'badge'; item: PublicBadge };
 
 const cards = computed<Card[]>(() => {
   const out: Card[] = [];
+  if (props.premium) {
+    out.push({
+      kind: 'premium',
+      planName: props.premium.planName,
+      endsOn: props.premium.endsOn,
+    });
+  }
   if (props.levelReached !== null) {
     out.push({ kind: 'level', level: props.levelReached });
   }
@@ -64,6 +77,9 @@ const isLast = computed(() => index.value >= cards.value.length - 1);
 // template compiler cannot parse type assertions, and a computed per variant
 // keeps the markup free of type noise.
 const current = computed<Card | null>(() => cards.value[index.value] ?? null);
+const premiumCard = computed(() =>
+  current.value?.kind === 'premium' ? current.value : null,
+);
 const levelCard = computed(() =>
   current.value?.kind === 'level' ? current.value.level : null,
 );
@@ -124,8 +140,24 @@ onBeforeUnmount(() => {
             :class="['celebrate-dot', { active: i === index, done: i < index }]" />
         </div>
 
+        <!-- Confetti. Pure CSS so a celebration costs no dependency; the
+             pieces translate and rotate only. -->
+        <div v-if="premiumCard" class="confetti" aria-hidden="true">
+          <span v-for="n in 18" :key="n" :class="'confetti-bit confetti-bit-' + (n % 6)" />
+        </div>
+
         <div class="celebrate-body">
-          <template v-if="levelCard !== null">
+          <template v-if="premiumCard">
+            <div class="celebrate-icon">&#127881;</div>
+            <h2 class="celebrate-title">{{ t('celebrate.premium_title') }}</h2>
+            <p class="celebrate-name">{{ premiumCard.planName }}</p>
+            <p v-if="premiumCard.endsOn" class="celebrate-sub">
+              {{ t('celebrate.premium_until', { date: premiumCard.endsOn }) }}
+            </p>
+            <p class="celebrate-sub">{{ t('celebrate.premium_body') }}</p>
+          </template>
+
+          <template v-else-if="levelCard !== null">
             <div class="celebrate-icon">&#9733;</div>
             <h2 class="celebrate-title">{{ t('celebrate.level_title') }}</h2>
             <p class="celebrate-sub">{{ t('celebrate.level_body', { level: levelCard }) }}</p>

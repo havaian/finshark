@@ -246,13 +246,6 @@ function mapPayError(e: unknown): string {
 </template>
 
 <style scoped>
-.click-history-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
 .click-plan-picker {
   margin-top: 0.5rem;
 }

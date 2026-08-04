@@ -14,6 +14,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { clickApi, pollClickOrder } from '../api/click.api';
+import CelebrationModal from './CelebrationModal.vue';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import type { SavedCard } from '../types/click';
 
@@ -48,6 +49,9 @@ const subscribing = ref(false);
 // the callbacks land seconds later - and silently showed nothing at all.
 const settling = ref(false);
 const subscribeDone = ref(false);
+// Drives the celebration modal. A completed purchase deserves the same moment
+// a lesson award gets - it went by in silence before.
+const celebratePremium = ref<{ planName: string; endsOn: string | null } | null>(null);
 const selectedPlanId = ref<string>('');
 
 // Subscribing is offered whenever there is NO active subscription - with one
@@ -253,6 +257,12 @@ async function subscribeNow() {
 
     if (settled?.status === 'paid') {
       subscribeDone.value = true;
+      celebratePremium.value = {
+        planName: selectedPlan.value?.name ?? '',
+        endsOn: settled.coverage_ends_at
+          ? new Date(settled.coverage_ends_at).toLocaleDateString()
+          : null,
+      };
       // Entitlement is a separate store from the subscriptions list and drives
       // the "Free plan" badge. Reloading only the list left the page still
       // claiming the user was on free.
@@ -416,4 +426,8 @@ async function toggleAutoRenew(next: boolean) {
       {{ error }}
     </p>
   </section>
+
+  <CelebrationModal :open="celebratePremium !== null" :premium="celebratePremium"
+    :level-reached="null" :achievements="[]" :badges="[]"
+    @close="celebratePremium = null" />
 </template>

@@ -29,6 +29,21 @@ const locale = useLocaleStore();
 type Phase = 'waiting' | 'paid' | 'failed' | 'timeout' | 'notfound';
 
 const phase = ref<Phase>('waiting');
+// A one-time purchase gets the same moment a subscription does: it is the same
+// achievement from the buyer's side.
+const showCelebration = ref(false);
+const planName = ref('');
+
+// Best-effort: a failed lookup leaves the name blank rather than showing the
+// raw plan id, which means nothing to the buyer.
+async function resolvePlanName(planId: string) {
+  try {
+    const plans = await clickApi.listPlans();
+    planName.value = plans.find((p) => p.id === planId)?.name ?? '';
+  } catch {
+    planName.value = '';
+  }
+}
 const order = ref<ClickOrder | null>(null);
 
 // Stops the poll loop if the user navigates away mid-wait.
@@ -57,6 +72,8 @@ onMounted(async () => {
 
   if (order.value.status === 'paid') {
     phase.value = 'paid';
+    showCelebration.value = true;
+    if (order.value?.plan_id) void resolvePlanName(order.value.plan_id);
     await entitlement.fetch();
     return;
   }
@@ -72,6 +89,8 @@ onMounted(async () => {
 
   if (final?.status === 'paid') {
     phase.value = 'paid';
+    showCelebration.value = true;
+    if (order.value?.plan_id) void resolvePlanName(order.value.plan_id);
     await entitlement.fetch();
     return;
   }
@@ -193,6 +212,16 @@ function formatPrice(minor: number | null, currency: string | null): string {
       </section>
     </div>
   </main>
+
+  <CelebrationModal :open="showCelebration"
+    :premium="{
+      planName: planName,
+      endsOn: order?.coverage_ends_at
+        ? new Date(order.coverage_ends_at).toLocaleDateString()
+        : null,
+    }"
+    :level-reached="null" :achievements="[]" :badges="[]"
+    @close="showCelebration = false" />
 </template>
 
 <style scoped>

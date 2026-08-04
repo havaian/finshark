@@ -58,19 +58,21 @@ defineExpose({ reload });
             {{ formatPrice(o.amount_minor, o.currency) }}
           </span>
         </div>
-        <div class="click-history-right">
+        <div class="payment-history-right">
           <!-- The fiscal receipt is the customer's own document under PKM
                No. 943, so it has to stay reachable long after the payment
                screen. A paid order with no URL yet says so rather than
                rendering nothing, which would read as "never issued". -->
           <a v-if="o.fiscal_qr_url" :href="o.fiscal_qr_url" target="_blank"
-            rel="noopener noreferrer" class="btn-link accent text-xs">
+            rel="noopener noreferrer" class="btn-link accent text-xs payment-receipt">
             {{ t('click.receipt_link') }}
           </a>
-          <span v-else-if="o.status === 'paid'" class="dim text-xs">
+          <span v-else-if="o.status === 'paid'" class="dim text-xs payment-receipt">
             {{ t('click.receipt_pending') }}
           </span>
-          <span class="dim text-xs">{{ new Date(o.created_at).toLocaleDateString() }}</span>
+          <span class="dim text-xs payment-history-date">
+            {{ new Date(o.created_at).toLocaleDateString() }}
+          </span>
         </div>
       </li>
     </ul>

@@ -1348,7 +1348,7 @@ export default {
     status_prepared: "Обработка",
     status_paid: "Оплачено",
     status_cancelled: "Отменён",
-    status_failed: "Требует внимания",
+    status_failed: "Не прошёл",
   },
 
   click_return: {
@@ -1369,6 +1369,9 @@ export default {
 },
   celebrate: {
     level_title: "Новый уровень!",
+    premium_title: "Оплата прошла",
+    premium_body: "Премиум активен. Фискальный чек отправлен по СМС.",
+    premium_until: "Действует до {date}",
     level_body: "Вы достигли уровня {level}",
     achievement_title: "Достижение открыто",
     badge_title: "Получен знак",

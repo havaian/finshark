@@ -43,7 +43,13 @@ const subscriptionsLoading = ref(true);
 // Plans the SavedCardPanel can subscribe to. Premium plans with a period -
 // a lifetime plan is a one-time purchase, not something to renew.
 const subscribablePlans = ref<
-  { id: string; name: string; price_minor: number | null; currency: string | null }[]
+  {
+    id: string;
+    name: string;
+    price_minor: number | null;
+    currency: string | null;
+    period_days: number | null;
+  }[]
 >([]);
 
 const activeSub = computed(() =>

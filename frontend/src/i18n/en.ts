@@ -1455,6 +1455,8 @@ export default {
     step_card: "Step 1 - your card",
     subscribe_cta: "Subscribe",
     subscribe_hint: "We charge your saved card now, then again 3 days before each period ends. Cancel any time.",
+    per_period: "every {days} days",
+    subscribe_hint_priced: "We charge {price} now, then {price} every {days} days, 3 days before each period ends. Cancel any time.",
     subscribe_failed: "Could not start the subscription",
   },
 

@@ -1450,6 +1450,8 @@ export default {
     step_card: "1-qadam - kartangiz",
     subscribe_cta: "Obuna bo'lish",
     subscribe_hint: "Saqlangan kartadan hozir, so'ng har bir davr tugashidan 3 kun oldin yechamiz. Istalgan vaqtda bekor qilish mumkin.",
+    per_period: "har {days} kunda",
+    subscribe_hint_priced: "Hozir {price}, so'ng har {days} kunda {price} yechamiz, har bir davr tugashidan 3 kun oldin. Istalgan vaqtda bekor qilish mumkin.",
     subscribe_failed: "Obunani rasmiylashtirib bo'lmadi",
   },
 

@@ -3921,3 +3921,10 @@
     color: var(--accent);
     margin-bottom: 10px;
 }
+
+/* Renewal cadence sitting next to the subscription price. Regular weight so
+   the amount stays the thing the eye lands on. */
+.subscribe-period {
+    font-weight: 400;
+    margin-left: 4px;
+}

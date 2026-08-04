@@ -21,7 +21,13 @@ const props = defineProps<{
   canAutoRenew: boolean;
   autoRenewOn: boolean;
   // Plans available to subscribe to. Empty while they load.
-  plans?: { id: string; name: string; price_minor: number | null; currency: string | null }[];
+  plans?: {
+    id: string;
+    name: string;
+    price_minor: number | null;
+    currency: string | null;
+    period_days: number | null;
+  }[];
 }>();
 
 const emit = defineEmits<{ (e: 'changed'): void }>();
@@ -53,6 +59,20 @@ const canSubscribe = computed(
 // then runs as step 1, and verification continues straight into the charge
 // instead of dumping them back on a page with a new button to find.
 const subscribeIntent = ref(false);
+
+const selectedPlan = computed(
+  () => props.plans?.find((p) => p.id === selectedPlanId.value) ?? null,
+);
+
+// Same formatting as the one-time panel so the two prices are comparable at a
+// glance rather than looking like different currencies.
+function formatPrice(minor: number | null, currency: string | null): string {
+  if (minor === null || currency === null) return '';
+  const grouped = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(
+    minor / 100,
+  );
+  return `${grouped} ${currency}`;
+}
 const cardNumber = ref('');
 const expiry = ref('');
 const smsCode = ref('');
@@ -261,7 +281,21 @@ async function toggleAutoRenew(next: boolean) {
         {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
       </button>
     </div>
-    <p class="dim text-xs mt-2">{{ t('cards.subscribe_hint') }}</p>
+    <p v-if="selectedPlan" class="click-price mt-3">
+      {{ formatPrice(selectedPlan.price_minor, selectedPlan.currency) }}
+      <span v-if="selectedPlan.period_days" class="dim text-sm subscribe-period">
+        {{ t('cards.per_period', { days: selectedPlan.period_days }) }}
+      </span>
+    </p>
+    <p class="dim text-xs mt-2">
+      <template v-if="selectedPlan && selectedPlan.period_days">
+        {{ t('cards.subscribe_hint_priced', {
+          price: formatPrice(selectedPlan.price_minor, selectedPlan.currency),
+          days: selectedPlan.period_days,
+        }) }}
+      </template>
+      <template v-else>{{ t('cards.subscribe_hint') }}</template>
+    </p>
 
     <!-- Card collection, inline, only once Subscribe has been pressed. -->
     <div v-if="showForm && !card" class="subscribe-step mt-4">

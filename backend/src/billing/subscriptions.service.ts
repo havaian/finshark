@@ -240,6 +240,41 @@ export class SubscriptionsService {
     });
   }
 
+  // Revoke a user's premium in one action.
+  //
+  // This exists because per-subscription revoke cannot do the job. Purchases
+  // chain into separate rows, so a user with ten months has ten active rows and
+  // entitlement passes on any one of them - revoking them individually means
+  // ten clicks, and missing one silently leaves the user with full access while
+  // the admin believes it is gone.
+  //
+  // One transaction: a partial revoke is the exact failure mode being fixed, so
+  // it must not be reachable by a mid-loop error either.
+  async revokeAllForUser(input: {
+    userId: string;
+    actorUserId?: string | null;
+    reason?: string | null;
+  }): Promise<{ revoked: number }> {
+    return this.sql.begin(async (tx) => {
+      const active = await this.subs.findAllGrantingAccess(input.userId, tx);
+      for (const sub of active) {
+        const updated = await this.subs.revoke(sub.id, tx);
+        if (!updated) continue;
+        await this.events.insert(
+          {
+            subscription_id: updated.id,
+            user_id: updated.user_id,
+            kind: "revoked",
+            actor_user_id: input.actorUserId ?? null,
+            reason: input.reason ?? null,
+          },
+          tx
+        );
+      }
+      return { revoked: active.length };
+    });
+  }
+
   // Read-only helpers for admin UI consumers (controllers land in a later
   // slice). Kept here so the service surface is symmetric.
   async history(userId: string): Promise<SubscriptionRow[]> {

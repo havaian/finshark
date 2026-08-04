@@ -1054,6 +1054,9 @@ export default {
       cancel_reason_label: "Reason (optional)",
       cancel_confirm: "Cancel subscription",
       revoke_modal_title: "Revoke subscription",
+      revoke_all_btn: "Revoke all access ({count})",
+      revoke_all_modal_title: "Revoke all access",
+      revoke_all_warning: "This revokes all {count} subscriptions currently granting this user premium. Purchases stack, so revoking only one would leave their access intact. This cannot be undone.",
       revoke_warn:
         "Hard revoke - ends_at is forced to now. Use for refunds or abuse.",
       revoke_reason_label: "Reason (required for audit)",

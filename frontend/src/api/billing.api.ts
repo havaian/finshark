@@ -135,4 +135,18 @@ export const adminBillingApi = {
   ): Promise<Subscription> =>
     (await api.post<Subscription>(`/admin/subscriptions/${id}/revoke`, input))
       .data,
+
+  // Removes ALL of a user's access at once. Purchases chain into separate
+  // subscription rows, so revoking them one by one is both tedious and unsafe -
+  // missing one leaves the user fully entitled.
+  revokeAllForUser: async (
+    userId: string,
+    input: { reason?: string }
+  ): Promise<{ revoked: number }> =>
+    (
+      await api.post<{ revoked: number }>(
+        `/admin/users/${userId}/subscriptions/revoke-all`,
+        input
+      )
+    ).data,
 };

@@ -71,19 +71,31 @@ const grantSuccess = ref(false);
 // ---- Per-subscription action modal ----
 // One modal handles all three of extend/cancel/revoke since they're nearly
 // identical (subscription + optional reason + optional days for extend).
-type ActionKind = 'extend' | 'cancel' | 'revoke';
+type ActionKind = 'extend' | 'cancel' | 'revoke' | 'revoke_all';
 const actionModal = ref<{
   kind: ActionKind;
-  sub: Subscription;
+  // null for revoke_all, which targets the user rather than one subscription.
+  sub: Subscription | null;
   days: string;
   reason: string;
   busy: boolean;
   error: string | null;
 } | null>(null);
 
-function openAction(kind: ActionKind, sub: Subscription) {
+// `sub` is absent for revoke_all, which acts on the user rather than on one
+// subscription.
+function openAction(kind: ActionKind, sub: Subscription | null) {
   actionModal.value = { kind, sub, days: '30', reason: '', busy: false, error: null };
 }
+
+// Every subscription still granting access. Chained purchases mean this is
+// usually more than one, which is exactly why the bulk action exists.
+const grantingCount = computed(
+  () =>
+    subs.value.filter(
+      (s) => s.status === 'active' && (s.ends_at === null || new Date(s.ends_at) > new Date()),
+    ).length,
+);
 
 function closeAction() {
   if (actionModal.value?.busy) return;
@@ -97,6 +109,20 @@ async function confirmAction() {
   a.busy = true;
   a.error = null;
   try {
+    // revoke_all is user-scoped, not subscription-scoped: it clears every row
+    // still granting access, so there is no single updated row to splice back
+    // in and the list is reloaded instead.
+    if (a.kind === 'revoke_all') {
+      if (!selected.value) return;
+      await adminBillingApi.revokeAllForUser(selected.value.id, {
+        reason: a.reason.trim() || undefined,
+      });
+      subs.value = await adminBillingApi.listSubscriptionsForUser(selected.value.id);
+      events.value = await adminBillingApi.listSubscriptionEventsForUser(selected.value.id);
+      actionModal.value = null;
+      return;
+    }
+
     let updated: Subscription;
     if (a.kind === 'extend') {
       const days = parseInt(a.days, 10);
@@ -105,16 +131,19 @@ async function confirmAction() {
         a.busy = false;
         return;
       }
+      if (!a.sub) return;
       updated = await adminBillingApi.extend(a.sub.id, {
         days,
         reason: a.reason.trim() || undefined,
       });
     } else if (a.kind === 'cancel') {
+      if (!a.sub) return;
       updated = await adminBillingApi.cancel(a.sub.id, {
         reason: a.reason.trim() || undefined,
       });
     } else {
       // revoke
+      if (!a.sub) return;
       updated = await adminBillingApi.revoke(a.sub.id, {
         reason: a.reason.trim() || undefined,
       });
@@ -333,7 +362,16 @@ onMounted(loadUsersAndPlans);
 
           <!-- Subscription history -->
           <div class="mt-6">
-            <h3>{{ t('admin.subscriptions.sub_history_heading') }}</h3>
+            <div class="admin-subs-head">
+              <h3>{{ t('admin.subscriptions.sub_history_heading') }}</h3>
+              <!-- One action for the whole user. Purchases chain into separate
+                   rows, so revoking them individually is both tedious and
+                   unsafe - missing one leaves the user fully entitled. -->
+              <button v-if="grantingCount > 0" class="btn btn-sm btn-ghost"
+                style="color: var(--danger, #c00);" @click="openAction('revoke_all', null)">
+                {{ t('admin.subscriptions.revoke_all_btn', { count: grantingCount }) }}
+              </button>
+            </div>
             <p v-if="detailsLoading" class="dim text-sm mt-2">{{ t('common.loading') }}</p>
             <p v-else-if="subs.length === 0" class="dim text-sm mt-2">
               {{ t('admin.subscriptions.sub_history_empty') }}
@@ -410,6 +448,9 @@ onMounted(loadUsersAndPlans);
           <h3>
             <template v-if="actionModal.kind === 'extend'">{{ t('admin.subscriptions.extend_modal_title') }}</template>
             <template v-else-if="actionModal.kind === 'cancel'">{{ t('admin.subscriptions.cancel_modal_title') }}</template>
+            <template v-else-if="actionModal.kind === 'revoke_all'">
+              {{ t('admin.subscriptions.revoke_all_modal_title') }}
+            </template>
             <template v-else>{{ t('admin.subscriptions.revoke_modal_title') }}</template>
           </h3>
           <button type="button" class="modal-close" :disabled="actionModal.busy" @click="closeAction">✕</button>
@@ -418,6 +459,9 @@ onMounted(loadUsersAndPlans);
         <div class="modal-body">
           <p v-if="actionModal.kind === 'cancel'" class="dim text-sm">
             {{ t('admin.subscriptions.cancel_warn') }}
+          </p>
+          <p v-if="actionModal.kind === 'revoke_all'" class="error-text">
+            {{ t('admin.subscriptions.revoke_all_warning', { count: grantingCount }) }}
           </p>
           <p v-if="actionModal.kind === 'revoke'" class="error-text">
             {{ t('admin.subscriptions.revoke_warn') }}

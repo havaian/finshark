@@ -81,6 +81,13 @@ class ReasonDto {
 // change just one. price_minor is in MINOR units (e.g. tiyin for UZS), matching
 // the column and the rest of the billing layer. Must be a positive integer -
 // we don't allow setting a premium plan's price to 0 or null via this path.
+class RevokeAllDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+}
+
 class UpdatePlanDto {
   @IsOptional()
   @IsString()
@@ -304,5 +311,26 @@ export class AdminSubscriptionsController {
   @HttpCode(HttpStatus.OK)
   async runExpiryWarnings(): Promise<{ sent: number; failed: number }> {
     return this.expiry.runOnce();
+  }
+  // ADMIN - remove ALL of a user's premium access in one action.
+  //
+  // The per-subscription revoke below cannot do this: purchases chain into
+  // separate rows, so a user with ten months has ten active subscriptions and
+  // entitlement passes on any one of them. Revoking them one at a time is both
+  // tedious and unsafe - miss one and the user keeps full access while the
+  // admin believes it is gone.
+  // POST /api/admin/users/:userId/subscriptions/revoke-all
+  @Post("users/:userId/subscriptions/revoke-all")
+  @HttpCode(HttpStatus.OK)
+  async revokeAll(
+    @Param("userId") userId: string,
+    @Body() body: RevokeAllDto,
+    @CurrentUser() actor: AccessTokenPayload
+  ): Promise<{ revoked: number }> {
+    return this.subs.revokeAllForUser({
+      userId,
+      actorUserId: actor.sub,
+      reason: body.reason?.trim() || null,
+    });
   }
 }

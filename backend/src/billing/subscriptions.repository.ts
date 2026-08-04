@@ -32,6 +32,26 @@ export class SubscriptionsRepository {
   // ended) sorts last via NULLS LAST, so the open-ended grant wins.
   //
   // Returns null if the user has no active subscription (= free tier).
+  // EVERY subscription currently granting access, not just the latest.
+  //
+  // Grants chain - each purchase starts where the previous one ends - so a user
+  // who bought ten months has ten rows, all status='active', all with a future
+  // ends_at. Entitlement passes if ANY of them qualifies, which is why a
+  // per-row revoke cannot actually remove access.
+  async findAllGrantingAccess(
+    userId: string,
+    sql: SqlOrTx = this.sql
+  ): Promise<SubscriptionRow[]> {
+    return sql<SubscriptionRow[]>`
+      SELECT ${sql.unsafe(SUB_COLS)}
+      FROM subscriptions
+      WHERE user_id = ${userId}
+        AND status = 'active'
+        AND (ends_at IS NULL OR ends_at > NOW())
+      ORDER BY ends_at ASC NULLS LAST
+    `;
+  }
+
   async findActiveForUser(userId: string): Promise<SubscriptionRow | null> {
     const rows = await this.sql<SubscriptionRow[]>`
       SELECT ${this.sql.unsafe(SUB_COLS)}

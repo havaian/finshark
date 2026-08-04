@@ -3859,3 +3859,11 @@
 .card-input-short {
     max-width: 160px;
 }
+
+.admin-subs-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}

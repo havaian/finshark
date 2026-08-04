@@ -1053,6 +1053,9 @@ export default {
       cancel_reason_label: "Sabab (ixtiyoriy)",
       cancel_confirm: "Obunani bekor qilish",
       revoke_modal_title: "Obunani qaytarib olish",
+      revoke_all_btn: "Barcha kirishni bekor qilish ({count})",
+      revoke_all_modal_title: "Barcha kirishni bekor qilish",
+      revoke_all_warning: "Foydalanuvchiga premium beruvchi barcha obunalar ({count}) bekor qilinadi. Xaridlar jamlanadi, shuning uchun faqat bittasini bekor qilish kirishni saqlab qolgan bo'lardi. Bu amalni qaytarib bo'lmaydi.",
       revoke_warn:
         "Qattiq qaytarib olish - ends_at hozirgi vaqtga majburlanadi. Qaytarishlar yoki suiiste'mol uchun ishlating.",
       revoke_reason_label: "Sabab (audit uchun majburiy)",

@@ -192,14 +192,31 @@ export class SubscriptionsRepository {
     id: string,
     sql: SqlOrTx = this.sql
   ): Promise<SubscriptionRow | null> {
+    // ends_at = GREATEST(NOW(), starts_at), not NOW().
+    //
+    // Grants chain: buying a second month while the first is still running
+    // creates a row that STARTS in the future. Setting ends_at = NOW() on such
+    // a row puts the end before the start, which trips
+    // chk_subs_ends_after_starts and fails the revoke outright.
+    //
+    // GREATEST gives the right answer for both shapes:
+    //   already running  -> ends now
+    //   not yet started  -> collapses to a zero-length window, which is what
+    //                       "this grant never took effect" actually means
+    //
+    // Zero length needs ends_at >= starts_at; migration
+    // 20260804000001_allow_zero_length_subscription relaxes the constraint.
+    // Entitlement keys off status, so a revoked row grants nothing either way.
     const rows = await sql<SubscriptionRow[]>`
       UPDATE subscriptions
-      SET status = 'expired', ends_at = NOW()
+      SET status = 'expired',
+          ends_at = GREATEST(NOW(), starts_at)
       WHERE id = ${id}
       RETURNING ${sql.unsafe(SUB_COLS)}
     `;
     return rows[0] ?? null;
   }
+
   // ── Auto-renew ───────────────────────────────────────────────────────────
 
   async setAutoRenew(input: {

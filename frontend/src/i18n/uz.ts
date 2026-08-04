@@ -707,6 +707,8 @@ export default {
     pending_explainer: "To'lovingiz tekshirilmoqda. Tasdiqlanishi bilan premiumni faollashtiramiz.",
     submitted_on: "Yuborilgan: {date}",
     history_title: "To'lovlaringiz",
+    onetime_title: "Bir martalik xarid",
+    onetime_subtitle: "Bitta davr uchun to'lov. Karta saqlanmaydi va avtomatik uzaytirish yo'q.",
     receipt_link: "Fiskal chek",
     receipt_pending: "Chek rasmiylashtirilmoqda",
   },
@@ -1440,6 +1442,10 @@ export default {
     verify_failed: "Kodni tasdiqlab bo'lmadi",
     remove_failed: "Kartani o'chirib bo'lmadi",
     auto_renew_failed: "Avtomatik uzaytirishni o'zgartirib bo'lmadi",
+    subscribe_plan: "Obuna",
+    subscribe_cta: "Obuna bo'lish",
+    subscribe_hint: "Saqlangan kartadan hozir, so'ng har bir davr tugashidan 3 kun oldin yechamiz. Istalgan vaqtda bekor qilish mumkin.",
+    subscribe_failed: "Obunani rasmiylashtirib bo'lmadi",
   },
 
 };

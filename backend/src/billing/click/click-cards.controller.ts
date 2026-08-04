@@ -54,6 +54,12 @@ class VerifyBindingDto {
   sms_code!: string;
 }
 
+class SubscribeDto {
+  @IsString()
+  @Length(1, 64)
+  plan_id!: string;
+}
+
 class AutoRenewDto {
   @IsBoolean()
   enabled!: boolean;
@@ -118,6 +124,17 @@ export class ClickCardsController {
   async remove(@CurrentUser() user: AccessTokenPayload): Promise<{ ok: true }> {
     await this.cards.removeCard(user.sub);
     return { ok: true };
+  }
+
+  // Start a subscription: charges the saved card now and comes back with
+  // auto-renew already on. The subscription itself appears when Click's
+  // callbacks land, same as any other payment.
+  @Post("subscribe")
+  async subscribe(
+    @CurrentUser() user: AccessTokenPayload,
+    @Body() dto: SubscribeDto
+  ): Promise<{ order_id: string; merchant_trans_id: string }> {
+    return this.cards.subscribeNow({ userId: user.sub, planId: dto.plan_id });
   }
 
   @Post("auto-renew")

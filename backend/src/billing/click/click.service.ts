@@ -627,6 +627,14 @@ export class ClickService {
     if (isAutoRenewal) {
       void this.cards.notifyRenewalSucceeded(order.user_id, sub.ends_at);
     }
+    // First payment of a subscription: the order asked for renewal to be on,
+    // and only now does a subscription row exist to set it on.
+    if (order.metadata?.enable_auto_renew === true) {
+      void this.cards.enableAutoRenewForNewSubscription({
+        userId: order.user_id,
+        subscriptionId: sub.id,
+      });
+    }
     return sub.id;
   }
 

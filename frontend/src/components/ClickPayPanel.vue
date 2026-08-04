@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { clickApi, loadClickCheckoutJs } from '../api/click.api';
 import { useLocaleStore } from '../stores/locale.store';
 import type { Plan } from '../types/billing';
-import type { ClickCheckoutHandle, ClickOrder } from '../types/click';
+import type { ClickCheckoutHandle } from '../types/click';
 
 // Click payment panel, embedded in SubscriptionPage. Replaces the retired P2P
 // card-transfer panel.
@@ -197,37 +197,12 @@ function mapPayError(e: unknown): string {
   return t('click.pay_error_generic');
 }
 
-// ── History ──────────────────────────────────────────────────────────────
-const myOrders = ref<ClickOrder[]>([]);
-
-async function loadMyOrders() {
-  try {
-    myOrders.value = await clickApi.listMyOrders();
-  } catch {
-    myOrders.value = [];
-  }
-}
-
-onMounted(loadMyOrders);
-
-// Only settled orders are worth showing. 'created' rows accumulate every time
-// someone opens a payment surface and changes their mind; listing them would
-// make abandoned checkouts look like failed payments.
-const visibleOrders = computed(() =>
-  myOrders.value.filter((o) => o.status !== 'created')
-);
-
-function statusPillClass(status: ClickOrder['status']): string {
-  if (status === 'paid') return 'pill pill-green';
-  if (status === 'cancelled' || status === 'failed') return 'pill pill-red';
-  return 'pill pill-amber';
-}
 </script>
 
 <template>
   <div class="card mt-6">
-    <h2 class="text-lg">{{ t('click.title') }}</h2>
-    <p class="dim text-sm mt-1">{{ t('click.subtitle') }}</p>
+    <h2 class="text-lg">{{ t('click.onetime_title') }}</h2>
+    <p class="dim text-sm mt-1">{{ t('click.onetime_subtitle') }}</p>
 
     <p v-if="loading" class="dim text-sm mt-4">{{ t('common.loading') }}</p>
     <p v-else-if="loadError" class="error-text mt-4">{{ loadError }}</p>
@@ -267,36 +242,7 @@ function statusPillClass(status: ClickOrder['status']): string {
         <p class="dim text-xs mt-2">{{ t('click.buttons_hint') }}</p>
       </template>
 
-      <!-- Payment history -->
-      <template v-if="visibleOrders.length > 0">
-        <h3 class="text-sm mt-6">{{ t('click.history_title') }}</h3>
-        <ul class="list-bordered mt-2">
-          <li v-for="o in visibleOrders" :key="o.id" class="list-row">
-            <div>
-              <span :class="statusPillClass(o.status)">{{ t('click.status_' + o.status) }}</span>
-              <span class="dim text-sm" style="margin-left: 0.5rem;">
-                {{ formatPrice(o.amount_minor, o.currency) }}
-              </span>
-            </div>
-            <div class="click-history-right">
-              <!-- Fiscal receipt for a past purchase. Under PKM No. 943 this is
-                   the customer's own document, so it has to be reachable after
-                   the payment screen is long gone - not only on the return page
-                   they saw once. Paid orders with no URL yet say so rather than
-                   rendering nothing, which would look like the receipt was
-                   never issued. -->
-              <a v-if="o.fiscal_qr_url" :href="o.fiscal_qr_url" target="_blank"
-                rel="noopener noreferrer" class="btn-link accent text-xs">
-                {{ t('click.receipt_link') }}
-              </a>
-              <span v-else-if="o.status === 'paid'" class="dim text-xs">
-                {{ t('click.receipt_pending') }}
-              </span>
-              <span class="dim text-xs">{{ new Date(o.created_at).toLocaleDateString() }}</span>
-            </div>
-          </li>
-        </ul>
-      </template>
+    </template>
     </template>
   </div>
 </template>

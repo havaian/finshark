@@ -16,10 +16,12 @@ import { useI18n } from 'vue-i18n';
 import { clickApi } from '../api/click.api';
 import type { SavedCard } from '../types/click';
 
-defineProps<{
-  // Auto-renew can only be enabled against a subscription that actually ends.
+const props = defineProps<{
+  // Auto-renew can only be toggled against a subscription that actually ends.
   canAutoRenew: boolean;
   autoRenewOn: boolean;
+  // Plans available to subscribe to. Empty while they load.
+  plans?: { id: string; name: string; price_minor: number | null; currency: string | null }[];
 }>();
 
 const emit = defineEmits<{ (e: 'changed'): void }>();
@@ -32,6 +34,15 @@ const error = ref<string | null>(null);
 
 // Binding form
 const showForm = ref(false);
+const subscribing = ref(false);
+const selectedPlanId = ref<string>('');
+
+// Subscribing is only offered when the user has NO active subscription: with
+// one already running, the auto-renew toggle is the right control and a second
+// "subscribe" button would just charge them for a period they already own.
+const canSubscribe = computed(
+  () => card.value !== null && !props.canAutoRenew && (props.plans?.length ?? 0) > 0,
+);
 const cardNumber = ref('');
 const expiry = ref('');
 const smsCode = ref('');
@@ -164,6 +175,22 @@ async function removeCard() {
   }
 }
 
+// Charge the saved card now and come back subscribed. The subscription itself
+// lands via Click's callbacks, so we reload rather than assume.
+async function subscribeNow() {
+  if (!selectedPlanId.value || subscribing.value) return;
+  subscribing.value = true;
+  error.value = null;
+  try {
+    await clickApi.subscribeNow(selectedPlanId.value);
+    emit('changed');
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : t('cards.subscribe_failed');
+  } finally {
+    subscribing.value = false;
+  }
+}
+
 async function toggleAutoRenew(next: boolean) {
   if (busy.value) return;
   busy.value = true;
@@ -198,6 +225,22 @@ async function toggleAutoRenew(next: boolean) {
           @click="removeCard">
           {{ t('cards.remove') }}
         </button>
+      </div>
+
+      <!-- Subscribe. Shown when a card is saved but nothing is running yet -
+           this is the path that turns a saved card into an actual
+           subscription, and without it the toggle below has nothing to act on. -->
+      <div v-if="canSubscribe" class="mt-4">
+        <label class="field-label">{{ t('cards.subscribe_plan') }}</label>
+        <select v-model="selectedPlanId">
+          <option value="" disabled>-</option>
+          <option v-for="p in props.plans" :key="p.id" :value="p.id">{{ p.name }}</option>
+        </select>
+        <button class="btn btn-primary mt-3" :disabled="!selectedPlanId || subscribing"
+          @click="subscribeNow">
+          {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
+        </button>
+        <p class="dim text-xs mt-2">{{ t('cards.subscribe_hint') }}</p>
       </div>
 
       <!-- Auto-renew. Only offered once a card exists: enabling it without one

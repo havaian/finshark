@@ -707,6 +707,8 @@ export default {
     pending_explainer: "Your payment is being reviewed. We'll activate premium as soon as it's confirmed.",
     submitted_on: "Submitted {date}",
     history_title: "Your payments",
+    onetime_title: "One-time purchase",
+    onetime_subtitle: "Pay for a single period. No card is saved and nothing renews.",
     receipt_link: "Fiscal receipt",
     receipt_pending: "Receipt pending",
   },
@@ -1445,6 +1447,10 @@ export default {
     verify_failed: "Could not confirm the code",
     remove_failed: "Could not remove the card",
     auto_renew_failed: "Could not change auto-renewal",
+    subscribe_plan: "Subscribe to",
+    subscribe_cta: "Subscribe",
+    subscribe_hint: "We charge your saved card now, then again 3 days before each period ends. Cancel any time.",
+    subscribe_failed: "Could not start the subscription",
   },
 
 };

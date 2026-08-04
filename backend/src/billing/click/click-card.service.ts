@@ -176,6 +176,116 @@ export class ClickCardService {
     await this.tokens.markRemoved(row.id);
   }
 
+  // ── Subscribe now ────────────────────────────────────────────────────────
+
+  // Start a subscription in one action: charge the saved card immediately for
+  // the first period, and have the resulting subscription come out with
+  // auto-renew already on.
+  //
+  // This exists because the toggle alone cannot start anything. setAutoRenew
+  // requires an ACTIVE subscription, so without this a new user had to buy
+  // one-time, then save a card, then find a toggle - three steps to reach the
+  // thing the page should have offered first.
+  //
+  // Nothing is granted here. The charge drives Click's normal Prepare/Complete
+  // callbacks, and `enable_auto_renew` in the order metadata tells the grant
+  // path to switch renewal on once the subscription actually exists. Doing it
+  // that way means one grant path, not two.
+  async subscribeNow(input: {
+    userId: string;
+    planId: string;
+  }): Promise<{ order_id: string; merchant_trans_id: string }> {
+    this.assertEnabled();
+
+    const card = await this.tokens.findActiveForUser(input.userId);
+    if (!card) {
+      throw new BadRequestException("save a card before subscribing");
+    }
+
+    const plan = await this.plans.findById(input.planId);
+    if (!plan || !plan.is_active || plan.tier !== "premium") {
+      throw new BadRequestException("plan is not available");
+    }
+    if (plan.price_minor === null || plan.currency === null) {
+      throw new BadRequestException("plan has no price");
+    }
+    if (plan.period_days === null) {
+      // A lifetime plan has nothing to renew; buying it is a one-time purchase.
+      throw new BadRequestException("this plan cannot be subscribed to");
+    }
+
+    // Refuse while another order for this plan is still settling, same guard
+    // the renewal sweep uses - a double-tap must not become two charges.
+    const openOrder = await this.orders.findOpenForUserPlan(
+      input.userId,
+      plan.id
+    );
+    if (openOrder) {
+      throw new BadRequestException(
+        "a payment for this plan is already in progress"
+      );
+    }
+
+    const merchantTransId = await this.orders.generateMerchantTransId();
+    const order = await this.orders.create({
+      user_id: input.userId,
+      plan_id: plan.id,
+      merchant_trans_id: merchantTransId,
+      amount_minor: plan.price_minor,
+      currency: plan.currency,
+      fiscal_status: this.config.fiscalEnabled ? "pending" : "not_required",
+      metadata: {
+        plan_name: plan.name,
+        // Read by ClickService.grantForOrder once the subscription exists.
+        enable_auto_renew: true,
+        card_token_id: card.id,
+      },
+    });
+
+    const res = await this.merchant.payWithCardToken({
+      cardToken: card.card_token,
+      amount: plan.price_minor / 100,
+      merchantTransId,
+    });
+    if (!res.ok) {
+      const note = res.errorNote ?? "card charge was declined";
+      await this.tokens.setLastError(card.id, note);
+      await this.orders.markFailed({
+        id: order.id,
+        error_note: `subscribe declined: ${note}`,
+      });
+      throw new BadRequestException(note);
+    }
+
+    await this.tokens.setLastError(card.id, null);
+    return { order_id: order.id, merchant_trans_id: merchantTransId };
+  }
+
+  // Turn auto-renew on for a subscription the grant path just created. Called
+  // from ClickService, which knows when the row exists.
+  async enableAutoRenewForNewSubscription(input: {
+    userId: string;
+    subscriptionId: string;
+  }): Promise<void> {
+    try {
+      const card = await this.tokens.findActiveForUser(input.userId);
+      if (!card) return;
+      await this.subs.setAutoRenew({
+        id: input.subscriptionId,
+        enabled: true,
+        cardTokenId: card.id,
+      });
+    } catch (e) {
+      // The payment succeeded and access was granted; failing to flip a flag
+      // must not undo that. The user can still toggle it by hand.
+      this.log.warn(
+        `could not enable auto-renew on ${input.subscriptionId}: ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+
   // ── Auto-renew toggle ────────────────────────────────────────────────────
 
   async setAutoRenew(input: {

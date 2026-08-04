@@ -75,6 +75,19 @@ export const clickApi = {
     await api.delete("/billing/click/cards");
   },
 
+  // Charge the saved card now and come back subscribed. The subscription
+  // itself appears when Click's callbacks land, so callers poll or reload
+  // rather than trusting the response to mean "access granted".
+  subscribeNow: async (
+    planId: string,
+  ): Promise<{ order_id: string; merchant_trans_id: string }> =>
+    (
+      await api.post<{ order_id: string; merchant_trans_id: string }>(
+        "/billing/click/cards/subscribe",
+        { plan_id: planId },
+      )
+    ).data,
+
   setAutoRenew: async (enabled: boolean): Promise<void> => {
     await api.post("/billing/click/cards/auto-renew", { enabled });
   },

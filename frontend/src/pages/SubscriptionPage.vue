@@ -3,11 +3,14 @@ import { computed, onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
 import { billingApi } from '../api/billing.api';
+import { clickApi } from '../api/click.api';
+import type { Plan } from '../types/billing';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import type { Subscription } from '../types/billing';
 import AppNav from '../components/AppNav.vue';
 import ClickPayPanel from '../components/ClickPayPanel.vue';
 import SavedCardPanel from '../components/SavedCardPanel.vue';
+import PaymentHistoryPanel from '../components/PaymentHistoryPanel.vue';
 
 // Dedicated billing surface. Previously this content was split between the
 // Settings "Premium" section (the redeem widget + status line) and the Profile
@@ -37,6 +40,12 @@ const subscriptionsLoading = ref(true);
 // The subscription auto-renew applies to: the active one, which is also the
 // only one with a future ends_at. An open-ended grant (lifetime, admin comp)
 // has nothing to renew, so the toggle is hidden rather than shown disabled.
+// Plans the SavedCardPanel can subscribe to. Premium plans with a period -
+// a lifetime plan is a one-time purchase, not something to renew.
+const subscribablePlans = ref<
+  { id: string; name: string; price_minor: number | null; currency: string | null }[]
+>([]);
+
 const activeSub = computed(() =>
   subscriptions.value.find((s) => s.status === 'active' && s.ends_at !== null) ?? null,
 );
@@ -136,7 +145,19 @@ onMounted(() => {
   // so a direct navigation here shows live status rather than a stale cache.
   if (!entitlement.entitlement) void entitlement.fetch();
   void loadSubscriptions();
+  void loadSubscribablePlans();
 });
+
+async function loadSubscribablePlans() {
+  try {
+    const all: Plan[] = await clickApi.listPlans();
+    // period_days === null is a lifetime plan: nothing to renew, so it is a
+    // one-time purchase and belongs in the panel below, not here.
+    subscribablePlans.value = all.filter((p) => p.period_days !== null);
+  } catch {
+    subscribablePlans.value = [];
+  }
+}
 </script>
 
 <template>
@@ -164,14 +185,16 @@ onMounted(() => {
 
       <!-- Pay via Click. Self-contained panel: plan picker, both Click payment
            surfaces (hosted page + card overlay), and payment history. -->
-      <ClickPayPanel />
-
-      <!-- Saved card + automatic renewal -->
-      <SavedCardPanel :can-auto-renew="activeSub !== null"
+      <!-- Subscription comes FIRST. It is the offer the page should lead with;
+           a one-time purchase is the alternative below it, not the default. -->
+      <SavedCardPanel :plans="subscribablePlans" :can-auto-renew="activeSub !== null"
         :auto-renew-on="activeSub?.auto_renew ?? false" @changed="loadSubscriptions" />
 
+      <!-- One-time purchase -->
+      <ClickPayPanel />
+
       <!-- Redeem a code -->
-      <section class="card mt-6">
+      <section class="card mt-6" id="redeem-section">
         <h2>{{ t('subscription.redeem_section') }}</h2>
         <p class="dim text-sm mt-2">{{ t('subscription.redeem_section_sub') }}</p>
 
@@ -190,6 +213,10 @@ onMounted(() => {
           <p v-if="redeemSuccess" class="mt-2" style="color: var(--success, #16a34a);">{{ redeemSuccess }}</p>
         </div>
       </section>
+
+      <!-- Payments, then subscription periods. Both are reference material, so
+           they sit below everything the user might act on. -->
+      <PaymentHistoryPanel />
 
       <!-- Billing history -->
       <section class="card mt-6">

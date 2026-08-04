@@ -1415,4 +1415,24 @@ export default {
     done: "Davom etish",
   },
 
+  cards: {
+    title: "Saqlangan karta",
+    saved: "Karta saqlandi",
+    none_hint: "Obuna avtomatik uzaytirilishi uchun kartani saqlang.",
+    add: "Karta qo'shish",
+    number: "Karta raqami",
+    expiry: "Amal qilish muddati (OO/YY)",
+    continue: "Davom etish",
+    sms_sent: "{phone} raqamiga kod yubordik",
+    sms_code: "SMS kodi",
+    confirm: "Tasdiqlash",
+    remove: "O'chirish",
+    auto_renew: "Avtomatik uzaytirish",
+    auto_renew_hint: "Obuna tugashidan 3 kun oldin saqlangan kartadan yechamiz. Istalgan vaqtda o'chirish mumkin.",
+    bind_failed: "Kartani saqlab bo'lmadi",
+    verify_failed: "Kodni tasdiqlab bo'lmadi",
+    remove_failed: "Kartani o'chirib bo'lmadi",
+    auto_renew_failed: "Avtomatik uzaytirishni o'zgartirib bo'lmadi",
+  },
+
 };

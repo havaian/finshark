@@ -10,6 +10,7 @@ import { PromocodesController } from "./promocodes.controller";
 import { PromocodesRepository } from "./promocodes.repository";
 import { PromocodesService } from "./promocodes.service";
 import { SubscriptionEventsRepository } from "./subscription-events.repository";
+import { SubscriptionExpiryService } from "./subscription-expiry.service";
 import { SubscriptionsRepository } from "./subscriptions.repository";
 import { SubscriptionsService } from "./subscriptions.service";
 
@@ -41,6 +42,7 @@ import { SubscriptionsService } from "./subscriptions.service";
     AdminSubscriptionsController,
   ],
   providers: [
+    SubscriptionExpiryService,
     PlansRepository,
     SubscriptionsRepository,
     SubscriptionEventsRepository,

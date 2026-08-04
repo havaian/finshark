@@ -1420,4 +1420,24 @@ export default {
     done: "Continue",
   },
 
+  cards: {
+    title: "Saved card",
+    saved: "Card saved",
+    none_hint: "Save a card to renew your subscription automatically.",
+    add: "Add card",
+    number: "Card number",
+    expiry: "Expiry (MM/YY)",
+    continue: "Continue",
+    sms_sent: "We sent a code to {phone}",
+    sms_code: "SMS code",
+    confirm: "Confirm",
+    remove: "Remove",
+    auto_renew: "Renew automatically",
+    auto_renew_hint: "We charge your saved card 3 days before your subscription ends. Turn this off any time.",
+    bind_failed: "Could not save the card",
+    verify_failed: "Could not confirm the code",
+    remove_failed: "Could not remove the card",
+    auto_renew_failed: "Could not change auto-renewal",
+  },
+
 };

@@ -10,6 +10,8 @@ import type {
   ClickOrder,
   ClickOrderStatus,
   ClickRemoteStatus,
+  CardBindingStarted,
+  SavedCard,
 } from "../types/click";
 
 // User-facing Click endpoints. All require auth (enforced server-side).
@@ -37,8 +39,46 @@ export const clickApi = {
 
   listMyOrders: async (): Promise<ClickOrder[]> =>
     (await api.get<ClickOrder[]>("/billing/click/orders")).data,
-};
+  // ── Saved cards ───────────────────────────────────────────────────────────
+  //
+  // BINDING IS TWO STEPS and the card number is deliberately not one of them
+  // on this side: the browser posts the PAN straight to Click, whose
+  // card_token/request needs no Auth header precisely so merchants never
+  // handle it. We then adopt the returned token and confirm it by SMS.
 
+  getSavedCard: async (): Promise<SavedCard | null> =>
+    (await api.get<SavedCard | null>("/billing/click/cards")).data,
+
+  // Step 1, preferred: browser already holds a token from Click.
+  adoptCard: async (input: {
+    card_token: string;
+    phone_masked?: string | null;
+  }): Promise<CardBindingStarted> =>
+    (await api.post<CardBindingStarted>("/billing/click/cards/adopt", input)).data,
+
+  // Step 1, fallback for when the browser cannot reach Click directly. The
+  // card number transits our backend in memory and is never stored.
+  requestCard: async (input: {
+    card_number: string;
+    expire_date: string;
+  }): Promise<CardBindingStarted> =>
+    (await api.post<CardBindingStarted>("/billing/click/cards/request", input)).data,
+
+  // Step 2: confirm with the SMS code Click sent to the cardholder.
+  verifyCard: async (input: {
+    token_id: string;
+    sms_code: string;
+  }): Promise<SavedCard> =>
+    (await api.post<SavedCard>("/billing/click/cards/verify", input)).data,
+
+  removeCard: async (): Promise<void> => {
+    await api.delete("/billing/click/cards");
+  },
+
+  setAutoRenew: async (enabled: boolean): Promise<void> => {
+    await api.post("/billing/click/cards/auto-renew", { enabled });
+  },
+};
 // Admin Click endpoints. Require admin + an elevated 2FA session.
 export const adminClickApi = {
   health: async (): Promise<ClickHealth> =>

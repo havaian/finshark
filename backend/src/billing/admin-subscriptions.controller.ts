@@ -19,6 +19,7 @@ import {
   MaxLength,
   Min,
 } from "class-validator";
+import { SubscriptionExpiryService } from "./subscription-expiry.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -107,7 +108,8 @@ export class AdminSubscriptionsController {
     private readonly subsRepo: SubscriptionsRepository,
     private readonly events: SubscriptionEventsRepository,
     private readonly plans: PlansRepository,
-    private readonly entitlements: EntitlementsService
+    private readonly entitlements: EntitlementsService,
+    private readonly expiry: SubscriptionExpiryService
   ) {}
 
   // ── Plans (read-only) ───────────────────────────────────────────────
@@ -269,5 +271,14 @@ export class AdminSubscriptionsController {
       reason: dto.reason ?? null,
     });
     return toPublicSubscription(row);
+  }
+  // ADMIN - run the expiry-warning sweep now instead of waiting for 09:00 UTC.
+  // Sends real email, so it is a test of the whole pipeline rather than a dry
+  // run: subscriptions it warns are marked and will not be warned again.
+  // POST /api/admin/subscriptions/expiry-warnings/run
+  @Post("subscriptions/expiry-warnings/run")
+  @HttpCode(HttpStatus.OK)
+  async runExpiryWarnings(): Promise<{ sent: number; failed: number }> {
+    return this.expiry.runOnce();
   }
 }

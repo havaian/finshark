@@ -42,6 +42,16 @@ export interface ClickApiResult<T> {
 
 const REQUEST_TIMEOUT_MS = 15_000;
 
+function notConfigured<T>(): ClickApiResult<T> {
+  return {
+    ok: false,
+    status: 0,
+    errorCode: null,
+    errorNote: "Click is not configured",
+    data: null,
+  };
+}
+
 @Injectable()
 export class ClickMerchantClient {
   private readonly log = new Logger(ClickMerchantClient.name);
@@ -139,10 +149,110 @@ export class ClickMerchantClient {
 
   // ── transport ────────────────────────────────────────────────────────────
 
+  // ── Card tokens (recurring) ──────────────────────────────────────────────
+  //
+  // NOTE ON card_token/request: it is the only Click endpoint that takes no
+  // Auth header, which is what makes it callable straight from the browser so
+  // the card number never reaches our servers. This method exists ONLY as a
+  // fallback for when the browser cannot reach Click directly (CORS), and the
+  // PAN it receives is a request-scoped argument that is never persisted or
+  // logged. Do not add it to any log line, error message or database column.
+  async requestCardToken(input: {
+    cardNumber: string;
+    expireDate: string; // MMYY
+  }): Promise<
+    ClickApiResult<{
+      card_token: string;
+      phone_number?: string;
+      temporary?: boolean;
+    }>
+  > {
+    const core = this.config.core;
+    if (!core) return notConfigured();
+
+    // temporary: 0 - a permanent token. Temporary tokens are deleted by Click
+    // after a single payment, which is the opposite of what recurring needs.
+    return this.request({
+      method: "POST",
+      path: "/card_token/request",
+      body: {
+        service_id: Number(core.serviceId),
+        card_number: input.cardNumber,
+        expire_date: input.expireDate,
+        temporary: 0,
+      },
+      skipAuth: true,
+    });
+  }
+
+  // Confirm a freshly requested token with the SMS code Click sent to the
+  // cardholder. Returns the masked PAN, which is the only card identifier we
+  // keep.
+  async verifyCardToken(input: {
+    cardToken: string;
+    smsCode: string;
+  }): Promise<ClickApiResult<{ card_number?: string }>> {
+    const core = this.config.core;
+    if (!core) return notConfigured();
+
+    return this.request({
+      method: "POST",
+      path: "/card_token/verify",
+      body: {
+        service_id: Number(core.serviceId),
+        card_token: input.cardToken,
+        sms_code: Number(input.smsCode),
+      },
+    });
+  }
+
+  // Charge a verified token. Click then drives the SAME Prepare/Complete
+  // callbacks as a hosted payment (confirmed by Click support, 2026-08-03), so
+  // the grant, idempotency and fiscalization paths are all reused - the
+  // response here only tells us the charge was accepted for processing.
+  //
+  // `transaction_parameter` is our merchant_trans_id, so the callbacks arrive
+  // already matched to the order we created.
+  async payWithCardToken(input: {
+    cardToken: string;
+    amount: number; // major units, as Click's SHOP API expects
+    merchantTransId: string;
+  }): Promise<ClickApiResult<{ payment_id: number; payment_status: number }>> {
+    const core = this.config.core;
+    if (!core) return notConfigured();
+
+    return this.request({
+      method: "POST",
+      path: "/card_token/payment",
+      body: {
+        service_id: Number(core.serviceId),
+        card_token: input.cardToken,
+        amount: input.amount,
+        transaction_parameter: input.merchantTransId,
+      },
+    });
+  }
+
+  // Unbind. Click offers the cardholder no way to do this from their own app,
+  // so this call is the only off switch that exists.
+  async deleteCardToken(cardToken: string): Promise<ClickApiResult<unknown>> {
+    const core = this.config.core;
+    if (!core) return notConfigured();
+
+    return this.request({
+      method: "DELETE",
+      path: `/card_token/${core.serviceId}/${encodeURIComponent(cardToken)}`,
+    });
+  }
+
   private async request<T>(input: {
     method: "GET" | "POST" | "DELETE";
     path: string;
     body?: unknown;
+    // card_token/request is documented without an Auth header. Sending one
+    // anyway is not obviously harmful, but the header carries a secret-derived
+    // digest and there is no reason to put it on a call that does not want it.
+    skipAuth?: boolean;
   }): Promise<ClickApiResult<T>> {
     const core = this.config.core;
     if (!core) {
@@ -172,7 +282,7 @@ export class ClickMerchantClient {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Auth: auth,
+          ...(input.skipAuth ? {} : { Auth: auth }),
         },
         body: input.body === undefined ? undefined : JSON.stringify(input.body),
         signal: controller.signal,

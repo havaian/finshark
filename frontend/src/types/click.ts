@@ -160,3 +160,23 @@ declare global {
     ) => void;
   }
 }
+
+// ── Saved cards (recurring) ─────────────────────────────────────────────────
+
+export type CardTokenStatus = "pending_sms" | "active" | "removed";
+
+// Never carries the card token itself - that is a payment credential and the
+// UI has no use for it.
+export interface SavedCard {
+  id: string;
+  card_masked: string | null;
+  phone_masked: string | null;
+  status: CardTokenStatus;
+  last_error: string | null;
+  created_at: string;
+}
+
+export interface CardBindingStarted {
+  token_id: string;
+  phone_masked: string | null;
+}

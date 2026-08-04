@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import type postgres from "postgres";
 import type { Sql } from "postgres";
@@ -210,6 +211,38 @@ export class ClickOrdersRepository {
       WHERE id = ${input.id}
         AND status = 'prepared'
       RETURNING ${sql.unsafe(ORDER_COLS)}
+    `;
+    return rows[0] ?? null;
+  }
+
+  // Allocate an unused merchant_trans_id. Lives here rather than on the
+  // service because both checkout and auto-renewal need it, and the uniqueness
+  // check is a query against this table.
+  async generateMerchantTransId(): Promise<string> {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidate = `fs${randomBytes(9).toString("hex")}`;
+      const existing = await this.findByMerchantTransId(candidate);
+      if (!existing) return candidate;
+    }
+    throw new Error("could not allocate a payment reference");
+  }
+
+  // An order for this user and plan that Click may still settle. Used by the
+  // renewal sweep to avoid opening a second charge while the first one's
+  // callbacks are in flight - without it, an hourly sweep could bill someone
+  // twice for the same period.
+  async findOpenForUserPlan(
+    userId: string,
+    planId: string
+  ): Promise<ClickOrderRow | null> {
+    const rows = await this.sql<ClickOrderRow[]>`
+      SELECT ${this.sql.unsafe(ORDER_COLS)}
+      FROM click_orders
+      WHERE user_id = ${userId}
+        AND plan_id = ${planId}
+        AND status IN ('created', 'prepared')
+      ORDER BY created_at DESC
+      LIMIT 1
     `;
     return rows[0] ?? null;
   }

@@ -59,6 +59,8 @@ export interface Subscription {
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  // Recurring billing. False for everything bought before auto-renew existed.
+  auto_renew: boolean;
 }
 
 export interface SubscriptionEvent {

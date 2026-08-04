@@ -66,6 +66,13 @@ export interface SubscriptionRow {
   metadata: Record<string, unknown>;
   created_at: Date;
   updated_at: Date;
+  // Recurring billing. auto_renew defaults FALSE - subscriptions bought before
+  // this feature existed were one-off purchases.
+  auto_renew: boolean;
+  renew_card_token_id: string | null;
+  renew_attempts: number;
+  renew_last_attempt_at: Date | null;
+  renew_last_error: string | null;
 }
 
 export interface SubscriptionEventRow {
@@ -192,6 +199,9 @@ export interface PublicSubscription {
   cancelled_at: string | null;
   created_by_user_id: string | null;
   metadata: Record<string, unknown>;
+  // Whether this subscription will renew itself. The card behind it is NOT
+  // exposed here - the saved-card endpoint owns that.
+  auto_renew: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -209,6 +219,7 @@ export function toPublicSubscription(row: SubscriptionRow): PublicSubscription {
     cancelled_at: row.cancelled_at ? row.cancelled_at.toISOString() : null,
     created_by_user_id: row.created_by_user_id,
     metadata: row.metadata,
+    auto_renew: row.auto_renew,
     created_at: row.created_at.toISOString(),
     updated_at: row.updated_at.toISOString(),
   };

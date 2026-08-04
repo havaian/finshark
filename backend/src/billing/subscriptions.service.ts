@@ -64,6 +64,11 @@ export class SubscriptionsService {
     createdByUserId?: string | null;
     reason?: string | null;
     metadata?: Record<string, unknown>;
+    // Suppresses the premium_granted email. Set by callers that send their own,
+    // more specific notification for the same event - an auto-renewal tells the
+    // user we charged their saved card and how to stop, which premium_granted
+    // does not say. Two emails for one charge is worse than either alone.
+    suppressNotification?: boolean;
   }): Promise<SubscriptionRow> {
     const plan = await this.plans.findById(input.planId);
     if (!plan) throw new BadRequestException(`unknown plan: ${input.planId}`);
@@ -117,7 +122,7 @@ export class SubscriptionsService {
     // warrant a "welcome to premium" email. Errors are logged inside the
     // helper and swallowed here.
     if (plan.tier === "premium") {
-      void this.notifyPremiumGranted(sub);
+      if (!input.suppressNotification) void this.notifyPremiumGranted(sub);
     }
 
     return sub;

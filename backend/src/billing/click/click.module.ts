@@ -10,6 +10,9 @@ import { ClickConfig } from "./click.config";
 import { ClickController } from "./click.controller";
 import { ClickFiscalService } from "./click-fiscal.service";
 import { ClickMerchantClient } from "./click-merchant.client";
+import { ClickCardService } from "./click-card.service";
+import { ClickCardsController } from "./click-cards.controller";
+import { ClickCardTokensRepository } from "./click-card-tokens.repository";
 import { ClickOrderExpiryService } from "./click-order-expiry.service";
 import { ClickOrdersRepository } from "./click-orders.repository";
 import { ClickService } from "./click.service";
@@ -38,8 +41,15 @@ import { ClickService } from "./click.service";
 //     UnknownDependenciesException described in billing.module.ts.
 @Module({
   imports: [AuthModule, UsersModule, BillingModule],
-  controllers: [ClickController, ClickCallbackController, AdminClickController],
+  controllers: [
+    ClickController,
+    ClickCardsController,
+    ClickCallbackController,
+    AdminClickController,
+  ],
   providers: [
+    ClickCardService,
+    ClickCardTokensRepository,
     ClickOrderExpiryService,
     ClickConfig,
     ClickOrdersRepository,

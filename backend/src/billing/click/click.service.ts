@@ -15,6 +15,7 @@ import { SubscriptionsRepository } from "../subscriptions.repository";
 import { SubscriptionsService } from "../subscriptions.service";
 import { toPublicPlan } from "../billing.types";
 import type { PublicPlan } from "../billing.types";
+import { ClickCardService } from "./click-card.service";
 import { ClickConfig } from "./click.config";
 import { ClickFiscalService } from "./click-fiscal.service";
 import { ClickOrdersRepository } from "./click-orders.repository";
@@ -63,7 +64,8 @@ export class ClickService {
   private readonly log = new Logger(ClickService.name);
 
   constructor(
-    @Inject(PG) private readonly sql: Sql,
+        private readonly cards: ClickCardService,
+@Inject(PG) private readonly sql: Sql,
     private readonly config: ClickConfig,
     private readonly orders: ClickOrdersRepository,
     private readonly plans: PlansRepository,
@@ -209,15 +211,16 @@ export class ClickService {
   // ends up in a query string, so it stays alphanumeric. The DB has a UNIQUE
   // index; the retry loop covers the (vanishingly unlikely) collision so a
   // clash surfaces as a retry rather than a 500 in the user's face.
+  // Delegates to the repository: auto-renewal mints ids too, and two copies of
+  // the uniqueness loop would be two places to get it wrong.
   private async generateMerchantTransId(): Promise<string> {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const candidate = `fs${randomBytes(9).toString("hex")}`;
-      const existing = await this.orders.findByMerchantTransId(candidate);
-      if (!existing) return candidate;
+    try {
+      return await this.orders.generateMerchantTransId();
+    } catch {
+      throw new ServiceUnavailableException(
+        "could not allocate a payment reference - please try again"
+      );
     }
-    throw new ServiceUnavailableException(
-      "could not allocate a payment reference - please try again"
-    );
   }
 
   // ── Prepare (action = 0) ─────────────────────────────────────────────────
@@ -586,6 +589,11 @@ export class ClickService {
   // ends_at read here is always a real date when a subscription exists.
   private async grantForOrder(order: ClickOrderRow): Promise<string> {
     const now = new Date();
+    // Orders opened by the renewal sweep carry this marker. They get
+    // renewal_succeeded instead of premium_granted: the user did not press
+    // anything, so the email has to say we charged a saved card and how to
+    // turn that off.
+    const isAutoRenewal = order.metadata?.auto_renew === true;
     const active = await this.subs.findActiveForUser(order.user_id);
     const startsAt =
       active && active.ends_at !== null && active.ends_at > now
@@ -600,7 +608,10 @@ export class ClickService {
         ? `click_trans_id:${order.click_trans_id}`
         : `click_order:${order.id}`,
       startsAt,
-      reason: "Click payment completed",
+      reason: isAutoRenewal
+        ? "Click auto-renewal completed"
+        : "Click payment completed",
+      suppressNotification: isAutoRenewal,
       metadata: {
         origin: "click",
         order_id: order.id,
@@ -612,6 +623,10 @@ export class ClickService {
         ...(startsAt > now ? { chained_from: active?.id ?? null } : {}),
       },
     });
+
+    if (isAutoRenewal) {
+      void this.cards.notifyRenewalSucceeded(order.user_id, sub.ends_at);
+    }
     return sub.id;
   }
 

@@ -7,6 +7,7 @@ import { useEntitlementStore } from '../stores/entitlement.store';
 import type { Subscription } from '../types/billing';
 import AppNav from '../components/AppNav.vue';
 import ClickPayPanel from '../components/ClickPayPanel.vue';
+import SavedCardPanel from '../components/SavedCardPanel.vue';
 
 // Dedicated billing surface. Previously this content was split between the
 // Settings "Premium" section (the redeem widget + status line) and the Profile
@@ -32,6 +33,13 @@ const entitlement = useEntitlementStore();
 // ── Billing history ────────────────────────────────────────────────────
 const subscriptions = ref<Subscription[]>([]);
 const subscriptionsLoading = ref(true);
+
+// The subscription auto-renew applies to: the active one, which is also the
+// only one with a future ends_at. An open-ended grant (lifetime, admin comp)
+// has nothing to renew, so the toggle is hidden rather than shown disabled.
+const activeSub = computed(() =>
+  subscriptions.value.find((s) => s.status === 'active' && s.ends_at !== null) ?? null,
+);
 
 // ── Promocode redeem (moved verbatim from SettingsPage) ──────────────────
 const redeemInput = ref('');
@@ -157,6 +165,10 @@ onMounted(() => {
       <!-- Pay via Click. Self-contained panel: plan picker, both Click payment
            surfaces (hosted page + card overlay), and payment history. -->
       <ClickPayPanel />
+
+      <!-- Saved card + automatic renewal -->
+      <SavedCardPanel :can-auto-renew="activeSub !== null"
+        :auto-renew-on="activeSub?.auto_renew ?? false" @changed="loadSubscriptions" />
 
       <!-- Redeem a code -->
       <section class="card mt-6">

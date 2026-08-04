@@ -307,3 +307,50 @@ export function clickAmountToMinor(raw: string): number | null {
   // 48999.999999 through a float round-trip.
   return Math.round(n * 100);
 }
+
+// ── Stored card tokens (recurring) ──────────────────────────────────────────
+
+export type ClickCardTokenStatus = "pending_sms" | "active" | "removed";
+
+// A binding between a user and a card held at Click.
+//
+// There is no card_number field and there must never be one. `card_masked` is
+// the display string Click returns from verify ("8600 55** **** 3244"); the
+// real PAN never reaches our servers except, in the CORS-fallback path, as a
+// request-scoped variable that is never written anywhere.
+export interface ClickCardTokenRow {
+  id: string;
+  user_id: string;
+  card_token: string;
+  card_masked: string | null;
+  phone_masked: string | null;
+  status: ClickCardTokenStatus;
+  verified_at: Date | null;
+  removed_at: Date | null;
+  last_error: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// What the client is allowed to see about a saved card. Deliberately excludes
+// card_token itself - it is a payment credential, and nothing in the UI needs
+// it.
+export interface PublicCardToken {
+  id: string;
+  card_masked: string | null;
+  phone_masked: string | null;
+  status: ClickCardTokenStatus;
+  last_error: string | null;
+  created_at: string;
+}
+
+export function toPublicCardToken(row: ClickCardTokenRow): PublicCardToken {
+  return {
+    id: row.id,
+    card_masked: row.card_masked,
+    phone_masked: row.phone_masked,
+    status: row.status,
+    last_error: row.last_error,
+    created_at: row.created_at.toISOString(),
+  };
+}

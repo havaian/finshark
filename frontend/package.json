@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "i18n:check": "node scripts/check-locale-parity.cjs && node scripts/check-locale-usage.cjs",
+    "build": "node scripts/check-locale-parity.cjs && node scripts/check-locale-usage.cjs && vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -227,41 +227,6 @@ async function toggleAutoRenew(next: boolean) {
         </button>
       </div>
 
-      <!-- Subscribe. Shown when a card is saved but nothing is running yet -
-           this is the path that turns a saved card into an actual
-           subscription, and without it the toggle below has nothing to act on. -->
-      <div v-if="canSubscribe" class="mt-4">
-        <label class="field-label">{{ t('cards.subscribe_plan') }}</label>
-        <!-- Same segmented picker the one-time panel uses, so choosing a plan
-             looks identical whichever way you buy. -->
-        <div class="segmented click-plan-picker">
-          <button v-for="p in props.plans" :key="p.id" type="button"
-            :class="{ active: selectedPlanId === p.id }" @click="selectedPlanId = p.id">
-            {{ p.name }}
-          </button>
-        </div>
-        <button class="btn btn-primary mt-3" :disabled="!selectedPlanId || subscribing"
-          @click="subscribeNow">
-          {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
-        </button>
-        <p class="dim text-xs mt-2">{{ t('cards.subscribe_hint') }}</p>
-      </div>
-
-      <!-- Auto-renew. Only offered once a card exists: enabling it without one
-           would schedule a renewal that can never succeed. -->
-      <div v-if="card && canAutoRenew" class="auto-renew-row mt-4">
-        <div>
-          <div style="font-weight: 500;">{{ t('cards.auto_renew') }}</div>
-          <p class="dim text-xs mt-1">{{ t('cards.auto_renew_hint') }}</p>
-        </div>
-        <!-- The app's own toggle component, same as SettingsPage. A bare
-             checkbox reads as a different product. -->
-        <button class="toggle" :class="{ on: autoRenewOn }" :disabled="busy"
-          :aria-label="t('cards.auto_renew')" @click="toggleAutoRenew(!autoRenewOn)">
-          <span class="toggle-knob"></span>
-        </button>
-      </div>
-
       <!-- Binding form -->
       <template v-if="!card">
         <p v-if="!showForm" class="dim text-sm mt-2">{{ t('cards.none_hint') }}</p>
@@ -315,7 +280,56 @@ async function toggleAutoRenew(next: boolean) {
         </div>
       </template>
 
+      <!-- Where the card number goes. Stated at the point of entry, because
+           that is when the user wonders. Wording is deliberately about what we
+           STORE: on the fallback path the number does transit our backend, so
+           "never touches our servers" would not be true. -->
+      <p v-if="!card && showForm" class="card-privacy dim text-xs">
+        {{ t('cards.privacy_note') }}
+      </p>
+
       <p v-if="error" class="text-sm mt-3" style="color: var(--danger);">{{ error }}</p>
     </template>
+  </section>
+
+  <!-- Subscription is a separate concern from storing a card, so it is a
+       separate panel. Only rendered once a card exists - there is nothing to
+       subscribe with otherwise. -->
+  <section v-if="!loading && card && (canSubscribe || canAutoRenew)" class="card mt-6">
+    <h2>{{ t('cards.subscription_title') }}</h2>
+
+    <!-- Start a subscription. -->
+    <div v-if="canSubscribe" class="mt-3">
+      <label class="field-label">{{ t('cards.subscribe_plan') }}</label>
+      <!-- Same segmented picker the one-time panel uses, so choosing a plan
+           looks identical whichever way you buy. -->
+      <div class="subscribe-row">
+        <div class="segmented click-plan-picker">
+          <button v-for="p in props.plans" :key="p.id" type="button"
+            :class="{ active: selectedPlanId === p.id }" @click="selectedPlanId = p.id">
+            {{ p.name }}
+          </button>
+        </div>
+        <button class="btn btn-primary" :disabled="!selectedPlanId || subscribing"
+          @click="subscribeNow">
+          {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
+        </button>
+      </div>
+      <p class="dim text-xs mt-2">{{ t('cards.subscribe_hint') }}</p>
+    </div>
+
+    <!-- Auto-renew, for a subscription that already exists. -->
+    <div v-if="canAutoRenew" class="auto-renew-row mt-4">
+      <div>
+        <div style="font-weight: 500;">{{ t('cards.auto_renew') }}</div>
+        <p class="dim text-xs mt-1">{{ t('cards.auto_renew_hint') }}</p>
+      </div>
+      <!-- The app's own toggle component, same as SettingsPage. A bare
+           checkbox reads as a different product. -->
+      <button class="toggle" :class="{ on: autoRenewOn }" :disabled="busy"
+        :aria-label="t('cards.auto_renew')" @click="toggleAutoRenew(!autoRenewOn)">
+        <span class="toggle-knob"></span>
+      </button>
+    </div>
   </section>
 </template>

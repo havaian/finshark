@@ -707,10 +707,6 @@ export default {
     pending_explainer: "Your payment is being reviewed. We'll activate premium as soon as it's confirmed.",
     submitted_on: "Submitted {date}",
     history_title: "Your payments",
-    onetime_title: "One-time purchase",
-    onetime_subtitle: "Pay for a single period. No card is saved and nothing renews.",
-    receipt_link: "Fiscal receipt",
-    receipt_pending: "Receipt pending",
   },
   subscription: {
     title: "Subscription",
@@ -1372,6 +1368,10 @@ export default {
   // Click payment panel on the subscription page. Both of Click's payment
   // surfaces are offered from one order, as their integration guide asks.
   click: {
+    receipt_pending: "Receipt pending",
+    onetime_title: "One-time purchase",
+    onetime_subtitle: "Pay for a single period. No card is saved and nothing renews.",
+    receipt_link: "Fiscal receipt",
     title: "Pay with Click",
     subtitle: "Choose a plan and pay by card or through your Click account. Premium activates as soon as the payment is confirmed.",
     load_error: "Couldn't load payment options. Please try again.",
@@ -1443,6 +1443,8 @@ export default {
     remove: "Remove",
     auto_renew: "Renew automatically",
     auto_renew_hint: "We charge your saved card 3 days before your subscription ends. Turn this off any time.",
+    subscription_title: "Subscription",
+    privacy_note: "Your card number is sent straight to Click and is never saved on our servers.",
     bind_failed: "Could not save the card",
     verify_failed: "Could not confirm the code",
     remove_failed: "Could not remove the card",

@@ -3867,3 +3867,35 @@
     gap: 12px;
     flex-wrap: wrap;
 }
+
+/* Button row for modals and inline forms. Referenced by AdminModal,
+   AdminPaymentsPage and SavedCardPanel but never defined, which is why those
+   buttons sat flush against the field above them and against each other. */
+.admin-order-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* Plan picker + its CTA on one line. .segmented is inline-flex, so without a
+   flex parent the button butts straight up against it. */
+.subscribe-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+/* Where the card number actually goes. Sits under the binding form because
+   that is the moment the question occurs to the user. */
+.card-privacy {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    background: var(--bg-elev);
+}

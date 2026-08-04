@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
+import AdminDetailPane from '../../components/AdminDetailPane.vue';
 import { adminApi } from '../../api/admin.api';
 import { adminBillingApi } from '../../api/billing.api';
 import type { PublicUser } from '../../types/auth';
@@ -313,16 +314,20 @@ onMounted(loadUsersAndPlans);
       </section>
 
       <!-- RIGHT: details for selected user -->
-      <section class="card grow" style="flex: 1 1 480px;">
-        <p v-if="!selected" class="dim text-sm">
-          {{ t('admin.subscriptions.pick_user_hint') }}
-        </p>
+      <!-- Placeholder column. Only meaningful on desktop, where the detail
+           sits beside the list; on mobile the detail is a modal and an empty
+           second column would be dead space. -->
+      <section v-if="!selected" class="card grow" style="flex: 1 1 480px;">
+        <p class="dim text-sm">{{ t('admin.subscriptions.pick_user_hint') }}</p>
+      </section>
 
-        <template v-else>
-          <header style="display: flex; flex-direction: column; gap: 4px;">
-            <div style="font-weight: 500;">{{ selected.display_name }}</div>
-            <div class="dim text-sm">{{ selected.email }}</div>
-          </header>
+      <!-- Inline column on desktop, modal on mobile. Below the breakpoint the
+           columns stacked, so tapping a user appended their detail to the
+           bottom of the page - off screen, and indistinguishable from a dead
+           tap. -->
+      <AdminDetailPane :open="selected !== null" :title="selected?.display_name ?? ''"
+        :subtitle="selected?.email ?? ''" @close="selected = null">
+        <template v-if="selected">
 
           <!-- Grant form -->
           <div class="mt-6">
@@ -438,7 +443,7 @@ onMounted(loadUsersAndPlans);
             </div>
           </div>
         </template>
-      </section>
+      </AdminDetailPane>
     </div>
 
     <!-- Action modal: extend / cancel / revoke share one shell -->

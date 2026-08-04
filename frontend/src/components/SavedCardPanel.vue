@@ -232,10 +232,14 @@ async function toggleAutoRenew(next: boolean) {
            subscription, and without it the toggle below has nothing to act on. -->
       <div v-if="canSubscribe" class="mt-4">
         <label class="field-label">{{ t('cards.subscribe_plan') }}</label>
-        <select v-model="selectedPlanId">
-          <option value="" disabled>-</option>
-          <option v-for="p in props.plans" :key="p.id" :value="p.id">{{ p.name }}</option>
-        </select>
+        <!-- Same segmented picker the one-time panel uses, so choosing a plan
+             looks identical whichever way you buy. -->
+        <div class="segmented click-plan-picker">
+          <button v-for="p in props.plans" :key="p.id" type="button"
+            :class="{ active: selectedPlanId === p.id }" @click="selectedPlanId = p.id">
+            {{ p.name }}
+          </button>
+        </div>
         <button class="btn btn-primary mt-3" :disabled="!selectedPlanId || subscribing"
           @click="subscribeNow">
           {{ subscribing ? t('common.loading') : t('cards.subscribe_cta') }}
@@ -250,9 +254,12 @@ async function toggleAutoRenew(next: boolean) {
           <div style="font-weight: 500;">{{ t('cards.auto_renew') }}</div>
           <p class="dim text-xs mt-1">{{ t('cards.auto_renew_hint') }}</p>
         </div>
-        <input type="checkbox" :checked="autoRenewOn" :disabled="busy"
-          :aria-label="t('cards.auto_renew')"
-          @change="toggleAutoRenew(($event.target as HTMLInputElement).checked)" />
+        <!-- The app's own toggle component, same as SettingsPage. A bare
+             checkbox reads as a different product. -->
+        <button class="toggle" :class="{ on: autoRenewOn }" :disabled="busy"
+          :aria-label="t('cards.auto_renew')" @click="toggleAutoRenew(!autoRenewOn)">
+          <span class="toggle-knob"></span>
+        </button>
       </div>
 
       <!-- Binding form -->

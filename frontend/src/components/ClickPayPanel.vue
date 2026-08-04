@@ -241,8 +241,6 @@ function mapPayError(e: unknown): string {
 
         <p class="dim text-xs mt-2">{{ t('click.buttons_hint') }}</p>
       </template>
-
-    </template>
     </template>
   </div>
 </template>

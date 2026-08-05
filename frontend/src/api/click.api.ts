@@ -88,6 +88,18 @@ export const clickApi = {
       )
     ).data,
 
+  // One-time purchase on the saved card. Distinct from subscribeNow: no
+  // auto-renew is arranged. See click-cards.controller.ts.
+  chargeNow: async (
+    planId: string,
+  ): Promise<{ order_id: string; merchant_trans_id: string }> =>
+    (
+      await api.post<{ order_id: string; merchant_trans_id: string }>(
+        "/billing/click/cards/charge",
+        { plan_id: planId },
+      )
+    ).data,
+
   setAutoRenew: async (enabled: boolean): Promise<void> => {
     await api.post("/billing/click/cards/auto-renew", { enabled });
   },

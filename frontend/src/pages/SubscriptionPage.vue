@@ -8,8 +8,7 @@ import type { Plan } from '../types/billing';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import type { Subscription } from '../types/billing';
 import AppNav from '../components/AppNav.vue';
-import ClickPayPanel from '../components/ClickPayPanel.vue';
-import SavedCardPanel from '../components/SavedCardPanel.vue';
+import PaymentPanel from '../components/PaymentPanel.vue';
 import PaymentHistoryPanel from '../components/PaymentHistoryPanel.vue';
 
 // Dedicated billing surface. Previously this content was split between the
@@ -200,15 +199,12 @@ async function loadSubscribablePlans() {
         <p v-else-if="entitlement.isFree" class="dim text-sm mt-1">{{ t('subscription.free_hint') }}</p>
       </section>
 
-      <!-- Pay via Click. Self-contained panel: plan picker, both Click payment
-           surfaces (hosted page + card overlay), and payment history. -->
-      <!-- Subscription comes FIRST. It is the offer the page should lead with;
-           a one-time purchase is the alternative below it, not the default. -->
-      <SavedCardPanel :plans="subscribablePlans" :can-auto-renew="activeSub !== null"
+      <!-- Single payment panel: plan picker, saved card, pay once / subscribe,
+           and Click's hosted page as an explicitly-labelled alternative. The
+           two panels it replaced both charged the same card and offered two
+           buttons that were both Click. -->
+      <PaymentPanel :can-auto-renew="activeSub !== null"
         :auto-renew-on="activeSub?.auto_renew ?? false" @changed="onBillingChanged" />
-
-      <!-- One-time purchase -->
-      <ClickPayPanel />
 
       <!-- Redeem a code -->
       <section class="card mt-6" id="redeem-section">

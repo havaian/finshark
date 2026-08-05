@@ -1386,6 +1386,16 @@ export default {
 
   // Click payment panel on the subscription page. Both of Click's payment
   // surfaces are offered from one order, as their integration guide asks.
+  payment: {
+    title: "Payment",
+    subtitle: "Pay with a saved card in one tap, or through Click.",
+    pay_once: "Pay once",
+    subscribe: "Subscribe",
+    actions_hint:
+      "Paying once covers a single period. Subscribing charges the same amount and renews automatically until you turn it off.",
+    once_hint: "A single charge. Nothing renews automatically.",
+    click_hint: "Opens Click's payment page. Use this if your card will not bind.",
+  },
   click: {
     receipt_pending: "Receipt pending",
     onetime_title: "One-time purchase",

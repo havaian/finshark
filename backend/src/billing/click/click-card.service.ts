@@ -257,6 +257,82 @@ export class ClickCardService {
     return { order_id: order.id, merchant_trans_id: merchantTransId };
   }
 
+  // One-time purchase against the saved card. Same charge mechanics as
+  // subscribeNow, two deliberate differences:
+  //
+  //   1. metadata carries NO enable_auto_renew. Buying once must not silently
+  //      arrange a recurring debit - the user asked to pay for a period, not
+  //      to start a standing order. Auto-renew is turned on only by the
+  //      subscribe flow, where that is what the button says.
+  //   2. Lifetime plans are allowed. subscribeNow refuses period_days = null
+  //      because there is nothing to renew; for a one-time charge that is
+  //      precisely the case that makes sense.
+  //
+  // This is what "pay by card" should mean: the saved token is charged
+  // directly, with no redirect to Click and no overlay.
+  async chargeNow(input: {
+    userId: string;
+    planId: string;
+  }): Promise<{ order_id: string; merchant_trans_id: string }> {
+    this.assertEnabled();
+
+    const card = await this.tokens.findActiveForUser(input.userId);
+    if (!card) {
+      throw new BadRequestException("save a card before paying");
+    }
+
+    const plan = await this.plans.findById(input.planId);
+    if (!plan || !plan.is_active || plan.tier !== "premium") {
+      throw new BadRequestException("plan is not available");
+    }
+    if (plan.price_minor === null || plan.currency === null) {
+      throw new BadRequestException("plan has no price");
+    }
+
+    // Same double-tap guard as subscribeNow and the renewal sweep.
+    const openOrder = await this.orders.findOpenForUserPlan(
+      input.userId,
+      plan.id
+    );
+    if (openOrder) {
+      throw new BadRequestException(
+        "a payment for this plan is already in progress"
+      );
+    }
+
+    const merchantTransId = await this.orders.generateMerchantTransId();
+    const order = await this.orders.create({
+      user_id: input.userId,
+      plan_id: plan.id,
+      merchant_trans_id: merchantTransId,
+      amount_minor: plan.price_minor,
+      currency: plan.currency,
+      fiscal_status: this.config.fiscalEnabled ? "pending" : "not_required",
+      metadata: {
+        plan_name: plan.name,
+        card_token_id: card.id,
+      },
+    });
+
+    const res = await this.merchant.payWithCardToken({
+      cardToken: card.card_token,
+      amount: plan.price_minor / 100,
+      merchantTransId,
+    });
+    if (!res.ok) {
+      const note = res.errorNote ?? "card charge was declined";
+      await this.tokens.setLastError(card.id, note);
+      await this.orders.markFailed({
+        id: order.id,
+        error_note: `card charge declined: ${note}`,
+      });
+      throw new BadRequestException(note);
+    }
+
+    await this.tokens.setLastError(card.id, null);
+    return { order_id: order.id, merchant_trans_id: merchantTransId };
+  }
+
   // Turn auto-renew on for a subscription the grant path just created. Called
   // from ClickService, which knows when the row exists.
   async enableAutoRenewForNewSubscription(input: {

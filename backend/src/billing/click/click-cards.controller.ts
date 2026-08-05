@@ -62,6 +62,12 @@ class SubscribeDto {
   plan_id!: string;
 }
 
+class ChargeDto {
+  @IsString()
+  @Length(1, 64)
+  plan_id!: string;
+}
+
 class AutoRenewDto {
   @IsBoolean()
   enabled!: boolean;
@@ -137,6 +143,16 @@ export class ClickCardsController {
     @Body() dto: SubscribeDto
   ): Promise<{ order_id: string; merchant_trans_id: string }> {
     return this.cards.subscribeNow({ userId: user.sub, planId: dto.plan_id });
+  }
+
+  // One-time purchase on the saved card. Deliberately NOT /subscribe: no
+  // auto-renew is arranged, because the user pressed "pay", not "subscribe".
+  @Post("charge")
+  async charge(
+    @CurrentUser() user: AccessTokenPayload,
+    @Body() dto: ChargeDto
+  ): Promise<{ order_id: string; merchant_trans_id: string }> {
+    return this.cards.chargeNow({ userId: user.sub, planId: dto.plan_id });
   }
 
   @Post("auto-renew")

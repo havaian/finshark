@@ -1382,6 +1382,16 @@ export default {
     back: "Bosh sahifaga",
   },
 
+  payment: {
+    title: "To'lov",
+    subtitle: "Saqlangan karta bilan bir tegishda yoki Click orqali to'lang.",
+    pay_once: "Bir marta to'lash",
+    subscribe: "Obuna bo'lish",
+    actions_hint:
+      "Bir martalik to'lov bitta davrni qoplaydi. Obuna esa xuddi shu summani yechadi va siz o'chirmaguningizcha avtomatik uzaytiriladi.",
+    once_hint: "Bir martalik yechim. Avtomatik uzaytirish bo'lmaydi.",
+    click_hint: "Click to'lov sahifasi ochiladi. Karta bog'lanmasa shundan foydalaning.",
+  },
   click: {
     receipt_pending: "Chek rasmiylashtirilmoqda",
     onetime_title: "Bir martalik xarid",

@@ -1152,6 +1152,22 @@ export default {
     // (subject + body per language, optional HTML, variable allow-list,
     // notes). Test-send action renders the template against an admin-
     // supplied JSON variable map and sends through the regular EmailService.
+    email_outbox: {
+      title: "Email navbati",
+      subtitle:
+        "Har bir tranzaksion xat avval navbatga tushadi. Pochta serveri 4xx kodi bilan javob bersa, yuborish qayta urinib ko'riladi; urinishlari tugagan xatlar failed holatida ko'rinib turadi.",
+      pending: "Navbatda",
+      failed: "Xatolar",
+      sent: "Yuborilgan",
+      view_all: "Hammasi",
+      view_failed: "Faqat xatolar",
+      attempts: "urinish",
+      requeue: "Qayta navbatga",
+      drain: "Hozir yuborish",
+      draining: "Yuborilmoqda…",
+      empty: "Navbat bo'sh.",
+      load_error: "Email navbatini yuklab bo'lmadi.",
+    },
     email_templates: {
       title: "Email shablonlari",
       sub: "Tranzaksion va eslatma xatlari matnini tahrirlang. Shablonlar {'{{var}}'} almashtirish bilan ko'rsatiladi.",

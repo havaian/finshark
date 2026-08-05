@@ -56,7 +56,38 @@ export interface ImportReport {
 // token automatically via the interceptor in client.ts.
 // Admin endpoints return RAW i18n shapes (both _en and _ru) so the editor can
 // edit either language.
+import type {
+  EmailOutboxEntry,
+  EmailOutboxStats,
+} from "../types/email-outbox";
+
 export const adminApi = {
+  // ---- Email outbox (transactional email queue) ----
+  // Read-only apart from requeue/drain. See admin-email-outbox.controller.ts.
+  getEmailOutboxStats: async (): Promise<EmailOutboxStats> =>
+    (await api.get<EmailOutboxStats>("/admin/email-outbox/stats")).data,
+
+  listEmailOutbox: async (status?: "failed"): Promise<EmailOutboxEntry[]> =>
+    (
+      await api.get<EmailOutboxEntry[]>("/admin/email-outbox", {
+        params: status ? { status } : undefined,
+      })
+    ).data,
+
+  requeueEmailOutbox: async (id: string): Promise<EmailOutboxEntry> =>
+    (await api.post<EmailOutboxEntry>(`/admin/email-outbox/${id}/requeue`)).data,
+
+  drainEmailOutbox: async (): Promise<{
+    sent: number;
+    retried: number;
+    failed: number;
+  }> =>
+    (
+      await api.post<{ sent: number; retried: number; failed: number }>(
+        "/admin/email-outbox/drain",
+      )
+    ).data,
+
   // ---- Overview (admin landing dashboard) ----
   // Returns at-a-glance counts: users / premium / recent activity / content.
   getOverview: async (): Promise<AdminOverview> =>

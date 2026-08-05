@@ -167,7 +167,12 @@ export class EmailTemplatesService {
     const text = substitute(picked.body, input.variables);
     const from =
       input.from ?? this.config.getOrThrow<string>("EMAIL_FROM");
-    await this.emails.send({ to: input.to, from, subject, text });
+    // html_* is optional per template. Where it is set the recipient gets the
+    // styled version; where it is null the plain body goes out on its own,
+    // which is what every template did before styling existed.
+    const html =
+      picked.html === null ? null : substitute(picked.html, input.variables);
+    await this.emails.send({ to: input.to, from, subject, text, html });
     return true;
   }
 }

@@ -13,7 +13,7 @@ import { ClickOrdersRepository } from "./click-orders.repository";
 import { PlansRepository } from "../plans.repository";
 import { SubscriptionsRepository } from "../subscriptions.repository";
 import { ConfigService } from "@nestjs/config";
-import { EmailTemplatesService } from "../../email/email-templates.service";
+import { EmailOutboxService } from "../../email/email-outbox.service";
 import { UsersRepository } from "../../users/users.repository";
 import type { ClickCardTokenRow } from "./click.types";
 
@@ -57,7 +57,7 @@ export class ClickCardService {
     private readonly orders: ClickOrdersRepository,
     private readonly plans: PlansRepository,
     private readonly subs: SubscriptionsRepository,
-    private readonly templates: EmailTemplatesService,
+    private readonly outbox: EmailOutboxService,
     private readonly users: UsersRepository,
     private readonly appConfig: ConfigService
   ) {}
@@ -484,7 +484,7 @@ export class ClickCardService {
               day: "numeric",
               timeZone: "UTC",
             });
-      await this.templates.sendByTemplate({
+      await this.outbox.enqueue({
         templateKey: input.templateKey,
         to: user.email,
         lang: "en",
@@ -494,6 +494,7 @@ export class ClickCardService {
           app_url: appUrl,
           reason: input.reason ?? "",
         },
+        context: `renewal user ${input.userId}`,
       });
     } catch (e) {
       this.log.warn(

@@ -112,6 +112,7 @@ export default {
     admin_subscriptions: "Admin · Obunalar",
     admin_payments: "Admin · To'lovlar",
     admin_email_templates: "Admin · Email shablonlar",
+    admin_email_outbox: "Admin · Email navbati",
       click_return: "To'lov",
 },
 

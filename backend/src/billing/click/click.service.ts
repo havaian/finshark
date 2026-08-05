@@ -8,8 +8,11 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import type { Sql } from "postgres";
 import { PG } from "../../db/db.module";
+import { EmailOutboxService } from "../../email/email-outbox.service";
+import { UsersRepository } from "../../users/users.repository";
 import { PlansRepository } from "../plans.repository";
 import { SubscriptionsRepository } from "../subscriptions.repository";
 import { SubscriptionsService } from "../subscriptions.service";
@@ -71,7 +74,10 @@ export class ClickService {
     private readonly plans: PlansRepository,
     private readonly subs: SubscriptionsRepository,
     private readonly subscriptions: SubscriptionsService,
-    private readonly fiscal: ClickFiscalService
+    private readonly fiscal: ClickFiscalService,
+    private readonly users: UsersRepository,
+    private readonly outbox: EmailOutboxService,
+    private readonly appConfig: ConfigService
   ) {}
 
   // ── User-facing ──────────────────────────────────────────────────────────
@@ -484,6 +490,14 @@ export class ClickService {
           },
           tx
         );
+        // The user attempted a payment and it was refused. Auto-renewal
+        // declines are NOT sent this: they get renewal_failed from
+        // ClickCardService, which says we charged a saved card and how to stop
+        // that. Sending both for one decline would be two emails saying
+        // different things about the same event.
+        if (order.metadata?.auto_renew !== true) {
+          void this.notifyPaymentFailed(order);
+        }
         return this.reject(
           ClickError.TRANSACTION_CANCELLED,
           "cancelled_by_click",
@@ -578,6 +592,39 @@ export class ClickService {
         orderId: paid.id,
       };
     });
+  }
+
+  // A user-initiated payment that Click refused. Queued rather than sent so
+  // the Complete callback answers Click on time no matter what mail is doing.
+  private async notifyPaymentFailed(order: ClickOrderRow): Promise<void> {
+    try {
+      const user = await this.users.findById(order.user_id);
+      if (!user) return;
+      const appUrl = this.appConfig
+        .getOrThrow<string>("APP_PUBLIC_URL")
+        .replace(/\/$/, "");
+      const planName =
+        typeof order.metadata?.plan_name === "string"
+          ? order.metadata.plan_name
+          : "Finshark Premium";
+      await this.outbox.enqueue({
+        templateKey: "payment_failed",
+        to: user.email,
+        lang: "en",
+        variables: {
+          display_name: user.display_name,
+          plan_name: planName,
+          app_url: appUrl,
+        },
+        context: `click order ${order.id} declined`,
+      });
+    } catch (e) {
+      this.log.warn(
+        `payment_failed enqueue failed for order ${order.id}: ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
   }
 
   // Chained grant: one subscription row per payment, but the new period starts

@@ -58,6 +58,8 @@ const AdminPaymentsPage = () =>
   import("../pages/admin/AdminPaymentsPage.vue");
 const AdminEmailTemplatesPage = () =>
   import("../pages/admin/AdminEmailTemplatesPage.vue");
+const AdminEmailOutboxPage = () =>
+  import("../pages/admin/AdminEmailOutboxPage.vue");
 const TwoFactorVerifyPage = () => import("../pages/TwoFactorVerifyPage.vue");
 const TwoFactorSetupPage = () => import("../pages/TwoFactorSetupPage.vue");
 const TwoFactorElevatePage = () =>
@@ -321,6 +323,12 @@ const routes: RouteRecordRaw[] = [
             name: "admin-email-templates",
             component: AdminEmailTemplatesPage,
             meta: { titleKey: "page_titles.admin_email_templates" },
+          },
+          {
+            path: "email-outbox",
+            name: "admin-email-outbox",
+            component: AdminEmailOutboxPage,
+            meta: { titleKey: "page_titles.admin_email_outbox" },
           },
           // Legacy redirects: any bookmarked /admin/papers, /admin/papers/:id/los,
           // /admin/los/:id/questions now bounce to the unified content browser.

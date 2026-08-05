@@ -7,6 +7,12 @@ export interface SendEmailInput {
   subject: string;
   text: string;
   from: string; // "Name <addr@domain>"
+  // Optional HTML alternative. When present the message goes out multipart/
+  // alternative: clients that render HTML show this, everything else (and
+  // every plain-text preview pane) falls back to `text`. The text part is
+  // never optional - a message with no plain-text alternative scores worse
+  // with spam filters and is unreadable in text-only clients.
+  html?: string | null;
 }
 
 // EMAIL_MODE controls behavior:
@@ -38,7 +44,8 @@ export class EmailService implements OnModuleDestroy {
   async send(input: SendEmailInput): Promise<void> {
     if (this.mode === "log" || !this.transporter) {
       this.log.log(
-        `[LOG-EMAIL] from=${input.from} to=${input.to} subject="${input.subject}"\n${input.text}`
+        `[LOG-EMAIL] from=${input.from} to=${input.to} subject="${input.subject}"` +
+          `${input.html ? " (html alternative attached)" : ""}\n${input.text}`
       );
       return;
     }
@@ -48,6 +55,9 @@ export class EmailService implements OnModuleDestroy {
       to: input.to,
       subject: input.subject,
       text: input.text,
+      // Omitted entirely when null so nodemailer keeps the message
+      // text/plain rather than building a single-part HTML message.
+      ...(input.html ? { html: input.html } : {}),
     });
   }
 

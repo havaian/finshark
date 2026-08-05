@@ -8,7 +8,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import type { Sql } from "postgres";
 import { PG } from "../db/db.module";
-import { EmailTemplatesService } from "../email/email-templates.service";
+import { EmailOutboxService } from "../email/email-outbox.service";
 import { UsersRepository } from "../users/users.repository";
 import { PlansRepository } from "./plans.repository";
 import { SubscriptionEventsRepository } from "./subscription-events.repository";
@@ -43,7 +43,7 @@ export class SubscriptionsService {
     private readonly plans: PlansRepository,
     private readonly events: SubscriptionEventsRepository,
     private readonly users: UsersRepository,
-    private readonly templates: EmailTemplatesService,
+    private readonly outbox: EmailOutboxService,
     private readonly config: ConfigService
   ) {}
 
@@ -329,7 +329,10 @@ export class SubscriptionsService {
               day: "numeric",
               timeZone: "UTC",
             })}`;
-      const sent = await this.templates.sendByTemplate({
+      // Queued, not sent. A relay that defers with a 4xx used to lose this
+      // email outright; the outbox retries until it lands or the window runs
+      // out, and either way there is a row recording what happened.
+      const queued = await this.outbox.enqueue({
         templateKey: "premium_granted",
         to: user.email,
         lang: "en",
@@ -338,10 +341,11 @@ export class SubscriptionsService {
           period_clause: periodClause,
           app_url: appUrl,
         },
+        context: `subscription ${sub.id}`,
       });
-      if (!sent) {
+      if (queued === null) {
         this.log.warn(
-          `premium_granted template not available; user ${sub.user_id} got no welcome email`
+          `premium_granted could not be queued; user ${sub.user_id} got no welcome email`
         );
       }
     } catch (err) {

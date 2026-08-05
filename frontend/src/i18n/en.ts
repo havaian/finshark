@@ -104,6 +104,7 @@ export default {
     admin_subscriptions: "Admin · Subscriptions",
     admin_payments: "Admin · Payments",
     admin_email_templates: "Admin · Email templates",
+    admin_email_outbox: "Admin · Email outbox",
       click_return: "Payment",
 },
 
@@ -1153,6 +1154,22 @@ export default {
     // (subject + body per language, optional HTML, variable allow-list,
     // notes). Test-send action renders the template against an admin-
     // supplied JSON variable map and sends through the regular EmailService.
+    email_outbox: {
+      title: "Email outbox",
+      subtitle:
+        "Every transactional email is queued here before sending. A relay that defers with a 4xx is retried; anything that exhausts its attempts stays visible as failed.",
+      pending: "Pending",
+      failed: "Failed",
+      sent: "Sent",
+      view_all: "All",
+      view_failed: "Failed only",
+      attempts: "attempts",
+      requeue: "Requeue",
+      drain: "Drain now",
+      draining: "Draining…",
+      empty: "Nothing in the queue.",
+      load_error: "Could not load the email outbox.",
+    },
     email_templates: {
       title: "Email templates",
       sub: "Edit transactional and reminder email copy. Templates render with {'{{var}}'} substitution.",

@@ -1,5 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { ConfigService } from "@nestjs/config";
+import { EmailOutboxService } from "../../email/email-outbox.service";
+import { UsersRepository } from "../../users/users.repository";
 import { ClickConfig } from "./click.config";
 import { ClickOrdersRepository } from "./click-orders.repository";
 
@@ -47,7 +50,10 @@ export class ClickOrderExpiryService {
 
   constructor(
     private readonly config: ClickConfig,
-    private readonly orders: ClickOrdersRepository
+    private readonly orders: ClickOrdersRepository,
+    private readonly users: UsersRepository,
+    private readonly outbox: EmailOutboxService,
+    private readonly appConfig: ConfigService
   ) {}
 
   // Every 15 minutes. The windows are measured in hours, so the sweep cadence
@@ -96,8 +102,16 @@ export class ClickOrderExpiryService {
         });
         // null means the row settled between our SELECT and the locked UPDATE -
         // a Complete landed in the gap. Expected under load, not an error.
-        if (updated) expired++;
-        else skipped++;
+        if (updated) {
+          expired++;
+          // Only 'created' orders get the email. A 'prepared' order may still
+          // have money moving on Click's side - telling that user nothing was
+          // charged could be wrong, and a wrong reassurance about money is
+          // worse than silence.
+          if (order.status === "created") {
+            void this.notifyAbandoned(order);
+          }
+        } else skipped++;
       } catch (e) {
         // One bad row must not abort the batch.
         this.log.error(
@@ -111,6 +125,47 @@ export class ClickOrderExpiryService {
     if (expired > 0 || skipped > 0) {
       this.log.log(
         `order expiry sweep: ${expired} expired, ${skipped} settled mid-sweep`
+      );
+    }
+  }
+
+  // Queued, never sent inline: the sweep must finish its batch regardless of
+  // what the mail path is doing. Failures are logged and swallowed, and the
+  // outbox owns retry from there.
+  private async notifyAbandoned(order: {
+    id: string;
+    user_id: string;
+    metadata?: Record<string, unknown> | null;
+  }): Promise<void> {
+    try {
+      const user = await this.users.findById(order.user_id);
+      if (!user) return;
+      const appUrl = this.appConfig
+        .getOrThrow<string>("APP_PUBLIC_URL")
+        .replace(/\/$/, "");
+      // plan_name is written onto the order at creation time by both the
+      // hosted-checkout and renewal paths. Falling back to a generic label
+      // rather than inventing a plan name if it is ever absent.
+      const planName =
+        typeof order.metadata?.plan_name === "string"
+          ? order.metadata.plan_name
+          : "Finshark Premium";
+      await this.outbox.enqueue({
+        templateKey: "checkout_abandoned",
+        to: user.email,
+        lang: "en",
+        variables: {
+          display_name: user.display_name,
+          plan_name: planName,
+          app_url: appUrl,
+        },
+        context: `click order ${order.id} abandoned`,
+      });
+    } catch (e) {
+      this.log.warn(
+        `checkout_abandoned enqueue failed for order ${order.id}: ${
+          e instanceof Error ? e.message : String(e)
+        }`
       );
     }
   }

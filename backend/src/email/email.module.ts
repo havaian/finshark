@@ -1,11 +1,14 @@
 import { Global, Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
+import { AdminEmailOutboxController } from "./admin-email-outbox.controller";
 import { AdminEmailTemplatesController } from "./admin-email-templates.controller";
 import { EmailService } from "./email.service";
 import { EmailTemplatesRepository } from "./email-templates.repository";
 import { EmailTemplatesService } from "./email-templates.service";
 import { EmailBlastService } from "./email-blast.service";
+import { EmailOutboxRepository } from "./email-outbox.repository";
+import { EmailOutboxService } from "./email-outbox.service";
 
 // Global so other modules (the reminder cron, billing notifications) can
 // inject EmailService and EmailTemplatesService directly without importing
@@ -20,13 +23,20 @@ import { EmailBlastService } from "./email-blast.service";
 @Global()
 @Module({
   imports: [AuthModule, UsersModule],
-  controllers: [AdminEmailTemplatesController],
+  controllers: [AdminEmailTemplatesController, AdminEmailOutboxController],
   providers: [
     EmailService,
     EmailTemplatesRepository,
     EmailTemplatesService,
     EmailBlastService,
+    EmailOutboxRepository,
+    EmailOutboxService,
   ],
-  exports: [EmailService, EmailTemplatesService, EmailBlastService],
+  exports: [
+    EmailService,
+    EmailTemplatesService,
+    EmailBlastService,
+    EmailOutboxService,
+  ],
 })
 export class EmailModule {}

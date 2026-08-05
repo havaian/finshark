@@ -102,6 +102,7 @@ export default {
     admin_subscriptions: "Админ · Подписки",
     admin_payments: "Админ · Платежи",
     admin_email_templates: "Админ · Шаблоны писем",
+    admin_email_outbox: "Админ · Очередь писем",
       click_return: "Оплата",
 },
 

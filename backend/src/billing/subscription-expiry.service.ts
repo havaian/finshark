@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { EmailTemplatesService } from "../email/email-templates.service";
+import { EmailOutboxService } from "../email/email-outbox.service";
 import { PlansRepository } from "./plans.repository";
 import { SubscriptionsRepository } from "./subscriptions.repository";
 
@@ -30,7 +30,7 @@ export class SubscriptionExpiryService {
   constructor(
     private readonly subs: SubscriptionsRepository,
     private readonly plans: PlansRepository,
-    private readonly templates: EmailTemplatesService,
+    private readonly outbox: EmailOutboxService,
     private readonly config: ConfigService
   ) {}
 
@@ -92,7 +92,7 @@ export class SubscriptionExpiryService {
           ? `${(plan.price_minor / 100).toLocaleString("en-US")} ${plan.currency}`
           : "";
       try {
-        await this.templates.sendByTemplate({
+        await this.outbox.enqueue({
           templateKey: "renewal_upcoming",
           to: row.email,
           lang: "en",
@@ -107,6 +107,7 @@ export class SubscriptionExpiryService {
             price,
             app_url: appUrl,
           },
+          context: `renewal notice ${row.id}`,
         });
         sent++;
       } catch (e) {
@@ -166,7 +167,7 @@ export class SubscriptionExpiryService {
       );
 
       try {
-        await this.templates.sendByTemplate({
+        await this.outbox.enqueue({
           templateKey: "subscription_expiring",
           to: row.email,
           lang: "en",
@@ -181,6 +182,7 @@ export class SubscriptionExpiryService {
             }),
             app_url: appUrl,
           },
+          context: `expiry warning ${row.id}`,
         });
         sent++;
       } catch (e) {

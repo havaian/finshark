@@ -53,6 +53,7 @@ export default {
   },
 
   nav: {
+    stats_toggle: "Seriya va XP ni ko'rsatish",
     dashboard: "Boshqaruv paneli",
     progress: "Taraqqiyot",
     profile: "Profil",

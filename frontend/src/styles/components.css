@@ -1459,6 +1459,8 @@ button.list-row.active {
     align-items: center;
     padding-right: 4px;
     margin-right: 4px;
+    /* Positioning context for the stats panel that hangs off the level pill. */
+    position: relative;
 }
 
 .app-nav-stat {
@@ -2596,4 +2598,54 @@ button.list-row.active {
   font-size: 1.25rem;
   color: var(--text-dim);
   flex: 0 0 auto;
+}
+
+
+/* Stats panel behind the level pill. Streak / freezes / XP used to be their
+   own navbar pills; folding them in here keeps the numbers one gesture away
+   without four chips competing for space on every page.
+
+   The wrapper is the positioning context, so the panel hangs off the pill
+   rather than the whole nav bar. */
+.app-nav-stats-pop {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 240px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text);
+    z-index: 60;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.app-nav-stats-pop-lead {
+    margin: 0 0 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+.app-nav-stats-pop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.app-nav-stats-pop-row .grow {
+    color: var(--text-dim);
+}
+
+/* The level pill is a <button> now, so the browser's default button chrome
+   has to be cleared to keep it looking like the pill it replaced. */
+button.app-nav-stat-level {
+    border: none;
+    font: inherit;
+    cursor: pointer;
 }

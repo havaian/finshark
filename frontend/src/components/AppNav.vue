@@ -51,6 +51,20 @@ function toggleStat(key: StatKey) {
   expandedStat.value = expandedStat.value === key ? null : key;
 }
 
+// Streak and XP used to sit in the navbar as their own pills. They are now
+// folded into the level pill, which opens a panel on hover or click.
+//
+// Two separate flags rather than one: hovering should reveal and re-hide
+// naturally, but a click should PIN the panel open so it survives the pointer
+// leaving - otherwise it is unusable on touch, where there is no hover at all.
+const statsHover = ref(false);
+const statsPinned = ref(false);
+const statsOpen = computed(() => statsHover.value || statsPinned.value);
+
+function toggleStatsPin() {
+  statsPinned.value = !statsPinned.value;
+}
+
 // Live level-band progress for the level pill tooltip. Derives from the
 // reactive auth.user.xp so the tooltip stays in sync after a lesson updates
 // xp/level in the store. Returns zeros when there's no user yet - the pill
@@ -128,12 +142,32 @@ watch(() => route.fullPath, () => { drawerOpen.value = false; });
 
 // ESC to close. Bound at the window level so focus can be anywhere.
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape' && drawerOpen.value) drawerOpen.value = false;
+  if (e.key !== 'Escape') return;
+  if (drawerOpen.value) drawerOpen.value = false;
+  statsPinned.value = false;
 }
+
+// A pinned stats panel closes when the user clicks anywhere else. Without
+// this it would stay open until the pill was clicked a second time, which is
+// not what a click-away feels like it should do.
+function onDocClick(e: MouseEvent) {
+  if (!statsPinned.value) return;
+  const el = e.target as HTMLElement | null;
+  if (el?.closest('.app-nav-stat-level, .app-nav-stats-pop')) return;
+  statsPinned.value = false;
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', onKey);
-  onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
+  document.addEventListener('click', onDocClick);
+  onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKey);
+    document.removeEventListener('click', onDocClick);
+  });
 }
+
+// Route change closes it too, same as the drawer.
+watch(() => route.fullPath, () => { statsPinned.value = false; });
 
 // Body scroll lock while drawer open. We toggle a class on <body> rather
 // than touching inline styles directly so any other code (modals) can use
@@ -178,33 +212,41 @@ function onLogoutMobile() {
 
       <!-- Right: stats + meta -->
       <div class="app-nav-right">
-        <!-- Stats pills: streak + XP. Cheap visibility into progress on every
-             page so the user always sees their numbers. Hidden when no user
-             yet to avoid layout jitter during fetchMe. Hovering a pill pops a
-             small CSS tooltip explaining what each icon means - useful for new
-             users who haven't seen the dashboard yet. -->
+        <!-- One pill instead of four. Streak, freezes and XP moved inside the
+             level pill's panel, which opens on hover and pins on click - the
+             click path matters because touch devices have no hover. Freezes
+             still only appear once the user actually has one. -->
         <div v-if="auth.user" class="app-nav-stats">
-          <span class="app-nav-stat app-nav-stat-level"
-            :data-tip="t('nav.stat_level_tip', { level: lvlProgress.level, intoLevel: lvlProgress.intoLevel, bandSize: lvlProgress.bandSize, next: lvlProgress.level + 1 })">
+          <button type="button" class="app-nav-stat app-nav-stat-level"
+            :aria-expanded="statsOpen" :aria-label="t('nav.stats_toggle')"
+            @mouseenter="statsHover = true" @mouseleave="statsHover = false"
+            @focus="statsHover = true" @blur="statsHover = false"
+            @click="toggleStatsPin">
             <span class="app-nav-stat-icon">★</span>
             <span class="app-nav-stat-val">{{ t('nav.stat_level_short', { level: auth.user.level }) }}</span>
-          </span>
-          <span class="app-nav-stat" :data-tip="t('nav.stat_streak_tip')">
-            <span class="app-nav-stat-icon">🔥</span>
-            <span class="app-nav-stat-val">{{ auth.user.streak_count }}</span>
-          </span>
-          <!-- Freeze pill: only rendered when the user actually has freezes.
-               Stays silent for the common case (no freezes, no clutter) and
-               surfaces as a small snowflake count once they earn one. -->
-          <span v-if="auth.user.streak_freezes_remaining > 0" class="app-nav-stat app-nav-stat-freeze"
-            :data-tip="t('nav.stat_freeze_tip')">
-            <span class="app-nav-stat-icon">❄</span>
-            <span class="app-nav-stat-val">{{ auth.user.streak_freezes_remaining }}</span>
-          </span>
-          <span class="app-nav-stat" :data-tip="t('nav.stat_xp_tip')">
-            <span class="app-nav-stat-icon">✦</span>
-            <span class="app-nav-stat-val">{{ auth.user.xp }}</span>
-          </span>
+          </button>
+
+          <div v-if="statsOpen" class="app-nav-stats-pop"
+            @mouseenter="statsHover = true" @mouseleave="statsHover = false">
+            <p class="app-nav-stats-pop-lead">
+              {{ t('nav.stat_level_tip', { level: lvlProgress.level, intoLevel: lvlProgress.intoLevel, bandSize: lvlProgress.bandSize, next: lvlProgress.level + 1 }) }}
+            </p>
+            <div class="app-nav-stats-pop-row">
+              <span class="app-nav-stat-icon">🔥</span>
+              <span class="grow">{{ t('nav.stat_streak_tip') }}</span>
+              <span class="app-nav-stat-val">{{ auth.user.streak_count }}</span>
+            </div>
+            <div v-if="auth.user.streak_freezes_remaining > 0" class="app-nav-stats-pop-row">
+              <span class="app-nav-stat-icon">❄</span>
+              <span class="grow">{{ t('nav.stat_freeze_tip') }}</span>
+              <span class="app-nav-stat-val">{{ auth.user.streak_freezes_remaining }}</span>
+            </div>
+            <div class="app-nav-stats-pop-row">
+              <span class="app-nav-stat-icon">✦</span>
+              <span class="grow">{{ t('nav.stat_xp_tip') }}</span>
+              <span class="app-nav-stat-val">{{ auth.user.xp }}</span>
+            </div>
+          </div>
         </div>
 
         <LangPicker />

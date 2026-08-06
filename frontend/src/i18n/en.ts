@@ -45,6 +45,7 @@ export default {
   },
 
   nav: {
+    stats_toggle: "Show streak and XP",
     dashboard: "Dashboard",
     progress: "Progress",
     profile: "Profile",

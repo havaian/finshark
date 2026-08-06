@@ -44,6 +44,7 @@ export default {
   },
 
   nav: {
+    stats_toggle: "Показать стрик и опыт",
     dashboard: "Главная",
     progress: "Прогресс",
     profile: "Профиль",

@@ -72,12 +72,18 @@ const grantSuccess = ref(false);
 // ---- Per-subscription action modal ----
 // One modal handles all three of extend/cancel/revoke since they're nearly
 // identical (subscription + optional reason + optional days for extend).
-type ActionKind = 'extend' | 'cancel' | 'revoke' | 'revoke_all';
+// 'change' is the user-level edit: it targets whichever subscription is
+// currently granting access and can either replace ends_at outright or add
+// days, which are two different questions an admin arrives with.
+type ActionKind = 'extend' | 'cancel' | 'revoke' | 'revoke_all' | 'change';
 const actionModal = ref<{
   kind: ActionKind;
   // null for revoke_all, which targets the user rather than one subscription.
   sub: Subscription | null;
   days: string;
+  // 'change' only. 'date' replaces ends_at; 'days' adds to it.
+  mode: 'date' | 'days';
+  endsAt: string;
   reason: string;
   busy: boolean;
   error: string | null;
@@ -86,8 +92,37 @@ const actionModal = ref<{
 // `sub` is absent for revoke_all, which acts on the user rather than on one
 // subscription.
 function openAction(kind: ActionKind, sub: Subscription | null) {
-  actionModal.value = { kind, sub, days: '30', reason: '', busy: false, error: null };
+  // Prefill the date picker with the subscription's current end date so the
+  // admin edits a real value rather than typing one from scratch.
+  const current = sub?.ends_at ? new Date(sub.ends_at) : null;
+  const iso = current && !Number.isNaN(current.getTime())
+    ? current.toISOString().slice(0, 10)
+    : '';
+  actionModal.value = {
+    kind,
+    sub,
+    days: '30',
+    mode: 'date',
+    endsAt: iso,
+    reason: '',
+    busy: false,
+    error: null,
+  };
 }
+
+// The subscription currently granting access. Purchases chain into separate
+// rows, so "the user's subscription" is the one running latest.
+const activeSub = computed<Subscription | null>(() => {
+  const live = subs.value.filter(
+    (x) => x.status === 'active' && (x.ends_at === null || new Date(x.ends_at) > new Date()),
+  );
+  if (live.length === 0) return null;
+  return live.reduce((a, b) => {
+    if (a.ends_at === null) return a;
+    if (b.ends_at === null) return b;
+    return new Date(b.ends_at) > new Date(a.ends_at) ? b : a;
+  });
+});
 
 // Every subscription still granting access. Chained purchases mean this is
 // usually more than one, which is exactly why the bulk action exists.
@@ -97,6 +132,14 @@ const grantingCount = computed(
       (s) => s.status === 'active' && (s.ends_at === null || new Date(s.ends_at) > new Date()),
     ).length,
 );
+
+// Nothing to edit without a live subscription, so this scrolls to the grant
+// form already on the page instead of opening a second, near-identical one.
+function focusGrant() {
+  const el = document.getElementById('grant-section');
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 function closeAction() {
   if (actionModal.value?.busy) return;
@@ -125,7 +168,33 @@ async function confirmAction() {
     }
 
     let updated: Subscription;
-    if (a.kind === 'extend') {
+    if (a.kind === 'change') {
+      if (!a.sub) return;
+      if (a.mode === 'date') {
+        if (!a.endsAt) {
+          a.error = t('admin.subscriptions.change_date_required');
+          a.busy = false;
+          return;
+        }
+        // End of the chosen day rather than midnight at its start, so picking
+        // today's date does not immediately expire the subscription.
+        updated = await adminBillingApi.setEndDate(a.sub.id, {
+          ends_at: new Date(`${a.endsAt}T23:59:59.000Z`).toISOString(),
+          reason: a.reason.trim() || undefined,
+        });
+      } else {
+        const days = parseInt(a.days, 10);
+        if (!Number.isFinite(days) || days <= 0) {
+          a.error = 'days must be a positive integer';
+          a.busy = false;
+          return;
+        }
+        updated = await adminBillingApi.extend(a.sub.id, {
+          days,
+          reason: a.reason.trim() || undefined,
+        });
+      }
+    } else if (a.kind === 'extend') {
       const days = parseInt(a.days, 10);
       if (!Number.isFinite(days) || days <= 0) {
         a.error = 'days must be a positive integer';
@@ -329,8 +398,9 @@ onMounted(loadUsersAndPlans);
         :subtitle="selected?.email ?? ''" @close="selected = null">
         <template v-if="selected">
 
-          <!-- Grant form -->
-          <div class="mt-6">
+          <!-- Grant form. id is the scroll target for the "issue subscription"
+               button shown when the user has none. -->
+          <div class="mt-6" id="grant-section">
             <h3>{{ t('admin.subscriptions.grant_heading') }}</h3>
             <div class="row mt-4" style="gap: 12px; flex-wrap: wrap; align-items: start;">
               <div class="field" style="flex: 1 1 200px;">
@@ -372,10 +442,22 @@ onMounted(loadUsersAndPlans);
               <!-- One action for the whole user. Purchases chain into separate
                    rows, so revoking them individually is both tedious and
                    unsafe - missing one leaves the user fully entitled. -->
-              <button v-if="grantingCount > 0" class="btn btn-sm btn-ghost"
-                style="color: var(--danger, #c00);" @click="openAction('revoke_all', null)">
-                {{ t('admin.subscriptions.revoke_all_btn', { count: grantingCount }) }}
-              </button>
+              <div class="row">
+                <!-- User-level edit. With a live subscription this changes its
+                     end date; without one there is nothing to edit, so the
+                     button points at the grant form above instead. -->
+                <button v-if="activeSub" class="btn btn-sm btn-primary"
+                  @click="openAction('change', activeSub)">
+                  {{ t('admin.subscriptions.change_btn') }}
+                </button>
+                <button v-else class="btn btn-sm btn-primary" @click="focusGrant">
+                  {{ t('admin.subscriptions.grant_open_btn') }}
+                </button>
+                <button v-if="grantingCount > 0" class="btn btn-sm btn-ghost"
+                  style="color: var(--danger, #c00);" @click="openAction('revoke_all', null)">
+                  {{ t('admin.subscriptions.revoke_all_btn', { count: grantingCount }) }}
+                </button>
+              </div>
             </div>
             <p v-if="detailsLoading" class="dim text-sm mt-2">{{ t('common.loading') }}</p>
             <p v-else-if="subs.length === 0" class="dim text-sm mt-2">
@@ -451,7 +533,8 @@ onMounted(loadUsersAndPlans);
       <div class="modal" style="max-width: 480px;">
         <header class="modal-head">
           <h3>
-            <template v-if="actionModal.kind === 'extend'">{{ t('admin.subscriptions.extend_modal_title') }}</template>
+            <template v-if="actionModal.kind === 'change'">{{ t('admin.subscriptions.change_modal_title') }}</template>
+            <template v-else-if="actionModal.kind === 'extend'">{{ t('admin.subscriptions.extend_modal_title') }}</template>
             <template v-else-if="actionModal.kind === 'cancel'">{{ t('admin.subscriptions.cancel_modal_title') }}</template>
             <template v-else-if="actionModal.kind === 'revoke_all'">
               {{ t('admin.subscriptions.revoke_all_modal_title') }}
@@ -471,6 +554,28 @@ onMounted(loadUsersAndPlans);
           <p v-if="actionModal.kind === 'revoke'" class="error-text">
             {{ t('admin.subscriptions.revoke_warn') }}
           </p>
+
+          <template v-if="actionModal.kind === 'change'">
+            <div class="segmented mt-4">
+              <button type="button" :class="{ active: actionModal.mode === 'date' }"
+                :disabled="actionModal.busy" @click="actionModal.mode = 'date'">
+                {{ t('admin.subscriptions.change_mode_date') }}
+              </button>
+              <button type="button" :class="{ active: actionModal.mode === 'days' }"
+                :disabled="actionModal.busy" @click="actionModal.mode = 'days'">
+                {{ t('admin.subscriptions.change_mode_days') }}
+              </button>
+            </div>
+            <div v-if="actionModal.mode === 'date'" class="field mt-4">
+              <label>{{ t('admin.subscriptions.change_ends_at_label') }}</label>
+              <input v-model="actionModal.endsAt" type="date" :disabled="actionModal.busy" />
+              <p class="dim text-xs mt-1">{{ t('admin.subscriptions.change_date_hint') }}</p>
+            </div>
+            <div v-else class="field mt-4">
+              <label>{{ t('admin.subscriptions.extend_days_label') }}</label>
+              <input v-model="actionModal.days" type="number" min="1" :disabled="actionModal.busy" />
+            </div>
+          </template>
 
           <div v-if="actionModal.kind === 'extend'" class="field mt-4">
             <label class="field-label">{{ t('admin.subscriptions.extend_days_label') }}</label>
@@ -501,7 +606,8 @@ onMounted(loadUsersAndPlans);
             <button class="btn"
               :class="actionModal.kind === 'revoke' ? 'btn-danger' : 'btn-primary'"
               :disabled="actionModal.busy" @click="confirmAction">
-              <template v-if="actionModal.kind === 'extend'">{{ t('admin.subscriptions.extend_confirm') }}</template>
+              <template v-if="actionModal.kind === 'change'">{{ t('admin.subscriptions.change_confirm') }}</template>
+              <template v-else-if="actionModal.kind === 'extend'">{{ t('admin.subscriptions.extend_confirm') }}</template>
               <template v-else-if="actionModal.kind === 'cancel'">{{ t('admin.subscriptions.cancel_confirm') }}</template>
               <template v-else>{{ t('admin.subscriptions.revoke_confirm') }}</template>
             </button>

@@ -108,7 +108,9 @@ function planLabel(p: Plan): string {
   if (p.period_days === null) return t('click.plan_lifetime');
   if (p.period_days === 30) return t('click.plan_monthly');
   if (p.period_days === 365) return t('click.plan_yearly');
-  return t('click.plan_days', { n: p.period_days });
+  // Third argument is the plural choice. Without it vue-i18n always picks the
+  // first form, so a 1-day plan rendered as "1 дней".
+  return t('click.plan_days', { n: p.period_days }, p.period_days);
 }
 
 // ── Card binding ─────────────────────────────────────────────────────────
@@ -243,6 +245,7 @@ async function removeCard() {
 // ── Paying ───────────────────────────────────────────────────────────────
 const charging = ref(false);
 const settling = ref(false);
+const activeAction = ref<PayIntent | null>(null);
 const payDone = ref(false);
 const celebratePremium = ref<{ planName: string; endsOn: string | null } | null>(null);
 
@@ -273,11 +276,18 @@ function startSubscribe() {
 }
 
 async function payOnce() {
+  activeAction.value = 'charge';
   await runCharge(() => clickApi.chargeNow(selectedPlanId.value as string));
 }
 
 async function subscribe() {
+  activeAction.value = 'subscribe';
   await runCharge(() => clickApi.subscribeNow(selectedPlanId.value as string));
+}
+
+// True while THIS button's request is in flight.
+function isRunning(action: PayIntent): boolean {
+  return activeAction.value === action && (charging.value || settling.value);
 }
 
 // Shared settle logic. The POST only means Click ACCEPTED the charge; access
@@ -319,6 +329,25 @@ async function runCharge(
   } finally {
     charging.value = false;
     settling.value = false;
+    activeAction.value = null;
+  }
+}
+
+// Click's hosted page. Kept as a third option for anyone whose card will not
+// bind - an Uzcard with online payments disabled, or an SMS that never
+// arrives. Full navigation rather than a router push: this leaves the SPA.
+const redirecting = ref(false);
+
+async function payWithClick() {
+  if (!canAct.value || redirecting.value) return;
+  redirecting.value = true;
+  error.value = null;
+  try {
+    const handle = await clickApi.createOrder(selectedPlanId.value as string);
+    window.location.href = handle.pay_url;
+  } catch (e) {
+    error.value = mapPayError(e);
+    redirecting.value = false;
   }
 }
 
@@ -389,15 +418,19 @@ function mapPayError(e: unknown): string {
 
         <p v-if="error" class="error-text mt-4">{{ error }}</p>
 
-        <!-- 3. Actions -->
+        <!-- 3. Actions. Subscribe is the primary offer and leads; paying once
+             is the alternative. When the plan is lifetime there is nothing to
+             subscribe to, so the one-time button becomes the primary instead
+             of leaving the row with no accent button at all. -->
         <div class="pay-actions mt-4">
-          <button type="button" class="btn btn-primary pay-btn" :disabled="!canAct"
-            @click="startPayOnce">
-            {{ charging || settling ? t('common.loading') : t('payment.pay_once') }}
-          </button>
-          <button v-if="canSubscribe" type="button" class="btn pay-btn pay-btn-alt"
+          <button v-if="canSubscribe" type="button" class="btn btn-primary pay-btn"
             :disabled="!canAct" @click="startSubscribe">
-            {{ t('payment.subscribe') }}
+            {{ isRunning('subscribe') ? t('common.loading') : t('payment.subscribe') }}
+          </button>
+          <button type="button"
+            :class="['btn', 'pay-btn', canSubscribe ? 'pay-btn-alt' : 'btn-primary']"
+            :disabled="!canAct" @click="startPayOnce">
+            {{ isRunning('charge') ? t('common.loading') : t('payment.pay_once') }}
           </button>
         </div>
         <p class="dim text-xs mt-2">
@@ -467,6 +500,17 @@ function mapPayError(e: unknown): string {
             <span class="toggle-knob"></span>
           </button>
         </div>
+
+        <!-- Click's hosted page. Explicitly named, below a divider: an
+             alternative for cards that will not bind, not a third co-equal
+             button competing with the two above. -->
+        <div class="pay-click mt-4">
+          <button type="button" class="btn-link accent" :disabled="!canAct || redirecting"
+            @click="payWithClick">
+            {{ redirecting ? t('click.opening') : t('click.pay_with_click') }}
+          </button>
+          <p class="dim text-xs mt-1">{{ t('payment.click_hint') }}</p>
+        </div>
       </template>
     </template>
   </section>
@@ -531,6 +575,11 @@ function mapPayError(e: unknown): string {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 10px;
+}
+
+.pay-click {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
 }
 
 .pay-step-head {

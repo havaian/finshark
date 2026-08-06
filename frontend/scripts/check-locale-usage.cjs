@@ -85,26 +85,66 @@ if (missing.length) {
   }
 }
 
-// A value is "untranslated" when ru or uz repeats the English verbatim AND the
-// English looks like prose. Short strings, pure interpolation ({a} / {b}),
-// product names and code-ish placeholders legitimately match across languages,
-// so they are excluded rather than reported as noise nobody will action.
-function isProse(v) {
-  if (v.length <= 12) return false;
-  const words = v.replace(/\{[^}]*\}/g, ' ').match(/[A-Za-z]{3,}/g);
-  return !!words && words.length >= 2;
+// A value is "untranslated" when ru or uz repeats the English verbatim.
+//
+// This used to skip anything 12 characters or shorter, on the theory that
+// short strings are usually codes. That let the ENTIRE admin.payments section
+// through - "Payments", "Paid", "Status", "Amount", "Cancelled" are all under
+// the threshold - and Russian admins saw an English panel while this script
+// reported success. Length is not evidence of anything; the exceptions are
+// specific strings, so they are listed as such.
+//
+// Still excluded, because they genuinely are identical in every language:
+// pure interpolation ({a} / {b}), and values with no Latin letters at all
+// (punctuation, digits, symbols).
+function isTranslatable(v) {
+  const withoutVars = v.replace(/\{[^}]*\}/g, ' ');
+  return /[A-Za-z]/.test(withoutVars);
 }
 
+// Values that are the same in en/ru/uz on purpose. Each one is a proper noun,
+// an abbreviation, a code, or an input placeholder showing literal syntax.
+// Add to this list only when the English really is the correct Russian and
+// Uzbek text - never to silence a missing translation.
 const ALLOW_IDENTICAL = new Set([
+  // Placeholders demonstrating literal input syntax
   'admin.email_templates.variables_placeholder',
   'admin.email_templates.test_vars_placeholder',
   'admin.whitelist.add_pattern_ph',
   'admin.payments.fiscal_name_placeholder',
+  'admin.promocodes.form_code_ph',
+  // Brand and product names
+  'page_titles.home',
+  'home.title',
+  'dashboard.premium_badge',
+  'dashboard.paper_locked_suffix',
+  'onboarding.goal_premium',
+  'settings.premium_section',
+  'settings.premium_status_premium',
+  'admin.overview.premium_title',
+  'profile.email',
+  // Payment provider identifiers, shown verbatim
+  'admin.subscriptions.sub_source_payme',
+  'admin.subscriptions.sub_source_click',
+  'admin.subscriptions.sub_source_stripe',
+  'admin.whitelist.kind_email',
+  'admin.users.admin_badge',
+  // Abbreviations and codes
+  'dashboard.xp',
+  'leaderboards.col_xp',
+  'admin.user_detail.meta_tfa',
+  'admin.overview.content_los',
+  'admin.questions.type_mcq',
+  'admin.questions.lang_tab_en',
+  'admin.questions.lang_tab_ru',
+  'admin.questions.lang_tab_uz',
+  'landing.stat_2_value',
+  'landing.stat_3_value',
 ]);
 
 for (const [label, other] of [['ru', ru], ['uz', uz]]) {
   const same = [...en]
-    .filter(([k, v]) => isProse(v) && other.get(k) === v && !ALLOW_IDENTICAL.has(k))
+    .filter(([k, v]) => isTranslatable(v) && other.get(k) === v && !ALLOW_IDENTICAL.has(k))
     .map(([k]) => k);
   if (same.length) {
     failed = true;

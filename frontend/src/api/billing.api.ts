@@ -122,6 +122,14 @@ export const adminBillingApi = {
     (await api.post<Subscription>(`/admin/subscriptions/${id}/extend`, input))
       .data,
 
+  // Absolute replacement for ends_at, as opposed to extend()'s relative days.
+  setEndDate: async (
+    id: string,
+    input: { ends_at: string; reason?: string }
+  ): Promise<Subscription> =>
+    (await api.post<Subscription>(`/admin/subscriptions/${id}/end-date`, input))
+      .data,
+
   cancel: async (
     id: string,
     input: { reason?: string }

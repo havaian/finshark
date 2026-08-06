@@ -1005,6 +1005,15 @@ export default {
     // Subscriptions admin page - pick a user, see history, grant / extend /
     // cancel / revoke, plus the event audit log.
     subscriptions: {
+      change_btn: "Change subscription",
+      grant_open_btn: "Issue subscription",
+      change_modal_title: "Change subscription",
+      change_mode_date: "New end date",
+      change_mode_days: "Add days",
+      change_ends_at_label: "Access ends on",
+      change_date_hint: "Access runs to the end of the chosen day. An earlier date is allowed; to end access now, use revoke.",
+      change_date_required: "Pick an end date.",
+      change_confirm: "Save changes",
       title: "Subscriptions",
       sub: "Manual grants, extensions, and audit log per user.",
       pick_user_ph: "Search by name or email",
@@ -1394,6 +1403,7 @@ export default {
     actions_hint:
       "Paying once covers a single period. Subscribing charges the same amount and renews automatically until you turn it off.",
     once_hint: "A single charge. Nothing renews automatically.",
+    click_hint: "Opens Click's payment page. Use this if your card will not bind.",
   },
   click: {
     receipt_pending: "Receipt pending",
@@ -1409,7 +1419,7 @@ export default {
     plan_monthly: "Monthly",
     plan_yearly: "Yearly",
     plan_lifetime: "Lifetime",
-    plan_days: "{n} days",
+    plan_days: "{n} day | {n} days",
     pay_with_click: "Pay with Click",
     pay_by_card: "Pay by card",
     opening: "Opening…",

@@ -19,7 +19,7 @@ import {
   Max,
   MaxLength,
   Min,
-} from "class-validator";
+  IsDateString,} from "class-validator";
 import { SubscriptionExpiryService } from "./subscription-expiry.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AdminWith2faGuard } from "../auth/guards/admin-with-2fa.guard";
@@ -63,6 +63,19 @@ class ExtendDto {
   @IsInt()
   @Min(1)
   days!: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+}
+
+// Absolute replacement for ends_at, as opposed to ExtendDto's relative days.
+// Kept as a separate DTO rather than an optional field on ExtendDto so that
+// "days" and "ends_at" cannot both arrive and leave the server picking one.
+class SetEndDateDto {
+  @IsDateString()
+  ends_at!: string;
 
   @IsOptional()
   @IsString()
@@ -264,6 +277,24 @@ export class AdminSubscriptionsController {
     const row = await this.subs.extend({
       subscriptionId: id,
       days: dto.days,
+      actorUserId: current.sub,
+      reason: dto.reason ?? null,
+    });
+    return toPublicSubscription(row);
+  }
+
+  // Set ends_at to an explicit date. Distinct from extend: admins correcting a
+  // subscription after a support call know the target date, not the delta.
+  @Post("subscriptions/:id/end-date")
+  @HttpCode(HttpStatus.OK)
+  async setEndDate(
+    @Param("id") id: string,
+    @Body() dto: SetEndDateDto,
+    @CurrentUser() current: AccessTokenPayload
+  ) {
+    const row = await this.subs.setEndDate({
+      subscriptionId: id,
+      endsAt: new Date(dto.ends_at),
       actorUserId: current.sub,
       reason: dto.reason ?? null,
     });

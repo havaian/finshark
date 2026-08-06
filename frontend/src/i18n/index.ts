@@ -57,6 +57,23 @@ export function writeLangToStorage(lang: Lang): void {
 // of raw keys. Instead we start on en and let bootstrapLocale() (awaited in
 // main.ts before mount) load + switch to the saved language. The fallback to
 // en means even if that load fails, the UI still renders real strings.
+// Russian needs three plural forms and vue-i18n's built-in rule only knows
+// two, so "1 дней" and "22 дней" would both render wrong without this.
+//
+//   index 0  день   - 1, 21, 31...  (ends in 1, but not 11)
+//   index 1  дня    - 2-4, 22-24... (ends in 2-4, but not 12-14)
+//   index 2  дней   - 0, 5-20, 25-30...
+//
+// The teens are the exception the naive "ends with 1" test gets wrong: 11 and
+// 21 both end in 1, but only 21 takes the singular.
+function russianPlural(choice: number): number {
+  const teen = choice % 100 > 10 && choice % 100 < 20;
+  const last = choice % 10;
+  if (!teen && last === 1) return 0;
+  if (!teen && last >= 2 && last <= 4) return 1;
+  return 2;
+}
+
 const options: I18nOptions = {
   legacy: false,
   locale: DEFAULT_LANG,
@@ -64,6 +81,9 @@ const options: I18nOptions = {
   messages: { en },
   missingWarn: false,
   fallbackWarn: false,
+  // en and uz use the default rule: English has two forms, Uzbek one (the
+  // noun does not change after a number), and the default handles both.
+  pluralRules: { ru: russianPlural },
 };
 
 export const i18n = createI18n(options);

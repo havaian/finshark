@@ -785,7 +785,7 @@ export default {
   },
 
   admin: {
-    panel: "Admin panel",
+    panel: "Boshqaruv paneli",
     overview: {
       title: "Umumiy ko'rinish",
       users_title: "Foydalanuvchilar",
@@ -882,7 +882,7 @@ export default {
       make_admin: "Admin qilish",
       remove_admin: "Adminlikdan olish",
       updating: "Yangilanmoqda…",
-      you_badge: "you",
+      you_badge: "siz",
       admin_badge: "admin",
       loading: "Foydalanuvchilar yuklanmoqda…",
       empty: "Hozircha foydalanuvchilar yo'q.",
@@ -913,7 +913,7 @@ export default {
       // the parser throw "SyntaxError: 10" at runtime.
       add_pattern_ph: "{'user@example.com'}  or  {'@example.com'}",
       add_note_ph: "Izoh (ixtiyoriy) - kim/nima uchun qo'shilgani",
-      add_btn: "Add",
+      add_btn: "Qo'shish",
       pattern_hint:
         "Aniq email ({'user@example.com'}) yoki domen naqshi ({'@example.com'}). Domenlar at-belgisi bilan boshlanadi va o'sha domendagi har qanday foydalanuvchiga ruxsat beradi.",
       kind_email: "email",
@@ -1004,6 +1004,15 @@ export default {
     // Subscriptions admin page - pick a user, see history, grant / extend /
     // cancel / revoke, plus the event audit log.
     subscriptions: {
+      change_btn: "Obunani o'zgartirish",
+      grant_open_btn: "Obuna berish",
+      change_modal_title: "Obunani o'zgartirish",
+      change_mode_date: "Yangi sana",
+      change_mode_days: "Kun qo'shish",
+      change_ends_at_label: "Kirish muddati",
+      change_date_hint: "Kirish tanlangan kun oxirigacha amal qiladi. Oldinroq sanani ham qo'yish mumkin; kirishni darhol yopish uchun bekor qilishdan foydalaning.",
+      change_date_required: "Tugash sanasini tanlang.",
+      change_confirm: "Saqlash",
       title: "Obunalar",
       sub: "Har bir foydalanuvchi bo'yicha qo'lda berishlar, uzaytirishlar va audit jurnali.",
       pick_user_ph: "Ism yoki email bo'yicha qidirish",
@@ -1071,26 +1080,26 @@ export default {
     },
     // Admin to'lovlar sahifasi: reja narxlari, kartalar, cheklarni tekshirish.
     payments: {
-      title: "Payments",
+      title: "To'lovlar",
       subtitle: "Reja narxlari, Click buyurtmalari, fiskal cheklar va karta o'tkazmalari arxivi.",
       load_error: "To'lovlar ma'lumotini yuklab bo'lmadi.",
-      save: "Save",
-      close: "Close",
+      save: "Saqlash",
+      close: "Yopish",
 
       // Integration health
       health_title: "Integratsiya holati",
-      health_ok: "OK",
-      health_off: "Off",
+      health_ok: "Ishlayapti",
+      health_off: "O'chirilgan",
       health_payments: "Click to'lovlari",
       health_fiscal: "Fiskallashtirish (OFD cheklari)",
 
       // Plan pricing
-      plans_title: "Plan pricing",
+      plans_title: "Tarif narxlari",
       plans_sub: "Narx va OFD chek satrini sozlang. Davomiylik faqat kelgusi xaridlarga ta'sir qiladi.",
-      plan_active: "Active",
-      plan_inactive: "Inactive",
-      activate: "Activate",
-      deactivate: "Deactivate",
+      plan_active: "Faol",
+      plan_inactive: "Nofaol",
+      activate: "Yoqish",
+      deactivate: "O'chirish",
       price_label: "Narx ({currency})",
       price_invalid: "Noldan katta narx kiriting.",
       plan_save_error: "Rejani saqlab bo'lmadi. Qayta urinib ko'ring.",
@@ -1106,20 +1115,20 @@ export default {
       fiscal_name_missing: "{n} ta faol rejada chek satri yo'q - ular bo'yicha to'lovlar fiskallashtirilmaydi.",
 
       // Click orders
-      orders_title: "Click orders",
+      orders_title: "Click buyurtmalari",
       orders_sub: "Click orqali boshlangan barcha to'lovlar, Click yordam xizmati so'raydigan identifikatorlar bilan.",
       orders_empty: "Bu ko'rinishda buyurtmalar yo'q.",
-      order_detail: "Details",
-      order_filter_all: "All",
-      order_filter_paid: "Paid",
-      order_filter_prepared: "Processing",
+      order_detail: "Batafsil",
+      order_filter_all: "Hammasi",
+      order_filter_paid: "To'langan",
+      order_filter_prepared: "Ishlanmoqda",
       order_filter_created: "Tugallanmagan",
-      order_filter_cancelled: "Cancelled",
+      order_filter_cancelled: "Bekor qilingan",
       order_filter_failed: "E'tibor talab qiladi",
       order_status_created: "Tugallanmagan",
-      order_status_prepared: "Processing",
-      order_status_paid: "Paid",
-      order_status_cancelled: "Cancelled",
+      order_status_prepared: "Ishlanmoqda",
+      order_status_paid: "To'langan",
+      order_status_cancelled: "Bekor qilingan",
       order_status_failed: "E'tibor talab qiladi",
 
       // Fiscalization
@@ -1135,12 +1144,12 @@ export default {
       fiscal_receipt_none: "Bu buyurtma bo'yicha fiskal chek rasmiylashtirilmaydi.",
 
       // Order detail
-      detail_status: "Status",
-      detail_amount: "Amount",
-      detail_user: "User",
-      detail_subscription: "Subscription",
+      detail_status: "Holati",
+      detail_amount: "Summa",
+      detail_user: "Foydalanuvchi",
+      detail_subscription: "Obuna",
       detail_fiscal: "Fiskal chek",
-      callbacks_title: "Callback log",
+      callbacks_title: "Qayta chaqiruvlar jurnali",
       callbacks_hint: "Click dan kelgan dastlabki Prepare/Complete so'rovlari va bizning javoblarimiz. Click yordam xizmati aynan shuni so'raydi.",
       callbacks_empty: "Bu buyurtma bo'yicha hali kolbeklar yo'q.",
       callbacks_error: "Kolbeklar jurnalini yuklab bo'lmadi.",
@@ -1178,7 +1187,7 @@ export default {
       enable_btn: "Yoqish",
       disable_btn: "O'chirish",
       delete_confirm: "'{key}' email shabloni o'chirilsinmi? Buni qaytarib bo'lmaydi.",
-      key_label: "Key",
+      key_label: "Kalit",
       key_help: "Koddan murojaat qilinadigan barqaror slug (masalan, 'reminder_daily'). Yaratilgandan keyin nomini o'zgartirib bo'lmaydi - o'chirib qayta yarating.",
       subject_en_label: "Mavzu (inglizcha)",
       subject_ru_label: "Mavzu (ruscha, ixtiyoriy)",
@@ -1195,7 +1204,7 @@ export default {
       variables_unused: "Ro'yxatda bor, lekin ishlatilmagan: {vars}",
       notes_label: "Admin izohlari (yuborilmaydi)",
       test_title: "Sinov yuborish",
-      test_to_label: "To",
+      test_to_label: "Kimga",
       test_lang_label: "Til",
       test_vars_label: "O'zgaruvchilar (JSON)",
       test_vars_placeholder: "{'{\"display_name\":\"Alex\",\"streak\":7}'}",
@@ -1361,7 +1370,7 @@ export default {
       title: "UI tarjimalari",
       sub: "Ilovada ko'rsatiladigan standart UI matnlarini almashtiring. Bo'sh qatorlar to'plamdagi standartlarga qaytadi.",
       empty: "Hali almashtirishlar yo'q.",
-      key: "Key",
+      key: "Kalit",
       lang: "Til",
       value: "Qiymat",
       default: "Standart",
@@ -1390,6 +1399,7 @@ export default {
     actions_hint:
       "Bir martalik to'lov bitta davrni qoplaydi. Obuna esa xuddi shu summani yechadi va siz o'chirmaguningizcha avtomatik uzaytiriladi.",
     once_hint: "Bir martalik yechim. Avtomatik uzaytirish bo'lmaydi.",
+    click_hint: "Click to'lov sahifasi ochiladi. Karta bog'lanmasa shundan foydalaning.",
   },
   click: {
     receipt_pending: "Chek rasmiylashtirilmoqda",

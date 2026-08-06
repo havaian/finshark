@@ -132,7 +132,64 @@ export class SubscriptionsService {
   // we anchor the extension at NOW() so the user doesn't get a retroactive
   // window they can't use. Lifetime subs (ends_at = NULL) can't be extended;
   // returns the unchanged row and logs a 'note' event.
-  async extend(input: {
+// Replace ends_at with an explicit date, rather than adding days to it.
+  //
+  // extend() answers "give them two more weeks"; this answers "their access
+  // should end on the 30th". Admins doing a correction after a support call
+  // know the target date, not the delta, and computing the delta by hand is
+  // where off-by-one errors come from.
+  //
+  // The new date may be EARLIER than the current one - that is a legitimate
+  // correction (wrong plan granted, partial refund), so it is allowed. Setting
+  // it into the past would silently end access, which is what revoke() is for
+  // and what it records in the audit, so that is refused here.
+  async setEndDate(input: {
+    subscriptionId: string;
+    endsAt: Date;
+    actorUserId?: string | null;
+    reason?: string | null;
+  }): Promise<SubscriptionRow> {
+    const existing = await this.subs.findById(input.subscriptionId);
+    if (!existing) throw new NotFoundException("subscription not found");
+
+    if (Number.isNaN(input.endsAt.getTime())) {
+      throw new BadRequestException("ends_at is not a valid date");
+    }
+    if (input.endsAt.getTime() <= Date.now()) {
+      throw new BadRequestException(
+        "ends_at must be in the future - use revoke to end access now"
+      );
+    }
+
+    const previous = existing.ends_at;
+
+    const updated = await this.sql.begin(async (tx) => {
+      const row = await this.subs.setEndsAt(existing.id, input.endsAt, tx);
+      if (!row) throw new NotFoundException("subscription not found");
+      await this.events.insert(
+        {
+          subscription_id: existing.id,
+          user_id: existing.user_id,
+          kind: "extended",
+          actor_user_id: input.actorUserId ?? null,
+          reason: input.reason ?? null,
+          // Both dates recorded: "extended" alone would not show that this
+          // could also have SHORTENED the period.
+          metadata: {
+            previous_ends_at: previous === null ? null : previous.toISOString(),
+            new_ends_at: input.endsAt.toISOString(),
+            absolute: true,
+          },
+        },
+        tx
+      );
+      return row;
+    });
+
+    return updated;
+  }
+
+    async extend(input: {
     subscriptionId: string;
     days: number;
     actorUserId?: string | null;

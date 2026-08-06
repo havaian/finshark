@@ -206,7 +206,7 @@ export default {
       "Да, в той мере, в какой они открыты, из официальной практической платформы ACCA и OpenTuition. Каждый вопрос привязан к цели обучения, чтобы было понятно, что он проверяет.",
     faq_5_q: "Откуда берутся объяснения?",
     faq_5_a:
-      "Из утверждённых учебных материалов, включая Kaplan, BPP и official ACCA study guides, переписанных простым языком. К каждому объяснению указана цель программы, к которой оно относится.",
+      "Из утверждённых учебных материалов, включая Kaplan, BPP и официальные учебные пособия ACCA, переписанных простым языком. К каждому объяснению указана цель программы, к которой оно относится.",
 
     // Раздел календаря активности - повторяет хитмап в профиле. Подписи дней
     // берём из profile.heatmap_day_*, чтобы не дублировать.
@@ -873,7 +873,7 @@ export default {
       meta_tfa: "2FA",
     },
     whitelist: {
-      title: "Whitelist по email",
+      title: "Белый список email",
       sub: "Войти могут только указанные email-адреса (или адреса под указанными доменами).",
       filter_placeholder: "Фильтр по шаблону или заметке",
       // Literal-interpolation {'...'} нужно чтобы vue-i18n не считал '@'
@@ -960,6 +960,15 @@ export default {
     },
 
     subscriptions: {
+      change_btn: "Изменить подписку",
+      grant_open_btn: "Выдать подписку",
+      change_modal_title: "Изменение подписки",
+      change_mode_date: "Новая дата",
+      change_mode_days: "Добавить дни",
+      change_ends_at_label: "Доступ до",
+      change_date_hint: "Доступ действует до конца выбранного дня. Более раннюю дату поставить можно; чтобы закрыть доступ сразу, используйте аннулирование.",
+      change_date_required: "Выберите дату окончания.",
+      change_confirm: "Сохранить",
       title: "Подписки",
       sub: "Ручные выдачи, продления и журнал событий по пользователям.",
       pick_user_ph: "Поиск по имени или email",
@@ -1023,26 +1032,26 @@ export default {
     },
     // Админ-страница платежей: цены планов, карты, очередь проверки квитанций.
     payments: {
-      title: "Payments",
+      title: "Платежи",
       subtitle: "Цены планов, заказы Click, фискальные чеки и архив переводов по картам.",
       load_error: "Не удалось загрузить данные по платежам.",
-      save: "Save",
-      close: "Close",
+      save: "Сохранить",
+      close: "Закрыть",
 
       // Integration health
       health_title: "Состояние интеграции",
-      health_ok: "OK",
-      health_off: "Off",
+      health_ok: "Работает",
+      health_off: "Выключено",
       health_payments: "Платежи Click",
       health_fiscal: "Фискализация (чеки ОФД)",
 
       // Plan pricing
-      plans_title: "Plan pricing",
+      plans_title: "Цены планов",
       plans_sub: "Настройте цену и строку чека ОФД. Длительность влияет только на будущие покупки.",
-      plan_active: "Active",
-      plan_inactive: "Inactive",
-      activate: "Activate",
-      deactivate: "Deactivate",
+      plan_active: "Активен",
+      plan_inactive: "Неактивен",
+      activate: "Включить",
+      deactivate: "Отключить",
       price_label: "Цена ({currency})",
       price_invalid: "Введите цену больше нуля.",
       plan_save_error: "Не удалось сохранить план. Попробуйте ещё раз.",
@@ -1058,20 +1067,20 @@ export default {
       fiscal_name_missing: "У {n} активных планов нет строки чека - платежи по ним не будут фискализированы.",
 
       // Click orders
-      orders_title: "Click orders",
+      orders_title: "Заказы Click",
       orders_sub: "Все платежи через Click с идентификаторами, которые запрашивает поддержка Click.",
       orders_empty: "В этой выборке заказов нет.",
-      order_detail: "Details",
-      order_filter_all: "All",
-      order_filter_paid: "Paid",
-      order_filter_prepared: "Processing",
+      order_detail: "Подробнее",
+      order_filter_all: "Все",
+      order_filter_paid: "Оплачен",
+      order_filter_prepared: "В обработке",
       order_filter_created: "Не завершены",
-      order_filter_cancelled: "Cancelled",
+      order_filter_cancelled: "Отменён",
       order_filter_failed: "Требуют внимания",
       order_status_created: "Не завершён",
-      order_status_prepared: "Processing",
-      order_status_paid: "Paid",
-      order_status_cancelled: "Cancelled",
+      order_status_prepared: "В обработке",
+      order_status_paid: "Оплачен",
+      order_status_cancelled: "Отменён",
       order_status_failed: "Требует внимания",
 
       // Fiscalization
@@ -1087,12 +1096,12 @@ export default {
       fiscal_receipt_none: "По этому заказу фискальный чек не оформляется.",
 
       // Order detail
-      detail_status: "Status",
-      detail_amount: "Amount",
-      detail_user: "User",
-      detail_subscription: "Subscription",
+      detail_status: "Статус",
+      detail_amount: "Сумма",
+      detail_user: "Пользователь",
+      detail_subscription: "Подписка",
       detail_fiscal: "Фискальный чек",
-      callbacks_title: "Callback log",
+      callbacks_title: "Журнал обратных вызовов",
       callbacks_hint: "Исходные запросы Prepare/Complete от Click и наши ответы. Именно это запрашивает поддержка Click.",
       callbacks_empty: "По этому заказу коллбеков пока нет.",
       callbacks_error: "Не удалось загрузить журнал коллбеков.",
@@ -1340,6 +1349,7 @@ export default {
     actions_hint:
       "Разовая оплата покрывает один период. Подписка списывает ту же сумму и продлевается автоматически, пока вы её не отключите.",
     once_hint: "Разовое списание. Автопродления не будет.",
+    click_hint: "Откроется платёжная страница Click. Подойдёт, если карта не привязывается.",
   },
   click: {
     receipt_pending: "Чек оформляется",
@@ -1355,7 +1365,7 @@ export default {
     plan_monthly: "Месяц",
     plan_yearly: "Год",
     plan_lifetime: "Навсегда",
-    plan_days: "{n} дней",
+    plan_days: "{n} день | {n} дня | {n} дней",
     pay_with_click: "Оплатить через Click",
     pay_by_card: "Оплатить картой",
     opening: "Открываем…",

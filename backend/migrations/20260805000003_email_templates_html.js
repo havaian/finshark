@@ -191,6 +191,10 @@ function renderHtml(subject, body) {
 </html>`;
 }
 
+// Exported so later migrations that add a template can style it with the same
+// shell instead of copying the markup. See 20260805000004.
+exports.renderHtml = renderHtml;
+
 exports.up = async (pgm) => {
   const { rows } = await pgm.db.query(`
     SELECT key, subject_en, subject_ru, subject_uz, body_en, body_ru, body_uz

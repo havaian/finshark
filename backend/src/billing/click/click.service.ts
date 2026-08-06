@@ -627,6 +627,61 @@ export class ClickService {
     }
   }
 
+  // Financial record for a completed payment. Queued like every other
+  // transactional email, so a mail outage defers it rather than losing it.
+  private async notifyPaymentReceipt(
+    order: ClickOrderRow,
+    endsAt: Date | null
+  ): Promise<void> {
+    try {
+      const user = await this.users.findById(order.user_id);
+      if (!user) return;
+      const appUrl = this.appConfig
+        .getOrThrow<string>("APP_PUBLIC_URL")
+        .replace(/\/$/, "");
+      const planName =
+        typeof order.metadata?.plan_name === "string"
+          ? order.metadata.plan_name
+          : "Finshark Premium";
+
+      const fmtDate = (d: Date) =>
+        d.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        });
+
+      await this.outbox.enqueue({
+        templateKey: "payment_receipt",
+        to: user.email,
+        lang: "en",
+        variables: {
+          display_name: user.display_name,
+          plan_name: planName,
+          // amount_minor is in tiyin; group thousands so 100000 reads as
+          // "1,000 UZS" rather than an unreadable run of digits.
+          amount: `${new Intl.NumberFormat("en-US", {
+            maximumFractionDigits: 2,
+          }).format(order.amount_minor / 100)} ${order.currency}`,
+          paid_on: fmtDate(order.paid_at ?? new Date()),
+          // merchant_trans_id, not the internal UUID: this is the reference
+          // Click support and the fiscal receipt both use.
+          order_number: order.merchant_trans_id,
+          ends_on: endsAt === null ? "further notice" : fmtDate(endsAt),
+          app_url: appUrl,
+        },
+        context: `receipt for click order ${order.id}`,
+      });
+    } catch (e) {
+      this.log.warn(
+        `payment_receipt enqueue failed for order ${order.id}: ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+
   // Chained grant: one subscription row per payment, but the new period starts
   // where the current one ends rather than at NOW(). Buying twice in a week
   // therefore stacks two full periods instead of overlapping them and burning
@@ -674,6 +729,11 @@ export class ClickService {
     if (isAutoRenewal) {
       void this.cards.notifyRenewalSucceeded(order.user_id, sub.ends_at);
     }
+
+    // Receipt goes out for EVERY paid order, regardless of which path produced
+    // it. The other emails describe what happened to the subscription; this one
+    // is the financial record - amount, date, order number.
+    void this.notifyPaymentReceipt(order, sub.ends_at);
     // First payment of a subscription: the order asked for renewal to be on,
     // and only now does a subscription row exist to set it on.
     if (order.metadata?.enable_auto_renew === true) {

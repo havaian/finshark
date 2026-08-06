@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+import { useLocaleStore } from '../../stores/locale.store';
 import { adminApi } from '../../api/admin.api';
 import { fmtDate } from '../../i18n/dates';
 import type { WhitelistEntry } from '../../types/whitelist';
@@ -130,7 +132,27 @@ function extractError(e: unknown): string | null {
   return null;
 }
 
-onMounted(load);
+// The nav entry is hidden when sign-up is open, but a bookmarked URL would
+// still land here. Managing a gate that is not applied is misleading, so the
+// page redirects rather than rendering an inert list.
+const router = useRouter();
+const localeStore = useLocaleStore();
+
+onMounted(async () => {
+  try {
+    const { enforced } = await adminApi.getWhitelistStatus();
+    if (!enforced) {
+      router.replace({ name: 'admin-overview', params: { lang: localeStore.lang } });
+      return;
+    }
+  } catch {
+    // Could not confirm enforcement - redirect rather than show a list that
+    // may do nothing.
+    router.replace({ name: 'admin-overview', params: { lang: localeStore.lang } });
+    return;
+  }
+  await load();
+});
 </script>
 
 <template>

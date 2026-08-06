@@ -99,7 +99,7 @@ export default {
     admin_users: "Admin · Users",
     admin_user_detail: "Admin · User",
     admin_localization: "Admin · Localization",
-    admin_whitelist: "Admin · Whitelist",
+    admin_whitelist: "Admin · User whitelist",
     admin_promocodes: "Admin · Promocodes",
     admin_subscriptions: "Admin · Subscriptions",
     admin_payments: "Admin · Payments",
@@ -905,7 +905,7 @@ export default {
       meta_tfa: "2FA",
     },
     whitelist: {
-      title: "Email whitelist",
+      title: "User whitelist",
       sub: "Only emails listed here (or under listed domains) can sign in.",
       filter_placeholder: "Filter by pattern or note",
       // The literal-interpolation syntax {'...'} prevents vue-i18n's message

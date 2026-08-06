@@ -323,6 +323,23 @@ async function onGrant() {
 }
 
 // ---- Display helpers ----
+// The stored status is NOT swept when a subscription runs out: 'expired' is
+// only ever written by revoke(). A row that simply reached its ends_at keeps
+// status='active' forever, which is why the panel showed "Active" next to an
+// end date already in the past.
+//
+// Access itself was correct throughout - findActiveForUser filters on
+// `ends_at > NOW()`, so entitlement never depended on the stored value. This
+// derives the label the same way instead of adding a sweep, because a stored
+// status that needs sweeping is a second source of truth that can drift again
+// the moment the cron misses a run.
+function effectiveStatus(sub: Subscription): SubscriptionStatus {
+  if (sub.status === 'active' && sub.ends_at !== null && new Date(sub.ends_at) <= new Date()) {
+    return 'expired';
+  }
+  return sub.status;
+}
+
 function statusLabel(s: SubscriptionStatus): string {
   const key = `admin.subscriptions.sub_status_${s}`;
   return t(key);
@@ -468,7 +485,8 @@ onMounted(loadUsersAndPlans);
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                   <div>
                     <span style="font-weight: 500;">{{ planLabel(s.plan_id) }}</span>
-                    <span class="pill pill-grey" style="margin-left: 10px;">{{ statusLabel(s.status) }}</span>
+                    <span :class="['pill', effectiveStatus(s) === 'active' ? 'pill-green' : 'pill-grey']"
+                      style="margin-left: 10px;">{{ statusLabel(effectiveStatus(s)) }}</span>
                     <span class="dim text-xs" style="margin-left: 8px;">· {{ sourceLabel(s.source) }}</span>
                   </div>
                   <div class="dim text-xs">
@@ -493,7 +511,7 @@ onMounted(loadUsersAndPlans);
                     {{ t('admin.subscriptions.sub_extend_btn') }}
                   </button>
                   <button class="btn btn-ghost btn-sm"
-                    :disabled="s.status !== 'active' || busyIds.has(s.id)"
+                    :disabled="effectiveStatus(s) !== 'active' || busyIds.has(s.id)"
                     @click="openAction('cancel', s)">
                     {{ t('admin.subscriptions.sub_cancel_btn') }}
                   </button>

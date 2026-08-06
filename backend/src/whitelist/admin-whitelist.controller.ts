@@ -42,6 +42,17 @@ class UpdateNoteDto {
 export class AdminWhitelistController {
   constructor(private readonly whitelist: WhitelistService) {}
 
+  // Whether the gate is actually enforced. The admin UI uses this to hide the
+  // whole page when sign-up is open: a list that has no effect on who can log
+  // in is worse than no list, because it looks like it is doing something.
+  //
+  // Deliberately NOT behind the enforcement flag itself - the page needs to
+  // ask even when the answer is "off".
+  @Get("status")
+  status(): { enforced: boolean } {
+    return { enforced: this.whitelist.isEnforced };
+  }
+
   @Get()
   list() {
     return this.whitelist.list();

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../../stores/auth.store';
 import { useLocaleStore } from '../../stores/locale.store';
@@ -8,6 +8,7 @@ import { SUPPORTED_LANGS } from '../../i18n';
 import { useRoute, useRouter } from 'vue-router';
 import LangPicker from '../../components/LangPicker.vue';
 import ThemeSwitch from '../../components/ThemeSwitch.vue';
+import { adminApi } from '../../api/admin.api';
 
 // Admin shell - sidebar nav + topbar with a "back to dashboard" exit.
 // Nested admin routes render in the <RouterView/> below.
@@ -50,12 +51,31 @@ function stripLang(path: string): string {
   return path;
 }
 
+// The whitelist page only exists to manage a gate. With WHITELIST_ENABLED off
+// the gate lets everyone through, so the page would be a list that silently
+// affects nothing - misleading rather than merely useless. Fetched once here
+// so every admin page shares the answer.
+const whitelistEnforced = ref(false);
+
+onMounted(async () => {
+  try {
+    const { enforced } = await adminApi.getWhitelistStatus();
+    whitelistEnforced.value = enforced;
+  } catch {
+    // Leave it hidden. Showing a page we could not confirm is enforced is the
+    // worse failure of the two.
+    whitelistEnforced.value = false;
+  }
+});
+
 const navItems = computed<NavItem[]>(() => [
   // Overview is the new default landing - sits first in the sidebar so it
   // also reads as "home" within the admin area.
   { to: lp('/admin/overview'), labelKey: 'admin.overview.title', activePrefixes: ['/admin/overview'] },
   { to: lp('/admin/users'), labelKey: 'admin.users.title', activePrefixes: ['/admin/users'] },
-  { to: lp('/admin/whitelist'), labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] },
+  ...(whitelistEnforced.value
+    ? [{ to: lp('/admin/whitelist'), labelKey: 'admin.whitelist.title', activePrefixes: ['/admin/whitelist'] }]
+    : []),
   // Unified content browser - the only editor for papers/LOs/questions now.
   { to: lp('/admin/content'), labelKey: 'admin.content.title', activePrefixes: ['/admin/content', '/admin/papers', '/admin/los'] },
   { to: lp('/admin/promocodes'), labelKey: 'admin.promocodes.title', activePrefixes: ['/admin/promocodes'] },

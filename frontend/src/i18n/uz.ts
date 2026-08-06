@@ -107,7 +107,7 @@ export default {
     admin_users: "Admin · Foydalanuvchilar",
     admin_user_detail: "Admin · Foydalanuvchi",
     admin_localization: "Admin · Lokalizatsiya",
-    admin_whitelist: "Admin · Oq ro'yxat",
+    admin_whitelist: "Admin · Foydalanuvchilar oq ro'yxati",
     admin_promocodes: "Admin · Promokodlar",
     admin_subscriptions: "Admin · Obunalar",
     admin_payments: "Admin · To'lovlar",
@@ -904,7 +904,7 @@ export default {
       meta_tfa: "2FA",
     },
     whitelist: {
-      title: "Email oq ro'yxati",
+      title: "Foydalanuvchilar oq ro'yxati",
       sub: "Faqat bu yerda ko'rsatilgan email manzillari (yoki ko'rsatilgan domenlar ostidagi) tizimga kira oladi.",
       filter_placeholder: "Naqsh yoki izoh bo'yicha filtrlash",
       // The literal-interpolation syntax {'...'} prevents vue-i18n's message

@@ -62,6 +62,11 @@ import type {
 } from "../types/email-outbox";
 
 export const adminApi = {
+  // Whether the sign-up whitelist is actually enforced. Drives whether the
+  // admin page is reachable at all - see admin-whitelist.controller.ts.
+  getWhitelistStatus: async (): Promise<{ enforced: boolean }> =>
+    (await api.get<{ enforced: boolean }>("/admin/whitelist/status")).data,
+
   // ---- Email outbox (transactional email queue) ----
   // Read-only apart from requeue/drain. See admin-email-outbox.controller.ts.
   getEmailOutboxStats: async (): Promise<EmailOutboxStats> =>

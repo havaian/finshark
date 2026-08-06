@@ -2,8 +2,11 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
+  type OnModuleInit,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { WhitelistRepository } from "./whitelist.repository";
 import {
   classifyPattern,
@@ -14,8 +17,42 @@ import {
 } from "./whitelist.types";
 
 @Injectable()
-export class WhitelistService {
-  constructor(private readonly repo: WhitelistRepository) {}
+export class WhitelistService implements OnModuleInit {
+  private readonly log = new Logger(WhitelistService.name);
+
+  // Closed sign-up was for the pre-launch period. It is OFF by default now:
+  // an unset variable means anyone with a verified Google account can register.
+  //
+  // The gate is disabled rather than deleted because the admin page, the table
+  // and the patterns are all still here and still correct - flipping this to
+  // "true" restores closed sign-up without a migration or a deploy of new code.
+  //
+  // Anything other than the exact string "true" leaves sign-up open, so a typo
+  // fails towards letting users in rather than silently locking everyone out.
+  private readonly enforced: boolean;
+
+  constructor(
+    private readonly repo: WhitelistRepository,
+    config: ConfigService
+  ) {
+    this.enforced =
+      (config.get<string>("WHITELIST_ENABLED") ?? "false").toLowerCase() ===
+      "true";
+  }
+
+  onModuleInit(): void {
+    // Logged at startup because "why can nobody sign up" and "why can everybody
+    // sign up" are both questions best answered by one line in the boot log.
+    this.log.log(
+      this.enforced
+        ? "whitelist ENFORCED - only listed emails/domains may sign in"
+        : "whitelist OFF - sign-up is open to any verified Google account"
+    );
+  }
+
+  get isEnforced(): boolean {
+    return this.enforced;
+  }
 
   // Auth-time check. True when the email matches any whitelist entry.
   //
@@ -23,6 +60,9 @@ export class WhitelistService {
   // (admins manage a handful manually) so a per-login query is fine; if we
   // ever scale into hundreds we can put a short in-memory TTL cache here.
   async isEmailAllowed(email: string): Promise<boolean> {
+    // Gate disabled: allow everyone, and skip the query entirely.
+    if (!this.enforced) return true;
+
     const patterns = await this.repo.findAllPatterns();
     // Empty whitelist → DENY ALL. This is the safer default once whitelist
     // enforcement ships; the migration backfills existing users so an empty

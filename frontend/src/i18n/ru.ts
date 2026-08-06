@@ -97,7 +97,7 @@ export default {
     admin_users: "Админ · Пользователи",
     admin_user_detail: "Админ · Пользователь",
     admin_localization: "Админ · Локализация",
-    admin_whitelist: "Админ · Доступ",
+    admin_whitelist: "Админ · Белый список пользователей",
     admin_promocodes: "Админ · Промокоды",
     admin_subscriptions: "Админ · Подписки",
     admin_payments: "Админ · Платежи",
@@ -873,7 +873,7 @@ export default {
       meta_tfa: "2FA",
     },
     whitelist: {
-      title: "Белый список email",
+      title: "Белый список пользователей",
       sub: "Войти могут только указанные email-адреса (или адреса под указанными доменами).",
       filter_placeholder: "Фильтр по шаблону или заметке",
       // Literal-interpolation {'...'} нужно чтобы vue-i18n не считал '@'

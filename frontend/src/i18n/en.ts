@@ -1394,7 +1394,6 @@ export default {
     actions_hint:
       "Paying once covers a single period. Subscribing charges the same amount and renews automatically until you turn it off.",
     once_hint: "A single charge. Nothing renews automatically.",
-    click_hint: "Opens Click's payment page. Use this if your card will not bind.",
   },
   click: {
     receipt_pending: "Receipt pending",

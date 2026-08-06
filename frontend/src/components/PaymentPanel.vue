@@ -27,16 +27,14 @@
 // trusting the response.
 import { computed, onMounted, ref } from 'vue';
 import { AxiosError } from 'axios';
-import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { clickApi, pollClickOrder } from '../api/click.api';
-import { useLocaleStore } from '../stores/locale.store';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import CelebrationModal from './CelebrationModal.vue';
 import type { Plan } from '../types/billing';
 import type { SavedCard } from '../types/click';
 
-const props = defineProps<{
+defineProps<{
   // True when an active subscription exists. Subscribing again would charge
   // for a period already owned, so the Subscribe action hides and the
   // auto-renew toggle takes over.
@@ -47,8 +45,6 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'changed'): void }>();
 
 const { t } = useI18n();
-const router = useRouter();
-const locale = useLocaleStore();
 const entitlement = useEntitlementStore();
 
 // ── Load ─────────────────────────────────────────────────────────────────
@@ -87,11 +83,16 @@ const selectedPlan = computed<Plan | null>(
   () => plans.value.find((p) => p.id === selectedPlanId.value) ?? null,
 );
 
-// Subscribing needs a period to renew. A lifetime plan can only be bought
-// once, which is exactly what "Pay once" is for.
-const canSubscribe = computed(
-  () => !props.canAutoRenew && selectedPlan.value?.period_days != null,
-);
+// Both actions are always offered. The ONLY thing that removes Subscribe is a
+// lifetime plan, which has no period to renew - chargeNow accepts it and
+// subscribeNow rejects it, so the button would 400 if it were shown.
+//
+// It deliberately does NOT depend on whether a subscription already exists.
+// That gate came from the old two-panel layout, where it meant "you are
+// already subscribed, use the toggle instead". Here it removed the only way to
+// subscribe at all. Buying while active is safe: grantForOrder chains the new
+// period onto the end of the current one rather than overlapping it.
+const canSubscribe = computed(() => selectedPlan.value?.period_days != null);
 
 // price_minor is in tiyin (x100). Group digits, no forced decimals - UZS
 // prices are whole sums in practice.
@@ -321,22 +322,6 @@ async function runCharge(
   }
 }
 
-// Hosted Click page. Full navigation, not a router push - this leaves the SPA.
-const redirecting = ref(false);
-
-async function payWithClick() {
-  if (!canAct.value || redirecting.value) return;
-  redirecting.value = true;
-  error.value = null;
-  try {
-    const handle = await clickApi.createOrder(selectedPlanId.value as string);
-    window.location.href = handle.pay_url;
-  } catch (e) {
-    error.value = mapPayError(e);
-    redirecting.value = false;
-  }
-}
-
 async function toggleAutoRenew(next: boolean) {
   if (busy.value) return;
   busy.value = true;
@@ -363,9 +348,6 @@ function mapPayError(e: unknown): string {
   if (e instanceof Error) return e.message;
   return t('click.pay_error_generic');
 }
-
-void router;
-void locale;
 </script>
 
 <template>
@@ -485,15 +467,6 @@ void locale;
             <span class="toggle-knob"></span>
           </button>
         </div>
-
-        <!-- 5. Click's hosted page, named for what it is. -->
-        <div class="pay-click mt-4">
-          <button type="button" class="btn-link accent" :disabled="!canAct || redirecting"
-            @click="payWithClick">
-            {{ redirecting ? t('click.opening') : t('click.pay_with_click') }}
-          </button>
-          <p class="dim text-xs mt-1">{{ t('payment.click_hint') }}</p>
-        </div>
       </template>
     </template>
   </section>
@@ -563,10 +536,5 @@ void locale;
 .pay-step-head {
   font-weight: 500;
   margin-bottom: 0.75rem;
-}
-
-.pay-click {
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
 }
 </style>

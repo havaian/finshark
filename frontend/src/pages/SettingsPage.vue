@@ -407,6 +407,22 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
         <h1>{{ t('settings.title') }}</h1>
       </header>
 
+      <!-- Billing lives on its own page. Placed FIRST because it was previously
+           wedged between reminders and privacy, where nobody looking for it
+           would think to scroll.
+           (/subscription).
+           The full redeem widget + plan status + history were moved there so
+           they aren't cramped here and are easier to find. This is just a
+           link through to it. -->
+      <RouterLink :to="lp('/subscription')" class="card settings-link-card">
+        <div class="grow">
+          <div style="font-weight: 500;">{{ t('subscription.link_title') }}</div>
+          <div class="dim text-sm" style="margin-top: 2px;">{{ t('subscription.link_sub') }}</div>
+        </div>
+        <span class="settings-link-cta">{{ t('subscription.link_cta') }} →</span>
+      </RouterLink>
+
+
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
 
       <!-- Appearance -->
@@ -513,17 +529,6 @@ function formatAuditMeta(meta: Record<string, unknown>): string {
         </p>
       </section>
 
-      <!-- Subscription & billing now live on their own page (/subscription).
-           The full redeem widget + plan status + history were moved there so
-           they aren't cramped here and are easier to find. This is just a
-           link through to it. -->
-      <RouterLink :to="lp('/subscription')" class="card settings-link-card">
-        <div class="grow">
-          <div style="font-weight: 500;">{{ t('subscription.link_title') }}</div>
-          <div class="dim text-sm" style="margin-top: 2px;">{{ t('subscription.link_sub') }}</div>
-        </div>
-        <span class="settings-link-cta">{{ t('subscription.link_cta') }} →</span>
-      </RouterLink>
 
       <!-- Privacy -->
       <section class="card">

@@ -255,6 +255,8 @@ export default {
   },
 
   dashboard: {
+    premium_active: "Премиум активен",
+    premium_until: "Продление {date}",
     exam_countdown: "До экзамена {days} дн.",
     exam_today: "Экзамен сегодня",
     exam_passed: "Дата экзамена прошла - обновите её в настройках",

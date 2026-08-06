@@ -628,6 +628,23 @@ onMounted(load);
         <h1>{{ t('profile.title') }}</h1>
       </header>
 
+        <!-- Billing lives on its own page. Placed FIRST: it used to sit below the
+             achievements list, past a full screen of scrolling.
+             (/subscription). Profile just links
+             through now - the full plan status, redeem, and history live there
+             rather than cramped at the bottom of the profile. -->
+        <RouterLink :to="lp('/subscription')" class="card profile-link-card">
+          <div class="grow">
+            <div style="font-weight: 500;">{{ t('subscription.link_title') }}</div>
+            <div class="dim text-sm" style="margin-top: 2px;">{{ t('subscription.link_sub') }}</div>
+          </div>
+          <span class="profile-link-cta">
+            <span v-if="entitlement.isPremium" class="pill pill-green" style="margin-right: 10px;">{{ t('dashboard.premium_active') }}</span>
+            {{ t('subscription.link_cta') }} →
+          </span>
+        </RouterLink>
+
+
       <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
       <p v-if="loading" class="dim text-sm">{{ t('common.loading') }}</p>
 
@@ -894,19 +911,6 @@ onMounted(load);
           </div>
         </section>
 
-        <!-- Billing moved to its own page (/subscription). Profile just links
-             through now - the full plan status, redeem, and history live there
-             rather than cramped at the bottom of the profile. -->
-        <RouterLink :to="lp('/subscription')" class="card profile-link-card mt-6">
-          <div class="grow">
-            <div style="font-weight: 500;">{{ t('subscription.link_title') }}</div>
-            <div class="dim text-sm" style="margin-top: 2px;">{{ t('subscription.link_sub') }}</div>
-          </div>
-          <span class="profile-link-cta">
-            <span v-if="entitlement.isPremium" class="pill pill-accent" style="margin-right: 10px;">{{ t('dashboard.premium_badge') }}</span>
-            {{ t('subscription.link_cta') }} →
-          </span>
-        </RouterLink>
 
         <!-- Danger zone -->
         <section class="card danger-zone mt-6">

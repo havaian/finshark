@@ -190,7 +190,7 @@ async function loadSubscribablePlans() {
       <section class="card">
         <header class="row" style="justify-content: space-between; align-items: center; gap: 12px;">
           <h2>{{ t('subscription.current_plan') }}</h2>
-          <span v-if="entitlement.isPremium" class="pill pill-accent">{{ t('dashboard.premium_badge') }}</span>
+          <span v-if="entitlement.isPremium" class="pill pill-green">{{ t('dashboard.premium_active') }}</span>
           <span v-else-if="entitlement.isFree" class="pill pill-grey">{{ t('settings.premium_status_free') }}</span>
         </header>
 

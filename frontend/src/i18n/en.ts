@@ -260,6 +260,8 @@ export default {
   },
 
   dashboard: {
+    premium_active: "Premium active",
+    premium_until: "Renews {date}",
     exam_countdown: "Exam in {days} days",
     exam_today: "Exam today",
     exam_passed: "Exam date passed - update it in Settings",

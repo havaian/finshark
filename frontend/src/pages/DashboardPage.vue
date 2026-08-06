@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/auth.store';
 import { useLocaleStore } from '../stores/locale.store';
 import { useEntitlementStore } from '../stores/entitlement.store';
 import { useLocalePath } from '../router/useLocalePath';
+import { fmtDate } from '../i18n/dates';
 import { lessonsApi } from '../api/lessons.api';
 import AppNav from '../components/AppNav.vue';
 import type { Paper } from '../types/content';
@@ -17,6 +18,16 @@ const router = useRouter();
 const locale = useLocaleStore();
 const lp = useLocalePath();
 const entitlement = useEntitlementStore();
+
+// Renewal / expiry date for the premium banner. Null for a lifetime grant
+// (ends_at is null), in which case the banner shows the title alone rather
+// than an empty "until" line.
+const premiumEndsOn = computed<string | null>(() => {
+  const raw = entitlement.entitlement?.ends_at;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : fmtDate(raw);
+});
 
 const papers = ref<Paper[]>([]);
 const selectedPaperId = ref<string>('');
@@ -216,9 +227,22 @@ function extractError(e: unknown): string | null {
           }) }}
         </span>
       </div>
-      <div v-else-if="entitlement.isPremium" class="row mt-4">
-        <span class="pill pill-accent">{{ t('dashboard.premium_badge') }}</span>
-      </div>
+      <!-- Premium state. A bare pill said "Premium" and nothing else - it did
+           not say until when, and it was not clickable, so the only route to
+           billing was Settings. Now it is a link to the subscription page and
+           carries the renewal date, which is the thing a subscriber actually
+           wants to check. -->
+      <RouterLink v-else-if="entitlement.isPremium" :to="lp('/subscription')"
+        class="premium-banner mt-4">
+        <span class="premium-banner-dot"></span>
+        <span class="grow">
+          <span class="premium-banner-title">{{ t('dashboard.premium_active') }}</span>
+          <span v-if="premiumEndsOn" class="premium-banner-sub">
+            {{ t('dashboard.premium_until', { date: premiumEndsOn }) }}
+          </span>
+        </span>
+        <span class="premium-banner-chevron" aria-hidden="true">&rsaquo;</span>
+      </RouterLink>
 
       <!-- Premium upsell CTA. Only for free-tier users once the entitlement
            has loaded (same guard as the quota chips so it doesn't flash for

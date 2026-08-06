@@ -265,6 +265,8 @@ export default {
   },
 
   dashboard: {
+    premium_active: "Premium faol",
+    premium_until: "Yangilanish {date}",
     exam_countdown: "Imtihongacha {days} kun",
     exam_today: "Imtihon bugun",
     exam_passed: "Imtihon sanasi o'tib ketdi - uni sozlamalarda yangilang",

@@ -70,6 +70,7 @@ const navItemsSrc: NavItemSrc[] = [
   { path: '/progress', labelKey: 'nav.progress' },
   { path: '/leaderboards', labelKey: 'nav.leaderboards' },
   { path: '/mocks/start', labelKey: 'nav.mocks' },
+  { path: '/subscription', labelKey: 'nav.subscription' },
 ];
 
 const navItems = computed<NavItem[]>(() =>
